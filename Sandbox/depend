@@ -1,0 +1,6 @@
+boid.o: boid.cpp boid.hpp vector.hpp draw.hpp
+draw.o: draw.cpp draw.hpp vector.hpp
+flock.o: flock.cpp flock.hpp boid.hpp vector.hpp draw.hpp
+main.o: main.cpp tb/Camera.hpp tb/ArcBall.hpp tb/Vectors.hpp \
+ tb/Matrix.hpp tb/Quaternion.hpp draw.hpp vector.hpp flock.hpp boid.hpp
+vector.o: vector.cpp vector.hpp

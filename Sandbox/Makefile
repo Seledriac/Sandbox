@@ -1,0 +1,33 @@
+CC = g++
+RM	= rm -f
+
+INCLUDE_DIRS = -I"F:\dev\lib\freeglut\include"
+LIB_DIRS = -L"F:\dev\lib\freeglut\lib"
+
+FLAGS_OPTIMIZATION = -O3
+FLAGS_OPENMP = -fopenmp
+FLAGS_WIN_GUI_APP = -Wl,--subsystem,windows
+FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
+FLAGS_WARNING = -W -Wall -g
+
+CFLAGS = ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_WIN_GUI_APP} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
+SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECS = main.exe
+
+
+all :: $(EXECS)
+
+main.exe: $(OBJECTS)
+	$(CC) -o $@ $(OBJECTS) $(CFLAGS)
+
+.cpp.o :
+	$(CC) -c $< -o $*.o $(INCLUDES) $(CFLAGS)
+
+clean ::
+	$(RM) $(OBJECTS) $(EXECS)
+
+depend::
+	$(CC) -MM *.cpp > depend
+
+include depend
