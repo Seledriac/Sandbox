@@ -1,8 +1,8 @@
 CC = g++
 RM	= rm -f
 
-INCLUDE_DIRS = -I"F:\dev\lib\freeglut\include"
-LIB_DIRS = -L"F:\dev\lib\freeglut\lib"
+INCLUDE_DIRS = -I"freeglut\include"
+LIB_DIRS = -L"freeglut\lib"
 
 FLAGS_OPTIMIZATION = -O3
 FLAGS_OPENMP = -fopenmp
