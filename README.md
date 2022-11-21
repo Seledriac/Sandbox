@@ -15,3 +15,7 @@ Add to path
 - C:\MinGW\msys\1.0\bin
 - C:\MinGW\bin
 
+Build and run sandbox
+- make depend
+- make
+- ./main
