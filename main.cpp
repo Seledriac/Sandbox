@@ -184,9 +184,9 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)y;  // Disable warning unused variable
 
   if (key == GLUT_KEY_UP)
-    D.timeVal*= 9.0/8.0;
+    D.timeVal*= 9.0 / 8.0;
   else if (key == GLUT_KEY_DOWN)
-    D.timeVal*= 7.0/8.0;
+    D.timeVal*= 7.0 / 8.0;
   else if (key == GLUT_KEY_LEFT)
     D.idxParamUI+= 1;
   else if (key == GLUT_KEY_RIGHT)
@@ -296,7 +296,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(2200, 100);
+  glutInitWindowPosition(200, 100);
   glutCreateWindow("Display");
 
   // World initialization

@@ -1,0 +1,9 @@
+{
+  "makefile.launchConfigurations": [
+    {
+      "cwd": "f:\\dev\\Sandbox",
+      "binaryPath": "f:\\dev\\Sandbox\\main.exe",
+      "binaryArgs": []
+    }
+  ]
+}
