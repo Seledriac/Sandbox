@@ -313,8 +313,6 @@ int main(int argc, char *argv[]) {
   // glutIdleFunc(&callback_idle);
   glutTimerFunc(100, callback_timer, 0);
 
-  printf("test %d %d\n", winW, winH);
-
   // Start refresh loop
   glutMainLoop();
 
