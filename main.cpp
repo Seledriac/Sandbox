@@ -10,7 +10,7 @@
 #include "Data.hpp"
 #include "SpaceTimeWorld.hpp"
 #include "flock.hpp"
-#include "math/Vectors.hpp"
+#include "math/Vec.hpp"
 #include "tb/Camera.hpp"
 
 
@@ -47,7 +47,6 @@ void draw_text(int const x, int const y, int const characterSize, char *const te
   glPushMatrix();
   glTranslatef(float(x), float(y), 0.0f);
   glScalef(float(characterSize) / 152.38f, float(characterSize) / 152.38f, float(characterSize) / 152.38f);
-  // glScalef(scale / 152.38f, scale / 152.38f, scale / 152.38f);
   for (char *p= text; *p; p++)
     glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *p);
   glPopMatrix();
@@ -112,7 +111,7 @@ void callback_display() {
 
   // Draw the HUD
   glLineWidth(2.0f);
-  glColor3f(0.2f, 0.2f, 0.2f);
+  glColor3f(0.8f, 0.8f, 0.8f);
   char str[50];
   int characterSize= 15;
   sprintf(str, "%.3f s", elapsed_time());
@@ -185,9 +184,9 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)y;  // Disable warning unused variable
 
   if (key == GLUT_KEY_UP)
-    D.timeVal*= 2.0;
+    D.timeVal*= 9.0/8.0;
   else if (key == GLUT_KEY_DOWN)
-    D.timeVal/= 2.0;
+    D.timeVal*= 7.0/8.0;
   else if (key == GLUT_KEY_LEFT)
     D.idxParamUI+= 1;
   else if (key == GLUT_KEY_RIGHT)
@@ -238,7 +237,7 @@ void callback_mouse_motion(int x, int y) {
 // OpenGL initialization
 void init_GL() {
   // Set background color
-  glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
   // Define light properties
   float global_ambient[]= {1.0f, 1.0f, 1.0f, 1.0f};
@@ -297,7 +296,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(250, 100);
+  glutInitWindowPosition(2200, 100);
   glutCreateWindow("Display");
 
   // World initialization
@@ -313,6 +312,8 @@ int main(int argc, char *argv[]) {
   glutMotionFunc(&callback_mouse_motion);
   // glutIdleFunc(&callback_idle);
   glutTimerFunc(100, callback_timer, 0);
+
+  printf("test %d %d\n", winW, winH);
 
   // Start refresh loop
   glutMainLoop();

@@ -1,7 +1,3 @@
-// Project lib
-#include "math/Fields.hpp"
-#include "math/Vectors.hpp"
-
 
 class Data
 {

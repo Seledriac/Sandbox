@@ -1,6 +1,6 @@
-SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Fields.hpp \
- math/Vectors.hpp Data.hpp
-flock.o: flock.cpp flock.hpp math/Vectors.hpp Data.hpp math/Fields.hpp
-main.o: main.cpp Data.hpp math/Fields.hpp math/Vectors.hpp \
- SpaceTimeWorld.hpp flock.hpp tb/Camera.hpp tb/Matrix.hpp tb/Vectors.hpp \
- tb/TrackBall.hpp tb/Quaternion.hpp
+SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vec.hpp \
+ Data.hpp
+flock.o: flock.cpp flock.hpp math/Vec.hpp Data.hpp
+main.o: main.cpp Data.hpp SpaceTimeWorld.hpp math/Vec.hpp flock.hpp \
+ tb/Camera.hpp tb/Matrix.hpp tb/Vectors.hpp tb/TrackBall.hpp \
+ tb/Quaternion.hpp

@@ -5,8 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Fields.hpp"
-#include "math/Vectors.hpp"
+#include "math/Vec.hpp"
 
 
 class SpaceTimeWorld
@@ -16,18 +15,18 @@ class SpaceTimeWorld
   int worldNbX;
   int worldNbY;
   int worldNbZ;
-
-  math::Field4D<bool> fieldSolid;
-  math::Field4D<math::Vec3> fieldColor;
-  math::Field4D<math::Vec3> fieldGravi;
+  std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
+  std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldColor;
+  std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldGravi;
 
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  math::Field2D<bool> screenSet;
-  math::Field2D<math::Vec3> screenCol;
-  math::Field3D<math::Vec3> photonPos;
-  math::Field3D<math::Vec3> photonVel;
+  std::vector<std::vector<bool>> screenSet;
+  std::vector<std::vector<math::Vec3>> screenCol;
+
+  std::vector<std::vector<std::vector<math::Vec3>>> photonPos;
+  std::vector<std::vector<std::vector<math::Vec3>>> photonVel;
 
   SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int const iWorldNbY, int const iWorldNbZ,
                  int const iScreenNbH, int const iScreenNbV, int const iScreenNbS);

@@ -6,11 +6,10 @@ LIB_DIRS = -L"freeglut\lib"
 
 FLAGS_OPTIMIZATION = -O2
 FLAGS_OPENMP = -fopenmp
-FLAGS_WIN_GUI_APP = -Wl,--subsystem,windows
 FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
 FLAGS_WARNING = -W -Wall -g
 
-CFLAGS = ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_WIN_GUI_APP} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
+CFLAGS = ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
 SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp) $(wildcard math/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECS = main.exe
