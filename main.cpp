@@ -114,14 +114,16 @@ void callback_display() {
   glColor3f(0.8f, 0.8f, 0.8f);
   char str[50];
   int characterSize= 15;
+  for (unsigned int k= 0; k < D.param.size(); k++) {
+    sprintf(str, "%s= %4.3e", D.param[k].name.c_str(), D.param[k].val);
+    draw_text(0, winH - (k + 1) * characterSize, characterSize, str);
+  }
+  glColor3f(0.8f, 0.3f, 0.3f);
+  sprintf(str, "______________");
+  draw_text(0, winH - (D.idxParamUI + 1) * characterSize - 3, characterSize, str);
+
   sprintf(str, "%.3f s", elapsed_time());
   draw_text(0, 2, characterSize, str);
-  sprintf(str, "win= %dx%d", winW, winH);
-  draw_text(0, winH - characterSize, characterSize, str);
-  sprintf(str, "idxParamUI= %d", D.idxParamUI);
-  draw_text(0, winH - 2 * characterSize, characterSize, str);
-  sprintf(str, "timeVal= %f", D.timeVal);
-  draw_text(0, winH - 3 * characterSize, characterSize, str);
   glLineWidth(1.0f);
 
   // Commit the draw
@@ -134,7 +136,7 @@ void callback_timer(int v) {
   if (D.playAnimation) {
     // Compute animations
     // myFlock.animate(0.02f);
-    mySpaceTimeWorld.animate(0.02f);
+    // mySpaceTimeWorld.animate(0.02f);
 
     // Refresh display and set timer for next frame
     glutPostRedisplay();
@@ -163,16 +165,15 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.playAnimation= !D.playAnimation;
   }
   else if (key == 'r') {
-    mySpaceTimeWorld= SpaceTimeWorld(1, 40, 40, 40, 300, 300, 100);
+    mySpaceTimeWorld= SpaceTimeWorld(
+        int(std::round(D.param[worldNbT______].val)),
+        int(std::round(D.param[worldNbX______].val)),
+        int(std::round(D.param[worldNbY______].val)),
+        int(std::round(D.param[worldNbZ______].val)),
+        int(std::round(D.param[screenNbH_____].val)),
+        int(std::round(D.param[screenNbV_____].val)),
+        int(std::round(D.param[screenNbS_____].val)));
   }
-  // else if (key == 'f') {
-  //   for (unsigned int dim= 0; dim < 3; dim++)
-  //     myFlock.posFood[dim]= float(rand()) / float(RAND_MAX);
-  // }
-  // else if (key == 'p') {
-  //   for (unsigned int dim= 0; dim < 3; dim++)
-  //     myFlock.posPredator[dim]= float(rand()) / float(RAND_MAX);
-  // }
 
   glutPostRedisplay();
 }
@@ -184,13 +185,20 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)y;  // Disable warning unused variable
 
   if (key == GLUT_KEY_UP)
-    D.timeVal*= 9.0 / 8.0;
+    D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 1) % int(D.param.size());
+
   else if (key == GLUT_KEY_DOWN)
-    D.timeVal*= 7.0 / 8.0;
+    D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
+
+  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
+    D.param[D.idxParamUI].val/= 10.0;
   else if (key == GLUT_KEY_LEFT)
-    D.idxParamUI+= 1;
+    D.param[D.idxParamUI].val-= 1.0;
+
+  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
+    D.param[D.idxParamUI].val*= 10.0;
   else if (key == GLUT_KEY_RIGHT)
-    D.idxParamUI-= 1;
+    D.param[D.idxParamUI].val+= 1.0;
 
   glutPostRedisplay();
 }
@@ -282,6 +290,16 @@ void init_GL() {
 void init_scene() {
   // Initialize pseudo random number generator
   srand(time(0));
+
+  // Init UI parameters
+  D.param.push_back(ParamUI("worldNbT______", 1));
+  D.param.push_back(ParamUI("worldNbX______", 40));
+  D.param.push_back(ParamUI("worldNbY______", 40));
+  D.param.push_back(ParamUI("worldNbZ______", 40));
+  D.param.push_back(ParamUI("screenNbH_____", 200));
+  D.param.push_back(ParamUI("screenNbV_____", 200));
+  D.param.push_back(ParamUI("screenNbS_____", 100));
+  D.param.push_back(ParamUI("gravStrength__", 1.e-4));
 
   // Initialize camera and arcball
   cam= new Camera;

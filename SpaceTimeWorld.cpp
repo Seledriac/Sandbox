@@ -14,7 +14,19 @@
 #include "Data.hpp"
 #include "math/Vec.hpp"
 
+
 extern Data D;
+
+
+inline void myVertex3f(math::Vec3 vec) {
+  glVertex3f(float(vec[0]), float(vec[1]), float(vec[2]));
+}
+
+
+inline void myColor3f(math::Vec3 vec) {
+  glColor3f(float(vec[0]), float(vec[1]), float(vec[2]));
+}
+
 
 SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int const iWorldNbY, int const iWorldNbZ,
                                int const iScreenNbH, int const iScreenNbV, int const iScreenNbS) {
@@ -62,9 +74,9 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
           }
           // Compute grav field
           if (!worldSolid[t][x][y][z]) {
-            worldGravi[t][x][y][z]+= D.timeVal * 0.01 * (posBallR - posCell).normalized() / (posBallR - posCell).length2();
-            worldGravi[t][x][y][z]+= D.timeVal * 0.01 * (posBallG - posCell).normalized() / (posBallG - posCell).length2();
-            worldGravi[t][x][y][z]+= D.timeVal * 0.01 * (posBallB - posCell).normalized() / (posBallB - posCell).length2();
+            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallR - posCell).normalized() / (posBallR - posCell).length2();
+            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallG - posCell).normalized() / (posBallG - posCell).length2();
+            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallB - posCell).normalized() / (posBallB - posCell).length2();
           }
         }
       }
@@ -104,14 +116,8 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
 }
 
 
-inline void myVertex3f(math::Vec3 vec) {
-  glVertex3f(float(vec[0]), float(vec[1]), float(vec[2]));
-}
-inline void myColor3f(math::Vec3 vec) {
-  glColor3f(float(vec[0]), float(vec[1]), float(vec[2]));
-}
-
 void SpaceTimeWorld::draw() {
+  // Draw the solid voxels
   glPushMatrix();
   glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
   glTranslatef(0.5f, 0.5f, 0.5f);
@@ -124,35 +130,46 @@ void SpaceTimeWorld::draw() {
           myColor3f(worldColor[0][x][y][z]);
           glutSolidCube(1.0);
         }
-        // else {
-        //   glTranslatef(float(x), float(y), float(z));
-        //   glBegin(GL_LINES);
-        //   glColor3f(0.0f, 0.8f, 0.0f);
-        //   glVertex3f(0.0f, 0.0f, 0.0f);
-        //   glColor3f(1.0f, 0.0f, 0.0f);
-        //   myVertex3f(worldGravi(0, x, y, z));
-        //   glEnd();
-        // }
         glPopMatrix();
       }
     }
   }
   glPopMatrix();
 
-  glPointSize(2.0f);
-  glBegin(GL_POINTS);
+  // // Draw the gravitational field
+  // glBegin(GL_LINES);
+  // for (int x= 0; x < worldNbX; x++) {
+  //   for (int y= 0; y < worldNbY; y++) {
+  //     for (int z= 0; z < worldNbZ; z++) {
+  //       if (!worldSolid[0][x][y][z]) {
+  //         math::Vec3 pos((double(x)+0.5) / double(worldNbX), (double(y)+0.5) / double(worldNbY), (double(z)+0.5) / double(worldNbZ));
+  //         glColor3f(0.0f, 0.8f, 0.0f);
+  //         myVertex3f(pos);
+  //         glColor3f(1.0f, 0.0f, 0.0f);
+  //         myVertex3f(pos + worldGravi[0][x][y][z]);
+  //       }
+  //     }
+  //   }
+  // }
+  // glEnd();
+
+  // Draw the screen
+  glPushMatrix();
+  glTranslatef(1.0f, 0.0f, 0.0f);
+  glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       myColor3f(screenCol[h][v]);
-      glVertex3f(1.0, float(h) / float(screenNbH), float(v) / float(screenNbV));
+      glRectf(float(h) / float(screenNbH), float(v) / float(screenNbV), float(h + 1) / float(screenNbH), float(v + 1) / float(screenNbV));
     }
   }
-  glEnd();
-  glPointSize(1.0f);
+  glPopMatrix();
 
+  // Draw the photon paths
   glBegin(GL_LINES);
-  for (int h= 0; h < screenNbH; h+= 30) {
-    for (int v= 0; v < screenNbV; v+= 30) {
+  int displaySkipsize= 8;
+  for (int h= displaySkipsize / 2; h < screenNbH; h+= screenNbH / displaySkipsize) {
+    for (int v= displaySkipsize / 2; v < screenNbV; v+= screenNbV / displaySkipsize) {
       if (!screenSet[h][v]) continue;
       for (int s= 0; s < screenNbS; s++) {
         myColor3f(screenCol[h][v]);
