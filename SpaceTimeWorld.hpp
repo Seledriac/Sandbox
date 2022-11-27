@@ -22,15 +22,13 @@ class SpaceTimeWorld
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<bool>> screenSet;
   std::vector<std::vector<math::Vec3>> screenCol;
   std::vector<std::vector<int>> screenCount;
 
   std::vector<std::vector<std::vector<math::Vec3>>> photonPos;
   std::vector<std::vector<std::vector<math::Vec3>>> photonVel;
 
-  SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int const iWorldNbY, int const iWorldNbZ,
-                 int const iScreenNbH, int const iScreenNbV, int const iScreenNbS);
+  SpaceTimeWorld();
 
   void draw();
   void animate(double const iTimestep);

@@ -2,6 +2,7 @@
 
 
 // Standard lib
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <ctime>
@@ -49,16 +50,86 @@ class Ball
 };
 
 
-SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int const iWorldNbY, int const iWorldNbZ,
-                               int const iScreenNbH, int const iScreenNbV, int const iScreenNbS) {
-  worldNbT= iWorldNbT;
-  worldNbX= iWorldNbX;
-  worldNbY= iWorldNbY;
-  worldNbZ= iWorldNbZ;
+std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
+  std::vector<std::array<int, 3>> listVoxels;
+  listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
 
-  screenNbH= iScreenNbH;
-  screenNbV= iScreenNbV;
-  screenNbS= iScreenNbS;
+  int dx= abs(x1 - x0);
+  int dy= abs(y1 - y0);
+  int dz= abs(z1 - z0);
+  int xs= (x1 > x0) ? 1 : -1;
+  int ys= (y1 > y0) ? 1 : -1;
+  int zs= (z1 > z0) ? 1 : -1;
+
+  // Driving axis is X-axis
+  if (dx >= dy and dx >= dz) {
+    int p1= 2 * dy - dx;
+    int p2= 2 * dz - dx;
+    while (x0 != x1) {
+      x0+= xs;
+      if (p1 >= 0) {
+        y0+= ys;
+        p1-= 2 * dx;
+      }
+      if (p2 >= 0) {
+        z0+= zs;
+        p2-= 2 * dx;
+      }
+      p1+= 2 * dy;
+      p2+= 2 * dz;
+      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
+    }
+  }
+  // Driving axis is Y-axis
+  else if (dy >= dx and dy >= dz) {
+    int p1= 2 * dx - dy;
+    int p2= 2 * dz - dy;
+    while (y0 != y1) {
+      y0+= ys;
+      if (p1 >= 0) {
+        x0+= xs;
+        p1-= 2 * dy;
+      }
+      if (p2 >= 0) {
+        z0+= zs;
+        p2-= 2 * dy;
+      }
+      p1+= 2 * dx;
+      p2+= 2 * dz;
+      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
+    }
+  }
+  // Driving axis is Z-axis
+  else {
+    int p1= 2 * dy - dz;
+    int p2= 2 * dx - dz;
+    while (z0 != z1) {
+      z0+= zs;
+      if (p1 >= 0) {
+        y0+= ys;
+        p1-= 2 * dz;
+      }
+      if (p2 >= 0) {
+        x0+= xs;
+        p2-= 2 * dz;
+      }
+      p1+= 2 * dy;
+      p2+= 2 * dx;
+      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
+    }
+  }
+  return listVoxels;
+}
+
+
+SpaceTimeWorld::SpaceTimeWorld() {
+  worldNbT= int(std::round(D.param[worldNbT____________].val));
+  worldNbX= int(std::round(D.param[worldNbX____________].val));
+  worldNbY= int(std::round(D.param[worldNbY____________].val));
+  worldNbZ= int(std::round(D.param[worldNbZ____________].val));
+  screenNbH= int(std::round(D.param[screenNbH___________].val));
+  screenNbV= int(std::round(D.param[screenNbV___________].val));
+  screenNbS= int(std::round(D.param[screenNbS___________].val));
 
   worldSolid= std::vector<std::vector<std::vector<std::vector<bool>>>>(worldNbT, std::vector<std::vector<std::vector<bool>>>(worldNbX, std::vector<std::vector<bool>>(worldNbY, std::vector<bool>(worldNbZ, false))));
   worldColor= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
@@ -114,26 +185,33 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
     }
   }
 
-  screenSet= std::vector<std::vector<bool>>(screenNbH, std::vector<bool>(screenNbV, false));
   screenCount= std::vector<std::vector<int>>(screenNbH, std::vector<int>(screenNbV, 1));
   screenCol= std::vector<std::vector<math::Vec3>>(screenNbH, std::vector<math::Vec3>(screenNbV, math::Vec3(0.0, 0.0, 0.0)));
 #pragma omp parallel for
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       for (int s= 0; s < screenNbS - 1; s++) {
-        if (screenSet[h][v]) continue;
-        int worldPosX= std::min(std::max(int(std::floor(photonPos[h][v][s][0] * worldNbX)), 0), worldNbX - 1);
-        int worldPosY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
-        int worldPosZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
-        if (worldSolid[0][worldPosX][worldPosY][worldPosZ]) {
-          double velDif= D.param[ParamType::dopplerStrength_____].val * (photonVel[h][v][0].length() - photonVel[h][v][s].length());
-          screenCol[h][v]= worldColor[0][worldPosX][worldPosY][worldPosZ] * (1 + velDif);
-          screenSet[h][v]= true;
-          continue;
-        }
+        int posBegX= std::min(std::max(int(std::floor(photonPos[h][v][s][0] * worldNbX)), 0), worldNbX - 1);
+        int posBegY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
+        int posBegZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlow[0][worldPosX][worldPosY][worldPosZ] / double(screenNbS);
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlow[0][posBegX][posBegY][posBegZ] / double(screenNbS);
         screenCount[h][v]++;
+        int posEndX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][0] * worldNbX)), 0), worldNbX - 1);
+        int posEndY= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbY)), 0), worldNbY - 1);
+        int posEndZ= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][2] * worldNbZ)), 0), worldNbZ - 1);
+
+        std::vector<std::array<int, 3>> listVox= Bresenham3D(posBegX, posBegY, posBegZ, posEndX, posEndY, posEndZ);
+        bool foundColision= false;
+        for (std::array<int, 3> voxIdx : listVox) {
+          if (worldSolid[0][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
+            double velDif= D.param[ParamType::dopplerStrength_____].val * (photonVel[h][v][0].length() - photonVel[h][v][s].length());
+            screenCol[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1 + velDif);
+            foundColision= true;
+            break;
+          }
+        }
+        if (foundColision) break;
       }
     }
   }
@@ -204,11 +282,11 @@ void SpaceTimeWorld::draw() {
     glBegin(GL_LINES);
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
-        for (int s= 0; s < screenCount[h][v]-1; s++) {
+        for (int s= 0; s < screenCount[h][v] - 1; s++) {
           myColor3f(screenCol[h][v]);
           myVertex3f(photonPos[h][v][s]);
           myColor3f(screenCol[h][v]);
-          myVertex3f(photonPos[h][v][s+1]);
+          myVertex3f(photonPos[h][v][s + 1]);
         }
       }
     }

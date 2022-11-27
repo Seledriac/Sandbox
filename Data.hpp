@@ -42,7 +42,7 @@ class Data
 
   std::vector<ParamUI> param;
 
-  void initParam() {
+  Data() {
     param.clear();
     param.push_back(ParamUI("worldNbT____________", 1));
     param.push_back(ParamUI("worldNbX____________", 50));
@@ -50,7 +50,7 @@ class Data
     param.push_back(ParamUI("worldNbZ____________", 50));
     param.push_back(ParamUI("screenNbH___________", 100));
     param.push_back(ParamUI("screenNbV___________", 100));
-    param.push_back(ParamUI("screenNbS___________", 100));
+    param.push_back(ParamUI("screenNbS___________", 40));
     param.push_back(ParamUI("gravStrength________", 1.0));
     param.push_back(ParamUI("dragStrength________", 1.0));
     param.push_back(ParamUI("dopplerStrength_____", 1.0));

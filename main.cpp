@@ -22,7 +22,7 @@ Camera *cam;
 // Global variables used by the scene
 Data D;
 // Flock myFlock(100, 0.05);
-SpaceTimeWorld mySpaceTimeWorld(0, 0, 0, 0, 0, 0, 0);
+SpaceTimeWorld mySpaceTimeWorld;
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -180,14 +180,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   }
 
   else if (key == 'r') {
-    mySpaceTimeWorld= SpaceTimeWorld(
-        int(std::round(D.param[worldNbT____________].val)),
-        int(std::round(D.param[worldNbX____________].val)),
-        int(std::round(D.param[worldNbY____________].val)),
-        int(std::round(D.param[worldNbZ____________].val)),
-        int(std::round(D.param[screenNbH___________].val)),
-        int(std::round(D.param[screenNbV___________].val)),
-        int(std::round(D.param[screenNbS___________].val)));
+    mySpaceTimeWorld= SpaceTimeWorld();
   }
 
   glutPostRedisplay();
@@ -312,9 +305,6 @@ void init_GL() {
 void init_scene() {
   // Initialize pseudo random number generator
   srand(time(0));
-
-  // Init UI parameters
-  D.initParam();
 
   // Initialize camera and arcball
   cam= new Camera;
