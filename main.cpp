@@ -70,30 +70,30 @@ void callback_display() {
   cam->setWindowSize(float(winW), float(winH));
   glMultMatrixf(cam->getViewMatrix());
 
-  // // Draw the reference frame
-  // glLineWidth(6.0f);
-  // glBegin(GL_LINES);
-  // glColor3f(1.0, 0.0, 0.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(1.0f, 0.0f, 0.0f);
-  // glColor3f(0.0, 1.0, 0.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(0.0f, 1.0f, 0.0f);
-  // glColor3f(0.0, 0.0, 1.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(0.0f, 0.0f, 1.0f);
-  // glEnd();
-  // glLineWidth(1.0f);
-  // glPointSize(15.0f);
-  // glBegin(GL_POINTS);
-  // glColor3f(1.0, 0.0, 0.0);
-  // glVertex3f(1.0f, 0.0f, 0.0f);
-  // glColor3f(0.0, 1.0, 0.0);
-  // glVertex3f(0.0f, 1.0f, 0.0f);
-  // glColor3f(0.0, 0.0, 1.0);
-  // glVertex3f(0.0f, 0.0f, 1.0f);
-  // glEnd();
-  // glPointSize(1.0f);
+  // Draw the reference frame
+  glLineWidth(6.0f);
+  glBegin(GL_LINES);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(1.0f, 0.0f, 0.0f);
+  glColor3f(0.0, 1.0, 0.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 1.0f, 0.0f);
+  glColor3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 1.0f);
+  glEnd();
+  glLineWidth(1.0f);
+  glPointSize(15.0f);
+  glBegin(GL_POINTS);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(1.0f, 0.0f, 0.0f);
+  glColor3f(0.0, 1.0, 0.0);
+  glVertex3f(0.0f, 1.0f, 0.0f);
+  glColor3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0f, 0.0f, 1.0f);
+  glEnd();
+  glPointSize(1.0f);
 
 
   // Draw stuff in the scene
@@ -115,12 +115,14 @@ void callback_display() {
   char str[50];
   int characterSize= 15;
   for (unsigned int k= 0; k < D.param.size(); k++) {
-    sprintf(str, "%s= %4.3e", D.param[k].name.c_str(), D.param[k].val);
-    draw_text(0, winH - (k + 1) * characterSize, characterSize, str);
+    sprintf(str, "%s = %4.6f", D.param[k].name.c_str(), D.param[k].val);
+    draw_text(0, winH - (k + 1) * (characterSize+2), characterSize, str);
   }
   glColor3f(0.8f, 0.3f, 0.3f);
   sprintf(str, "______________");
-  draw_text(0, winH - (D.idxParamUI + 1) * characterSize - 3, characterSize, str);
+  draw_text(0, winH - (D.idxParamUI + 1) * (characterSize+2)-3, characterSize, str);
+  sprintf(str, "______________");
+  draw_text(0, winH - (D.idxParamUI) * (characterSize+2), characterSize, str);
 
   sprintf(str, "%.3f s", elapsed_time());
   draw_text(0, 2, characterSize, str);
@@ -164,15 +166,28 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == ' ') {
     D.playAnimation= !D.playAnimation;
   }
+  else if (key == '1') {
+    D.showWorld= !D.showWorld;
+  }
+  else if (key == '2') {
+    D.showScreen= !D.showScreen;
+  }
+  else if (key == '3') {
+    D.showPhotonPath= !D.showPhotonPath;
+  }
+  else if (key == '4') {
+    D.showGravity= !D.showGravity;
+  }
+
   else if (key == 'r') {
     mySpaceTimeWorld= SpaceTimeWorld(
-        int(std::round(D.param[worldNbT______].val)),
-        int(std::round(D.param[worldNbX______].val)),
-        int(std::round(D.param[worldNbY______].val)),
-        int(std::round(D.param[worldNbZ______].val)),
-        int(std::round(D.param[screenNbH_____].val)),
-        int(std::round(D.param[screenNbV_____].val)),
-        int(std::round(D.param[screenNbS_____].val)));
+        int(std::round(D.param[worldNbT____________].val)),
+        int(std::round(D.param[worldNbX____________].val)),
+        int(std::round(D.param[worldNbY____________].val)),
+        int(std::round(D.param[worldNbZ____________].val)),
+        int(std::round(D.param[screenNbH___________].val)),
+        int(std::round(D.param[screenNbV___________].val)),
+        int(std::round(D.param[screenNbS___________].val)));
   }
 
   glutPostRedisplay();
@@ -186,17 +201,24 @@ void callback_keyboard_special(int key, int x, int y) {
 
   if (key == GLUT_KEY_UP)
     D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 1) % int(D.param.size());
-
   else if (key == GLUT_KEY_DOWN)
     D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
 
   else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
     D.param[D.idxParamUI].val/= 10.0;
+  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
+    D.param[D.idxParamUI].val/= 2.0;
+  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
+    D.param[D.idxParamUI].val-= 10.0;
   else if (key == GLUT_KEY_LEFT)
     D.param[D.idxParamUI].val-= 1.0;
 
   else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
     D.param[D.idxParamUI].val*= 10.0;
+  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
+    D.param[D.idxParamUI].val*= 2.0;
+  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
+    D.param[D.idxParamUI].val+= 10.0;
   else if (key == GLUT_KEY_RIGHT)
     D.param[D.idxParamUI].val+= 1.0;
 
@@ -245,7 +267,7 @@ void callback_mouse_motion(int x, int y) {
 // OpenGL initialization
 void init_GL() {
   // Set background color
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
   // Define light properties
   float global_ambient[]= {1.0f, 1.0f, 1.0f, 1.0f};
@@ -292,18 +314,11 @@ void init_scene() {
   srand(time(0));
 
   // Init UI parameters
-  D.param.push_back(ParamUI("worldNbT______", 1));
-  D.param.push_back(ParamUI("worldNbX______", 40));
-  D.param.push_back(ParamUI("worldNbY______", 40));
-  D.param.push_back(ParamUI("worldNbZ______", 40));
-  D.param.push_back(ParamUI("screenNbH_____", 200));
-  D.param.push_back(ParamUI("screenNbV_____", 200));
-  D.param.push_back(ParamUI("screenNbS_____", 100));
-  D.param.push_back(ParamUI("gravStrength__", 1.e-4));
+  D.initParam();
 
   // Initialize camera and arcball
   cam= new Camera;
-  cam->setEye(2.5f, 1.5f, 1.5f);
+  cam->setEye(2.0f, 2.5f, 1.5f);
   cam->setCenter(0.5f, 0.5f, 0.5f);
 }
 

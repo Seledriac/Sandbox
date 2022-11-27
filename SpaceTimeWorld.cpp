@@ -28,6 +28,27 @@ inline void myColor3f(math::Vec3 vec) {
 }
 
 
+class Ball
+{
+  public:
+  math::Vec3 pos;
+  math::Vec3 col;
+  math::Vec3 spin;
+  double rad;
+
+  Ball(
+      math::Vec3 const iPos,
+      math::Vec3 const iCol,
+      math::Vec3 const iSpin,
+      double const iRad) {
+    pos= iPos;
+    col= iCol;
+    spin= iSpin / iSpin.length();
+    rad= iRad;
+  }
+};
+
+
 SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int const iWorldNbY, int const iWorldNbZ,
                                int const iScreenNbH, int const iScreenNbV, int const iScreenNbS) {
   worldNbT= iWorldNbT;
@@ -41,42 +62,43 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
 
   worldSolid= std::vector<std::vector<std::vector<std::vector<bool>>>>(worldNbT, std::vector<std::vector<std::vector<bool>>>(worldNbX, std::vector<std::vector<bool>>(worldNbY, std::vector<bool>(worldNbZ, false))));
   worldColor= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
-  worldGravi= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
+  worldFlow= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
+
+  std::vector<Ball> balls;
+  balls.push_back(Ball(math::Vec3(0.5, 0.5, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          math::Vec3 posCell(double(x) / double(worldNbX), double(y) / double(worldNbY), double(z) / double(worldNbZ));
-          // Add back checkerboard layer
+          math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+          // Add background layer
           if (x == 0) {
             worldSolid[t][x][y][z]= true;
             if (y % 10 == 0 || y % 10 == 9 || z % 10 == 0 || z % 10 == 9)
               worldColor[t][x][y][z].set(0.2, 0.2, 0.2);
             else
-              worldColor[t][x][y][z].set(0.5, 0.5, 0.5);
+              worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
           }
           // Add balls
-          double radBall= 0.15;
-          math::Vec3 posBallR(0.2, 0.5, 0.6);
-          if ((posCell - posBallR).length2() < radBall * radBall) {
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(4.0 * (posCell[0] - posBallR[0] + radBall), 0.0, 0.0);
-          }
-          math::Vec3 posBallG(0.6, 0.3, 0.2);
-          if ((posCell - posBallG).length2() < radBall * radBall) {
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(0.0, 3.0 * (posCell[0] - posBallG[0] + radBall), 0.0);
-          }
-          math::Vec3 posBallB(0.4, 0.8, 0.3);
-          if ((posCell - posBallB).length2() < radBall * radBall) {
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(0.0, 0.0, 3.0 * (posCell[0] - posBallB[0] + radBall));
-          }
-          // Compute grav field
-          if (!worldSolid[t][x][y][z]) {
-            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallR - posCell).normalized() / (posBallR - posCell).length2();
-            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallG - posCell).normalized() / (posBallG - posCell).length2();
-            worldGravi[t][x][y][z]+= D.param[ParamType::gravStrength__].val * (posBallB - posCell).normalized() / (posBallB - posCell).length2();
+          for (Ball ball : balls) {
+            // Set voxel presence and colors
+            if ((posCell - ball.pos).length2() < ball.rad * ball.rad) {
+              worldSolid[t][x][y][z]= true;
+              worldColor[t][x][y][z]= ball.col;
+            }
+
+            // Compute inward gravitational pull
+            if (!worldSolid[t][x][y][z]) {
+              worldFlow[t][x][y][z]+= D.param[ParamType::gravStrength________].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).length2();
+            }
+
+            // Compute frame dragging
+            if (!worldSolid[t][x][y][z]) {
+              math::Vec3 vec= (ball.pos - posCell).normalized();
+              math::Vec3 dir= vec.cross(ball.spin).normalized();
+              worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).length2();
+            }
           }
         }
       }
@@ -88,11 +110,12 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       photonPos[h][v][0]= math::Vec3(1.0, (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
-      photonVel[h][v][0]= math::Vec3(-2.0 / double(screenNbS), 0.0, 0.0);
+      photonVel[h][v][0]= math::Vec3(-3.0, 0.0, 0.0);
     }
   }
 
   screenSet= std::vector<std::vector<bool>>(screenNbH, std::vector<bool>(screenNbV, false));
+  screenCount= std::vector<std::vector<int>>(screenNbH, std::vector<int>(screenNbV, 1));
   screenCol= std::vector<std::vector<math::Vec3>>(screenNbH, std::vector<math::Vec3>(screenNbV, math::Vec3(0.0, 0.0, 0.0)));
 #pragma omp parallel for
   for (int h= 0; h < screenNbH; h++) {
@@ -103,13 +126,14 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
         int worldPosY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
         int worldPosZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
         if (worldSolid[0][worldPosX][worldPosY][worldPosZ]) {
-          screenCol[h][v]= worldColor[0][worldPosX][worldPosY][worldPosZ];
+          double velDif= D.param[ParamType::dopplerStrength_____].val * (photonVel[h][v][0].length() - photonVel[h][v][s].length());
+          screenCol[h][v]= worldColor[0][worldPosX][worldPosY][worldPosZ] * (1 + velDif);
           screenSet[h][v]= true;
           continue;
         }
-        photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s];
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldGravi[0][worldPosX][worldPosY][worldPosZ];
-        photonVel[h][v][s + 1].normalize(2.0 / double(screenNbS));
+        photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlow[0][worldPosX][worldPosY][worldPosZ] / double(screenNbS);
+        screenCount[h][v]++;
       }
     }
   }
@@ -118,68 +142,90 @@ SpaceTimeWorld::SpaceTimeWorld(int const iWorldNbT, int const iWorldNbX, int con
 
 void SpaceTimeWorld::draw() {
   // Draw the solid voxels
-  glPushMatrix();
-  glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
-  glTranslatef(0.5f, 0.5f, 0.5f);
-  for (int x= 0; x < worldNbX; x++) {
-    for (int y= 0; y < worldNbY; y++) {
-      for (int z= 0; z < worldNbZ; z++) {
-        glPushMatrix();
-        if (worldSolid[0][x][y][z]) {
-          glTranslatef(float(x), float(y), float(z));
-          myColor3f(worldColor[0][x][y][z]);
-          glutSolidCube(1.0);
+  if (D.showWorld) {
+    glPushMatrix();
+    glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
+    glTranslatef(0.5f, 0.5f, 0.5f);
+    for (int x= 0; x < worldNbX; x++) {
+      for (int y= 0; y < worldNbY; y++) {
+        for (int z= 0; z < worldNbZ; z++) {
+          glPushMatrix();
+          if (worldSolid[0][x][y][z]) {
+            glTranslatef(float(x), float(y), float(z));
+            myColor3f(worldColor[0][x][y][z]);
+            glutSolidCube(1.0);
+          }
+          glPopMatrix();
         }
-        glPopMatrix();
       }
     }
+    glPopMatrix();
   }
-  glPopMatrix();
 
-  // // Draw the gravitational field
-  // glBegin(GL_LINES);
-  // for (int x= 0; x < worldNbX; x++) {
-  //   for (int y= 0; y < worldNbY; y++) {
-  //     for (int z= 0; z < worldNbZ; z++) {
-  //       if (!worldSolid[0][x][y][z]) {
-  //         math::Vec3 pos((double(x)+0.5) / double(worldNbX), (double(y)+0.5) / double(worldNbY), (double(z)+0.5) / double(worldNbZ));
-  //         glColor3f(0.0f, 0.8f, 0.0f);
-  //         myVertex3f(pos);
-  //         glColor3f(1.0f, 0.0f, 0.0f);
-  //         myVertex3f(pos + worldGravi[0][x][y][z]);
-  //       }
-  //     }
-  //   }
-  // }
-  // glEnd();
+  // Draw the gravitational field
+  if (D.showGravity) {
+    glBegin(GL_LINES);
+
+    int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 1000, 1.0 / 3.0);
+    for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
+      for (int y= displaySkipsize / 2; y < worldNbY; y+= displaySkipsize) {
+        for (int z= displaySkipsize / 2; z < worldNbZ; z+= displaySkipsize) {
+          if (!worldSolid[0][x][y][z]) {
+            math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+            glColor3f(0.0f, 0.8f, 0.0f);
+            myVertex3f(pos);
+            glColor3f(1.0f, 0.0f, 0.0f);
+            myVertex3f(pos + worldFlow[0][x][y][z]);
+          }
+        }
+      }
+    }
+    glEnd();
+  }
 
   // Draw the screen
-  glPushMatrix();
-  glTranslatef(1.0f, 0.0f, 0.0f);
-  glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
-  for (int h= 0; h < screenNbH; h++) {
-    for (int v= 0; v < screenNbV; v++) {
-      myColor3f(screenCol[h][v]);
-      glRectf(float(h) / float(screenNbH), float(v) / float(screenNbV), float(h + 1) / float(screenNbH), float(v + 1) / float(screenNbV));
-    }
-  }
-  glPopMatrix();
-
-  // Draw the photon paths
-  glBegin(GL_LINES);
-  int displaySkipsize= 8;
-  for (int h= displaySkipsize / 2; h < screenNbH; h+= screenNbH / displaySkipsize) {
-    for (int v= displaySkipsize / 2; v < screenNbV; v+= screenNbV / displaySkipsize) {
-      if (!screenSet[h][v]) continue;
-      for (int s= 0; s < screenNbS; s++) {
+  if (D.showScreen) {
+    glPushMatrix();
+    glTranslatef(1.0f, 0.0f, 0.0f);
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+    for (int h= 0; h < screenNbH; h++) {
+      for (int v= 0; v < screenNbV; v++) {
         myColor3f(screenCol[h][v]);
-        myVertex3f(photonPos[h][v][s]);
-        myColor3f(screenCol[h][v]);
-        myVertex3f(photonPos[h][v][s] + photonVel[h][v][s]);
+        glRectf(float(h) / float(screenNbH), float(v) / float(screenNbV), float(h + 1) / float(screenNbH), float(v + 1) / float(screenNbV));
       }
     }
+    glPopMatrix();
   }
-  glEnd();
+
+  // Draw the photon paths
+  if (D.showPhotonPath) {
+    int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 100);
+    glBegin(GL_LINES);
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+        for (int s= 0; s < screenCount[h][v]-1; s++) {
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos[h][v][s]);
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos[h][v][s+1]);
+        }
+      }
+    }
+    glEnd();
+    // glPointSize(3.0f);
+    // glBegin(GL_POINTS);
+    // for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+    //   for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+    //     for (int s= 0; s < screenCount[h][v]; s++) {
+    //       myColor3f(screenCol[h][v]);
+    //       myVertex3f(photonPos[h][v][s]);
+    //     }
+    //   }
+    // }
+    // glEnd();
+    // glPointSize(1.0f);
+  }
 }
 
 
