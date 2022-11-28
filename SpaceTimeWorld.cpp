@@ -135,8 +135,11 @@ SpaceTimeWorld::SpaceTimeWorld() {
   worldColor= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
   worldFlow= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
 
+  // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(math::Vec3(0.5, 0.5, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.6, 0.3, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.3, 0.5, 0.7), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 1.0), 0.1));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {

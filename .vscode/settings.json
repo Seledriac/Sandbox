@@ -4,6 +4,11 @@
       "cwd": "f:\\dev\\Sandbox",
       "binaryPath": "f:\\dev\\Sandbox\\main.exe",
       "binaryArgs": []
+    },
+    {
+      "cwd": "e:\\dev\\Sandbox",
+      "binaryPath": "e:\\dev\\Sandbox\\main.exe",
+      "binaryArgs": []
     }
   ],
   "files.associations": {
