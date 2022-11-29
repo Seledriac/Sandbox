@@ -137,9 +137,9 @@ SpaceTimeWorld::SpaceTimeWorld() {
 
   // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(math::Vec3(0.6, 0.3, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.7, 0.4, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
   balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
-  balls.push_back(Ball(math::Vec3(0.3, 0.5, 0.7), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 1.0), 0.1));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -281,7 +281,7 @@ void SpaceTimeWorld::draw() {
 
   // Draw the photon paths
   if (D.showPhotonPath) {
-    int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 100);
+    int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
     glBegin(GL_LINES);
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
@@ -294,18 +294,6 @@ void SpaceTimeWorld::draw() {
       }
     }
     glEnd();
-    // glPointSize(3.0f);
-    // glBegin(GL_POINTS);
-    // for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
-    //   for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
-    //     for (int s= 0; s < screenCount[h][v]; s++) {
-    //       myColor3f(screenCol[h][v]);
-    //       myVertex3f(photonPos[h][v][s]);
-    //     }
-    //   }
-    // }
-    // glEnd();
-    // glPointSize(1.0f);
   }
 }
 

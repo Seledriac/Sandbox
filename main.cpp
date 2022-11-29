@@ -124,6 +124,7 @@ void callback_display() {
   sprintf(str, "______________");
   draw_text(0, winH - (D.idxParamUI) * (characterSize+2), characterSize, str);
 
+  glColor3f(0.8f, 0.8f, 0.8f);
   sprintf(str, "%.3f s", elapsed_time());
   draw_text(0, 2, characterSize, str);
   glLineWidth(1.0f);
