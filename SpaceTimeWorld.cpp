@@ -138,8 +138,8 @@ SpaceTimeWorld::SpaceTimeWorld() {
   // Create balls
   std::vector<Ball> balls;
   balls.push_back(Ball(math::Vec3(0.7, 0.4, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
-  balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
-  balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.05));
+  balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 0.0), 0.1));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -169,9 +169,11 @@ SpaceTimeWorld::SpaceTimeWorld() {
 
             // Compute frame dragging
             if (!worldSolid[t][x][y][z]) {
-              math::Vec3 vec= (ball.pos - posCell).normalized();
-              math::Vec3 dir= vec.cross(ball.spin).normalized();
-              worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).length2();
+              if (ball.spin.length2() > 0.0) {
+                math::Vec3 vec= (ball.pos - posCell).normalized();
+                math::Vec3 dir= vec.cross(ball.spin).normalized();
+                worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).length2();
+              }
             }
           }
         }
