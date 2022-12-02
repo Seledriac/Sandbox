@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 
@@ -28,7 +30,7 @@ enum ParamType
   cursorPosZ__________,
   gravStrength________,
   dragStrength________,
-  dopplerStrength_____,
+  dopplerShift________,
   testVar0____________,
   testVar1____________,
   testVar2____________,
@@ -49,8 +51,8 @@ class Data
   bool showWorld= true;
   bool showScreen= true;
   bool showPhotonPath= false;
-  bool showGravity= false;
   bool showCursor= true;
+  bool showGravity= false;
 
   int idxParamUI= 0;
 
@@ -65,12 +67,12 @@ class Data
     param.push_back(ParamUI("screenNbH___________", 100));
     param.push_back(ParamUI("screenNbV___________", 100));
     param.push_back(ParamUI("screenNbS___________", 40));
-    param.push_back(ParamUI("cursorPosX__________", 1));
-    param.push_back(ParamUI("cursorPosY__________", 1));
-    param.push_back(ParamUI("cursorPosZ__________", 1));
+    param.push_back(ParamUI("cursorPosX__________", 50));
+    param.push_back(ParamUI("cursorPosY__________", 50));
+    param.push_back(ParamUI("cursorPosZ__________", 50));
     param.push_back(ParamUI("gravStrength________", 1.0));
     param.push_back(ParamUI("dragStrength________", 1.0));
-    param.push_back(ParamUI("dopplerStrength_____", 1.0));
+    param.push_back(ParamUI("dopplerShift________", 1.0));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));

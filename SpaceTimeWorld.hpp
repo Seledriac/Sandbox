@@ -3,6 +3,7 @@
 
 // Standard lib
 #include <vector>
+#include <array>
 
 // Project lib
 #include "math/Vec.hpp"
@@ -15,6 +16,8 @@ class SpaceTimeWorld
   int worldNbX;
   int worldNbY;
   int worldNbZ;
+  std::array<double, 3> worldBBoxMin;
+  std::array<double, 3> worldBBoxMax;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
   std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldColor;
   std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldFlow;
@@ -31,5 +34,4 @@ class SpaceTimeWorld
   SpaceTimeWorld();
 
   void draw();
-  void animate(double const iTimestep);
 };

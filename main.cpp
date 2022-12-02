@@ -72,7 +72,7 @@ void callback_display() {
   glMultMatrixf(cam->getViewMatrix());
 
   // Draw the reference frame
-  glLineWidth(6.0f);
+  glLineWidth(3.0f);
   glBegin(GL_LINES);
   glColor3f(1.0, 0.0, 0.0);
   glVertex3f(0.0f, 0.0f, 0.0f);
@@ -85,7 +85,7 @@ void callback_display() {
   glVertex3f(0.0f, 0.0f, 1.0f);
   glEnd();
   glLineWidth(1.0f);
-  glPointSize(15.0f);
+  glPointSize(6.0f);
   glBegin(GL_POINTS);
   glColor3f(1.0, 0.0, 0.0);
   glVertex3f(1.0f, 0.0f, 0.0f);
@@ -177,6 +177,9 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.showPhotonPath= !D.showPhotonPath;
   }
   else if (key == '4') {
+    D.showCursor= !D.showCursor;
+  }
+  else if (key == '5') {
     D.showGravity= !D.showGravity;
   }
 
@@ -207,7 +210,7 @@ void callback_keyboard_special(int key, int x, int y) {
   else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
     D.param[D.idxParamUI].val/= 2.0;
   else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
-    D.param[D.idxParamUI].val-= 10.0;
+    D.param[D.idxParamUI].val-= 0.01;
   else if (key == GLUT_KEY_LEFT)
     D.param[D.idxParamUI].val-= 1.0;
 
@@ -216,9 +219,12 @@ void callback_keyboard_special(int key, int x, int y) {
   else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
     D.param[D.idxParamUI].val*= 2.0;
   else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
-    D.param[D.idxParamUI].val+= 10.0;
+    D.param[D.idxParamUI].val+= 0.01;
   else if (key == GLUT_KEY_RIGHT)
     D.param[D.idxParamUI].val+= 1.0;
+
+  if (D.playAnimation)
+    mySpaceTimeWorld= SpaceTimeWorld();
 
   glutPostRedisplay();
 }
@@ -260,8 +266,11 @@ void callback_mouse_motion(int x, int y) {
 // Mouse motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
-  if (x < 300)
-    D.idxParamUI= std::min(std::max((y - 3) / (characterSize + 2), 0), int(D.param.size()) - 1);
+  if (x < 180) {
+    int targetParam= (y - 3) / (characterSize + 2);
+    if (targetParam >= 0 && targetParam < int(D.param.size()))
+      D.idxParamUI= targetParam;
+  }
 
   if (D.idxParamUI != prevParamIdx)
     glutPostRedisplay();

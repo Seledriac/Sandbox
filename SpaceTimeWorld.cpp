@@ -13,8 +13,12 @@
 
 // Project lib
 #include "Data.hpp"
+#include "SrtFileInput.hpp"
+#include "SrtUtil.hpp"
 #include "math/Vec.hpp"
 
+
+using std::vector;
 
 extern Data D;
 
@@ -44,14 +48,14 @@ class Ball
       double const iRad) {
     pos= iPos;
     col= iCol;
-    spin= iSpin / iSpin.length();
+    spin= iSpin / iSpin.norm2();
     rad= iRad;
   }
 };
 
 
-std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
-  std::vector<std::array<int, 3>> listVoxels;
+vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
+  vector<std::array<int, 3>> listVoxels;
   listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
 
   int dx= abs(x1 - x0);
@@ -131,17 +135,21 @@ SpaceTimeWorld::SpaceTimeWorld() {
   screenNbV= int(std::round(D.param[screenNbV___________].val));
   screenNbS= int(std::round(D.param[screenNbS___________].val));
 
-  worldSolid= std::vector<std::vector<std::vector<std::vector<bool>>>>(worldNbT, std::vector<std::vector<std::vector<bool>>>(worldNbX, std::vector<std::vector<bool>>(worldNbY, std::vector<bool>(worldNbZ, false))));
-  worldColor= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
-  worldFlow= std::vector<std::vector<std::vector<std::vector<math::Vec3>>>>(worldNbT, std::vector<std::vector<std::vector<math::Vec3>>>(worldNbX, std::vector<std::vector<math::Vec3>>(worldNbY, std::vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
+  worldSolid= vector<vector<vector<vector<bool>>>>(worldNbT, vector<vector<vector<bool>>>(worldNbX, vector<vector<bool>>(worldNbY, vector<bool>(worldNbZ, false))));
+  worldColor= vector<vector<vector<vector<math::Vec3>>>>(worldNbT, vector<vector<vector<math::Vec3>>>(worldNbX, vector<vector<math::Vec3>>(worldNbY, vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
+  worldFlow= vector<vector<vector<vector<math::Vec3>>>>(worldNbT, vector<vector<vector<math::Vec3>>>(worldNbX, vector<vector<math::Vec3>>(worldNbY, vector<math::Vec3>(worldNbZ, math::Vec3(0.0, 0.0, 0.0)))));
+
+  worldBBoxMin= {0.0, 0.0, 0.0};
+  worldBBoxMax= {1.0, 1.0, 1.0};
 
   // Create balls
-  std::vector<Ball> balls;
+  vector<Ball> balls;
   // balls.push_back(Ball(math::Vec3(0.7, 0.4, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
   // balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.05));
   // balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 0.0), 0.1));
 
-  balls.push_back(Ball(math::Vec3(0.5, 0.5, 0.5), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.1));
+  math::Vec3 tempPos(D.param[ParamType::testVar0____________].val, D.param[ParamType::testVar1____________].val, D.param[ParamType::testVar2____________].val);
+  balls.push_back(Ball(tempPos, math::Vec3(0.0, 0.6, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -152,30 +160,29 @@ SpaceTimeWorld::SpaceTimeWorld() {
           if (x == 0) {
             worldSolid[t][x][y][z]= true;
             if (y % 10 == 0 || y % 10 == 9 || z % 10 == 0 || z % 10 == 9)
-              worldColor[t][x][y][z].set(0.2, 0.2, 0.2);
-            else
               worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+            else
+              worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
           }
           // Add balls
           for (Ball ball : balls) {
             // Set voxel presence and colors
-            if ((posCell - ball.pos).length2() < ball.rad * ball.rad) {
+            if ((posCell - ball.pos).norm2Squared() < ball.rad * ball.rad) {
               worldSolid[t][x][y][z]= true;
-              worldColor[t][x][y][z]= ball.col;
+              worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
             }
 
             // Compute inward gravitational pull
             if (!worldSolid[t][x][y][z]) {
-              worldFlow[t][x][y][z]+= D.param[ParamType::gravStrength________].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).length2();
+              worldFlow[t][x][y][z]+= D.param[ParamType::gravStrength________].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).norm2Squared();
             }
 
             // Compute frame dragging
             if (!worldSolid[t][x][y][z]) {
-              if (ball.spin.length2() > 0.0) {
+              if (ball.spin.norm2Squared() > 0.0) {
                 math::Vec3 vec= (posCell - ball.pos).normalized();
                 math::Vec3 dir= ball.spin.cross(vec).normalized();
-                // worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::pow(vec.dot(ball.spin), 2.0)) * dir / (ball.pos - posCell).length2();
-                worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).length2();
+                worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).norm2Squared();
               }
             }
           }
@@ -184,8 +191,33 @@ SpaceTimeWorld::SpaceTimeWorld() {
     }
   }
 
-  photonPos= std::vector<std::vector<std::vector<math::Vec3>>>(screenNbH, std::vector<std::vector<math::Vec3>>(screenNbV, std::vector<math::Vec3>(screenNbS, math::Vec3(-1.0, -1.0, -1.0))));
-  photonVel= std::vector<std::vector<std::vector<math::Vec3>>>(screenNbH, std::vector<std::vector<math::Vec3>>(screenNbV, std::vector<math::Vec3>(screenNbS, math::Vec3(0.0, 0.0, 0.0))));
+
+  // // Load PNG image for the background
+  // std::vector<std::vector<std::vector<double>>> loadedRField, loadedGField, loadedBField, loadedAField;
+  // try {
+  //   SrtFileInput::LoadRGBAFieldImagePNGFile("HubbleDeepField.png", loadedRField, loadedGField, loadedBField, loadedAField, true);
+  // } catch (...) {
+  // }
+  // double stepX, stepY, stepZ;
+  // double startX, startY, startZ;
+  // SrtUtil::GetVoxelSizes(worldNbX, worldNbY, worldNbZ, worldBBoxMin, worldBBoxMax, true, stepX, stepY, stepZ);
+  // SrtUtil::GetVoxelStart(worldBBoxMin, worldBBoxMax, stepX, stepY, stepZ, true, startX, startY, startZ);
+  // for (int x= 0; x < worldNbX; x++) {
+  //   for (int y= 0; y < worldNbY; y++) {
+  //     for (int z= 0; z < worldNbZ; z++) {
+  //       Eigen::Vector3d pos(double(x) * stepX + startX, double(y) * stepY + startY, double(z) * stepZ + startZ);
+  //       double r= SrtUtil::GetScalarFieldVal(loadedRField, pos, true, worldBBoxMin, worldBBoxMax);
+  //       double g= SrtUtil::GetScalarFieldVal(loadedGField, pos, true, worldBBoxMin, worldBBoxMax);
+  //       double b= SrtUtil::GetScalarFieldVal(loadedBField, pos, true, worldBBoxMin, worldBBoxMax);
+  //       if (x == 0)
+  //         worldColor[0][x][y][z].set(r, g, b);
+  //     }
+  //   }
+  // }
+
+
+  photonPos= vector<vector<vector<math::Vec3>>>(screenNbH, vector<vector<math::Vec3>>(screenNbV, vector<math::Vec3>(screenNbS, math::Vec3(-1.0, -1.0, -1.0))));
+  photonVel= vector<vector<vector<math::Vec3>>>(screenNbH, vector<vector<math::Vec3>>(screenNbV, vector<math::Vec3>(screenNbS, math::Vec3(0.0, 0.0, 0.0))));
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       photonPos[h][v][0]= math::Vec3(1.0, (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
@@ -193,27 +225,27 @@ SpaceTimeWorld::SpaceTimeWorld() {
     }
   }
 
-  screenCount= std::vector<std::vector<int>>(screenNbH, std::vector<int>(screenNbV, 1));
-  screenCol= std::vector<std::vector<math::Vec3>>(screenNbH, std::vector<math::Vec3>(screenNbV, math::Vec3(0.0, 0.0, 0.0)));
+  screenCount= vector<vector<int>>(screenNbH, vector<int>(screenNbV, 1));
+  screenCol= vector<vector<math::Vec3>>(screenNbH, vector<math::Vec3>(screenNbV, math::Vec3(0.0, 0.0, 0.0)));
 #pragma omp parallel for
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       for (int s= 0; s < screenNbS - 1; s++) {
-        int posBegX= std::min(std::max(int(std::floor(photonPos[h][v][s][0] * worldNbX)), 0), worldNbX - 1);
-        int posBegY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
-        int posBegZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
+        int begX= std::min(std::max(int(std::floor(photonPos[h][v][s][0] * worldNbX)), 0), worldNbX - 1);
+        int begY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
+        int begZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlow[0][posBegX][posBegY][posBegZ] / double(screenNbS);
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlow[0][begX][begY][begZ] / double(screenNbS);
         screenCount[h][v]++;
-        int posEndX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][0] * worldNbX)), 0), worldNbX - 1);
-        int posEndY= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbY)), 0), worldNbY - 1);
-        int posEndZ= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][2] * worldNbZ)), 0), worldNbZ - 1);
+        int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][0] * worldNbX)), 0), worldNbX - 1);
+        int endY= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbY)), 0), worldNbY - 1);
+        int endZ= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][2] * worldNbZ)), 0), worldNbZ - 1);
 
-        std::vector<std::array<int, 3>> listVox= Bresenham3D(posBegX, posBegY, posBegZ, posEndX, posEndY, posEndZ);
+        vector<std::array<int, 3>> listVox= Bresenham3D(begX, begY, begZ, endX, endY, endZ);
         bool foundColision= false;
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[0][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            double velDif= D.param[ParamType::dopplerStrength_____].val * (photonVel[h][v][0].length() - photonVel[h][v][s].length());
+            double velDif= D.param[ParamType::dopplerShift________].val * (photonVel[h][v][0].norm2() - photonVel[h][v][s].norm2());
             screenCol[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1 + velDif);
             foundColision= true;
             break;
@@ -333,9 +365,4 @@ void SpaceTimeWorld::draw() {
     glEnd();
     glPointSize(1.0f);
   }
-}
-
-
-void SpaceTimeWorld::animate(double const iTimestep) {
-  (void)iTimestep;
 }

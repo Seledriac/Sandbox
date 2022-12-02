@@ -65,6 +65,19 @@
     "xstddef": "cpp",
     "xstring": "cpp",
     "xtr1common": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "dense": "cpp",
+    "chrono": "cpp",
+    "complex": "cpp",
+    "iostream": "cpp",
+    "list": "cpp",
+    "map": "cpp",
+    "queue": "cpp",
+    "ratio": "cpp",
+    "set": "cpp",
+    "xthread": "cpp",
+    "thread": "cpp",
+    "xhash": "cpp",
+    "xtree": "cpp"
   }
 }

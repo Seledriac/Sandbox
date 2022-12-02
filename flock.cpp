@@ -75,7 +75,7 @@ void Flock::animate(float t) {
     int count= 0;
     math::Vec3 sep, ali, coh, aim, run;
     for (int j= 0; j < nb_boids; j++) {
-      if ((boids[i].p - boids[j].p).length2() > size * size) continue;
+      if ((boids[i].p - boids[j].p).norm2Squared() > size * size) continue;
       if (i == j) continue;
       ali= ali + boids[j].v;
       coh= coh + boids[j].p;
@@ -87,7 +87,7 @@ void Flock::animate(float t) {
       coh= coh / count - boids[i].p;
     }
     aim= posFood - boids[i].p;
-    if ((boids[i].p - posPredator).length2() < (5.0 * size) * (5.0 * size))
+    if ((boids[i].p - posPredator).norm2Squared() < (5.0 * size) * (5.0 * size))
       run= boids[i].p - posPredator;
 
     velocityChange[i]= a * sep + b * ali + c * coh + d * aim + e * run;
@@ -96,7 +96,7 @@ void Flock::animate(float t) {
   // Apply the forces
   for (int i= 0; i < nb_boids; i++) {
     boids[i].v+= velocityChange[i];
-    float l= boids[i].v.length();
+    float l= boids[i].v.norm2();
     if (l > 0.3) {
       boids[i].v= 0.3 * boids[i].v / l;
     }
