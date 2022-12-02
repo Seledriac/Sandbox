@@ -137,9 +137,11 @@ SpaceTimeWorld::SpaceTimeWorld() {
 
   // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(math::Vec3(0.7, 0.4, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
-  balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.05));
-  balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 0.0), 0.1));
+  // balls.push_back(Ball(math::Vec3(0.7, 0.4, 0.5), math::Vec3(0.6, 0.0, 0.0), math::Vec3(0.0, 0.0, 1.0), 0.1));
+  // balls.push_back(Ball(math::Vec3(0.5, 0.7, 0.3), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.05));
+  // balls.push_back(Ball(math::Vec3(0.2, 0.5, 0.6), math::Vec3(0.0, 0.0, 0.6), math::Vec3(0.0, 0.0, 0.0), 0.1));
+
+  balls.push_back(Ball(math::Vec3(0.5, 0.5, 0.5), math::Vec3(0.0, 0.6, 0.0), math::Vec3(1.0, 0.0, 0.0), 0.1));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -170,8 +172,9 @@ SpaceTimeWorld::SpaceTimeWorld() {
             // Compute frame dragging
             if (!worldSolid[t][x][y][z]) {
               if (ball.spin.length2() > 0.0) {
-                math::Vec3 vec= (ball.pos - posCell).normalized();
-                math::Vec3 dir= vec.cross(ball.spin).normalized();
+                math::Vec3 vec= (posCell - ball.pos).normalized();
+                math::Vec3 dir= ball.spin.cross(vec).normalized();
+                // worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::pow(vec.dot(ball.spin), 2.0)) * dir / (ball.pos - posCell).length2();
                 worldFlow[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).length2();
               }
             }
@@ -296,6 +299,39 @@ void SpaceTimeWorld::draw() {
       }
     }
     glEnd();
+    glPointSize(3.0f);
+    glBegin(GL_POINTS);
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+        for (int s= 0; s < screenCount[h][v]; s++) {
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos[h][v][s]);
+        }
+      }
+    }
+    glEnd();
+    glPointSize(1.0f);
+  }
+
+  if (D.showCursor) {
+    int h= std::min(std::max(int(D.param[ParamType::cursorPosY__________].val), 0), screenNbH - 1);
+    int v= std::min(std::max(int(D.param[ParamType::cursorPosZ__________].val), 0), screenNbV - 1);
+    glBegin(GL_LINES);
+    for (int s= 0; s < screenCount[h][v] - 1; s++) {
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos[h][v][s]);
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos[h][v][s + 1]);
+    }
+    glEnd();
+    glPointSize(3.0f);
+    glBegin(GL_POINTS);
+    for (int s= 0; s < screenCount[h][v]; s++) {
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos[h][v][s]);
+    }
+    glEnd();
+    glPointSize(1.0f);
   }
 }
 

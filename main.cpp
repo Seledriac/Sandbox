@@ -17,6 +17,7 @@
 // Global variables used for the display
 unsigned int winFPS= 60;
 int winW, winH;
+int characterSize= 13;
 Camera *cam;
 
 // Global variables used by the scene
@@ -43,7 +44,7 @@ float elapsed_time() {
 }
 
 
-void draw_text(int const x, int const y, int const characterSize, char *const text) {
+void draw_text(int const x, int const y, char *const text) {
   glPushMatrix();
   glTranslatef(float(x), float(y), 0.0f);
   glScalef(float(characterSize) / 152.38f, float(characterSize) / 152.38f, float(characterSize) / 152.38f);
@@ -113,20 +114,19 @@ void callback_display() {
   glLineWidth(2.0f);
   glColor3f(0.8f, 0.8f, 0.8f);
   char str[50];
-  int characterSize= 15;
   for (unsigned int k= 0; k < D.param.size(); k++) {
     sprintf(str, "%s = %4.6f", D.param[k].name.c_str(), D.param[k].val);
-    draw_text(0, winH - (k + 1) * (characterSize+2), characterSize, str);
+    draw_text(0, winH - (k + 1) * (characterSize + 2), str);
   }
   glColor3f(0.8f, 0.3f, 0.3f);
-  sprintf(str, "______________");
-  draw_text(0, winH - (D.idxParamUI + 1) * (characterSize+2)-3, characterSize, str);
-  sprintf(str, "______________");
-  draw_text(0, winH - (D.idxParamUI) * (characterSize+2), characterSize, str);
+  sprintf(str, "____________________");
+  draw_text(0, winH - (D.idxParamUI + 1) * (characterSize + 2) - 3, str);
+  sprintf(str, "____________________");
+  draw_text(0, winH - (D.idxParamUI) * (characterSize + 2), str);
 
   glColor3f(0.8f, 0.8f, 0.8f);
   sprintf(str, "%.3f s", elapsed_time());
-  draw_text(0, 2, characterSize, str);
+  draw_text(0, 2, str);
   glLineWidth(1.0f);
 
   // Commit the draw
@@ -193,8 +193,12 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  if (key == GLUT_KEY_UP)
+  if (key == GLUT_KEY_UP && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
+    D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 5) % int(D.param.size());
+  else if (key == GLUT_KEY_UP)
     D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 1) % int(D.param.size());
+  else if (key == GLUT_KEY_DOWN && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
+    D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
   else if (key == GLUT_KEY_DOWN)
     D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
 
@@ -248,7 +252,19 @@ void callback_mouse_click(int button, int state, int x, int y) {
 // Mouse motion interruption callback
 void callback_mouse_motion(int x, int y) {
   cam->setCurrentMousePos(float(x), float(y));
+
   glutPostRedisplay();
+}
+
+
+// Mouse motion interruption callback
+void callback_passive_mouse_motion(int x, int y) {
+  int prevParamIdx= D.idxParamUI;
+  if (x < 300)
+    D.idxParamUI= std::min(std::max((y - 3) / (characterSize + 2), 0), int(D.param.size()) - 1);
+
+  if (D.idxParamUI != prevParamIdx)
+    glutPostRedisplay();
 }
 
 
@@ -320,7 +336,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(200, 100);
+  glutInitWindowPosition(2200, 100);
   glutCreateWindow("Display");
 
   // World initialization
@@ -334,6 +350,7 @@ int main(int argc, char *argv[]) {
   glutSpecialFunc(&callback_keyboard_special);
   glutMouseFunc(&callback_mouse_click);
   glutMotionFunc(&callback_mouse_motion);
+  glutPassiveMotionFunc(&callback_passive_mouse_motion);
   // glutIdleFunc(&callback_idle);
   glutTimerFunc(100, callback_timer, 0);
 

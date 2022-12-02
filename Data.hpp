@@ -23,9 +23,22 @@ enum ParamType
   screenNbH___________,
   screenNbV___________,
   screenNbS___________,
+  cursorPosX__________,
+  cursorPosY__________,
+  cursorPosZ__________,
   gravStrength________,
   dragStrength________,
   dopplerStrength_____,
+  testVar0____________,
+  testVar1____________,
+  testVar2____________,
+  testVar3____________,
+  testVar4____________,
+  testVar5____________,
+  testVar6____________,
+  testVar7____________,
+  testVar8____________,
+  testVar9____________,
 };
 
 class Data
@@ -37,6 +50,7 @@ class Data
   bool showScreen= true;
   bool showPhotonPath= false;
   bool showGravity= false;
+  bool showCursor= true;
 
   int idxParamUI= 0;
 
@@ -51,8 +65,21 @@ class Data
     param.push_back(ParamUI("screenNbH___________", 100));
     param.push_back(ParamUI("screenNbV___________", 100));
     param.push_back(ParamUI("screenNbS___________", 40));
+    param.push_back(ParamUI("cursorPosX__________", 1));
+    param.push_back(ParamUI("cursorPosY__________", 1));
+    param.push_back(ParamUI("cursorPosZ__________", 1));
     param.push_back(ParamUI("gravStrength________", 1.0));
     param.push_back(ParamUI("dragStrength________", 1.0));
     param.push_back(ParamUI("dopplerStrength_____", 1.0));
+    param.push_back(ParamUI("testVar0____________", 1.0));
+    param.push_back(ParamUI("testVar1____________", 1.0));
+    param.push_back(ParamUI("testVar2____________", 1.0));
+    param.push_back(ParamUI("testVar3____________", 1.0));
+    param.push_back(ParamUI("testVar4____________", 1.0));
+    param.push_back(ParamUI("testVar5____________", 1.0));
+    param.push_back(ParamUI("testVar6____________", 1.0));
+    param.push_back(ParamUI("testVar7____________", 1.0));
+    param.push_back(ParamUI("testVar8____________", 1.0));
+    param.push_back(ParamUI("testVar9____________", 1.0));
   }
 };
