@@ -7,13 +7,13 @@
 // Project
 #include "SrtGenericPNGParser.hpp"
 
+using std::vector;
 
 void SrtFileInput::LoadScalarFieldBinaryFile(
     std::string const iFullpath,
     int const iNbX,
-    int const iNbY,
-    int const iNbZ,
-    std::vector<std::vector<std::vector<double>>>& oField,
+    int const iNbY, int const iNbZ,
+    vector<vector<vector<double>>>& oField,
     bool const iVerbose) {
   if (iNbX < 1 || iNbY < 1 || iNbZ < 1) {
     printf("[ERROR] Invalid field dimensions\n\n");
@@ -31,9 +31,8 @@ void SrtFileInput::LoadScalarFieldBinaryFile(
   }
 
   oField=
-      std::vector<std::vector<std::vector<double>>>(iNbX,
-                                                    std::vector<std::vector<double>>(iNbY,
-                                                                                     std::vector<double>(iNbZ)));
+      vector<vector<vector<double>>>(iNbX,
+                                     vector<vector<double>>(iNbY, vector<double>(iNbZ)));
 
   for (int z= 0; z < iNbZ; z++) {
     for (int y= 0; y < iNbY; y++) {
@@ -53,9 +52,8 @@ void SrtFileInput::LoadScalarFieldBinaryFile(
 void SrtFileInput::LoadVectorFieldBinaryFile(
     std::string const iFullpath,
     int const iNbX,
-    int const iNbY,
-    int const iNbZ,
-    std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+    int const iNbY, int const iNbZ,
+    vector<vector<vector<Eigen::Vector3d>>>& oField,
     bool const iVerbose) {
   if (iNbX < 1 || iNbY < 1 || iNbZ < 1) {
     printf("[ERROR] Invalid field dimensions\n\n");
@@ -73,9 +71,7 @@ void SrtFileInput::LoadVectorFieldBinaryFile(
   }
 
   oField=
-      std::vector<std::vector<std::vector<Eigen::Vector3d>>>(iNbX,
-                                                             std::vector<std::vector<Eigen::Vector3d>>(iNbY,
-                                                                                                       std::vector<Eigen::Vector3d>(iNbZ)));
+      vector<vector<vector<Eigen::Vector3d>>>(iNbX, vector<vector<Eigen::Vector3d>>(iNbY, vector<Eigen::Vector3d>(iNbZ)));
 
   for (int z= 0; z < iNbZ; z++) {
     for (int y= 0; y < iNbY; y++) {
@@ -148,7 +144,7 @@ void SrtFileInput::LoadBoxTXTFile(
 
 void SrtFileInput::LoadScalarFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<double>>>& oField,
+    vector<vector<vector<double>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT scalar field file [%s]\n", iFullpath.c_str());
@@ -173,9 +169,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<double>>>(X,
-                                                        std::vector<std::vector<double>>(Y,
-                                                                                         std::vector<double>(Z, 0.0)));
+  oField= vector<vector<vector<double>>>(X, vector<vector<double>>(Y, vector<double>(Z, 0.0)));
 
   // Load the field values
   for (int x= 0; x < X; x++) {
@@ -202,7 +196,7 @@ void SrtFileInput::LoadScalarFieldRawVTIFile(
     std::string const iFullpath,
     std::array<double, 3>& oBBoxMin,
     std::array<double, 3>& oBBoxMax,
-    std::vector<std::vector<std::vector<double>>>& oField,
+    vector<vector<vector<double>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Reading file [%s] ", iFullpath.c_str());
@@ -232,7 +226,7 @@ void SrtFileInput::LoadScalarFieldRawVTIFile(
         nbX= endX - begX + 1;
         nbY= endY - begY + 1;
         nbZ= endZ - begZ + 1;
-        oField= std::vector<std::vector<std::vector<double>>>(nbX, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
+        oField= vector<vector<vector<double>>>(nbX, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
         oBBoxMin= {oriX - 0.5 * spaX, oriY - 0.5 * spaY, oriZ - 0.5 * spaZ};
         oBBoxMax= {oriX - 0.5 * spaX + nbX * spaX, oriY - 0.5 * spaY + nbY * spaY, oriZ - 0.5 * spaZ + nbZ * spaZ};
       }
@@ -276,7 +270,7 @@ void SrtFileInput::LoadVectorFieldRawVTIFile(
     std::string const iFullpath,
     std::array<double, 3>& oBBoxMin,
     std::array<double, 3>& oBBoxMax,
-    std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+    vector<vector<vector<Eigen::Vector3d>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Reading file [%s] ", iFullpath.c_str());
@@ -306,10 +300,7 @@ void SrtFileInput::LoadVectorFieldRawVTIFile(
         nbX= endX - begX + 1;
         nbY= endY - begY + 1;
         nbZ= endZ - begZ + 1;
-        oField= std::vector<std::vector<std::vector<Eigen::Vector3d>>>(nbX,
-                                                                       std::vector<std::vector<Eigen::Vector3d>>(nbY,
-                                                                                                                 std::vector<Eigen::Vector3d>(nbZ,
-                                                                                                                                              Eigen::Vector3d(0.0, 0.0, 0.0))));
+        oField= vector<vector<vector<Eigen::Vector3d>>>(nbX, vector<vector<Eigen::Vector3d>>(nbY, vector<Eigen::Vector3d>(nbZ, Eigen::Vector3d(0.0, 0.0, 0.0))));
         oBBoxMin= {oriX - 0.5 * spaX, oriY - 0.5 * spaY, oriZ - 0.5 * spaZ};
         oBBoxMax= {oriX - 0.5 * spaX + nbX * spaX, oriY - 0.5 * spaY + nbY * spaY, oriZ - 0.5 * spaZ + nbZ * spaZ};
       }
@@ -353,7 +344,7 @@ void SrtFileInput::LoadVectorFieldRawVTIFile(
 
 void SrtFileInput::LoadScalarFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<int>>>& oField,
+    vector<vector<vector<int>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT scalar field file [%s]\n", iFullpath.c_str());
@@ -378,9 +369,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<int>>>(X,
-                                                     std::vector<std::vector<int>>(Y,
-                                                                                   std::vector<int>(Z, 0)));
+  oField= vector<vector<vector<int>>>(X, vector<vector<int>>(Y, vector<int>(Z, 0)));
 
   // Load the field values
   for (int x= 0; x < X; x++) {
@@ -404,7 +393,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
 
 void SrtFileInput::LoadScalarFieldImagePNGFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<double>>>& oField,
+    vector<vector<vector<double>>>& oField,
     bool const iVerbose) {
   // Open the file
   std::ifstream inputFile(iFullpath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
@@ -426,12 +415,12 @@ void SrtFileInput::LoadScalarFieldImagePNGFile(
     printf("Loading PNG scalar field file [%s]\n", iFullpath.c_str());
 
   // Load the contents of the PNG file into a buffer
-  std::vector<unsigned char> buffer((size_t)size);
+  vector<unsigned char> buffer((size_t)size);
   inputFile.read((char*)(&buffer[0]), size);
 
   // Decode the buffer and store into an image vector (row/width major, col/height minor, with the 4 RGBA components for each pixel)
   unsigned long w, h;
-  std::vector<unsigned char> imageVector;
+  vector<unsigned char> imageVector;
   int error= SrtGenericPNGParser::DecodePNG(imageVector, w, h, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true);
   if (error != 0) {
     printf("[ERROR] Error code %d when decoding the PNG file in buffer\n\n", error);
@@ -440,7 +429,7 @@ void SrtFileInput::LoadScalarFieldImagePNGFile(
 
   // Convert the imageVector into the flat 3D field
   int nbY= w, nbZ= h;
-  oField= std::vector<std::vector<std::vector<double>>>(1, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
+  oField= vector<vector<vector<double>>>(1, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
   for (int y= 0; y < nbY; y++) {
     for (int z= 0; z < nbZ; z++) {
       double r= double(imageVector[z * nbY * 4 + y * 4 + 0]) / 255.0;
@@ -457,10 +446,10 @@ void SrtFileInput::LoadScalarFieldImagePNGFile(
 
 void SrtFileInput::LoadRGBAFieldImagePNGFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<double>>>& oRField,
-    std::vector<std::vector<std::vector<double>>>& oGField,
-    std::vector<std::vector<std::vector<double>>>& oBField,
-    std::vector<std::vector<std::vector<double>>>& oAField,
+    vector<vector<vector<double>>>& oRField,
+    vector<vector<vector<double>>>& oGField,
+    vector<vector<vector<double>>>& oBField,
+    vector<vector<vector<double>>>& oAField,
     bool const iVerbose) {
   // Open the file
   std::ifstream inputFile(iFullpath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
@@ -484,12 +473,12 @@ void SrtFileInput::LoadRGBAFieldImagePNGFile(
   }
 
   // Load the contents of the PNG file into a buffer
-  std::vector<unsigned char> buffer((size_t)size);
+  vector<unsigned char> buffer((size_t)size);
   inputFile.read((char*)(&buffer[0]), size);
 
   // Decode the buffer and store into an image vector (row/width major, col/height minor, with the 4 RGBA components for each pixel)
   unsigned long w, h;
-  std::vector<unsigned char> imageVector;
+  vector<unsigned char> imageVector;
   int error= SrtGenericPNGParser::DecodePNG(imageVector, w, h, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true);
   if (error != 0) {
     printf("[ERROR] Error code %d when decoding the PNG file in buffer\n\n", error);
@@ -498,10 +487,10 @@ void SrtFileInput::LoadRGBAFieldImagePNGFile(
 
   // Convert the imageVector into the flat 3D field
   int nbY= w, nbZ= h;
-  oRField= std::vector<std::vector<std::vector<double>>>(1, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
-  oGField= std::vector<std::vector<std::vector<double>>>(1, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
-  oBField= std::vector<std::vector<std::vector<double>>>(1, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
-  oAField= std::vector<std::vector<std::vector<double>>>(1, std::vector<std::vector<double>>(nbY, std::vector<double>(nbZ, 0.0)));
+  oRField= vector<vector<vector<double>>>(1, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
+  oGField= vector<vector<vector<double>>>(1, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
+  oBField= vector<vector<vector<double>>>(1, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
+  oAField= vector<vector<vector<double>>>(1, vector<vector<double>>(nbY, vector<double>(nbZ, 0.0)));
   for (int y= 0; y < nbY; y++) {
     for (int z= 0; z < nbZ; z++) {
       oRField[0][y][nbZ - 1 - z]= double(imageVector[z * nbY * 4 + y * 4 + 0]) / 255.0;
@@ -519,7 +508,7 @@ void SrtFileInput::LoadRGBAFieldImagePNGFile(
 
 void SrtFileInput::LoadVectorFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+    vector<vector<vector<Eigen::Vector3d>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT vector field file [%s]\n", iFullpath.c_str());
@@ -544,10 +533,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<Eigen::Vector3d>>>(X,
-                                                                 std::vector<std::vector<Eigen::Vector3d>>(Y,
-                                                                                                           std::vector<Eigen::Vector3d>(Z,
-                                                                                                                                        Eigen::Vector3d(0.0, 0.0, 0.0))));
+  oField= vector<vector<vector<Eigen::Vector3d>>>(X, vector<vector<Eigen::Vector3d>>(Y, vector<Eigen::Vector3d>(Z, Eigen::Vector3d(0.0, 0.0, 0.0))));
 
   // Load the field values
   for (int x= 0; x < X; x++) {
@@ -573,7 +559,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
 
 void SrtFileInput::LoadVectorFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<std::array<bool, 3>>>>& oField,
+    vector<vector<vector<std::array<bool, 3>>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT vector field file [%s]\n", iFullpath.c_str());
@@ -598,10 +584,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<std::array<bool, 3>>>>(X,
-                                                                     std::vector<std::vector<std::array<bool, 3>>>(Y,
-                                                                                                                   std::vector<std::array<bool, 3>>(Z,
-                                                                                                                                                    {false, false, false})));
+  oField= vector<vector<vector<std::array<bool, 3>>>>(X, vector<vector<std::array<bool, 3>>>(Y, vector<std::array<bool, 3>>(Z, {false, false, false})));
 
   // Load the field values
   for (int x= 0; x < X; x++) {
@@ -625,7 +608,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
 
 void SrtFileInput::LoadVectorFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<std::array<double, 3>>>>& oField,
+    vector<vector<vector<std::array<double, 3>>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT vector field file [%s]\n", iFullpath.c_str());
@@ -650,10 +633,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<std::array<double, 3>>>>(X,
-                                                                       std::vector<std::vector<std::array<double, 3>>>(Y,
-                                                                                                                       std::vector<std::array<double, 3>>(Z,
-                                                                                                                                                          {0.0, 0.0, 0.0})));
+  oField= vector<vector<vector<std::array<double, 3>>>>(X, vector<vector<std::array<double, 3>>>(Y, vector<std::array<double, 3>>(Z, {0.0, 0.0, 0.0})));
 
   // Load the field values
   for (int x= 0; x < X; x++) {
@@ -677,7 +657,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
 
 void SrtFileInput::LoadTensorFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<std::array<double, 9>>>>& oField,
+    vector<vector<vector<std::array<double, 9>>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT tensor field file [%s]\n", iFullpath.c_str());
@@ -702,10 +682,7 @@ void SrtFileInput::LoadTensorFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<std::array<double, 9>>>>(nbX,
-                                                                       std::vector<std::vector<std::array<double, 9>>>(nbY,
-                                                                                                                       std::vector<std::array<double, 9>>(nbZ,
-                                                                                                                                                          {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})));
+  oField= vector<vector<vector<std::array<double, 9>>>>(nbX, vector<vector<std::array<double, 9>>>(nbY, vector<std::array<double, 9>>(nbZ, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0})));
 
   // Load the field values
   for (int x= 0; x < nbX; x++) {
@@ -730,7 +707,7 @@ void SrtFileInput::LoadTensorFieldTXTFile(
 
 void SrtFileInput::LoadTensorFieldTXTFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::vector<Eigen::Matrix3d>>>& oField,
+    vector<vector<vector<Eigen::Matrix3d>>>& oField,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading TXT tensor field file [%s]\n", iFullpath.c_str());
@@ -755,9 +732,7 @@ void SrtFileInput::LoadTensorFieldTXTFile(
   }
 
   // Allocate the field
-  oField= std::vector<std::vector<std::vector<Eigen::Matrix3d>>>(nbX,
-                                                                 std::vector<std::vector<Eigen::Matrix3d>>(nbY,
-                                                                                                           std::vector<Eigen::Matrix3d>(nbZ)));
+  oField= vector<vector<vector<Eigen::Matrix3d>>>(nbX, vector<vector<Eigen::Matrix3d>>(nbY, vector<Eigen::Matrix3d>(nbZ)));
 
   // Load the field values
   for (int x= 0; x < nbX; x++) {
@@ -782,9 +757,9 @@ void SrtFileInput::LoadTensorFieldTXTFile(
 
 void SrtFileInput::LoadMeshOBJFile(
     std::string const iFullpath,
-    std::vector<Eigen::Vector3d>& oPoints,
-    std::vector<Eigen::Vector3d>& oColors,
-    std::vector<Eigen::Vector3i>& oTriangles,
+    vector<Eigen::Vector3d>& oPoints,
+    vector<Eigen::Vector3d>& oColors,
+    vector<Eigen::Vector3i>& oTriangles,
     bool const iVerbose) {
   if (iVerbose)
     printf("Loading OBJ mesh file [%s]\n", iFullpath.c_str());

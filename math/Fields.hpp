@@ -8,7 +8,7 @@
 
 
 // Choose 0 or 1 to disable or enable bound checking in the () operator
-#define FIELDS_ARRAY_BOUNDS_CHECK 1
+#define FIELDS_ARRAY_BOUNDS_CHECK 0
 
 
 namespace math {

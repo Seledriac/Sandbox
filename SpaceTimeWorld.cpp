@@ -23,13 +23,79 @@ using std::vector;
 extern Data D;
 
 
-inline void myVertex3f(math::Vec3 vec) {
-  glVertex3f(float(vec[0]), float(vec[1]), float(vec[2]));
-}
+inline void myVertex3f(math::Vec3 vec) { glVertex3f(float(vec[0]), float(vec[1]), float(vec[2])); }
+inline void myColor3f(math::Vec3 vec) { glColor3f(float(vec[0]), float(vec[1]), float(vec[2])); }
 
 
-inline void myColor3f(math::Vec3 vec) {
-  glColor3f(float(vec[0]), float(vec[1]), float(vec[2]));
+vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
+  vector<std::array<int, 3>> listVoxels;
+  listVoxels.push_back({x0, y0, z0});
+
+  int dx= std::abs(x1 - x0);
+  int dy= std::abs(y1 - y0);
+  int dz= std::abs(z1 - z0);
+  int xs= (x1 > x0) ? 1 : -1;
+  int ys= (y1 > y0) ? 1 : -1;
+  int zs= (z1 > z0) ? 1 : -1;
+
+  // Driving axis is X-axis
+  if (dx >= dy and dx >= dz) {
+    int p1= 2 * dy - dx;
+    int p2= 2 * dz - dx;
+    while (x0 != x1) {
+      x0+= xs;
+      if (p1 >= 0) {
+        y0+= ys;
+        p1-= 2 * dx;
+      }
+      if (p2 >= 0) {
+        z0+= zs;
+        p2-= 2 * dx;
+      }
+      p1+= 2 * dy;
+      p2+= 2 * dz;
+      listVoxels.push_back({x0, y0, z0});
+    }
+  }
+  // Driving axis is Y-axis
+  else if (dy >= dx and dy >= dz) {
+    int p1= 2 * dx - dy;
+    int p2= 2 * dz - dy;
+    while (y0 != y1) {
+      y0+= ys;
+      if (p1 >= 0) {
+        x0+= xs;
+        p1-= 2 * dy;
+      }
+      if (p2 >= 0) {
+        z0+= zs;
+        p2-= 2 * dy;
+      }
+      p1+= 2 * dx;
+      p2+= 2 * dz;
+      listVoxels.push_back({x0, y0, z0});
+    }
+  }
+  // Driving axis is Z-axis
+  else {
+    int p1= 2 * dy - dz;
+    int p2= 2 * dx - dz;
+    while (z0 != z1) {
+      z0+= zs;
+      if (p1 >= 0) {
+        y0+= ys;
+        p1-= 2 * dz;
+      }
+      if (p2 >= 0) {
+        x0+= xs;
+        p2-= 2 * dz;
+      }
+      p1+= 2 * dy;
+      p2+= 2 * dx;
+      listVoxels.push_back({x0, y0, z0});
+    }
+  }
+  return listVoxels;
 }
 
 
@@ -52,78 +118,6 @@ class Ball
     rad= iRad;
   }
 };
-
-
-vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
-  vector<std::array<int, 3>> listVoxels;
-  listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
-
-  int dx= abs(x1 - x0);
-  int dy= abs(y1 - y0);
-  int dz= abs(z1 - z0);
-  int xs= (x1 > x0) ? 1 : -1;
-  int ys= (y1 > y0) ? 1 : -1;
-  int zs= (z1 > z0) ? 1 : -1;
-
-  // Driving axis is X-axis
-  if (dx >= dy and dx >= dz) {
-    int p1= 2 * dy - dx;
-    int p2= 2 * dz - dx;
-    while (x0 != x1) {
-      x0+= xs;
-      if (p1 >= 0) {
-        y0+= ys;
-        p1-= 2 * dx;
-      }
-      if (p2 >= 0) {
-        z0+= zs;
-        p2-= 2 * dx;
-      }
-      p1+= 2 * dy;
-      p2+= 2 * dz;
-      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
-    }
-  }
-  // Driving axis is Y-axis
-  else if (dy >= dx and dy >= dz) {
-    int p1= 2 * dx - dy;
-    int p2= 2 * dz - dy;
-    while (y0 != y1) {
-      y0+= ys;
-      if (p1 >= 0) {
-        x0+= xs;
-        p1-= 2 * dy;
-      }
-      if (p2 >= 0) {
-        z0+= zs;
-        p2-= 2 * dy;
-      }
-      p1+= 2 * dx;
-      p2+= 2 * dz;
-      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
-    }
-  }
-  // Driving axis is Z-axis
-  else {
-    int p1= 2 * dy - dz;
-    int p2= 2 * dx - dz;
-    while (z0 != z1) {
-      z0+= zs;
-      if (p1 >= 0) {
-        y0+= ys;
-        p1-= 2 * dz;
-      }
-      if (p2 >= 0) {
-        x0+= xs;
-        p2-= 2 * dz;
-      }
-      p1+= 2 * dy;
-      p2+= 2 * dx;
-      listVoxels.push_back(std::array<int, 3>({x0, y0, z0}));
-    }
-  }
-  return listVoxels;
-}
 
 
 SpaceTimeWorld::SpaceTimeWorld() {
@@ -192,28 +186,28 @@ SpaceTimeWorld::SpaceTimeWorld() {
   }
 
 
-  // // Load PNG image for the background
-  // std::vector<std::vector<std::vector<double>>> loadedRField, loadedGField, loadedBField, loadedAField;
-  // try {
-  //   SrtFileInput::LoadRGBAFieldImagePNGFile("HubbleDeepField.png", loadedRField, loadedGField, loadedBField, loadedAField, true);
-  // } catch (...) {
-  // }
-  // double stepX, stepY, stepZ;
-  // double startX, startY, startZ;
-  // SrtUtil::GetVoxelSizes(worldNbX, worldNbY, worldNbZ, worldBBoxMin, worldBBoxMax, true, stepX, stepY, stepZ);
-  // SrtUtil::GetVoxelStart(worldBBoxMin, worldBBoxMax, stepX, stepY, stepZ, true, startX, startY, startZ);
-  // for (int x= 0; x < worldNbX; x++) {
-  //   for (int y= 0; y < worldNbY; y++) {
-  //     for (int z= 0; z < worldNbZ; z++) {
-  //       Eigen::Vector3d pos(double(x) * stepX + startX, double(y) * stepY + startY, double(z) * stepZ + startZ);
-  //       double r= SrtUtil::GetScalarFieldVal(loadedRField, pos, true, worldBBoxMin, worldBBoxMax);
-  //       double g= SrtUtil::GetScalarFieldVal(loadedGField, pos, true, worldBBoxMin, worldBBoxMax);
-  //       double b= SrtUtil::GetScalarFieldVal(loadedBField, pos, true, worldBBoxMin, worldBBoxMax);
-  //       if (x == 0)
-  //         worldColor[0][x][y][z].set(r, g, b);
-  //     }
-  //   }
-  // }
+  // Load PNG image for the background
+  std::vector<std::vector<std::vector<double>>> loadedRField, loadedGField, loadedBField, loadedAField;
+  try {
+    SrtFileInput::LoadRGBAFieldImagePNGFile("HubbleDeepField.png", loadedRField, loadedGField, loadedBField, loadedAField, true);
+  } catch (...) {
+  }
+  double stepX, stepY, stepZ;
+  double startX, startY, startZ;
+  SrtUtil::GetVoxelSizes(worldNbX, worldNbY, worldNbZ, worldBBoxMin, worldBBoxMax, true, stepX, stepY, stepZ);
+  SrtUtil::GetVoxelStart(worldBBoxMin, stepX, stepY, stepZ, true, startX, startY, startZ);
+  for (int x= 0; x < worldNbX; x++) {
+    for (int y= 0; y < worldNbY; y++) {
+      for (int z= 0; z < worldNbZ; z++) {
+        Eigen::Vector3d pos(double(x) * stepX + startX, double(y) * stepY + startY, double(z) * stepZ + startZ);
+        double r= SrtUtil::GetScalarFieldVal(loadedRField, pos, true, worldBBoxMin, worldBBoxMax);
+        double g= SrtUtil::GetScalarFieldVal(loadedGField, pos, true, worldBBoxMin, worldBBoxMax);
+        double b= SrtUtil::GetScalarFieldVal(loadedBField, pos, true, worldBBoxMin, worldBBoxMax);
+        if (x == 0)
+          worldColor[0][x][y][z].set(r, g, b);
+      }
+    }
+  }
 
 
   photonPos= vector<vector<vector<math::Vec3>>>(screenNbH, vector<vector<math::Vec3>>(screenNbV, vector<math::Vec3>(screenNbS, math::Vec3(-1.0, -1.0, -1.0))));
@@ -221,7 +215,7 @@ SpaceTimeWorld::SpaceTimeWorld() {
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       photonPos[h][v][0]= math::Vec3(1.0, (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
-      photonVel[h][v][0]= math::Vec3(-3.0, 0.0, 0.0);
+      photonVel[h][v][0]= math::Vec3(-2.0, 0.0, 0.0);
     }
   }
 

@@ -252,7 +252,6 @@ void SrtUtil::GetVoxelSizes(
 
 void SrtUtil::GetVoxelStart(
     std::array<double, 3> const &iBBoxMin,
-    std::array<double, 3> const &iBBoxMax,
     double const iVoxSizeX,
     double const iVoxSizeY,
     double const iVoxSizeZ,
@@ -284,7 +283,7 @@ double SrtUtil::GetScalarFieldVal(
   if (nbX == 0 || nbY == 0 || nbZ == 0) return 0;
   double stepX, stepY, stepZ, startX, startY, startZ;
   SrtUtil::GetVoxelSizes(nbX, nbY, nbZ, iBBoxMin, iBBoxMax, iCentered, stepX, stepY, stepZ);
-  SrtUtil::GetVoxelStart(iBBoxMin, iBBoxMax, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
+  SrtUtil::GetVoxelStart(iBBoxMin, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
 
   int x= std::min(std::max(int(std::round((iCoord[0] - startX) / stepX)), 0), nbX - 1);
   int y= std::min(std::max(int(std::round((iCoord[1] - startY) / stepY)), 0), nbY - 1);
@@ -305,7 +304,7 @@ double SrtUtil::GetScalarFieldVal(
   if (nbX == 0 || nbY == 0 || nbZ == 0) return 0.0;
   double stepX, stepY, stepZ, startX, startY, startZ;
   SrtUtil::GetVoxelSizes(nbX, nbY, nbZ, iBBoxMin, iBBoxMax, iCentered, stepX, stepY, stepZ);
-  SrtUtil::GetVoxelStart(iBBoxMin, iBBoxMax, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
+  SrtUtil::GetVoxelStart(iBBoxMin, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
 
   double xFloat= (iCoord[0] - startX) / stepX;
   double yFloat= (iCoord[1] - startY) / stepY;
@@ -359,7 +358,7 @@ Eigen::Vector3d SrtUtil::GetVectorFieldVal(
   if (nbX == 0 || nbY == 0 || nbZ == 0) return Eigen::Vector3d::Zero();
   double stepX, stepY, stepZ, startX, startY, startZ;
   SrtUtil::GetVoxelSizes(nbX, nbY, nbZ, iBBoxMin, iBBoxMax, iCentered, stepX, stepY, stepZ);
-  SrtUtil::GetVoxelStart(iBBoxMin, iBBoxMax, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
+  SrtUtil::GetVoxelStart(iBBoxMin, stepX, stepY, stepZ, iCentered, startX, startY, startZ);
 
   double xFloat= (iCoord[0] - startX) / stepX;
   double yFloat= (iCoord[1] - startY) / stepY;

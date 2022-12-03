@@ -14,7 +14,10 @@ SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vec.hpp \
  Eigen/src/Core/arch/Default/BFloat16.h \
  Eigen/src/Core/arch/Default/TypeCasting.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctionsFwd.h \
- Eigen/src/Core/arch/Default/Settings.h \
+ Eigen/src/Core/arch/SSE/PacketMath.h \
+ Eigen/src/Core/arch/SSE/TypeCasting.h \
+ Eigen/src/Core/arch/SSE/MathFunctions.h \
+ Eigen/src/Core/arch/SSE/Complex.h Eigen/src/Core/arch/Default/Settings.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctions.h \
  Eigen/src/Core/functors/TernaryFunctors.h \
  Eigen/src/Core/functors/BinaryFunctors.h \
@@ -81,7 +84,7 @@ SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vec.hpp \
  Eigen/src/Core/Replicate.h Eigen/src/Core/Reverse.h \
  Eigen/src/Core/ArrayWrapper.h Eigen/src/Core/StlIterators.h \
  Eigen/src/Core/GlobalFunctions.h \
- Eigen/src/Core/util/ReenableStupidWarnings.h
+ Eigen/src/Core/util/ReenableStupidWarnings.h SrtUtil.hpp
 SrtColormap.o: SrtColormap.cpp SrtColormap.hpp
 SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp Eigen/Core \
  Eigen/src/Core/util/DisableStupidWarnings.h Eigen/src/Core/util/Macros.h \
@@ -98,7 +101,10 @@ SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp Eigen/Core \
  Eigen/src/Core/arch/Default/BFloat16.h \
  Eigen/src/Core/arch/Default/TypeCasting.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctionsFwd.h \
- Eigen/src/Core/arch/Default/Settings.h \
+ Eigen/src/Core/arch/SSE/PacketMath.h \
+ Eigen/src/Core/arch/SSE/TypeCasting.h \
+ Eigen/src/Core/arch/SSE/MathFunctions.h \
+ Eigen/src/Core/arch/SSE/Complex.h Eigen/src/Core/arch/Default/Settings.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctions.h \
  Eigen/src/Core/functors/TernaryFunctors.h \
  Eigen/src/Core/functors/BinaryFunctors.h \
@@ -182,7 +188,10 @@ SrtUtil.o: SrtUtil.cpp SrtUtil.hpp Eigen/Core \
  Eigen/src/Core/arch/Default/BFloat16.h \
  Eigen/src/Core/arch/Default/TypeCasting.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctionsFwd.h \
- Eigen/src/Core/arch/Default/Settings.h \
+ Eigen/src/Core/arch/SSE/PacketMath.h \
+ Eigen/src/Core/arch/SSE/TypeCasting.h \
+ Eigen/src/Core/arch/SSE/MathFunctions.h \
+ Eigen/src/Core/arch/SSE/Complex.h Eigen/src/Core/arch/Default/Settings.h \
  Eigen/src/Core/arch/Default/GenericPacketMathFunctions.h \
  Eigen/src/Core/functors/TernaryFunctors.h \
  Eigen/src/Core/functors/BinaryFunctors.h \
@@ -249,7 +258,42 @@ SrtUtil.o: SrtUtil.cpp SrtUtil.hpp Eigen/Core \
  Eigen/src/Core/Replicate.h Eigen/src/Core/Reverse.h \
  Eigen/src/Core/ArrayWrapper.h Eigen/src/Core/StlIterators.h \
  Eigen/src/Core/GlobalFunctions.h \
- Eigen/src/Core/util/ReenableStupidWarnings.h
+ Eigen/src/Core/util/ReenableStupidWarnings.h Eigen/Dense Eigen/Core \
+ Eigen/LU Eigen/src/misc/Kernel.h Eigen/src/misc/Image.h \
+ Eigen/src/LU/FullPivLU.h Eigen/src/LU/PartialPivLU.h \
+ Eigen/src/LU/Determinant.h Eigen/src/LU/InverseImpl.h \
+ Eigen/src/LU/arch/InverseSize4.h Eigen/Cholesky Eigen/Jacobi \
+ Eigen/src/Jacobi/Jacobi.h Eigen/src/Cholesky/LLT.h \
+ Eigen/src/Cholesky/LDLT.h Eigen/QR Eigen/Householder \
+ Eigen/src/Householder/Householder.h \
+ Eigen/src/Householder/HouseholderSequence.h \
+ Eigen/src/Householder/BlockHouseholder.h Eigen/src/QR/HouseholderQR.h \
+ Eigen/src/QR/FullPivHouseholderQR.h Eigen/src/QR/ColPivHouseholderQR.h \
+ Eigen/src/QR/CompleteOrthogonalDecomposition.h Eigen/SVD \
+ Eigen/src/misc/RealSvd2x2.h Eigen/src/SVD/UpperBidiagonalization.h \
+ Eigen/src/SVD/SVDBase.h Eigen/src/SVD/JacobiSVD.h Eigen/src/SVD/BDCSVD.h \
+ Eigen/Geometry Eigen/src/Geometry/OrthoMethods.h \
+ Eigen/src/Geometry/EulerAngles.h Eigen/src/Geometry/Homogeneous.h \
+ Eigen/src/Geometry/RotationBase.h Eigen/src/Geometry/Rotation2D.h \
+ Eigen/src/Geometry/Quaternion.h Eigen/src/Geometry/AngleAxis.h \
+ Eigen/src/Geometry/Transform.h Eigen/src/Geometry/Translation.h \
+ Eigen/src/Geometry/Scaling.h Eigen/src/Geometry/Hyperplane.h \
+ Eigen/src/Geometry/ParametrizedLine.h Eigen/src/Geometry/AlignedBox.h \
+ Eigen/src/Geometry/Umeyama.h Eigen/src/Geometry/arch/Geometry_SIMD.h \
+ Eigen/Eigenvalues Eigen/src/Eigenvalues/Tridiagonalization.h \
+ Eigen/src/Eigenvalues/RealSchur.h \
+ Eigen/src/Eigenvalues/./HessenbergDecomposition.h \
+ Eigen/src/Eigenvalues/EigenSolver.h Eigen/src/Eigenvalues/./RealSchur.h \
+ Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+ Eigen/src/Eigenvalues/./Tridiagonalization.h \
+ Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+ Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+ Eigen/src/Eigenvalues/ComplexSchur.h \
+ Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+ Eigen/src/Eigenvalues/./ComplexSchur.h Eigen/src/Eigenvalues/RealQZ.h \
+ Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+ Eigen/src/Eigenvalues/./RealQZ.h \
+ Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h
 flock.o: flock.cpp flock.hpp math/Vec.hpp Data.hpp
 main.o: main.cpp Data.hpp SpaceTimeWorld.hpp math/Vec.hpp flock.hpp \
  tb/Camera.hpp tb/Matrix.hpp tb/Vectors.hpp tb/TrackBall.hpp \

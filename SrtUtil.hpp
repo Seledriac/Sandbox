@@ -73,7 +73,6 @@ class SrtUtil
   // Get the voxel starting position of the provided scalar field based on the bounding box
   static void GetVoxelStart(
       std::array<double, 3> const &iBBoxMin,
-      std::array<double, 3> const &iBBoxMax,
       double const iVoxSizeX,
       double const iVoxSizeY,
       double const iVoxSizeZ,

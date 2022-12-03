@@ -277,12 +277,6 @@ void callback_passive_mouse_motion(int x, int y) {
 }
 
 
-// // Idle program interruption callback
-// void callback_idle() {
-//   glutPostRedisplay();
-// }
-
-
 // OpenGL initialization
 void init_GL() {
   // Set background color
@@ -360,7 +354,6 @@ int main(int argc, char *argv[]) {
   glutMouseFunc(&callback_mouse_click);
   glutMotionFunc(&callback_mouse_motion);
   glutPassiveMotionFunc(&callback_passive_mouse_motion);
-  // glutIdleFunc(&callback_idle);
   glutTimerFunc(100, callback_timer, 0);
 
   // Start refresh loop
