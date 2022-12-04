@@ -5,9 +5,6 @@
 #include <string>
 #include <vector>
 
-// Eigen lib
-#include "Eigen/Core"
-
 class SrtFileInput
 {
   public:
@@ -24,7 +21,7 @@ class SrtFileInput
       int const iNbX,
       int const iNbY,
       int const iNbZ,
-      std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+      std::vector<std::vector<std::vector<std::array<double, 3>>>>& oField,
       bool const iVerbose);
 
   static void LoadBoxTXTFile(
@@ -56,7 +53,7 @@ class SrtFileInput
       std::string const iFullpath,
       std::array<double, 3>& oBBoxMin,
       std::array<double, 3>& oBBoxMax,
-      std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+      std::vector<std::vector<std::vector<std::array<double, 3>>>>& oField,
       bool const iVerbose);
 
   static void LoadScalarFieldTXTFile(
@@ -69,17 +66,12 @@ class SrtFileInput
       std::vector<std::vector<std::vector<double>>>& oField,
       bool const iVerbose);
 
-  static void LoadRGBAFieldImagePNGFile(
+  static void LoadImagePNGFile(
       std::string const iFullpath,
-      std::vector<std::vector<std::vector<double>>>& oRField,
-      std::vector<std::vector<std::vector<double>>>& oGField,
-      std::vector<std::vector<std::vector<double>>>& oBField,
-      std::vector<std::vector<std::vector<double>>>& oAField,
-      bool const iVerbose);
-
-  static void LoadVectorFieldTXTFile(
-      std::string const iFullpath,
-      std::vector<std::vector<std::vector<Eigen::Vector3d>>>& oField,
+      std::vector<std::vector<double>>& oRField,
+      std::vector<std::vector<double>>& oGField,
+      std::vector<std::vector<double>>& oBField,
+      std::vector<std::vector<double>>& oAField,
       bool const iVerbose);
 
   static void LoadVectorFieldTXTFile(
@@ -97,15 +89,10 @@ class SrtFileInput
       std::vector<std::vector<std::vector<std::array<double, 9>>>>& oField,
       bool const iVerbose);
 
-  static void LoadTensorFieldTXTFile(
-      std::string const iFullpath,
-      std::vector<std::vector<std::vector<Eigen::Matrix3d>>>& oField,
-      bool const iVerbose);
-
   static void LoadMeshOBJFile(
       std::string const iFullpath,
-      std::vector<Eigen::Vector3d>& oPoints,
-      std::vector<Eigen::Vector3d>& oColors,
-      std::vector<Eigen::Vector3i>& oTriangles,
+      std::vector<std::array<double, 3>>& oPoints,
+      std::vector<std::array<double, 3>>& oColors,
+      std::vector<std::array<int, 3>>& oTriangles,
       bool const iVerbose);
 };

@@ -14,7 +14,6 @@
 // Project lib
 #include "Data.hpp"
 #include "SrtFileInput.hpp"
-#include "SrtUtil.hpp"
 #include "math/Vec.hpp"
 
 
@@ -187,25 +186,19 @@ SpaceTimeWorld::SpaceTimeWorld() {
 
 
   // Load PNG image for the background
-  std::vector<std::vector<std::vector<double>>> loadedRField, loadedGField, loadedBField, loadedAField;
+  std::vector<std::vector<double>> loadedRField, loadedGField, loadedBField, loadedAField;
   try {
-    SrtFileInput::LoadRGBAFieldImagePNGFile("HubbleDeepField.png", loadedRField, loadedGField, loadedBField, loadedAField, true);
+    SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedRField, loadedGField, loadedBField, loadedAField, true);
   } catch (...) {
   }
-  double stepX, stepY, stepZ;
-  double startX, startY, startZ;
-  SrtUtil::GetVoxelSizes(worldNbX, worldNbY, worldNbZ, worldBBoxMin, worldBBoxMax, true, stepX, stepY, stepZ);
-  SrtUtil::GetVoxelStart(worldBBoxMin, stepX, stepY, stepZ, true, startX, startY, startZ);
-  for (int x= 0; x < worldNbX; x++) {
-    for (int y= 0; y < worldNbY; y++) {
-      for (int z= 0; z < worldNbZ; z++) {
-        Eigen::Vector3d pos(double(x) * stepX + startX, double(y) * stepY + startY, double(z) * stepZ + startZ);
-        double r= SrtUtil::GetScalarFieldVal(loadedRField, pos, true, worldBBoxMin, worldBBoxMax);
-        double g= SrtUtil::GetScalarFieldVal(loadedGField, pos, true, worldBBoxMin, worldBBoxMax);
-        double b= SrtUtil::GetScalarFieldVal(loadedBField, pos, true, worldBBoxMin, worldBBoxMax);
-        if (x == 0)
-          worldColor[0][x][y][z].set(r, g, b);
-      }
+  for (int y= 0; y < worldNbY; y++) {
+    for (int z= 0; z < worldNbZ; z++) {
+      int imgY= y * int(loadedRField.size()) / worldNbY;
+      int imgZ= z * int(loadedRField[0].size()) / worldNbZ;
+      double r= loadedRField[imgY][imgZ];
+      double g= loadedGField[imgY][imgZ];
+      double b= loadedBField[imgY][imgZ];
+      worldColor[0][0][y][z].set(r, g, b);
     }
   }
 
