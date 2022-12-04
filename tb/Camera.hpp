@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Matrix.hpp"
 #include "TrackBall.hpp"
 
 //  Represents a camera. Enables the user to move the camera and at the end

@@ -12,7 +12,7 @@
 
 // Project lib
 #include "Data.hpp"
-#include "math/Vec.hpp"
+#include "math/Vectors.hpp"
 
 extern Data D;
 

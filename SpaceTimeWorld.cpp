@@ -14,7 +14,7 @@
 // Project lib
 #include "Data.hpp"
 #include "SrtFileInput.hpp"
-#include "math/Vec.hpp"
+#include "math/Vectors.hpp"
 
 
 using std::vector;

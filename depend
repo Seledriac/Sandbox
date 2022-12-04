@@ -1,9 +1,9 @@
-SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vec.hpp \
+SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
  Data.hpp SrtFileInput.hpp
 SrtColormap.o: SrtColormap.cpp SrtColormap.hpp
 SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp SrtGenericPNGParser.hpp
 SrtGenericPNGParser.o: SrtGenericPNGParser.cpp SrtGenericPNGParser.hpp
-flock.o: flock.cpp flock.hpp math/Vec.hpp Data.hpp
-main.o: main.cpp Data.hpp SpaceTimeWorld.hpp math/Vec.hpp flock.hpp \
- tb/Camera.hpp tb/Matrix.hpp tb/Vectors.hpp tb/TrackBall.hpp \
- tb/Quaternion.hpp
+flock.o: flock.cpp flock.hpp math/Vectors.hpp Data.hpp
+main.o: main.cpp Data.hpp SpaceTimeWorld.hpp math/Vectors.hpp flock.hpp \
+ tb/Camera.hpp tb/TrackBall.hpp tb/TrackBallMatrix.hpp \
+ tb/TrackBallVectors.hpp tb/TrackBallQuaternion.hpp

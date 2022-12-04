@@ -10,7 +10,7 @@
 #include "Data.hpp"
 #include "SpaceTimeWorld.hpp"
 #include "flock.hpp"
-#include "math/Vec.hpp"
+#include "math/Vectors.hpp"
 #include "tb/Camera.hpp"
 
 
@@ -310,14 +310,14 @@ void init_GL() {
   glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
 
   // Misc
-  // glEnable(GL_POINT_SMOOTH);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_NORMALIZE);
   glEnable(GL_DEPTH_TEST);
-  // glEnable(GL_LINE_SMOOTH);
   glDepthFunc(GL_LEQUAL);
   glShadeModel(GL_SMOOTH);
+  // glEnable(GL_POINT_SMOOTH);
+  // glEnable(GL_LINE_SMOOTH);
 }
 
 

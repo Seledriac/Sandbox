@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vec.hpp"
+#include "math/Vectors.hpp"
 
 
 class Boid

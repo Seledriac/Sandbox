@@ -2,9 +2,9 @@
 
 #include <cmath>
 
-#include "Matrix.hpp"
-#include "Quaternion.hpp"
-#include "Vectors.hpp"
+#include "TrackBallMatrix.hpp"
+#include "TrackBallQuaternion.hpp"
+#include "TrackBallVectors.hpp"
 
 namespace tb {
 
