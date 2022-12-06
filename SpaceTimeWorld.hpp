@@ -7,6 +7,7 @@
 
 // Project lib
 #include "math/Vectors.hpp"
+#include "math/Fields.hpp"
 
 
 class SpaceTimeWorld
@@ -28,8 +29,10 @@ class SpaceTimeWorld
   std::vector<std::vector<math::Vec3>> screenCol;
   std::vector<std::vector<int>> screenCount;
 
-  std::vector<std::vector<std::vector<math::Vec3>>> photonPos;
-  std::vector<std::vector<std::vector<math::Vec3>>> photonVel;
+  // std::vector<std::vector<std::vector<math::Vec3>>> photonPos;
+  // std::vector<std::vector<std::vector<math::Vec3>>> photonVel;
+  math::Field3D<math::Vec3> photonPos;
+  math::Field3D<math::Vec3> photonVel;
 
   SpaceTimeWorld();
 

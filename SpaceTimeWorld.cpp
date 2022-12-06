@@ -21,6 +21,7 @@ using std::vector;
 
 extern Data D;
 
+#define USE_FIELD_CLASS
 
 inline void myVertex3f(math::Vec3 vec) { glVertex3f(float(vec[0]), float(vec[1]), float(vec[2])); }
 inline void myColor3f(math::Vec3 vec) { glColor3f(float(vec[0]), float(vec[1]), float(vec[2])); }
@@ -203,6 +204,7 @@ SpaceTimeWorld::SpaceTimeWorld() {
   }
 
 
+#ifndef USE_FIELD_CLASS
   photonPos= vector<vector<vector<math::Vec3>>>(screenNbH, vector<vector<math::Vec3>>(screenNbV, vector<math::Vec3>(screenNbS, math::Vec3(-1.0, -1.0, -1.0))));
   photonVel= vector<vector<vector<math::Vec3>>>(screenNbH, vector<vector<math::Vec3>>(screenNbV, vector<math::Vec3>(screenNbS, math::Vec3(0.0, 0.0, 0.0))));
   for (int h= 0; h < screenNbH; h++) {
@@ -242,6 +244,49 @@ SpaceTimeWorld::SpaceTimeWorld() {
       }
     }
   }
+#endif
+
+#ifdef USE_FIELD_CLASS
+  photonPos= math::Field3D<math::Vec3>(screenNbH, screenNbV, screenNbS);
+  photonVel= math::Field3D<math::Vec3>(screenNbH, screenNbV, screenNbS);
+  for (int h= 0; h < screenNbH; h++) {
+    for (int v= 0; v < screenNbV; v++) {
+      photonPos(h, v, 0).set(1.0, (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
+      photonVel(h, v, 0).set(-2.0, 0.0, 0.0);
+    }
+  }
+
+  screenCount= vector<vector<int>>(screenNbH, vector<int>(screenNbV, 1));
+  screenCol= vector<vector<math::Vec3>>(screenNbH, vector<math::Vec3>(screenNbV, math::Vec3(0.0, 0.0, 0.0)));
+#pragma omp parallel for
+  for (int h= 0; h < screenNbH; h++) {
+    for (int v= 0; v < screenNbV; v++) {
+      for (int s= 0; s < screenNbS - 1; s++) {
+        int begX= std::min(std::max(int(std::floor(photonPos(h, v, s)[0] * worldNbX)), 0), worldNbX - 1);
+        int begY= std::min(std::max(int(std::floor(photonPos(h, v, s)[1] * worldNbY)), 0), worldNbY - 1);
+        int begZ= std::min(std::max(int(std::floor(photonPos(h, v, s)[2] * worldNbZ)), 0), worldNbZ - 1);
+        photonPos(h, v, s + 1)= photonPos(h, v, s) + photonVel(h, v, s) / double(screenNbS);
+        photonVel(h, v, s + 1)= photonVel(h, v, s) + worldFlow[0][begX][begY][begZ] / double(screenNbS);
+        screenCount[h][v]++;
+        int endX= std::min(std::max(int(std::floor(photonPos(h, v, s + 1)[0] * worldNbX)), 0), worldNbX - 1);
+        int endY= std::min(std::max(int(std::floor(photonPos(h, v, s + 1)[1] * worldNbY)), 0), worldNbY - 1);
+        int endZ= std::min(std::max(int(std::floor(photonPos(h, v, s + 1)[2] * worldNbZ)), 0), worldNbZ - 1);
+
+        vector<std::array<int, 3>> listVox= Bresenham3D(begX, begY, begZ, endX, endY, endZ);
+        bool foundColision= false;
+        for (std::array<int, 3> voxIdx : listVox) {
+          if (worldSolid[0][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
+            double velDif= D.param[ParamType::dopplerShift________].val * (photonVel(h, v, 0).norm2() - photonVel(h, v, s).norm2());
+            screenCol[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1 + velDif);
+            foundColision= true;
+            break;
+          }
+        }
+        if (foundColision) break;
+      }
+    }
+  }
+#endif
 }
 
 
@@ -303,6 +348,8 @@ void SpaceTimeWorld::draw() {
     glPopMatrix();
   }
 
+
+#ifndef USE_FIELD_CLASS
   // Draw the photon paths
   if (D.showPhotonPath) {
     int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
@@ -352,4 +399,57 @@ void SpaceTimeWorld::draw() {
     glEnd();
     glPointSize(1.0f);
   }
+#endif
+
+#ifdef USE_FIELD_CLASS
+  // Draw the photon paths
+  if (D.showPhotonPath) {
+    int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
+    glBegin(GL_LINES);
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+        for (int s= 0; s < screenCount[h][v] - 1; s++) {
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos(h, v, s));
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos(h, v, s + 1));
+        }
+      }
+    }
+    glEnd();
+    glPointSize(3.0f);
+    glBegin(GL_POINTS);
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+        for (int s= 0; s < screenCount[h][v]; s++) {
+          myColor3f(screenCol[h][v]);
+          myVertex3f(photonPos(h, v, s));
+        }
+      }
+    }
+    glEnd();
+    glPointSize(1.0f);
+  }
+
+  if (D.showCursor) {
+    int h= std::min(std::max(int(D.param[ParamType::cursorPosY__________].val), 0), screenNbH - 1);
+    int v= std::min(std::max(int(D.param[ParamType::cursorPosZ__________].val), 0), screenNbV - 1);
+    glBegin(GL_LINES);
+    for (int s= 0; s < screenCount[h][v] - 1; s++) {
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos(h, v, s));
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos(h, v, s + 1));
+    }
+    glEnd();
+    glPointSize(3.0f);
+    glBegin(GL_POINTS);
+    for (int s= 0; s < screenCount[h][v]; s++) {
+      myColor3f(screenCol[h][v]);
+      myVertex3f(photonPos(h, v, s));
+    }
+    glEnd();
+    glPointSize(1.0f);
+  }
+#endif
 }
