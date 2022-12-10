@@ -20,13 +20,13 @@ Flock::Flock(int n, float size) {
   this->nb_boids= n;
   this->size= size;
 
-  this->posFood= math::Vec3(0.5, 0.5, 0.5);
-  this->posPredator= math::Vec3(0.5, 0.5, 0.3);
+  this->posFood= Math::Vec3(0.5, 0.5, 0.5);
+  this->posPredator= Math::Vec3(0.5, 0.5, 0.3);
 
-  math::Vec3 p= math::Vec3(0.0, 0.5, 0.0);
-  math::Vec3 dp= math::Vec3(0.5, 0.0, 0.5);
-  math::Vec3 v= math::Vec3(0.0, 0.0, 0.0);
-  math::Vec3 dv= math::Vec3(0.2, 0.2, 0.2);
+  Math::Vec3 p= Math::Vec3(0.0, 0.5, 0.0);
+  Math::Vec3 dp= Math::Vec3(0.5, 0.0, 0.5);
+  Math::Vec3 v= Math::Vec3(0.0, 0.0, 0.0);
+  Math::Vec3 dv= Math::Vec3(0.2, 0.2, 0.2);
 
   this->boids= std::vector<Boid>(n);
   for (int i= 0; i < n; i++) {
@@ -67,13 +67,13 @@ void Flock::draw() {
 
 void Flock::animate(float t) {
   float a= 0.75, b= 0.015, c= 0.45, d= 0.04, e= 0.06;
-  std::vector<math::Vec3> velocityChange(this->nb_boids);
+  std::vector<Math::Vec3> velocityChange(this->nb_boids);
 
   // Compute the forces
   // #pragma omp parallel for
   for (int i= 0; i < nb_boids; i++) {
     int count= 0;
-    math::Vec3 sep, ali, coh, aim, run;
+    Math::Vec3 sep, ali, coh, aim, run;
     for (int j= 0; j < nb_boids; j++) {
       if ((boids[i].p - boids[j].p).norm2Squared() > size * size) continue;
       if (i == j) continue;

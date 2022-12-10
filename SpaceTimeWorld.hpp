@@ -1,13 +1,11 @@
 #pragma once
 
-
 // Standard lib
-#include <vector>
 #include <array>
+#include <vector>
 
 // Project lib
 #include "math/Vectors.hpp"
-#include "math/Fields.hpp"
 
 
 class SpaceTimeWorld
@@ -20,19 +18,16 @@ class SpaceTimeWorld
   std::array<double, 3> worldBBoxMin;
   std::array<double, 3> worldBBoxMax;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
-  std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldColor;
-  std::vector<std::vector<std::vector<std::vector<math::Vec3>>>> worldFlow;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldFlows;
 
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<math::Vec3>> screenCol;
+  std::vector<std::vector<Math::Vec3>> screenColor;
   std::vector<std::vector<int>> screenCount;
-
-  // std::vector<std::vector<std::vector<math::Vec3>>> photonPos;
-  // std::vector<std::vector<std::vector<math::Vec3>>> photonVel;
-  math::Field3D<math::Vec3> photonPos;
-  math::Field3D<math::Vec3> photonVel;
+  std::vector<std::vector<std::vector<Math::Vec3>>> photonPos;
+  std::vector<std::vector<std::vector<Math::Vec3>>> photonVel;
 
   SpaceTimeWorld();
 

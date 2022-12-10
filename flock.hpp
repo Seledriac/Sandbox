@@ -11,7 +11,7 @@
 class Boid
 {
   public:
-  math::Vec3 p, v, n;
+  Math::Vec3 p, v, n;
   float size;
 };
 
@@ -19,8 +19,8 @@ class Boid
 class Flock
 {
   public:
-  math::Vec3 posFood;
-  math::Vec3 posPredator;
+  Math::Vec3 posFood;
+  Math::Vec3 posPredator;
 
   private:
   int nb_boids;

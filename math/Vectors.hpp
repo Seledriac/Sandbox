@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace math {
+namespace Math {
 
   class Vec3
   {
@@ -74,4 +74,4 @@ private:
     double x[3];
   };
 
-}  // namespace math
+}  // namespace Math

@@ -68,10 +68,7 @@ class SrtFileInput
 
   static void LoadImagePNGFile(
       std::string const iFullpath,
-      std::vector<std::vector<double>>& oRField,
-      std::vector<std::vector<double>>& oGField,
-      std::vector<std::vector<double>>& oBField,
-      std::vector<std::vector<double>>& oAField,
+      std::vector<std::vector<std::array<double, 4>>>& oImage,
       bool const iVerbose);
 
   static void LoadVectorFieldTXTFile(
