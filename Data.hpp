@@ -82,13 +82,13 @@ class Data
     param.push_back(ParamUI("GR_DragStrength_____", 1.0));
     param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
     param.push_back(ParamUI("PS_NbParticles______", 1000));
-    param.push_back(ParamUI("PS_TimeStep_________", 0.1));
-    param.push_back(ParamUI("PS_NbSubStep________", 8));
+    param.push_back(ParamUI("PS_TimeStep_________", 0.05));
+    param.push_back(ParamUI("PS_NbSubStep________", 4));
     param.push_back(ParamUI("PS_FactorConduction_", 2.0));
     param.push_back(ParamUI("PS_ForceGravity_____", -1.0));
-    param.push_back(ParamUI("PS_ForceBuoyancy____", 2.0));
+    param.push_back(ParamUI("PS_ForceBuoyancy____", 4.0));
     param.push_back(ParamUI("PS_HeatInput________", 1.0));
-    param.push_back(ParamUI("PS_HeatOutput_______", 0.2));
+    param.push_back(ParamUI("PS_HeatOutput_______", 0.3));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));

@@ -63,7 +63,8 @@ void ParticleSystem::Draw() {
     glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
     glScalef(RadCur[k], RadCur[k], RadCur[k]);
     double r, g, b;
-    SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
+    // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
+    SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
     glColor3f(r, g, b);
     glutSolidSphere(1.0, 32, 16);
     glPopMatrix();
@@ -86,6 +87,7 @@ void ParticleSystem::Animate() {
   double heatAdd= D.param[PS_HeatInput________].val;
   double heatRem= D.param[PS_HeatOutput_______].val;
 
+
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
     for (int k0= 0; k0 < NbParticles; k0++) {
@@ -95,7 +97,7 @@ void ParticleSystem::Animate() {
 
     // Add or remove heat to particles based on position in the domain
     for (int k0= 0; k0 < NbParticles; k0++) {
-      if (PosCur[k0][2] < -0.8 * domainRad)
+      if (PosCur[k0][2] < -0.9 * domainRad)
         HotCur[k0]+= heatAdd * dt;
       else
         HotCur[k0]-= heatRem * dt;
@@ -116,19 +118,16 @@ void ParticleSystem::Animate() {
     }
 
     // Reset forces
-    for (int k0= 0; k0 < NbParticles; k0++) {
+    for (int k0= 0; k0 < NbParticles; k0++)
       ForCur[k0].set(0.0, 0.0, 0.0);
-    }
 
     // Add gravity forces
-    for (int k0= 0; k0 < NbParticles; k0++) {
+    for (int k0= 0; k0 < NbParticles; k0++)
       ForCur[k0]+= gravity * MasCur[k0];
-    }
 
     // Add boyancy forces
-    for (int k0= 0; k0 < NbParticles; k0++) {
+    for (int k0= 0; k0 < NbParticles; k0++)
       ForCur[k0]+= buoyancy * HotCur[k0];
-    }
 
     // Apply boundary constraint
     for (int k0= 0; k0 < NbParticles; k0++) {
@@ -152,9 +151,8 @@ void ParticleSystem::Animate() {
     }
 
     // Deduce velocities
-    for (int k0= 0; k0 < NbParticles; k0++) {
+    for (int k0= 0; k0 < NbParticles; k0++)
       VelCur[k0]= (PosCur[k0] - PosOld[k0]) / dt;
-    }
 
     // Update positions
     PosOld= PosCur;
