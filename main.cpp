@@ -7,6 +7,7 @@
 #include <GL/freeglut.h>
 
 // Project lib
+#include "BallsCollision.hpp"
 #include "Data.hpp"
 #include "SpaceTimeWorld.hpp"
 #include "flock.hpp"
@@ -24,6 +25,7 @@ Camera *cam;
 Data D;
 // Flock myFlock(100, 0.05);
 SpaceTimeWorld mySpaceTimeWorld;
+BallsCollision myBallsCollision;
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -99,7 +101,8 @@ void callback_display() {
 
   // Draw stuff in the scene
   // myFlock.draw();
-  mySpaceTimeWorld.draw();
+  mySpaceTimeWorld.Draw();
+  myBallsCollision.Draw();
 
   // Set the camera transformation matrix for the HUD
   glMatrixMode(GL_PROJECTION);
@@ -139,7 +142,7 @@ void callback_timer(int v) {
   if (D.playAnimation) {
     // Compute animations
     // myFlock.animate(0.02f);
-    // mySpaceTimeWorld.animate(0.02f);
+    myBallsCollision.Animate();
 
     // Refresh display and set timer for next frame
     glutPostRedisplay();
@@ -184,7 +187,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
   }
 
   else if (key == 'r') {
-    mySpaceTimeWorld= SpaceTimeWorld();
+    mySpaceTimeWorld.Init();
+  }
+  else if (key == 'b') {
+    myBallsCollision.Init();
   }
 
   glutPostRedisplay();
@@ -222,9 +228,6 @@ void callback_keyboard_special(int key, int x, int y) {
     D.param[D.idxParamUI].val+= 0.01;
   else if (key == GLUT_KEY_RIGHT)
     D.param[D.idxParamUI].val+= 1.0;
-
-  if (D.playAnimation)
-    mySpaceTimeWorld= SpaceTimeWorld();
 
   glutPostRedisplay();
 }
@@ -328,8 +331,10 @@ void init_scene() {
 
   // Initialize camera and arcball
   cam= new Camera;
+  // cam->setEye(2.0f, 2.5f, 1.5f);
+  // cam->setCenter(0.5f, 0.5f, 0.5f);
   cam->setEye(2.0f, 2.5f, 1.5f);
-  cam->setCenter(0.5f, 0.5f, 0.5f);
+  cam->setCenter(0.0f, 0.0f, 0.0f);
 }
 
 
@@ -339,7 +344,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(2200, 100);
+  glutInitWindowPosition(200, 100);
   glutCreateWindow("Display");
 
   // World initialization

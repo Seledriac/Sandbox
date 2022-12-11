@@ -29,7 +29,10 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<Math::Vec3>>> photonPos;
   std::vector<std::vector<std::vector<Math::Vec3>>> photonVel;
 
+  bool isInitialized;
+  
   SpaceTimeWorld();
 
-  void draw();
+  void Init();
+  void Draw();
 };

@@ -119,6 +119,13 @@ class Ball
 
 
 SpaceTimeWorld::SpaceTimeWorld() {
+  isInitialized= false;
+}
+
+
+void SpaceTimeWorld::Init() {
+  isInitialized= true;
+
   worldNbT= int(std::round(D.param[worldNbT____________].val));
   worldNbX= int(std::round(D.param[worldNbX____________].val));
   worldNbY= int(std::round(D.param[worldNbY____________].val));
@@ -245,7 +252,9 @@ SpaceTimeWorld::SpaceTimeWorld() {
 }
 
 
-void SpaceTimeWorld::draw() {
+void SpaceTimeWorld::Draw() {
+  if (!isInitialized) return;
+
   // Draw the solid voxels
   if (D.showWorld) {
     glPushMatrix();
