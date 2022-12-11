@@ -7,8 +7,8 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "BallsCollision.hpp"
 #include "Data.hpp"
+#include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
 #include "flock.hpp"
 #include "math/Vectors.hpp"
@@ -25,7 +25,7 @@ Camera *cam;
 Data D;
 // Flock myFlock(100, 0.05);
 SpaceTimeWorld mySpaceTimeWorld;
-BallsCollision myBallsCollision;
+ParticleSystem myParticleSystem;
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -102,7 +102,7 @@ void callback_display() {
   // Draw stuff in the scene
   // myFlock.draw();
   mySpaceTimeWorld.Draw();
-  myBallsCollision.Draw();
+  myParticleSystem.Draw();
 
   // Set the camera transformation matrix for the HUD
   glMatrixMode(GL_PROJECTION);
@@ -114,7 +114,7 @@ void callback_display() {
   glLoadIdentity();
 
   // Draw the HUD
-  glLineWidth(2.0f);
+  glLineWidth(1.0f);
   glColor3f(0.8f, 0.8f, 0.8f);
   char str[50];
   for (unsigned int k= 0; k < D.param.size(); k++) {
@@ -142,7 +142,7 @@ void callback_timer(int v) {
   if (D.playAnimation) {
     // Compute animations
     // myFlock.animate(0.02f);
-    myBallsCollision.Animate();
+    myParticleSystem.Animate();
 
     // Refresh display and set timer for next frame
     glutPostRedisplay();
@@ -186,11 +186,17 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.showGravity= !D.showGravity;
   }
 
+  else if (key == 'R') {
+    mySpaceTimeWorld= SpaceTimeWorld();
+  }
   else if (key == 'r') {
     mySpaceTimeWorld.Init();
   }
-  else if (key == 'b') {
-    myBallsCollision.Init();
+  else if (key == 'P') {
+    myParticleSystem= ParticleSystem();
+  }
+  else if (key == 'p') {
+    myParticleSystem.Init();
   }
 
   glutPostRedisplay();

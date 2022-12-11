@@ -26,14 +26,14 @@ public:
           x[2] * v.x[0] - x[0] * v.x[2],
           x[0] * v.x[1] - x[1] * v.x[0]);
     }
-    inline double norm2Squared() const { return x[0] * x[0] + x[1] * x[1] + x[2] * x[2]; }
-    inline double norm2() const { return sqrt(norm2Squared()); }
+    inline double normSquared() const { return x[0] * x[0] + x[1] * x[1] + x[2] * x[2]; }
+    inline double norm() const { return sqrt(normSquared()); }
     inline Vec3& normalize(double len= 1.0) {
-      double l= norm2();
+      double l= norm();
       return (l != 0.0) ? (*this*= (len / l)) : (*this);
     }
     inline Vec3 normalized(double len= 1.0) {
-      double l= norm2();
+      double l= norm();
       return (l != 0.0) ? (*this * len / l) : (*this);
     }
 

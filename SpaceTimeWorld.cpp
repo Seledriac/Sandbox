@@ -112,7 +112,7 @@ class Ball
       double const iRad) {
     pos= iPos;
     col= iCol;
-    spin= iSpin / iSpin.norm2();
+    spin= iSpin / iSpin.norm();
     rad= iRad;
   }
 };
@@ -126,13 +126,13 @@ SpaceTimeWorld::SpaceTimeWorld() {
 void SpaceTimeWorld::Init() {
   isInitialized= true;
 
-  worldNbT= int(std::round(D.param[worldNbT____________].val));
-  worldNbX= int(std::round(D.param[worldNbX____________].val));
-  worldNbY= int(std::round(D.param[worldNbY____________].val));
-  worldNbZ= int(std::round(D.param[worldNbZ____________].val));
-  screenNbH= int(std::round(D.param[screenNbH___________].val));
-  screenNbV= int(std::round(D.param[screenNbV___________].val));
-  screenNbS= int(std::round(D.param[screenNbS___________].val));
+  worldNbT= int(std::round(D.param[GR_WorldNbT_________].val));
+  worldNbX= int(std::round(D.param[GR_WorldNbX_________].val));
+  worldNbY= int(std::round(D.param[GR_WorldNbY_________].val));
+  worldNbZ= int(std::round(D.param[GR_WorldNbZ_________].val));
+  screenNbH= int(std::round(D.param[GR_ScreenNbH________].val));
+  screenNbV= int(std::round(D.param[GR_ScreenNbV________].val));
+  screenNbS= int(std::round(D.param[GR_ScreenNbS________].val));
 
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
@@ -166,22 +166,22 @@ void SpaceTimeWorld::Init() {
           // Add balls
           for (Ball ball : balls) {
             // Set voxel presence and colors
-            if ((posCell - ball.pos).norm2Squared() < ball.rad * ball.rad) {
+            if ((posCell - ball.pos).normSquared() < ball.rad * ball.rad) {
               worldSolid[t][x][y][z]= true;
               worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
             }
 
             // Compute inward gravitational pull
             if (!worldSolid[t][x][y][z]) {
-              worldFlows[t][x][y][z]+= D.param[ParamType::gravStrength________].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).norm2Squared();
+              worldFlows[t][x][y][z]+= D.param[GR_GravStrength_____].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).normSquared();
             }
 
             // Compute frame dragging
             if (!worldSolid[t][x][y][z]) {
-              if (ball.spin.norm2Squared() > 0.0) {
+              if (ball.spin.normSquared() > 0.0) {
                 Math::Vec3 vec= (posCell - ball.pos).normalized();
                 Math::Vec3 dir= ball.spin.cross(vec).normalized();
-                worldFlows[t][x][y][z]+= D.param[ParamType::dragStrength________].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).norm2Squared();
+                worldFlows[t][x][y][z]+= D.param[GR_DragStrength_____].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).normSquared();
               }
             }
           }
@@ -239,7 +239,7 @@ void SpaceTimeWorld::Init() {
         bool foundColision= false;
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[0][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            double velDif= D.param[ParamType::dopplerShift________].val * (photonVel[h][v][0].norm2() - photonVel[h][v][s].norm2());
+            double velDif= D.param[GR_DopplerShift_____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
             screenColor[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1 + velDif);
             foundColision= true;
             break;
@@ -343,8 +343,8 @@ void SpaceTimeWorld::Draw() {
 
   // Draw photon path for pixel selected by cursor
   if (D.showCursor) {
-    int h= std::min(std::max(int(D.param[ParamType::cursorPosY__________].val), 0), screenNbH - 1);
-    int v= std::min(std::max(int(D.param[ParamType::cursorPosZ__________].val), 0), screenNbV - 1);
+    int h= std::min(std::max(int(D.param[GR_CursorPosY_______].val), 0), screenNbH - 1);
+    int v= std::min(std::max(int(D.param[GR_CursorPosZ_______].val), 0), screenNbV - 1);
     glBegin(GL_LINES);
     for (int s= 0; s < screenCount[h][v] - 1; s++) {
       myColor3f(screenColor[h][v]);

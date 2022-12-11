@@ -18,27 +18,27 @@ class ParamUI
 
 enum ParamType
 {
-  worldNbT____________,
-  worldNbX____________,
-  worldNbY____________,
-  worldNbZ____________,
-  screenNbH___________,
-  screenNbV___________,
-  screenNbS___________,
-  cursorPosX__________,
-  cursorPosY__________,
-  cursorPosZ__________,
-  gravStrength________,
-  dragStrength________,
-  dopplerShift________,
-  nbParticles_________,
-  timeStep____________,
-  ratioDamping________,
-  ratioConduction_____,
-  forceGravity________,
-  forceBoundary_______,
-  forceCollision______,
-  forceBuoyancy_______,
+  GR_WorldNbT_________,
+  GR_WorldNbX_________,
+  GR_WorldNbY_________,
+  GR_WorldNbZ_________,
+  GR_ScreenNbH________,
+  GR_ScreenNbV________,
+  GR_ScreenNbS________,
+  GR_CursorPosX_______,
+  GR_CursorPosY_______,
+  GR_CursorPosZ_______,
+  GR_GravStrength_____,
+  GR_DragStrength_____,
+  GR_DopplerShift_____,
+  PS_NbParticles______,
+  PS_TimeStep_________,
+  PS_NbSubStep________,
+  PS_FactorConduction_,
+  PS_ForceGravity_____,
+  PS_ForceBuoyancy____,
+  PS_HeatInput________,
+  PS_HeatOutput_______,
   testVar0____________,
   testVar1____________,
   testVar2____________,
@@ -68,27 +68,27 @@ class Data
 
   Data() {
     param.clear();
-    param.push_back(ParamUI("worldNbT____________", 1.0));
-    param.push_back(ParamUI("worldNbX____________", 50.0));
-    param.push_back(ParamUI("worldNbY____________", 50.0));
-    param.push_back(ParamUI("worldNbZ____________", 50.0));
-    param.push_back(ParamUI("screenNbH___________", 100.0));
-    param.push_back(ParamUI("screenNbV___________", 100.0));
-    param.push_back(ParamUI("screenNbS___________", 40.0));
-    param.push_back(ParamUI("cursorPosX__________", 50.0));
-    param.push_back(ParamUI("cursorPosY__________", 50.0));
-    param.push_back(ParamUI("cursorPosZ__________", 50.0));
-    param.push_back(ParamUI("gravStrength________", 1.0));
-    param.push_back(ParamUI("dragStrength________", 1.0));
-    param.push_back(ParamUI("dopplerShift________", 1.0));
-    param.push_back(ParamUI("nbParticles_________", 20.0));
-    param.push_back(ParamUI("timeStep____________", 0.1));
-    param.push_back(ParamUI("ratioDamping________", 0.05));
-    param.push_back(ParamUI("ratioConduction_____", 0.01));
-    param.push_back(ParamUI("forceGravity________", 100.0));
-    param.push_back(ParamUI("forceBoundary_______", 1000.0));
-    param.push_back(ParamUI("forceCollision______", 1000.0));
-    param.push_back(ParamUI("forceBuoyancy_______", 100.0));
+    param.push_back(ParamUI("GR_WorldNbT_________", 1));
+    param.push_back(ParamUI("GR_WorldNbX_________", 50));
+    param.push_back(ParamUI("GR_WorldNbY_________", 50));
+    param.push_back(ParamUI("GR_WorldNbZ_________", 50));
+    param.push_back(ParamUI("GR_ScreenNbH________", 100));
+    param.push_back(ParamUI("GR_ScreenNbV________", 100));
+    param.push_back(ParamUI("GR_ScreenNbS________", 40));
+    param.push_back(ParamUI("GR_CursorPosX_______", 50));
+    param.push_back(ParamUI("GR_CursorPosY_______", 50));
+    param.push_back(ParamUI("GR_CursorPosZ_______", 50));
+    param.push_back(ParamUI("GR_GravStrength_____", 1.0));
+    param.push_back(ParamUI("GR_DragStrength_____", 1.0));
+    param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
+    param.push_back(ParamUI("PS_NbParticles______", 1000));
+    param.push_back(ParamUI("PS_TimeStep_________", 0.1));
+    param.push_back(ParamUI("PS_NbSubStep________", 8));
+    param.push_back(ParamUI("PS_FactorConduction_", 2.0));
+    param.push_back(ParamUI("PS_ForceGravity_____", -1.0));
+    param.push_back(ParamUI("PS_ForceBuoyancy____", 2.0));
+    param.push_back(ParamUI("PS_HeatInput________", 1.0));
+    param.push_back(ParamUI("PS_HeatOutput_______", 0.2));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));
