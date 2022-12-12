@@ -31,6 +31,7 @@ enum ParamType
   GR_GravStrength_____,
   GR_DragStrength_____,
   GR_DopplerShift_____,
+  PS_Contrain2D_______,
   PS_NbParticles______,
   PS_TimeStep_________,
   PS_NbSubStep________,
@@ -81,6 +82,7 @@ class Data
     param.push_back(ParamUI("GR_GravStrength_____", 1.0));
     param.push_back(ParamUI("GR_DragStrength_____", 1.0));
     param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
+    param.push_back(ParamUI("PS_Contrain2D_______", 1));
     param.push_back(ParamUI("PS_NbParticles______", 1000));
     param.push_back(ParamUI("PS_TimeStep_________", 0.05));
     param.push_back(ParamUI("PS_NbSubStep________", 4));

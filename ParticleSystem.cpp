@@ -41,7 +41,13 @@ void ParticleSystem::Init() {
   MasCur= std::vector<double>(NbParticles, 0.0);
   HotCur= std::vector<double>(NbParticles, 0.0);
 
-  double minRadius= 0.4 / std::sqrt(double(NbParticles));
+
+  double minRadius= 1.0;
+  if (int(std::round(D.param[PS_Contrain2D_______].val)) >= 1)
+    minRadius= 0.4 / std::pow(double(NbParticles), 1.0 / 2.0);
+  else
+    minRadius= 0.4 / std::pow(double(NbParticles), 1.0 / 3.0);
+
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
       PosCur[k][dim]= (double(rand()) / double(RAND_MAX)) - 0.5;
@@ -61,7 +67,7 @@ void ParticleSystem::Draw() {
   for (int k= 0; k < NbParticles; k++) {
     glPushMatrix();
     glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
-    glScalef(RadCur[k], RadCur[k], RadCur[k]);
+    glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
     double r, g, b;
     // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
     SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
@@ -90,14 +96,16 @@ void ParticleSystem::Animate() {
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
-    for (int k0= 0; k0 < NbParticles; k0++) {
-      PosCur[k0][0]= 0.0;
-      VelCur[k0][0]= 0.0;
+    if (int(std::round(D.param[PS_Contrain2D_______].val)) >= 1) {
+      for (int k0= 0; k0 < NbParticles; k0++) {
+        PosCur[k0][0]= 0.0;
+        VelCur[k0][0]= 0.0;
+      }
     }
 
     // Add or remove heat to particles based on position in the domain
     for (int k0= 0; k0 < NbParticles; k0++) {
-      if (PosCur[k0][2] < -0.9 * domainRad)
+      if (PosCur[k0][2] < -0.9 * domainRad && PosCur[k0][1] > -0.8 * domainRad && PosCur[k0][1] < 0.8 * domainRad  && PosCur[k0][0] > -0.8 * domainRad && PosCur[k0][0] < 0.8 * domainRad)
         HotCur[k0]+= heatAdd * dt;
       else
         HotCur[k0]-= heatRem * dt;
