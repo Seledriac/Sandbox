@@ -8,9 +8,9 @@ namespace tbmath {
   {
 public:
     mat2(void) { load_identity(); }
-    mat2(const mat2& m) {
-      for (int i= 0; i < 4; ++i) x[i]= m.x[i];
-    }
+    // mat2(const mat2& m) {
+    //   for (int i= 0; i < 4; ++i) x[i]= m.x[i];
+    // }
     mat2(float x11, float x12,
          float x21, float x22) {
       x[0]= x11;
@@ -84,9 +84,9 @@ private:
   {
 public:
     mat3(void) { load_identity(); }
-    mat3(const mat3& m) {
-      for (int i= 0; i < 9; ++i) x[i]= m.x[i];
-    }
+    // mat3(const mat3& m) {
+    //   for (int i= 0; i < 9; ++i) x[i]= m.x[i];
+    // }
     mat3(float x11, float x12, float x13,
          float x21, float x22, float x23,
          float x31, float x32, float x33) {
@@ -230,9 +230,9 @@ private:
   {
 public:
     mat4(void) { load_identity(); }
-    mat4(const mat4& m) {
-      for (int i= 0; i < 16; ++i) x[i]= m.x[i];
-    }
+    // mat4(const mat4& m) {
+    //   for (int i= 0; i < 16; ++i) x[i]= m.x[i];
+    // }
     mat4(float x11, float x12, float x13, float x14,
          float x21, float x22, float x23, float x24,
          float x31, float x32, float x33, float x34,
@@ -433,9 +433,9 @@ private:
   {
 public:
     matn(void) { load_identity(); }
-    matn(const matn<N>& m) {
-      for (unsigned int i= 0; i < N * N; ++i) x[i]= m.x[i];
-    }
+    // matn(const matn<N>& m) {
+    //   for (unsigned int i= 0; i < N * N; ++i) x[i]= m.x[i];
+    // }
     matn(float m[]) {
       for (unsigned int i= 0; i < N * N; ++i) x[i]= m[i];
     }
