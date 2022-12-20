@@ -73,30 +73,30 @@ void callback_display() {
   cam->setWindowSize(float(winW), float(winH));
   glMultMatrixf(cam->getViewMatrix());
 
-  // // Draw the reference frame
-  // glLineWidth(3.0f);
-  // glBegin(GL_LINES);
-  // glColor3f(1.0, 0.0, 0.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(1.0f, 0.0f, 0.0f);
-  // glColor3f(0.0, 1.0, 0.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(0.0f, 1.0f, 0.0f);
-  // glColor3f(0.0, 0.0, 1.0);
-  // glVertex3f(0.0f, 0.0f, 0.0f);
-  // glVertex3f(0.0f, 0.0f, 1.0f);
-  // glEnd();
-  // glLineWidth(1.0f);
-  // glPointSize(6.0f);
-  // glBegin(GL_POINTS);
-  // glColor3f(1.0, 0.0, 0.0);
-  // glVertex3f(1.0f, 0.0f, 0.0f);
-  // glColor3f(0.0, 1.0, 0.0);
-  // glVertex3f(0.0f, 1.0f, 0.0f);
-  // glColor3f(0.0, 0.0, 1.0);
-  // glVertex3f(0.0f, 0.0f, 1.0f);
-  // glEnd();
-  // glPointSize(1.0f);
+  // Draw the reference frame
+  glLineWidth(3.0f);
+  glBegin(GL_LINES);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(1.0f, 0.0f, 0.0f);
+  glColor3f(0.0, 1.0, 0.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 1.0f, 0.0f);
+  glColor3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 1.0f);
+  glEnd();
+  glLineWidth(1.0f);
+  glPointSize(6.0f);
+  glBegin(GL_POINTS);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(1.0f, 0.0f, 0.0f);
+  glColor3f(0.0, 1.0, 0.0);
+  glVertex3f(0.0f, 1.0f, 0.0f);
+  glColor3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0f, 0.0f, 1.0f);
+  glEnd();
+  glPointSize(1.0f);
 
 
   // Draw stuff in the scene

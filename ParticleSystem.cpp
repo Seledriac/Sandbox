@@ -41,19 +41,19 @@ void ParticleSystem::Init() {
   MasCur= std::vector<double>(NbParticles, 0.0);
   HotCur= std::vector<double>(NbParticles, 0.0);
 
-
   double minRadius= 1.0;
   if (int(std::round(D.param[PS_Contrain2D_______].val)) >= 1)
-    minRadius= 0.4 / std::pow(double(NbParticles), 1.0 / 2.0);
+    minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 2.0);
   else
-    minRadius= 0.4 / std::pow(double(NbParticles), 1.0 / 3.0);
+    minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 3.0);
 
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
       PosCur[k][dim]= (double(rand()) / double(RAND_MAX)) - 0.5;
       ColCur[k][dim]= (double(rand()) / double(RAND_MAX));
     }
-    RadCur[k]= minRadius + minRadius * (double(rand()) / double(RAND_MAX));
+    RadCur[k]= 1.5 * minRadius;
+    // RadCur[k]= minRadius + minRadius * (double(rand()) / double(RAND_MAX));
     MasCur[k]= 1.0;
     HotCur[k]= (double(rand()) / double(RAND_MAX));
   }
@@ -67,7 +67,8 @@ void ParticleSystem::Draw() {
   for (int k= 0; k < NbParticles; k++) {
     glPushMatrix();
     glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
-    glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
+    glScalef(RadCur[k], RadCur[k], RadCur[k]);
+    // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
     double r, g, b;
     // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
     SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
@@ -105,7 +106,7 @@ void ParticleSystem::Animate() {
 
     // Add or remove heat to particles based on position in the domain
     for (int k0= 0; k0 < NbParticles; k0++) {
-      if (PosCur[k0][2] < -0.9 * domainRad && PosCur[k0][1] > -0.8 * domainRad && PosCur[k0][1] < 0.8 * domainRad  && PosCur[k0][0] > -0.8 * domainRad && PosCur[k0][0] < 0.8 * domainRad)
+      if (PosCur[k0][2] < -0.9 * domainRad && PosCur[k0][1] > -0.8 * domainRad && PosCur[k0][1] < 0.8 * domainRad && PosCur[k0][0] > -0.8 * domainRad && PosCur[k0][0] < 0.8 * domainRad)
         HotCur[k0]+= heatAdd * dt;
       else
         HotCur[k0]-= heatRem * dt;
@@ -125,6 +126,10 @@ void ParticleSystem::Animate() {
       HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
     }
 
+    // Update particle radii based on heat
+    for (int k0= 0; k0 < NbParticles; k0++)
+      RadCur[k0]= 0.01 + HotCur[k0] * 0.03;
+
     // Reset forces
     for (int k0= 0; k0 < NbParticles; k0++)
       ForCur[k0].set(0.0, 0.0, 0.0);
@@ -140,8 +145,9 @@ void ParticleSystem::Animate() {
     // Apply boundary constraint
     for (int k0= 0; k0 < NbParticles; k0++) {
       // Square domain
-      for (int dim= 0; dim < 3; dim++)
-        PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
+      PosCur[k0][0]= std::min(std::max(PosCur[k0][0], -domainRad), domainRad);
+      PosCur[k0][1]= std::min(std::max(PosCur[k0][1], -domainRad), domainRad);
+      PosCur[k0][2]= std::max(PosCur[k0][2], -domainRad);
       // // Circular domain
       // if (PosCur[k0].norm() + RadCur[k0] > domainRad)
       //   PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
