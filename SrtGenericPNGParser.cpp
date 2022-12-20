@@ -526,7 +526,8 @@ int SrtGenericPNGParser::DecodePNG(std::vector<unsigned char>& out_image, unsign
       return (unsigned char)((pa <= pb && pa <= pc) ? a : pb <= pc ? b : c);
     }
   };
-  PNG decoder; decoder.decode(out_image, in_png, in_size, convert_to_rgba32);
+  PNG decoder; decoder.info.width= 0; decoder.info.height= 0;
+  decoder.decode(out_image, in_png, in_size, convert_to_rgba32);
   image_width = decoder.info.width; image_height = decoder.info.height;
   return decoder.error;
 }
