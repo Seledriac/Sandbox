@@ -31,15 +31,15 @@ enum ParamType
   GR_GravStrength_____,
   GR_DragStrength_____,
   GR_DopplerShift_____,
-  PS_Contrain2D_______,
-  PS_NbParticles______,
-  PS_TimeStep_________,
-  PS_NbSubStep________,
-  PS_FactorConduction_,
-  PS_ForceGravity_____,
-  PS_ForceBuoyancy____,
-  PS_HeatInput________,
-  PS_HeatOutput_______,
+  PD_Contrain2D_______,
+  PD_NbParticles______,
+  PD_TimeStep_________,
+  PD_NbSubStep________,
+  PD_FactorConduction_,
+  PD_ForceGravity_____,
+  PD_ForceBuoyancy____,
+  PD_HeatInput________,
+  PD_HeatOutput_______,
   testVar0____________,
   testVar1____________,
   testVar2____________,
@@ -82,15 +82,15 @@ class Data
     param.push_back(ParamUI("GR_GravStrength_____", 1.0));
     param.push_back(ParamUI("GR_DragStrength_____", 1.0));
     param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
-    param.push_back(ParamUI("PS_Contrain2D_______", 1));
-    param.push_back(ParamUI("PS_NbParticles______", 1000));
-    param.push_back(ParamUI("PS_TimeStep_________", 0.05));
-    param.push_back(ParamUI("PS_NbSubStep________", 4));
-    param.push_back(ParamUI("PS_FactorConduction_", 2.0));
-    param.push_back(ParamUI("PS_ForceGravity_____", -1.0));
-    param.push_back(ParamUI("PS_ForceBuoyancy____", 4.0));
-    param.push_back(ParamUI("PS_HeatInput________", 1.0));
-    param.push_back(ParamUI("PS_HeatOutput_______", 0.3));
+    param.push_back(ParamUI("PD_Contrain2D_______", 1));
+    param.push_back(ParamUI("PD_NbParticles______", 1000));
+    param.push_back(ParamUI("PD_TimeStep_________", 0.05));
+    param.push_back(ParamUI("PD_NbSubStep________", 4));
+    param.push_back(ParamUI("PD_FactorConduction_", 2.0));
+    param.push_back(ParamUI("PD_ForceGravity_____", -1.0));
+    param.push_back(ParamUI("PD_ForceBuoyancy____", 8.0));
+    param.push_back(ParamUI("PD_HeatInput________", 1.0));
+    param.push_back(ParamUI("PD_HeatOutput_______", 0.3));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));

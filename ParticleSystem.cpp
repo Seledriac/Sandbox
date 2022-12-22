@@ -28,7 +28,7 @@ ParticleSystem::ParticleSystem() {
 void ParticleSystem::Init() {
   isInitialized= true;
 
-  NbParticles= int(std::round(D.param[PS_NbParticles______].val));
+  NbParticles= int(std::round(D.param[PD_NbParticles______].val));
 
   PosOld= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
   PosCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
@@ -42,7 +42,7 @@ void ParticleSystem::Init() {
   HotCur= std::vector<double>(NbParticles, 0.0);
 
   double minRadius= 1.0;
-  if (int(std::round(D.param[PS_Contrain2D_______].val)) >= 1)
+  if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1)
     minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 2.0);
   else
     minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 3.0);
@@ -71,7 +71,8 @@ void ParticleSystem::Draw() {
     // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
     double r, g, b;
     // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
-    SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
+    SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
+    // SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
     glColor3f(r, g, b);
     glutSolidSphere(1.0, 32, 16);
     glPopMatrix();
@@ -83,21 +84,21 @@ void ParticleSystem::Animate() {
   if (!isInitialized) return;
 
   double domainRad= 1.0;
-  int nbSubstep= int(std::round(D.param[PS_NbSubStep________].val));
-  double dt= D.param[PS_TimeStep_________].val / double(nbSubstep);
+  int nbSubstep= int(std::round(D.param[PD_NbSubStep________].val));
+  double dt= D.param[PD_TimeStep_________].val / double(nbSubstep);
 
-  Math::Vec3 gravity(0.0, 0.0, D.param[PS_ForceGravity_____].val);
-  Math::Vec3 buoyancy(0.0, 0.0, D.param[PS_ForceBuoyancy____].val);
+  Math::Vec3 gravity(0.0, 0.0, D.param[PD_ForceGravity_____].val);
+  Math::Vec3 buoyancy(0.0, 0.0, D.param[PD_ForceBuoyancy____].val);
 
-  double conductionFactor= D.param[PS_FactorConduction_].val;
+  double conductionFactor= D.param[PD_FactorConduction_].val;
 
-  double heatAdd= D.param[PS_HeatInput________].val;
-  double heatRem= D.param[PS_HeatOutput_______].val;
+  double heatAdd= D.param[PD_HeatInput________].val;
+  double heatRem= D.param[PD_HeatOutput_______].val;
 
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
-    if (int(std::round(D.param[PS_Contrain2D_______].val)) >= 1) {
+    if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1) {
       for (int k0= 0; k0 < NbParticles; k0++) {
         PosCur[k0][0]= 0.0;
         VelCur[k0][0]= 0.0;
@@ -113,7 +114,7 @@ void ParticleSystem::Animate() {
       HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
     }
 
-    // Transfer heat between particles
+    // Transfer heat between particles (Gauss Seidel)
     std::vector<double> HotOld= HotCur;
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
@@ -145,15 +146,14 @@ void ParticleSystem::Animate() {
     // Apply boundary constraint
     for (int k0= 0; k0 < NbParticles; k0++) {
       // Square domain
-      PosCur[k0][0]= std::min(std::max(PosCur[k0][0], -domainRad), domainRad);
-      PosCur[k0][1]= std::min(std::max(PosCur[k0][1], -domainRad), domainRad);
-      PosCur[k0][2]= std::max(PosCur[k0][2], -domainRad);
+      for (int dim= 0; dim < 3; dim++)
+        PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
       // // Circular domain
       // if (PosCur[k0].norm() + RadCur[k0] > domainRad)
       //   PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
     }
 
-    // Apply collision constraint
+    // Apply collision constraint (Gauss Seidel)
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
