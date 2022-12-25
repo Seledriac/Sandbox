@@ -15,8 +15,6 @@ class SpaceTimeWorld
   int worldNbX;
   int worldNbY;
   int worldNbZ;
-  std::array<double, 3> worldBBoxMin;
-  std::array<double, 3> worldBBoxMax;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldFlows;

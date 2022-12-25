@@ -104,16 +104,19 @@ class Ball
   Math::Vec3 col;
   Math::Vec3 spin;
   double rad;
+  double mass;
 
   Ball(
       Math::Vec3 const iPos,
       Math::Vec3 const iCol,
       Math::Vec3 const iSpin,
-      double const iRad) {
+      double const iRad,
+      double const iMass) {
     pos= iPos;
     col= iCol;
     spin= iSpin / iSpin.norm();
     rad= iRad;
+    mass= iMass;
   }
 };
 
@@ -138,17 +141,10 @@ void SpaceTimeWorld::Init() {
   worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
   worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
 
-  worldBBoxMin= {0.0, 0.0, 0.0};
-  worldBBoxMax= {1.0, 1.0, 1.0};
-
   // Create balls
   std::vector<Ball> balls;
-  // balls.push_back(Ball(Math::Vec3(0.7, 0.4, 0.5), Math::Vec3(0.6, 0.0, 0.0), Math::Vec3(0.0, 0.0, 1.0), 0.1));
-  // balls.push_back(Ball(Math::Vec3(0.5, 0.7, 0.3), Math::Vec3(0.0, 0.6, 0.0), Math::Vec3(1.0, 0.0, 0.0), 0.05));
-  // balls.push_back(Ball(Math::Vec3(0.2, 0.5, 0.6), Math::Vec3(0.0, 0.0, 0.6), Math::Vec3(0.0, 0.0, 0.0), 0.1));
-
-  Math::Vec3 tempPos(D.param[ParamType::testVar0____________].val, D.param[ParamType::testVar1____________].val, D.param[ParamType::testVar2____________].val);
-  balls.push_back(Ball(tempPos, Math::Vec3(0.0, 0.6, 0.0), Math::Vec3(0.0, 0.0, 1.0), 0.1));
+  balls.push_back(Ball(Math::Vec3(0.5, 0.65, 0.65), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.05, 0.2));
+  // balls.push_back(Ball(Math::Vec3(0.5, 0.25, 0.25), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.05, -0.2));
 
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -171,9 +167,9 @@ void SpaceTimeWorld::Init() {
               worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
             }
 
-            // Compute inward gravitational pull
+            // Compute radial gravitational effect
             if (!worldSolid[t][x][y][z]) {
-              worldFlows[t][x][y][z]+= D.param[GR_GravStrength_____].val * (ball.pos - posCell).normalized() / (ball.pos - posCell).normSquared();
+              worldFlows[t][x][y][z]+= D.param[GR_GravStrength_____].val * ball.mass * (ball.pos - posCell).normalized() / (ball.pos - posCell).normSquared();
             }
 
             // Compute frame dragging
@@ -181,7 +177,7 @@ void SpaceTimeWorld::Init() {
               if (ball.spin.normSquared() > 0.0) {
                 Math::Vec3 vec= (posCell - ball.pos).normalized();
                 Math::Vec3 dir= ball.spin.cross(vec).normalized();
-                worldFlows[t][x][y][z]+= D.param[GR_DragStrength_____].val * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).normSquared();
+                worldFlows[t][x][y][z]+= D.param[GR_DragStrength_____].val * ball.mass * (1.0 - std::abs(vec.dot(ball.spin))) * dir / (ball.pos - posCell).normSquared();
               }
             }
           }
@@ -210,24 +206,30 @@ void SpaceTimeWorld::Init() {
 
   photonPos= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec3(-1.0, -1.0, -1.0));
   photonVel= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec3(0.0, 0.0, 0.0));
-  // photonPos= vector<vector<vector<Math::Vec3>>>(screenNbH, vector<vector<Math::Vec3>>(screenNbV, vector<Math::Vec3>(screenNbS, Math::Vec3(-1.0, -1.0, -1.0))));
-  // photonVel= vector<vector<vector<Math::Vec3>>>(screenNbH, vector<vector<Math::Vec3>>(screenNbV, vector<Math::Vec3>(screenNbS, Math::Vec3(0.0, 0.0, 0.0))));
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
-      photonPos[h][v][0]= Math::Vec3(1.0, (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
+      photonPos[h][v][0]= Math::Vec3(1.0 - 0.5 / double(screenNbS), (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
       photonVel[h][v][0]= Math::Vec3(-2.0, 0.0, 0.0);
     }
   }
 
-  screenCount= Util::AllocField2D(screenNbH, screenNbV, 1);
   screenColor= Util::AllocField2D(screenNbH, screenNbV, Math::Vec3(0.0, 0.0, 0.0));
+  screenCount= Util::AllocField2D(screenNbH, screenNbV, 1);
 #pragma omp parallel for
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       for (int s= 0; s < screenNbS - 1; s++) {
-        int begX= std::min(std::max(int(std::floor(photonPos[h][v][s][0] * worldNbX)), 0), worldNbX - 1);
-        int begY= std::min(std::max(int(std::floor(photonPos[h][v][s][1] * worldNbY)), 0), worldNbY - 1);
-        int begZ= std::min(std::max(int(std::floor(photonPos[h][v][s][2] * worldNbZ)), 0), worldNbZ - 1);
+        int idxX= int(std::floor(photonPos[h][v][s][0] * worldNbX));
+        int idxY= int(std::floor(photonPos[h][v][s][1] * worldNbY));
+        int idxZ= int(std::floor(photonPos[h][v][s][2] * worldNbZ));
+        if (idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
+          double velDif= D.param[GR_DopplerShift_____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+          screenColor[h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
+          break;
+        }
+        int begX= std::min(std::max(idxX, 0), worldNbX - 1);
+        int begY= std::min(std::max(idxY, 0), worldNbY - 1);
+        int begZ= std::min(std::max(idxZ, 0), worldNbZ - 1);
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
         photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlows[0][begX][begY][begZ] / double(screenNbS);
         screenCount[h][v]++;
@@ -240,7 +242,7 @@ void SpaceTimeWorld::Init() {
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[0][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
             double velDif= D.param[GR_DopplerShift_____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
-            screenColor[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1 + velDif);
+            screenColor[h][v]= worldColor[0][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
             foundColision= true;
             break;
           }

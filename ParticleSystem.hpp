@@ -14,6 +14,7 @@ class ParticleSystem
 {
   public:
   int NbParticles;
+  double BaseRadius;
 
   std::vector<Math::Vec3> PosOld;
   std::vector<Math::Vec3> PosCur;

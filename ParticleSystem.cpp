@@ -41,18 +41,18 @@ void ParticleSystem::Init() {
   MasCur= std::vector<double>(NbParticles, 0.0);
   HotCur= std::vector<double>(NbParticles, 0.0);
 
-  double minRadius= 1.0;
+  BaseRadius= 1.0;
   if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1)
-    minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 2.0);
+    BaseRadius= 1.0 / std::pow(double(NbParticles), 1.0 / 2.0);
   else
-    minRadius= 0.3 / std::pow(double(NbParticles), 1.0 / 3.0);
+    BaseRadius= 1.0 / std::pow(double(NbParticles), 1.0 / 3.0);
 
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
       PosCur[k][dim]= (double(rand()) / double(RAND_MAX)) - 0.5;
       ColCur[k][dim]= (double(rand()) / double(RAND_MAX));
     }
-    RadCur[k]= 1.5 * minRadius;
+    RadCur[k]= BaseRadius;
     // RadCur[k]= minRadius + minRadius * (double(rand()) / double(RAND_MAX));
     MasCur[k]= 1.0;
     HotCur[k]= (double(rand()) / double(RAND_MAX));
@@ -129,7 +129,7 @@ void ParticleSystem::Animate() {
 
     // Update particle radii based on heat
     for (int k0= 0; k0 < NbParticles; k0++)
-      RadCur[k0]= 0.01 + HotCur[k0] * 0.03;
+      RadCur[k0]= 0.5 * BaseRadius + HotCur[k0] * BaseRadius;
 
     // Reset forces
     for (int k0= 0; k0 < NbParticles; k0++)
