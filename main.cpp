@@ -164,40 +164,29 @@ void callback_keyboard(unsigned char key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  if (key == 27) {
+  if (key == 27)
     exit(EXIT_SUCCESS);
-  }
-  else if (key == ' ') {
+  else if (key == ' ')
     D.playAnimation= !D.playAnimation;
-  }
-  else if (key == '1') {
+  else if (key == '1')
     D.showWorld= !D.showWorld;
-  }
-  else if (key == '2') {
+  else if (key == '2')
     D.showScreen= !D.showScreen;
-  }
-  else if (key == '3') {
+  else if (key == '3')
     D.showPhotonPath= !D.showPhotonPath;
-  }
-  else if (key == '4') {
+  else if (key == '4')
     D.showCursor= !D.showCursor;
-  }
-  else if (key == '5') {
-    D.showGravity= !D.showGravity;
-  }
+  else if (key == '5')
+    D.showFlow= !D.showFlow;
 
-  else if (key == 'R') {
+  else if (key == 'R')
     mySpaceTimeWorld= SpaceTimeWorld();
-  }
-  else if (key == 'r') {
+  else if (key == 'r')
     mySpaceTimeWorld.Init();
-  }
-  else if (key == 'P') {
+  else if (key == 'P')
     myParticleSystem= ParticleSystem();
-  }
-  else if (key == 'p') {
+  else if (key == 'p')
     myParticleSystem.Init();
-  }
 
   glutPostRedisplay();
 }

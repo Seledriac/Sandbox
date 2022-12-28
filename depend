@@ -1,7 +1,7 @@
 ParticleSystem.o: ParticleSystem.cpp ParticleSystem.hpp math/Vectors.hpp \
  Data.hpp SrtColormap.hpp
 SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
- Data.hpp SrtFileInput.hpp math/Util.hpp
+ Data.hpp SrtColormap.hpp SrtFileInput.hpp math/Util.hpp
 SrtColormap.o: SrtColormap.cpp SrtColormap.hpp
 SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp SrtGenericPNGParser.hpp
 SrtGenericPNGParser.o: SrtGenericPNGParser.cpp SrtGenericPNGParser.hpp

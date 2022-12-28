@@ -36,6 +36,11 @@ public:
       double l= norm();
       return (l != 0.0) ? (*this * len / l) : (*this);
     }
+    inline Vec3 abs() {
+      return Vec3(std::abs(x[0]), std::abs(x[1]), std::abs(x[2]));
+    }
+    inline double max() const { return std::max(std::max(x[0], x[1]), x[2]); }
+    inline double min() const { return std::min(std::min(x[0], x[1]), x[2]); }
 
     // Operators
     inline double operator[](int idx) const { return x[idx]; }
