@@ -147,8 +147,8 @@ void SpaceTimeWorld::Init() {
 
   // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(Math::Vec3(0.6, 0.15, 0.50), Math::Vec3(0.6, 0.85, 0.50), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.2));
-  balls.push_back(Ball(Math::Vec3(0.25, 0.50, 0.15), Math::Vec3(0.25, 0.50, 0.85), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.2));
+  balls.push_back(Ball(Math::Vec3(0.6, 0.20, 0.20), Math::Vec3(0.6, 0.80, 0.80), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.2));
+  balls.push_back(Ball(Math::Vec3(0.25, 0.80, 0.20), Math::Vec3(0.25, 0.20, 0.80), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.2));
 
   // Compute the world fields
   for (int t= 0; t < worldNbT; t++) {
@@ -168,7 +168,9 @@ void SpaceTimeWorld::Init() {
 
           // Add balls
           for (Ball ball : balls) {
-            Math::Vec3 BallToCell= posCell - (ball.posBeg + (ball.posEnd - ball.posBeg) * (double(t) / double(worldNbT - 1)));
+            Math::Vec3 BallToCell= posCell - ball.posBeg;
+            if (worldNbT > 1)
+              BallToCell-= (ball.posEnd - ball.posBeg) * (double(t) / double(worldNbT - 1));
 
             // Set voxel presence and colors
             if (BallToCell.abs().max() < ball.rad) {
