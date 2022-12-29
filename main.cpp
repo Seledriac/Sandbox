@@ -263,12 +263,14 @@ void callback_mouse_motion(int x, int y) {
 
 // Mouse motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
+  (void)x;  // Disable warning unused variable
+  (void)y;  // Disable warning unused variable
   int prevParamIdx= D.idxParamUI;
-  if (x < 180) {
-    int targetParam= (y - 3) / (characterSize + 2);
-    if (targetParam >= 0 && targetParam < int(D.param.size()))
-      D.idxParamUI= targetParam;
-  }
+  // if (x < 180) {
+  //   int targetParam= (y - 3) / (characterSize + 2);
+  //   if (targetParam >= 0 && targetParam < int(D.param.size()))
+  //     D.idxParamUI= targetParam;
+  // }
 
   if (D.idxParamUI != prevParamIdx)
     glutPostRedisplay();

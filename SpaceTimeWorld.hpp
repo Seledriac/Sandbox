@@ -19,11 +19,12 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldFlows;
 
+  int screenNbT;
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<Math::Vec3>> screenColor;
-  std::vector<std::vector<int>> screenCount;
+  std::vector<std::vector<std::vector<Math::Vec3>>> screenColor;
+  std::vector<std::vector<std::vector<int>>> screenCount;
 
   std::vector<std::vector<std::vector<Math::Vec3>>> photonPos;
   std::vector<std::vector<std::vector<Math::Vec3>>> photonVel;

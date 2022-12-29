@@ -22,6 +22,7 @@ enum ParamType
   GR_WorldNbX_________,
   GR_WorldNbY_________,
   GR_WorldNbZ_________,
+  GR_ScreenNbT________,
   GR_ScreenNbH________,
   GR_ScreenNbV________,
   GR_ScreenNbS________,
@@ -64,7 +65,7 @@ class Data
   bool showWorld= true;
   bool showScreen= true;
   bool showPhotonPath= false;
-  bool showCursor= true;
+  bool showCursor= false;
   bool showFlow= false;
 
   int idxParamUI= 0;
@@ -77,6 +78,7 @@ class Data
     param.push_back(ParamUI("GR_WorldNbX_________", 50));
     param.push_back(ParamUI("GR_WorldNbY_________", 50));
     param.push_back(ParamUI("GR_WorldNbZ_________", 50));
+    param.push_back(ParamUI("GR_ScreenNbT________", 20));
     param.push_back(ParamUI("GR_ScreenNbH________", 100));
     param.push_back(ParamUI("GR_ScreenNbV________", 100));
     param.push_back(ParamUI("GR_ScreenNbS________", 40));
