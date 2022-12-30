@@ -242,7 +242,7 @@ void SpaceTimeWorld::Init() {
   }
 
   // Loop through each screen frame
-  // #pragma omp parallel for
+  #pragma omp parallel for
   for (int t= 0; t < screenNbT; t++) {
     // Compute the photon paths to render the scene on the screen
     for (int h= 0; h < screenNbH; h++) {
