@@ -26,9 +26,9 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<Math::Vec3>>> screenColor;
   std::vector<std::vector<std::vector<int>>> screenCount;
 
-  std::vector<std::vector<std::vector<Math::Vec3>>> photonPos;
-  std::vector<std::vector<std::vector<Math::Vec3>>> photonVel;
-  std::vector<std::vector<std::vector<double>>> photonTim;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> photonPos;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> photonVel;
+  std::vector<std::vector<std::vector<std::vector<double>>>> photonTim;
 
   bool isInitialized;
 

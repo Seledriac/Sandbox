@@ -148,7 +148,7 @@ void SpaceTimeWorld::Init() {
 
   // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(Math::Vec3(0.6, 0.20, 0.20), Math::Vec3(0.6, 0.80, 0.80), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.1));
+  balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.1));
   // balls.push_back(Ball(Math::Vec3(0.25, 0.80, 0.20), Math::Vec3(0.25, 0.20, 0.80), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.1));
 
   // Compute the world fields
@@ -169,19 +169,22 @@ void SpaceTimeWorld::Init() {
 
           // Add balls
           for (Ball ball : balls) {
-            Math::Vec3 BallToCell= posCell - ball.posBeg;
+            Math::Vec3 BallToCell;
             if (worldNbT > 1)
-              BallToCell-= (ball.posEnd - ball.posBeg) * (double(t) / double(worldNbT - 1));
+              BallToCell= posCell - ball.posBeg - (ball.posEnd - ball.posBeg) * (double(t) / double(worldNbT - 1));
+            else
+              BallToCell= posCell - 0.5 * (ball.posBeg + ball.posEnd);
 
             // Set voxel presence and colors
-            if (BallToCell.abs().max() < ball.rad) {
-              worldSolid[t][x][y][z]= true;
-              worldColor[t][x][y][z]= ball.col * BallToCell.norm() / ball.rad;
-            }
-            // if (BallToCell.normSquared() < ball.rad * ball.rad) {
+            // if (BallToCell.abs().max() < ball.rad) {
             //   worldSolid[t][x][y][z]= true;
-            //   worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
+            //   worldColor[t][x][y][z]= ball.col * BallToCell.norm() / ball.rad;
             // }
+            if (BallToCell.normSquared() < ball.rad * ball.rad) {
+              worldSolid[t][x][y][z]= true;
+              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
+              worldColor[t][x][y][z]= (1.0 - 0.6 * BallToCell[1] / ball.rad) * ball.col;
+            }
 
             // Compute radial gravitational effect
             if (!worldSolid[t][x][y][z]) {
@@ -202,81 +205,74 @@ void SpaceTimeWorld::Init() {
     }
   }
 
-  // Load PNG image for the background
-  static std::vector<std::vector<std::array<double, 4>>> loadedImage;
-  if (loadedImage.empty()) {
-    try {
-      SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedImage, true);
-    } catch (...) {
-    }
-  }
-  for (int t= 0; t < worldNbT; t++) {
-    for (int y= 0; y < worldNbY; y++) {
-      for (int z= 0; z < worldNbZ; z++) {
-        int imgY= y * int(loadedImage.size()) / worldNbY;
-        int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
-        worldColor[t][0][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
-      }
-    }
-  }
+  // // Load PNG image for the background
+  // static std::vector<std::vector<std::array<double, 4>>> loadedImage;
+  // if (loadedImage.empty()) {
+  //   try {
+  //     SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedImage, true);
+  //   } catch (...) {
+  //   }
+  // }
+  // for (int t= 0; t < worldNbT; t++) {
+  //   for (int y= 0; y < worldNbY; y++) {
+  //     for (int z= 0; z < worldNbZ; z++) {
+  //       int imgY= y * int(loadedImage.size()) / worldNbY;
+  //       int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
+  //       worldColor[t][0][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+  //     }
+  //   }
+  // }
 
-
-  // Allocate  the photon fields
-  photonPos= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec3(-1.0, -1.0, -1.0));
-  photonVel= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec3(0.0, 0.0, 0.0));
-  photonTim= Util::AllocField3D(screenNbH, screenNbV, screenNbS, 0.0);
-
-  // Initialize the photon fields
-  for (int h= 0; h < screenNbH; h++) {
-    for (int v= 0; v < screenNbV; v++) {
-      photonPos[h][v][0]= Math::Vec3(1.0 - 0.5 / double(screenNbS), (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
-      photonVel[h][v][0]= Math::Vec3(-1.5, 0.0, 0.0);
-    }
-  }
-
-  // Allocate the screen fields
+  // Allocate the screen fields and photon fields
   screenColor= Util::AllocField3D(screenNbT, screenNbH, screenNbV, Math::Vec3(0.0, 0.0, 0.0));
   screenCount= Util::AllocField3D(screenNbT, screenNbH, screenNbV, 1);
+  photonPos= Util::AllocField4D(screenNbT, screenNbH, screenNbV, screenNbS, Math::Vec3(-1.0, -1.0, -1.0));
+  photonVel= Util::AllocField4D(screenNbT, screenNbH, screenNbV, screenNbS, Math::Vec3(0.0, 0.0, 0.0));
+  photonTim= Util::AllocField4D(screenNbT, screenNbH, screenNbV, screenNbS, 0.0);
 
-  // Loop through each screen frame
+  // Initialize the photon fields
   for (int t= 0; t < screenNbT; t++) {
-    // Initialize the photon fields
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
-        photonTim[h][v][0]= double(t * worldNbT) / double(screenNbT);
+        photonPos[t][h][v][0]= Math::Vec3(1.0 - 0.5 / double(screenNbS), (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
+        photonVel[t][h][v][0]= Math::Vec3(-1.5, 0.0, 0.0);
+        photonTim[t][h][v][0]= double(t * worldNbT) / double(screenNbT);
       }
     }
+  }
 
+  // Loop through each screen frame
+  // #pragma omp parallel for
+  for (int t= 0; t < screenNbT; t++) {
     // Compute the photon paths to render the scene on the screen
-#pragma omp parallel for
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
         for (int s= 0; s < screenNbS - 1; s++) {
-          int idxX= int(std::floor(photonPos[h][v][s][0] * worldNbX));
-          int idxY= int(std::floor(photonPos[h][v][s][1] * worldNbY));
-          int idxZ= int(std::floor(photonPos[h][v][s][2] * worldNbZ));
+          int idxX= int(std::floor(photonPos[t][h][v][s][0] * worldNbX));
+          int idxY= int(std::floor(photonPos[t][h][v][s][1] * worldNbY));
+          int idxZ= int(std::floor(photonPos[t][h][v][s][2] * worldNbZ));
           if (idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-            double velDif= D.param[GR_DopplerShift_____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            double velDif= D.param[GR_DopplerShift_____].val * (photonVel[t][h][v][0].norm() - photonVel[t][h][v][s].norm());
             screenColor[t][h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
             break;
           }
-          int idxT= std::min(std::max(int(std::floor(photonTim[h][v][s])), 0), worldNbT - 1);
+          int idxT= std::min(std::max(int(std::floor(photonTim[t][h][v][s])), 0), worldNbT - 1);
           int begX= std::min(std::max(idxX, 0), worldNbX - 1);
           int begY= std::min(std::max(idxY, 0), worldNbY - 1);
           int begZ= std::min(std::max(idxZ, 0), worldNbZ - 1);
-          photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
-          photonVel[h][v][s + 1]= photonVel[h][v][s] + worldFlows[idxT][begX][begY][begZ] / double(screenNbS);
-          photonTim[h][v][s + 1]= photonTim[h][v][s] - D.param[GR_TimeDilation_____].val * (double(worldNbT) / double(screenNbS));
+          photonPos[t][h][v][s + 1]= photonPos[t][h][v][s] + photonVel[t][h][v][s] / double(screenNbS);
+          photonVel[t][h][v][s + 1]= photonVel[t][h][v][s] + worldFlows[idxT][begX][begY][begZ] / double(screenNbS);
+          photonTim[t][h][v][s + 1]= photonTim[t][h][v][s] - D.param[GR_TimeDilation_____].val * (double(worldNbT) / double(screenNbS));
           screenCount[t][h][v]++;
-          int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][0] * worldNbX)), 0), worldNbX - 1);
-          int endY= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbY)), 0), worldNbY - 1);
-          int endZ= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][2] * worldNbZ)), 0), worldNbZ - 1);
+          int endX= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][0] * worldNbX)), 0), worldNbX - 1);
+          int endY= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][1] * worldNbY)), 0), worldNbY - 1);
+          int endZ= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][2] * worldNbZ)), 0), worldNbZ - 1);
 
           bool foundCollision= false;
           std::vector<std::array<int, 3>> listVox= Bresenham3D(begX, begY, begZ, endX, endY, endZ);
           for (std::array<int, 3> voxIdx : listVox) {
             if (worldSolid[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-              double velDif= D.param[GR_DopplerShift_____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+              double velDif= D.param[GR_DopplerShift_____].val * (photonVel[t][h][v][0].norm() - photonVel[t][h][v][s].norm());
               screenColor[t][h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
               foundCollision= true;
               break;
@@ -356,17 +352,16 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the photon paths
   if (D.showPhotonPath) {
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), screenNbT - 1);
     int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
     glBegin(GL_LINES);
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
-        for (int s= 0; s < screenCount[screenNbT - 1][h][v] - 1; s++) {
-          if (photonTim[h][v][s] > D.param[GR_CursorPosT_______].val) {
-            myColor3f(screenColor[screenNbT - 1][h][v]);
-            myVertex3f(photonPos[h][v][s]);
-            myColor3f(screenColor[screenNbT - 1][h][v]);
-            myVertex3f(photonPos[h][v][s + 1]);
-          }
+        for (int s= 0; s < screenCount[idxT][h][v] - 1; s++) {
+          myColor3f(screenColor[idxT][h][v]);
+          myVertex3f(photonPos[idxT][h][v][s]);
+          myColor3f(screenColor[idxT][h][v]);
+          myVertex3f(photonPos[idxT][h][v][s + 1]);
         }
       }
     }
@@ -375,11 +370,9 @@ void SpaceTimeWorld::Draw() {
     glBegin(GL_POINTS);
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
-        for (int s= 0; s < screenCount[screenNbT - 1][h][v]; s++) {
-          if (photonTim[h][v][s] > D.param[GR_CursorPosT_______].val) {
-            myColor3f(screenColor[screenNbT - 1][h][v]);
-            myVertex3f(photonPos[h][v][s]);
-          }
+        for (int s= 0; s < screenCount[idxT][h][v]; s++) {
+          myColor3f(screenColor[idxT][h][v]);
+          myVertex3f(photonPos[idxT][h][v][s]);
         }
       }
     }
@@ -389,21 +382,22 @@ void SpaceTimeWorld::Draw() {
 
   // Draw photon path for pixel selected by cursor
   if (D.showCursor) {
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), screenNbT - 1);
     int h= std::min(std::max(int(D.param[GR_CursorPosY_______].val), 0), screenNbH - 1);
     int v= std::min(std::max(int(D.param[GR_CursorPosZ_______].val), 0), screenNbV - 1);
     glBegin(GL_LINES);
-    for (int s= 0; s < screenCount[screenNbT - 1][h][v] - 1; s++) {
-      myColor3f(screenColor[screenNbT - 1][h][v]);
-      myVertex3f(photonPos[h][v][s]);
-      myColor3f(screenColor[screenNbT - 1][h][v]);
-      myVertex3f(photonPos[h][v][s + 1]);
+    for (int s= 0; s < screenCount[idxT][h][v] - 1; s++) {
+      myColor3f(screenColor[idxT][h][v]);
+      myVertex3f(photonPos[idxT][h][v][s]);
+      myColor3f(screenColor[idxT][h][v]);
+      myVertex3f(photonPos[idxT][h][v][s + 1]);
     }
     glEnd();
     glPointSize(3.0f);
     glBegin(GL_POINTS);
-    for (int s= 0; s < screenCount[screenNbT - 1][h][v]; s++) {
-      myColor3f(screenColor[screenNbT - 1][h][v]);
-      myVertex3f(photonPos[h][v][s]);
+    for (int s= 0; s < screenCount[idxT][h][v]; s++) {
+      myColor3f(screenColor[idxT][h][v]);
+      myVertex3f(photonPos[idxT][h][v][s]);
     }
     glEnd();
     glPointSize(1.0f);

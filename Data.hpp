@@ -62,6 +62,7 @@ class Data
   public:
   bool playAnimation= false;
 
+  bool showAxis= false;
   bool showWorld= true;
   bool showScreen= true;
   bool showPhotonPath= false;
@@ -74,15 +75,15 @@ class Data
 
   Data() {
     param.clear();
-    param.push_back(ParamUI("GR_WorldNbT_________", 20));
+    param.push_back(ParamUI("GR_WorldNbT_________", 10));
     param.push_back(ParamUI("GR_WorldNbX_________", 50));
     param.push_back(ParamUI("GR_WorldNbY_________", 50));
     param.push_back(ParamUI("GR_WorldNbZ_________", 50));
-    param.push_back(ParamUI("GR_ScreenNbT________", 20));
+    param.push_back(ParamUI("GR_ScreenNbT________", 10));
     param.push_back(ParamUI("GR_ScreenNbH________", 100));
     param.push_back(ParamUI("GR_ScreenNbV________", 100));
     param.push_back(ParamUI("GR_ScreenNbS________", 40));
-    param.push_back(ParamUI("GR_CursorPosT_______", 10));
+    param.push_back(ParamUI("GR_CursorPosT_______", 5));
     param.push_back(ParamUI("GR_CursorPosX_______", 50));
     param.push_back(ParamUI("GR_CursorPosY_______", 50));
     param.push_back(ParamUI("GR_CursorPosZ_______", 50));
