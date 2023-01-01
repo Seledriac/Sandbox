@@ -1,3 +1,4 @@
+AgentSwarm.o: AgentSwarm.cpp AgentSwarm.hpp math/Vectors.hpp Data.hpp
 ParticleSystem.o: ParticleSystem.cpp ParticleSystem.hpp math/Vectors.hpp \
  Data.hpp SrtColormap.hpp
 SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
@@ -5,8 +6,7 @@ SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
 SrtColormap.o: SrtColormap.cpp SrtColormap.hpp
 SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp SrtGenericPNGParser.hpp
 SrtGenericPNGParser.o: SrtGenericPNGParser.cpp SrtGenericPNGParser.hpp
-flock.o: flock.cpp flock.hpp math/Vectors.hpp Data.hpp
-main.o: main.cpp Data.hpp ParticleSystem.hpp math/Vectors.hpp \
- SpaceTimeWorld.hpp flock.hpp tb/Camera.hpp tb/TrackBall.hpp \
+main.o: main.cpp Data.hpp math/Vectors.hpp tb/Camera.hpp tb/TrackBall.hpp \
  tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
- tb/TrackBallQuaternion.hpp
+ tb/TrackBallQuaternion.hpp AgentSwarm.hpp ParticleSystem.hpp \
+ SpaceTimeWorld.hpp

@@ -45,6 +45,15 @@ enum ParamType
   PD_HeatInput________,
   PD_HeatOutput_______,
   S1__________________,
+  AS_NbAgents_________,
+  AS_SizeAgent________,
+  AS_TimeStep_________,
+  AS_CoeffSeparation__,
+  AS_CoeffAlignment___,
+  AS_CoeffCohesion____,
+  AS_CoeffHunger______,
+  AS_CoeffFear________,
+  S2__________________,
   testVar0____________,
   testVar1____________,
   testVar2____________,
@@ -102,6 +111,15 @@ class Data
     param.push_back(ParamUI("PD_HeatInput________", 1.0));
     param.push_back(ParamUI("PD_HeatOutput_______", 0.3));
     param.push_back(ParamUI("S1__________________", 1.0));
+    param.push_back(ParamUI("AS_NbAgents_________", 100));
+    param.push_back(ParamUI("AS_SizeAgent________", 0.05));
+    param.push_back(ParamUI("AS_TimeStep_________", 0.05));
+    param.push_back(ParamUI("AS_CoeffSeparation__", 0.75));
+    param.push_back(ParamUI("AS_CoeffAlignment___", 0.015));
+    param.push_back(ParamUI("AS_CoeffCohesion____", 0.45));
+    param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
+    param.push_back(ParamUI("AS_CoeffFear________", 0.06));
+    param.push_back(ParamUI("S2__________________", 1.0));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));

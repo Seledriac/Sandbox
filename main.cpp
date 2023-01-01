@@ -6,13 +6,17 @@
 // GLUT lib
 #include <GL/freeglut.h>
 
-// Project lib
+// Project Data
 #include "Data.hpp"
-#include "ParticleSystem.hpp"
-#include "SpaceTimeWorld.hpp"
-#include "flock.hpp"
+
+// Project Utilities
 #include "math/Vectors.hpp"
 #include "tb/Camera.hpp"
+
+// Project Sandbox Classes
+#include "AgentSwarm.hpp"
+#include "ParticleSystem.hpp"
+#include "SpaceTimeWorld.hpp"
 
 
 // Global variables used for the display
@@ -23,7 +27,7 @@ Camera *cam;
 
 // Global variables used by the scene
 Data D;
-// Flock myFlock(100, 0.05);
+AgentSwarm myAgentSwarm;
 SpaceTimeWorld mySpaceTimeWorld;
 ParticleSystem myParticleSystem;
 
@@ -102,7 +106,7 @@ void callback_display() {
 
 
   // Draw stuff in the scene
-  // myFlock.draw();
+  myAgentSwarm.Draw();
   mySpaceTimeWorld.Draw();
   myParticleSystem.Draw();
 
@@ -143,7 +147,7 @@ void callback_display() {
 void callback_timer(int v) {
   if (D.playAnimation) {
     // Compute animations
-    // myFlock.animate(0.02f);
+    myAgentSwarm.Animate();
     myParticleSystem.Animate();
 
     // Refresh display and set timer for next frame
@@ -189,6 +193,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
     myParticleSystem= ParticleSystem();
   else if (key == 'p')
     myParticleSystem.Init();
+  else if (key == 'S')
+    myAgentSwarm= AgentSwarm();
+  else if (key == 's')
+    myAgentSwarm.Init();
 
   glutPostRedisplay();
 }
