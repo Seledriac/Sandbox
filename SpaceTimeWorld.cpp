@@ -22,10 +22,6 @@
 extern Data D;
 
 
-inline void myVertex3f(Math::Vec3 vec) { glVertex3f(float(vec[0]), float(vec[1]), float(vec[2])); }
-inline void myColor3f(Math::Vec3 vec) { glColor3f(float(vec[0]), float(vec[1]), float(vec[2])); }
-
-
 std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
   std::vector<std::array<int, 3>> listVoxels;
   listVoxels.push_back({x0, y0, z0});
@@ -235,14 +231,14 @@ void SpaceTimeWorld::Init() {
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
         photonPos[t][h][v][0]= Math::Vec3(1.0 - 0.5 / double(screenNbS), (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
-        photonVel[t][h][v][0]= Math::Vec3(-1.5, 0.0, 0.0);
+        photonVel[t][h][v][0]= Math::Vec3(-2.0, 0.0, 0.0);
         photonTim[t][h][v][0]= double(t * worldNbT) / double(screenNbT);
       }
     }
   }
 
-  // Loop through each screen frame
-  #pragma omp parallel for
+// Loop through each screen frame
+#pragma omp parallel for
   for (int t= 0; t < screenNbT; t++) {
     // Compute the photon paths to render the scene on the screen
     for (int h= 0; h < screenNbH; h++) {
@@ -301,7 +297,7 @@ void SpaceTimeWorld::Draw() {
           glPushMatrix();
           if (worldSolid[idxT][x][y][z]) {
             glTranslatef(float(x), float(y), float(z));
-            myColor3f(worldColor[idxT][x][y][z]);
+            glColor3dv(worldColor[idxT][x][y][z].array());
             glutSolidCube(1.0);
           }
           glPopMatrix();
@@ -325,8 +321,8 @@ void SpaceTimeWorld::Draw() {
             SrtColormap::RatioToJetBrightSmooth(worldFlows[idxT][x][y][z].norm(), r, g, b);
             glColor3d(r, g, b);
             Math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
-            myVertex3f(pos);
-            myVertex3f(pos + 0.02 * worldFlows[idxT][x][y][z]);
+            glVertex3dv(pos.array());
+            glVertex3dv((pos + 0.02 * worldFlows[idxT][x][y][z]).array());
           }
         }
       }
@@ -343,7 +339,7 @@ void SpaceTimeWorld::Draw() {
     glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
-        myColor3f(screenColor[idxT][h][v]);
+        glColor3dv(screenColor[idxT][h][v].array());
         glRectf(float(h) / float(screenNbH), float(v) / float(screenNbV), float(h + 1) / float(screenNbH), float(v + 1) / float(screenNbV));
       }
     }
@@ -358,10 +354,10 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[idxT][h][v] - 1; s++) {
-          myColor3f(screenColor[idxT][h][v]);
-          myVertex3f(photonPos[idxT][h][v][s]);
-          myColor3f(screenColor[idxT][h][v]);
-          myVertex3f(photonPos[idxT][h][v][s + 1]);
+          glColor3dv(screenColor[idxT][h][v].array());
+          glVertex3dv(photonPos[idxT][h][v][s].array());
+          glColor3dv(screenColor[idxT][h][v].array());
+          glVertex3dv(photonPos[idxT][h][v][s + 1].array());
         }
       }
     }
@@ -371,8 +367,8 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[idxT][h][v]; s++) {
-          myColor3f(screenColor[idxT][h][v]);
-          myVertex3f(photonPos[idxT][h][v][s]);
+          glColor3dv(screenColor[idxT][h][v].array());
+          glVertex3dv(photonPos[idxT][h][v][s].array());
         }
       }
     }
@@ -387,17 +383,17 @@ void SpaceTimeWorld::Draw() {
     int v= std::min(std::max(int(D.param[GR_CursorPosZ_______].val), 0), screenNbV - 1);
     glBegin(GL_LINES);
     for (int s= 0; s < screenCount[idxT][h][v] - 1; s++) {
-      myColor3f(screenColor[idxT][h][v]);
-      myVertex3f(photonPos[idxT][h][v][s]);
-      myColor3f(screenColor[idxT][h][v]);
-      myVertex3f(photonPos[idxT][h][v][s + 1]);
+      glColor3dv(screenColor[idxT][h][v].array());
+      glVertex3dv(photonPos[idxT][h][v][s].array());
+      glColor3dv(screenColor[idxT][h][v].array());
+      glVertex3dv(photonPos[idxT][h][v][s + 1].array());
     }
     glEnd();
     glPointSize(3.0f);
     glBegin(GL_POINTS);
     for (int s= 0; s < screenCount[idxT][h][v]; s++) {
-      myColor3f(screenColor[idxT][h][v]);
-      myVertex3f(photonPos[idxT][h][v][s]);
+      glColor3dv(screenColor[idxT][h][v].array());
+      glVertex3dv(photonPos[idxT][h][v][s].array());
     }
     glEnd();
     glPointSize(1.0f);

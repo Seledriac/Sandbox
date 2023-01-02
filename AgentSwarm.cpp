@@ -52,6 +52,8 @@ void AgentSwarm::Init() {
 
 
 void AgentSwarm::Draw() {
+  if (!isInitialized) return;
+
   // glBegin(GL_LINES);
   // for (int i= 0; i < NbAgents; i++) {
   //   glColor3f(0.0, 0.0, 1.0);
@@ -115,6 +117,8 @@ void AgentSwarm::Draw() {
 
 
 void AgentSwarm::Animate() {
+    if (!isInitialized) return;
+
   float a= float(D.param[AS_CoeffSeparation__].val);
   float b= float(D.param[AS_CoeffAlignment___].val);
   float c= float(D.param[AS_CoeffCohesion____].val);
