@@ -287,7 +287,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the solid voxels
   if (D.showWorld) {
-    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), worldNbT - 1);
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val / 100.0 * double(worldNbT))), 0), worldNbT - 1);
     glPushMatrix();
     glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
     glTranslatef(0.5f, 0.5f, 0.5f);
@@ -309,7 +309,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the space time flow field
   if (D.showFlow) {
-    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), worldNbT - 1);
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val / 100.0 * double(worldNbT))), 0), worldNbT - 1);
 
     glBegin(GL_LINES);
     int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 1000, 1.0 / 3.0);
@@ -332,7 +332,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the screen
   if (D.showScreen) {
-    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), screenNbT - 1);
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val / 100.0 * double(screenNbT))), 0), screenNbT - 1);
     glPushMatrix();
     glTranslatef(1.0f, 0.0f, 0.0f);
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
@@ -348,7 +348,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the photon paths
   if (D.showPhotonPath) {
-    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), screenNbT - 1);
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val / 100.0 * double(screenNbT))), 0), screenNbT - 1);
     int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
     glBegin(GL_LINES);
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
@@ -378,7 +378,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw photon path for pixel selected by cursor
   if (D.showCursor) {
-    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val)), 0), screenNbT - 1);
+    int idxT= std::min(std::max(int(std::floor(D.param[GR_CursorPosT_______].val / 100.0 * double(screenNbT))), 0), screenNbT - 1);
     int h= std::min(std::max(int(D.param[GR_CursorPosY_______].val), 0), screenNbH - 1);
     int v= std::min(std::max(int(D.param[GR_CursorPosZ_______].val), 0), screenNbV - 1);
     glBegin(GL_LINES);
