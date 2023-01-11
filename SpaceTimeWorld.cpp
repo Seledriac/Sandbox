@@ -145,7 +145,7 @@ void SpaceTimeWorld::Init() {
   // Create balls
   std::vector<Ball> balls;
   balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.1));
-  // balls.push_back(Ball(Math::Vec3(0.25, 0.80, 0.20), Math::Vec3(0.25, 0.20, 0.80), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.1));
+  balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.1));
 
   // Compute the world fields
   for (int t= 0; t < worldNbT; t++) {
@@ -201,23 +201,23 @@ void SpaceTimeWorld::Init() {
     }
   }
 
-  // // Load PNG image for the background
-  // static std::vector<std::vector<std::array<double, 4>>> loadedImage;
-  // if (loadedImage.empty()) {
-  //   try {
-  //     SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedImage, true);
-  //   } catch (...) {
-  //   }
-  // }
-  // for (int t= 0; t < worldNbT; t++) {
-  //   for (int y= 0; y < worldNbY; y++) {
-  //     for (int z= 0; z < worldNbZ; z++) {
-  //       int imgY= y * int(loadedImage.size()) / worldNbY;
-  //       int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
-  //       worldColor[t][0][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
-  //     }
-  //   }
-  // }
+  // Load PNG image for the background
+  static std::vector<std::vector<std::array<double, 4>>> loadedImage;
+  if (loadedImage.empty()) {
+    try {
+      SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedImage, true);
+    } catch (...) {
+    }
+  }
+  for (int t= 0; t < worldNbT; t++) {
+    for (int y= 0; y < worldNbY; y++) {
+      for (int z= 0; z < worldNbZ; z++) {
+        int imgY= y * int(loadedImage.size()) / worldNbY;
+        int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
+        worldColor[t][0][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+      }
+    }
+  }
 
   // Allocate the screen fields and photon fields
   screenColor= Util::AllocField3D(screenNbT, screenNbH, screenNbV, Math::Vec3(0.0, 0.0, 0.0));

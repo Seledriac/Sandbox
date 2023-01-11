@@ -185,6 +185,9 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '5')
     D.showFlow= !D.showFlow;
 
+  else if (key == 'a')
+    D.showAxis= !D.showAxis;
+
   else if (key == 'R')
     mySpaceTimeWorld= SpaceTimeWorld();
   else if (key == 'r')
