@@ -72,11 +72,16 @@ class Data
   bool playAnimation= false;
 
   bool showAxis= false;
+  
   bool showWorld= true;
   bool showScreen= true;
   bool showPhotonPath= false;
   bool showCursor= false;
   bool showFlow= false;
+
+  bool showNodes= true;
+  bool showEdges= true;
+  bool showFaces= true;
 
   int idxParamUI= 0;
 

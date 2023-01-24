@@ -17,6 +17,7 @@
 #include "AgentSwarm.hpp"
 #include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
+#include "FractalCurveDevelopment.hpp"
 
 
 // Global variables used for the display
@@ -30,6 +31,7 @@ Data D;
 AgentSwarm myAgentSwarm;
 SpaceTimeWorld mySpaceTimeWorld;
 ParticleSystem myParticleSystem;
+FractalCurveDevelopment myFractalCurveDevelopment;
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -108,6 +110,7 @@ void callback_display() {
   // Draw stuff in the scene
   myAgentSwarm.Draw();
   mySpaceTimeWorld.Draw();
+  myFractalCurveDevelopment.Draw();
   myParticleSystem.Draw();
 
   // Set the camera transformation matrix for the HUD
@@ -192,6 +195,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
     mySpaceTimeWorld= SpaceTimeWorld();
   else if (key == 'r')
     mySpaceTimeWorld.Init();
+  else if (key == 'F')
+    myFractalCurveDevelopment= FractalCurveDevelopment();
+  else if (key == 'f')
+    myFractalCurveDevelopment.Init();
   else if (key == 'P')
     myParticleSystem= ParticleSystem();
   else if (key == 'p')
