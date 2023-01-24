@@ -348,10 +348,10 @@ void init_scene() {
 
   // Initialize camera and arcball
   cam= new Camera;
+  cam->setEye(1.5f, 2.0f, 1.0f);
+  cam->setCenter(0.0f, 0.0f, 0.0f);
   // cam->setEye(2.0f, 2.5f, 1.5f);
   // cam->setCenter(0.5f, 0.5f, 0.5f);
-  cam->setEye(2.0f, 2.5f, 1.5f);
-  cam->setCenter(0.5f, 0.5f, 0.5f);
 }
 
 
