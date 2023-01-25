@@ -1,4 +1,7 @@
 AgentSwarm.o: AgentSwarm.cpp AgentSwarm.hpp math/Vectors.hpp Data.hpp
+FractalCurveDevelopment.o: FractalCurveDevelopment.cpp \
+ FractalCurveDevelopment.hpp math/Vectors.hpp Data.hpp SrtColormap.hpp \
+ math/Util.hpp
 ParticleSystem.o: ParticleSystem.cpp ParticleSystem.hpp math/Vectors.hpp \
  Data.hpp SrtColormap.hpp
 SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
@@ -9,4 +12,4 @@ SrtGenericPNGParser.o: SrtGenericPNGParser.cpp SrtGenericPNGParser.hpp
 main.o: main.cpp Data.hpp math/Vectors.hpp tb/Camera.hpp tb/TrackBall.hpp \
  tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
  tb/TrackBallQuaternion.hpp AgentSwarm.hpp ParticleSystem.hpp \
- SpaceTimeWorld.hpp
+ SpaceTimeWorld.hpp FractalCurveDevelopment.hpp
