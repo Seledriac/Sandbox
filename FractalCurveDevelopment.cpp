@@ -19,6 +19,8 @@
 
 extern Data D;
 
+// #define KOCH_SNOWFLAKE
+#define DRAGON_CURVE
 
 FractalCurveDevelopment::FractalCurveDevelopment() {
   isInitialized= false;
@@ -34,11 +36,21 @@ void FractalCurveDevelopment::Init() {
   Nodes.clear();
 
   // Initialize the curve at depth 0
-  Nodes.resize(1, std::vector<Math::Vec3>(4));
-  Nodes[0][0]= Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0);
-  Nodes[0][1]= Math::Vec3(std::sqrt(3.0) / 2.0, 0.0, 0.0);
-  Nodes[0][2]= Math::Vec3(-std::sqrt(3.0) / 2.0, 1.0, 0.0);
-  Nodes[0][3]= Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0);
+#ifdef KOCH_SNOWFLAKE
+  Nodes.resize(1);
+  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(std::sqrt(3.0) / 2.0, 0.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, 1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0));
+#endif
+#ifdef DRAGON_CURVE
+  Nodes.resize(1);
+  Nodes[0].push_back(Math::Vec3(0.0, -1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(1.0, 0.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(0.0, 1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(-1.0, 0.0, 0.0));
+  Nodes[0].push_back(Math::Vec3(0.0, -1.0, 0.0));
+#endif
 
   // Iteratively build the next level in the fractal recursion depth
   for (int idxDepth= 1; idxDepth < maxDepth; idxDepth++) {
@@ -46,8 +58,9 @@ void FractalCurveDevelopment::Init() {
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
       Math::Vec3 posA= Nodes[idxDepth - 1][idxNode];
       Math::Vec3 posB= Nodes[idxDepth - 1][idxNode + 1];
-      Math::Vec3 ZOffset(0.0, 0.0, -0.5 / std::pow(1.25, double(idxDepth)));
+      Math::Vec3 ZOffset(0.0, 0.0, -D.param[testVar1____________].val / std::pow(D.param[testVar2____________].val, double(idxDepth)));
 
+#ifdef KOCH_SNOWFLAKE
       Math::Vec3 posN0= ZOffset + posA;
       Math::Vec3 posN1= ZOffset + posA + (posB - posA) * 1.0 / 3.0;
       Math::Vec3 posN2= ZOffset + (posA + posB) / 2.0 + (std::sqrt(3.0) / 6.0) * (posB - posA).norm() * (posB - posA).cross(Math::Vec3(0.0, 0.0, 1.0)).normalized();
@@ -68,28 +81,48 @@ void FractalCurveDevelopment::Init() {
       Faces.push_back({posM, posN2, posN3});
       Faces.push_back({posM, posN3, posN4});
       Faces.push_back({posM, posN4, posB});
+#endif
+#ifdef DRAGON_CURVE
+      Math::Vec3 dir= (posB - posA).cross(Math::Vec3(0.0, 0.0, 1.0)).normalized();
+      if (idxNode % 2 == 0)
+        dir= Math::Vec3()-dir;
+      Math::Vec3 posN0= ZOffset + posA;
+      Math::Vec3 posN1= ZOffset + 0.5 * (posA + posB) + 0.5*D.param[testVar3____________].val * (posB - posA).norm() * dir;
+      Math::Vec3 posN2= ZOffset + posB;
+
+      if (idxNode == 0)
+        Nodes[idxDepth].push_back(posN0);
+      Nodes[idxDepth].push_back(posN1);
+      Nodes[idxDepth].push_back(posN2);
+
+      Math::Vec3 posM= (posA + posB) / 2.0;
+      Faces.push_back({posM, posA, posN0});
+      Faces.push_back({posM, posN0, posN1});
+      Faces.push_back({posM, posN1, posN2});
+      Faces.push_back({posM, posN2, posB});
+#endif
     }
   }
 
   // Save OBJ file of developed surface
-  // std::string iFullpath= "D:/3DModelsUnsorted/test.obj";
-  // printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
-  // FILE* outputFile= nullptr;
-  // outputFile= fopen(iFullpath.c_str(), "w");
-  // if (outputFile == nullptr) {
-  //   printf("[ERROR] Unable to create the file\n\n");
-  //   throw 0;
-  // }
-  // for (unsigned int k= 0; k < Faces.size(); k++) {
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
-  // }
-  // for (unsigned int k= 0; k < Faces.size(); k++) {
-  //   fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
-  // }
-  // fclose(outputFile);
-  // printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
+  std::string iFullpath= "D:/3DModelsUnsorted/test.obj";
+  printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
+  FILE* outputFile= nullptr;
+  outputFile= fopen(iFullpath.c_str(), "w");
+  if (outputFile == nullptr) {
+    printf("[ERROR] Unable to create the file\n\n");
+    throw 0;
+  }
+  for (unsigned int k= 0; k < Faces.size(); k++) {
+    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
+    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
+    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
+  }
+  for (unsigned int k= 0; k < Faces.size(); k++) {
+    fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
+  }
+  fclose(outputFile);
+  printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
 
   isInitialized= true;
 }
