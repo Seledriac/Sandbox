@@ -95,7 +95,6 @@ void ParticleSystem::Animate() {
   double heatAdd= D.param[PD_HeatInput________].val;
   double heatRem= D.param[PD_HeatOutput_______].val;
 
-
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
     if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1) {
@@ -145,12 +144,12 @@ void ParticleSystem::Animate() {
 
     // Apply boundary constraint
     for (int k0= 0; k0 < NbParticles; k0++) {
-      // Square domain
-      for (int dim= 0; dim < 3; dim++)
-        PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
-      // // Circular domain
-      // if (PosCur[k0].norm() + RadCur[k0] > domainRad)
-      //   PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
+      // // Square domain
+      // for (int dim= 0; dim < 3; dim++)
+      //   PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
+      // Circular domain
+      if (PosCur[k0].norm() + RadCur[k0] > domainRad)
+        PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
     }
 
     // Apply collision constraint (Gauss Seidel)
@@ -168,6 +167,10 @@ void ParticleSystem::Animate() {
     for (int k0= 0; k0 < NbParticles; k0++)
       VelCur[k0]= (PosCur[k0] - PosOld[k0]) / dt;
 
+    // Apply explicit velocyti damping
+    for (int k0= 0; k0 < NbParticles; k0++)
+      VelCur[k0]= VelCur[k0] * (1.0 - D.param[PD_VelocityDecay____].val);
+
     // Update positions
     PosOld= PosCur;
     for (int k0= 0; k0 < NbParticles; k0++) {
@@ -175,4 +178,13 @@ void ParticleSystem::Animate() {
       PosCur[k0]= PosCur[k0] + VelCur[k0] * dt + AccCur[k0] * dt * dt;
     }
   }
+
+  // Plot some values
+  D.plotData.resize(3);
+  D.plotData[0].first= "valX";
+  D.plotData[1].first= "valY";
+  D.plotData[2].first= "valZ";
+  if (D.plotData[0].second.size() < 1000) D.plotData[0].second.push_back(PosCur[0][0]);
+  if (D.plotData[1].second.size() < 1000) D.plotData[1].second.push_back(PosCur[0][1]);
+  if (D.plotData[2].second.size() < 1000) D.plotData[2].second.push_back(PosCur[0][2]);
 }

@@ -19,8 +19,8 @@
 
 extern Data D;
 
-// #define KOCH_SNOWFLAKE
-#define DRAGON_CURVE
+#define KOCH_SNOWFLAKE
+// #define DRAGON_CURVE
 
 FractalCurveDevelopment::FractalCurveDevelopment() {
   isInitialized= false;

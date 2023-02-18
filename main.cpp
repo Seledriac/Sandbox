@@ -15,9 +15,10 @@
 
 // Project Sandbox Classes
 #include "AgentSwarm.hpp"
+#include "FractalCurveDevelopment.hpp"
 #include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
-#include "FractalCurveDevelopment.hpp"
+#include "SrtColormap.hpp"
 
 
 // Global variables used for the display
@@ -106,7 +107,6 @@ void callback_display() {
     glPointSize(1.0f);
   }
 
-
   // Draw stuff in the scene
   myAgentSwarm.Draw();
   mySpaceTimeWorld.Draw();
@@ -122,24 +122,63 @@ void callback_display() {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  // Draw the HUD
-  glLineWidth(1.0f);
-  glColor3f(0.8f, 0.8f, 0.8f);
-  char str[50];
+  // Draw the parameter list
   for (unsigned int k= 0; k < D.param.size(); k++) {
+    if (k == D.idxParamUI)
+      glColor3f(0.8f, 0.4f, 0.4f);
+    else
+      glColor3f(0.8f, 0.8f, 0.8f);
+    char str[50];
     sprintf(str, "%s = %4.6f", D.param[k].name.c_str(), D.param[k].val);
     draw_text(0, winH - (k + 1) * (characterSize + 2), str);
   }
-  glColor3f(0.8f, 0.3f, 0.3f);
-  sprintf(str, "____________________");
-  draw_text(0, winH - (D.idxParamUI + 1) * (characterSize + 2) - 3, str);
-  sprintf(str, "____________________");
-  draw_text(0, winH - (D.idxParamUI) * (characterSize + 2), str);
 
-  glColor3f(0.8f, 0.8f, 0.8f);
-  sprintf(str, "%.3f s", elapsed_time());
-  draw_text(0, 2, str);
-  glLineWidth(1.0f);
+  // Draw the 2D plot
+  {
+    int plotW= 400;
+    int plotH= 100;
+    int textW= 80;
+    int textH= 12;
+    for (unsigned int k0= 0; k0 < D.plotData.size(); k0++) {
+      if (D.plotData[k0].second.empty()) continue;
+      // Set the color
+      double r, g, b;
+      SrtColormap::RatioToJetBrightSmooth(double(k0) / double(D.plotData.size()-1), r, g, b);
+      glColor3f(float(r), float(g), float(b));
+      // Find the min max range for vertical scaling
+      double valMin= D.plotData[k0].second[0];
+      double valMax= D.plotData[k0].second[0];
+      for (unsigned int k1= 0; k1 < D.plotData[k0].second.size(); k1++) {
+        if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
+        if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
+      }
+      // Draw the text for legend and min max values
+      char str[50];
+      strcpy(str, D.plotData[k0].first.c_str());
+      draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
+      sprintf(str, "%+.2e", valMax);
+      draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
+      sprintf(str, "%+.2e", valMin);
+      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
+      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
+      draw_text(winW - textW, winH - textH - textH * k0, str);
+      // Draw the polyline
+      glBegin(GL_LINE_STRIP);
+      for (unsigned int k1= 0; k1 < D.plotData[k0].second.size(); k1++) {
+        double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+        glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
+      }
+      glEnd();
+    }
+  }
+
+  // Draw the frame time
+  {
+    glColor3f(0.8f, 0.8f, 0.8f);
+    char str[50];
+    sprintf(str, "%.3f s", elapsed_time());
+    draw_text(0, 2, str);
+  }
 
   // Commit the draw
   glutSwapBuffers();
@@ -190,6 +229,8 @@ void callback_keyboard(unsigned char key, int x, int y) {
 
   else if (key == 'a')
     D.showAxis= !D.showAxis;
+  else if (key == 'q')
+    D.plotData.clear();
 
   else if (key == 'R')
     mySpaceTimeWorld= SpaceTimeWorld();
@@ -285,7 +326,7 @@ void callback_mouse_motion(int x, int y) {
 void callback_passive_mouse_motion(int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
-  int prevParamIdx= D.idxParamUI;
+  unsigned int prevParamIdx= D.idxParamUI;
   // if (x < 180) {
   //   int targetParam= (y - 3) / (characterSize + 2);
   //   if (targetParam >= 0 && targetParam < int(D.param.size()))

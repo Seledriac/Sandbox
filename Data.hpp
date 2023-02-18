@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -39,6 +40,7 @@ enum ParamType
   PD_NbParticles______,
   PD_TimeStep_________,
   PD_NbSubStep________,
+  PD_VelocityDecay____,
   PD_FactorConduction_,
   PD_ForceGravity_____,
   PD_ForceBuoyancy____,
@@ -72,7 +74,7 @@ class Data
   bool playAnimation= false;
 
   bool showAxis= false;
-  
+
   bool showWorld= true;
   bool showScreen= true;
   bool showPhotonPath= false;
@@ -83,9 +85,11 @@ class Data
   bool showEdges= true;
   bool showFaces= true;
 
-  int idxParamUI= 0;
+  unsigned int idxParamUI= 0;
 
   std::vector<ParamUI> param;
+
+  std::vector<std::pair<std::string, std::vector<double>>> plotData;
 
   Data() {
     param.clear();
@@ -110,6 +114,7 @@ class Data
     param.push_back(ParamUI("PD_NbParticles______", 1000));
     param.push_back(ParamUI("PD_TimeStep_________", 0.05));
     param.push_back(ParamUI("PD_NbSubStep________", 4));
+    param.push_back(ParamUI("PD_VelocityDecay____", 0.01));
     param.push_back(ParamUI("PD_FactorConduction_", 2.0));
     param.push_back(ParamUI("PD_ForceGravity_____", -1.0));
     param.push_back(ParamUI("PD_ForceBuoyancy____", 8.0));
