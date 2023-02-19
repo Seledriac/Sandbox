@@ -30,6 +30,7 @@ void ParticleSystem::Init() {
 
   NbParticles= int(std::round(D.param[PD_NbParticles______].val));
 
+  // Allocate particle arrays
   PosOld= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
   PosCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
   PosCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
@@ -41,22 +42,38 @@ void ParticleSystem::Init() {
   MasCur= std::vector<double>(NbParticles, 0.0);
   HotCur= std::vector<double>(NbParticles, 0.0);
 
-  BaseRadius= 1.0;
+  // Compute radius based on box size and 2D or 3D
+  BaseRadius= 0.6;
   if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1)
-    BaseRadius= 1.0 / std::pow(double(NbParticles), 1.0 / 2.0);
+    BaseRadius/= std::pow(double(NbParticles), 1.0 / 2.0);
   else
-    BaseRadius= 1.0 / std::pow(double(NbParticles), 1.0 / 3.0);
+    BaseRadius/= std::pow(double(NbParticles), 1.0 / 3.0);
 
+  // Initialize with random particle properties
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
+      if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1 && dim == 0) continue;
       PosCur[k][dim]= (double(rand()) / double(RAND_MAX)) - 0.5;
       ColCur[k][dim]= (double(rand()) / double(RAND_MAX));
     }
     RadCur[k]= BaseRadius;
-    // RadCur[k]= minRadius + minRadius * (double(rand()) / double(RAND_MAX));
     MasCur[k]= 1.0;
     HotCur[k]= (double(rand()) / double(RAND_MAX));
   }
+
+  // Apply collision constraint (Gauss Seidel)
+  for (int idxStep= 0; idxStep < int(std::round(D.param[PD_NbSubStep________].val)); idxStep++) {
+    for (int k0= 0; k0 < NbParticles; k0++) {
+      for (int k1= k0 + 1; k1 < NbParticles; k1++) {
+        if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
+          Math::Vec3 val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5 * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+          PosCur[k0]-= val;
+          PosCur[k1]+= val;
+        }
+      }
+    }
+  }
+
   PosOld= PosCur;
 }
 
@@ -86,6 +103,7 @@ void ParticleSystem::Animate() {
   double domainRad= 1.0;
   int nbSubstep= int(std::round(D.param[PD_NbSubStep________].val));
   double dt= D.param[PD_TimeStep_________].val / double(nbSubstep);
+  double velocityDecay= (1.0 - D.param[PD_VelocityDecay____].val * dt);
 
   Math::Vec3 gravity(0.0, 0.0, D.param[PD_ForceGravity_____].val);
   Math::Vec3 buoyancy(0.0, 0.0, D.param[PD_ForceBuoyancy____].val);
@@ -108,8 +126,7 @@ void ParticleSystem::Animate() {
     for (int k0= 0; k0 < NbParticles; k0++) {
       if (PosCur[k0][2] < -0.9 * domainRad && PosCur[k0][1] > -0.8 * domainRad && PosCur[k0][1] < 0.8 * domainRad && PosCur[k0][0] > -0.8 * domainRad && PosCur[k0][0] < 0.8 * domainRad)
         HotCur[k0]+= heatAdd * dt;
-      else
-        HotCur[k0]-= heatRem * dt;
+      HotCur[k0]-= heatRem * dt;
       HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
     }
 
@@ -117,7 +134,7 @@ void ParticleSystem::Animate() {
     std::vector<double> HotOld= HotCur;
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
-        if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
+        if ((PosCur[k1] - PosCur[k0]).normSquared() <= 1.1 * (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
           double val= conductionFactor * (HotOld[k1] - HotOld[k0]) * dt;
           HotCur[k0]+= val;
           HotCur[k1]-= val;
@@ -126,9 +143,9 @@ void ParticleSystem::Animate() {
       HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
     }
 
-    // Update particle radii based on heat
-    for (int k0= 0; k0 < NbParticles; k0++)
-      RadCur[k0]= 0.5 * BaseRadius + HotCur[k0] * BaseRadius;
+    // // Update particle radii based on heat
+    // for (int k0= 0; k0 < NbParticles; k0++)
+    //   RadCur[k0]= 0.5 * BaseRadius + HotCur[k0] * BaseRadius;
 
     // Reset forces
     for (int k0= 0; k0 < NbParticles; k0++)
@@ -167,9 +184,9 @@ void ParticleSystem::Animate() {
     for (int k0= 0; k0 < NbParticles; k0++)
       VelCur[k0]= (PosCur[k0] - PosOld[k0]) / dt;
 
-    // Apply explicit velocyti damping
+    // Apply explicit velocity damping
     for (int k0= 0; k0 < NbParticles; k0++)
-      VelCur[k0]= VelCur[k0] * (1.0 - D.param[PD_VelocityDecay____].val);
+      VelCur[k0]= VelCur[k0] * velocityDecay;
 
     // Update positions
     PosOld= PosCur;

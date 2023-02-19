@@ -113,13 +113,13 @@ class Data
     param.push_back(ParamUI("PD_Contrain2D_______", 1));
     param.push_back(ParamUI("PD_NbParticles______", 1000));
     param.push_back(ParamUI("PD_TimeStep_________", 0.05));
-    param.push_back(ParamUI("PD_NbSubStep________", 4));
-    param.push_back(ParamUI("PD_VelocityDecay____", 0.01));
+    param.push_back(ParamUI("PD_NbSubStep________", 8));
+    param.push_back(ParamUI("PD_VelocityDecay____", 0.1));
     param.push_back(ParamUI("PD_FactorConduction_", 2.0));
     param.push_back(ParamUI("PD_ForceGravity_____", -1.0));
-    param.push_back(ParamUI("PD_ForceBuoyancy____", 8.0));
-    param.push_back(ParamUI("PD_HeatInput________", 1.0));
-    param.push_back(ParamUI("PD_HeatOutput_______", 0.3));
+    param.push_back(ParamUI("PD_ForceBuoyancy____", 4.0));
+    param.push_back(ParamUI("PD_HeatInput________", 4.0));
+    param.push_back(ParamUI("PD_HeatOutput_______", 0.1));
     param.push_back(ParamUI("S1__________________", 1.0));
     param.push_back(ParamUI("AS_NbAgents_________", 100));
     param.push_back(ParamUI("AS_SizeAgent________", 0.05));

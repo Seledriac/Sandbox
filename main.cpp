@@ -143,7 +143,7 @@ void callback_display() {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
       double r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(double(k0) / double(D.plotData.size()-1), r, g, b);
+      SrtColormap::RatioToJetBrightSmooth(double(k0) / double(D.plotData.size() - 1), r, g, b);
       glColor3f(float(r), float(g), float(b));
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
