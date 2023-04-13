@@ -144,8 +144,9 @@ void SpaceTimeWorld::Init() {
 
   // Create balls
   std::vector<Ball> balls;
-  balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.1));
-  balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.1));
+  // balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, 0.1));
+  // balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, -0.1));
+  balls.push_back(Ball(Math::Vec3(0.5, 0.5, 0.5), Math::Vec3(0.5, 0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), Math::Vec3(0.0, 0.0, 0.2), 0.08, D.param[testVar0____________].val));
 
   // Compute the world fields
   for (int t= 0; t < worldNbT; t++) {
@@ -154,14 +155,14 @@ void SpaceTimeWorld::Init() {
         for (int z= 0; z < worldNbZ; z++) {
           Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
 
-          // Add background layer
-          if (x == 0) {
-            worldSolid[t][x][y][z]= true;
-            if (y % 10 == 0 || y % 10 == 9 || z % 10 == 0 || z % 10 == 9)
-              worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
-            else
-              worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
-          }
+          // // Add background layer
+          // if (x == 0) {
+          //   worldSolid[t][x][y][z]= true;
+          //   if (y % 10 == 0 || y % 10 == 9 || z % 10 == 0 || z % 10 == 9)
+          //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+          //   else
+          //     worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+          // }
 
           // Add balls
           for (Ball ball : balls) {
@@ -214,7 +215,9 @@ void SpaceTimeWorld::Init() {
       for (int z= 0; z < worldNbZ; z++) {
         int imgY= y * int(loadedImage.size()) / worldNbY;
         int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
+        worldSolid[t][0][y][z]= true;
         worldColor[t][0][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+        todo; // add image on all faces of domain
       }
     }
   }
