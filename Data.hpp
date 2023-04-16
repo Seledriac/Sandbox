@@ -27,14 +27,11 @@ enum ParamType
   GR_ScreenNbH________,
   GR_ScreenNbV________,
   GR_ScreenNbS________,
-  GR_CursorPosT_______,
-  GR_CursorPosX_______,
-  GR_CursorPosY_______,
-  GR_CursorPosZ_______,
-  GR_GravStrength_____,
-  GR_DragStrength_____,
+  GR_CursorWorldT_____,
+  GR_CursorScreenT____,
+  GR_CurvSpace________,
+  GR_CurvTime_________,
   GR_DopplerShift_____,
-  GR_TimeDilation_____,
   S0__________________,
   PD_Contrain2D_______,
   PD_NbParticles______,
@@ -94,21 +91,18 @@ class Data
   Data() {
     param.clear();
     param.push_back(ParamUI("GR_WorldNbT_________", 5));
-    param.push_back(ParamUI("GR_WorldNbX_________", 50));
-    param.push_back(ParamUI("GR_WorldNbY_________", 50));
-    param.push_back(ParamUI("GR_WorldNbZ_________", 50));
+    param.push_back(ParamUI("GR_WorldNbX_________", 40));
+    param.push_back(ParamUI("GR_WorldNbY_________", 40));
+    param.push_back(ParamUI("GR_WorldNbZ_________", 40));
     param.push_back(ParamUI("GR_ScreenNbT________", 5));
     param.push_back(ParamUI("GR_ScreenNbH________", 100));
     param.push_back(ParamUI("GR_ScreenNbV________", 100));
     param.push_back(ParamUI("GR_ScreenNbS________", 40));
-    param.push_back(ParamUI("GR_CursorPosT_______", 5));
-    param.push_back(ParamUI("GR_CursorPosX_______", 50));
-    param.push_back(ParamUI("GR_CursorPosY_______", 50));
-    param.push_back(ParamUI("GR_CursorPosZ_______", 50));
-    param.push_back(ParamUI("GR_GravStrength_____", 1.0));
-    param.push_back(ParamUI("GR_DragStrength_____", 1.0));
+    param.push_back(ParamUI("GR_CursorWorldT_____", 0));
+    param.push_back(ParamUI("GR_CursorScreenT____", 0));
+    param.push_back(ParamUI("GR_CurvSpace________", 1.0));
+    param.push_back(ParamUI("GR_CurvTime_________", 1.0));
     param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
-    param.push_back(ParamUI("GR_TimeDilation_____", 1.0));
     param.push_back(ParamUI("S0__________________", 1.0));
     param.push_back(ParamUI("PD_Contrain2D_______", 1));
     param.push_back(ParamUI("PD_NbParticles______", 1000));

@@ -16,8 +16,10 @@ class SpaceTimeWorld
   int worldNbY;
   int worldNbZ;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
+  std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsSet;
+  std::vector<std::vector<std::vector<std::vector<double>>>> worldCurva;
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
-  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldFlows;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> worldFlows;
 
   int screenNbT;
   int screenNbH;
@@ -26,9 +28,8 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<Math::Vec3>>> screenColor;
   std::vector<std::vector<std::vector<int>>> screenCount;
 
-  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> photonPos;
-  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> photonVel;
-  std::vector<std::vector<std::vector<std::vector<double>>>> photonTim;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> photonPos;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> photonVel;
 
   bool isInitialized;
 
