@@ -16,7 +16,7 @@ class SpaceTimeWorld
   int worldNbY;
   int worldNbZ;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
-  std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsSet;
+  std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsFix;
   std::vector<std::vector<std::vector<std::vector<double>>>> worldCurva;
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
   std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> worldFlows;
