@@ -27,6 +27,7 @@ enum ParamType
   GR_ScreenNbH________,
   GR_ScreenNbV________,
   GR_ScreenNbS________,
+  GR_CurvaSmoothness__,
   GR_CursorWorldT_____,
   GR_CursorScreenT____,
   GR_CurvSpace________,
@@ -98,6 +99,7 @@ class Data
     param.push_back(ParamUI("GR_ScreenNbH________", 100));
     param.push_back(ParamUI("GR_ScreenNbV________", 100));
     param.push_back(ParamUI("GR_ScreenNbS________", 40));
+    param.push_back(ParamUI("GR_CurvaSmoothness__", 8));
     param.push_back(ParamUI("GR_CursorWorldT_____", 0));
     param.push_back(ParamUI("GR_CursorScreenT____", 0));
     param.push_back(ParamUI("GR_CurvSpace________", 1.0));
