@@ -145,10 +145,10 @@ void SpaceTimeWorld::Init() {
 
   // Create list of objects with macro properties
   std::vector<Ball> balls;
-  balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), 0.1, 100.0));
+  // balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), 0.1, 100.0));
   // balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), 0.1, -100.0));
 
-  // balls.push_back(Ball(Math::Vec3(0.5, 0.2, 0.2), Math::Vec3(0.5, 0.8, 0.8), Math::Vec3(0.6, 0.2, 0.2), 0.1, 10.0));
+  balls.push_back(Ball(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), 0.1, 100.0));
 
   // Set the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -241,25 +241,27 @@ void SpaceTimeWorld::Init() {
             //       if (yOff < 0 || yOff >= worldNbY) continue;
             //       for (int zOff= z - 2 * k; zOff <= z + 2 * k; zOff+= k) {
             //         if (zOff < 0 || zOff >= worldNbZ) continue;
-            for (int tOff= t - k; tOff <= t + k; tOff+= k) {
-              if (tOff < 0 || tOff >= worldNbT) continue;
-              for (int xOff= x - k; xOff <= x + k; xOff+= k) {
-                if (xOff < 0 || xOff >= worldNbX) continue;
-                for (int yOff= y - k; yOff <= y + k; yOff+= k) {
-                  if (yOff < 0 || yOff >= worldNbY) continue;
-                  for (int zOff= z - k; zOff <= z + k; zOff+= k) {
-                    if (zOff < 0 || zOff >= worldNbZ) continue;
-                    if (worldIsSet[tOff][xOff][yOff][zOff]) {
-                      // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
-                      // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
-                      double weight= 1.0;
-                      sum+= weight * worldCurvaOld[tOff][xOff][yOff][zOff];
-                      sumWeight+= weight;
-                    }
+
+            int tOff= t;
+            // for (int tOff= t - k; tOff <= t + k; tOff+= k) {
+            //   if (tOff < 0 || tOff >= worldNbT) continue;
+            for (int xOff= x - k; xOff <= x + k; xOff+= k) {
+              if (xOff < 0 || xOff >= worldNbX) continue;
+              for (int yOff= y - k; yOff <= y + k; yOff+= k) {
+                if (yOff < 0 || yOff >= worldNbY) continue;
+                for (int zOff= z - k; zOff <= z + k; zOff+= k) {
+                  if (zOff < 0 || zOff >= worldNbZ) continue;
+                  if (worldIsSet[tOff][xOff][yOff][zOff]) {
+                    // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
+                    // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
+                    double weight= 1.0;
+                    sum+= weight * worldCurvaOld[tOff][xOff][yOff][zOff];
+                    sumWeight+= weight;
                   }
                 }
               }
             }
+            // }
             worldIsSet[t][x][y][z]= true;
             if (sumWeight != 0.0) worldCurva[t][x][y][z]= sum / double(sumWeight);
           }
@@ -274,10 +276,10 @@ void SpaceTimeWorld::Init() {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          if (t > 0 && t < worldNbT - 1) worldFlows[t][x][y][z][0]= worldCurva[t + 1][x][y][z] - worldCurva[t - 1][x][y][z];
-          if (x > 0 && x < worldNbX - 1) worldFlows[t][x][y][z][1]= worldCurva[t][x + 1][y][z] - worldCurva[t][x - 1][y][z];
-          if (y > 0 && y < worldNbY - 1) worldFlows[t][x][y][z][2]= worldCurva[t][x][y + 1][z] - worldCurva[t][x][y - 1][z];
-          if (z > 0 && z < worldNbZ - 1) worldFlows[t][x][y][z][3]= worldCurva[t][x][y][z + 1] - worldCurva[t][x][y][z - 1];
+          if (t > 0 && t < worldNbT - 1) worldFlows[t][x][y][z][0]= D.param[GR_CurvTime_________].val * (worldCurva[t + 1][x][y][z] - worldCurva[t - 1][x][y][z]);
+          if (x > 0 && x < worldNbX - 1) worldFlows[t][x][y][z][1]= D.param[GR_CurvSpace________].val * (worldCurva[t][x + 1][y][z] - worldCurva[t][x - 1][y][z]);
+          if (y > 0 && y < worldNbY - 1) worldFlows[t][x][y][z][2]= D.param[GR_CurvSpace________].val * (worldCurva[t][x][y + 1][z] - worldCurva[t][x][y - 1][z]);
+          if (z > 0 && z < worldNbZ - 1) worldFlows[t][x][y][z][3]= D.param[GR_CurvSpace________].val * (worldCurva[t][x][y][z + 1] - worldCurva[t][x][y][z - 1]);
         }
       }
     }
@@ -308,30 +310,23 @@ void SpaceTimeWorld::Init() {
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
         for (int s= 0; s < screenNbS - 1; s++) {
-          // TODO try periodic photon path unit cube space loop closed thing ?
-
-          // TODO round instead of floor ?
-          int idxT= int(std::floor(photonPos[t][h][v][s][0] * worldNbT));
-          int idxX= int(std::floor(photonPos[t][h][v][s][1] * worldNbX));
-          int idxY= int(std::floor(photonPos[t][h][v][s][2] * worldNbY));
-          int idxZ= int(std::floor(photonPos[t][h][v][s][3] * worldNbZ));
+          int idxT= int(std::floor(photonPos[t][h][v][s][0] * double(worldNbT)));
+          int idxX= int(std::floor(photonPos[t][h][v][s][1] * double(worldNbX)));
+          int idxY= int(std::floor(photonPos[t][h][v][s][2] * double(worldNbY)));
+          int idxZ= int(std::floor(photonPos[t][h][v][s][3] * double(worldNbZ)));
           if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-            // double velDif= D.param[GR_DopplerShift_____].val * (photonVel[t][h][v][0].norm() - photonVel[t][h][v][s].norm());
-            // screenColor[t][h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
+            double velDif= D.param[GR_DopplerShift_____].val * (photonVel[t][h][v][0].norm() - photonVel[t][h][v][s].norm());
+            screenColor[t][h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
             break;
           }
-          idxT= std::min(std::max(idxT, 0), worldNbT - 1);
-          idxX= std::min(std::max(idxX, 0), worldNbX - 1);
-          idxY= std::min(std::max(idxY, 0), worldNbY - 1);
-          idxZ= std::min(std::max(idxZ, 0), worldNbZ - 1);
 
           photonPos[t][h][v][s + 1]= photonPos[t][h][v][s] + photonVel[t][h][v][s] / double(screenNbS);
           photonVel[t][h][v][s + 1]= photonVel[t][h][v][s] + worldFlows[idxT][idxX][idxY][idxZ] / double(screenNbS);
           screenCount[t][h][v]++;
+
           int endX= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][1] * worldNbX)), 0), worldNbX - 1);
           int endY= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][2] * worldNbY)), 0), worldNbY - 1);
           int endZ= std::min(std::max(int(std::floor(photonPos[t][h][v][s + 1][3] * worldNbZ)), 0), worldNbZ - 1);
-
           bool foundCollision= false;
           std::vector<std::array<int, 3>> listVox= Bresenham3D(idxX, idxY, idxZ, endX, endY, endZ);
           for (std::array<int, 3> voxIdx : listVox) {
@@ -393,14 +388,13 @@ void SpaceTimeWorld::Draw() {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
           if (worldSolid[idxT][x][y][z]) continue;
-          double flowTime= worldFlows[idxT][x][y][z][0] * D.param[testVar0____________].val;
           Math::Vec3 flowPos(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           double r, g, b;
-          SrtColormap::RatioToJetBrightSmooth(0.5 + flowTime, r, g, b);
+          SrtColormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0] * D.param[testVar0____________].val, r, g, b);
           glColor3d(r, g, b);
           Math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
           glVertex3dv(pos.array());
-          glVertex3dv((pos + 0.002 * flowPos).array());
+          glVertex3dv((pos + D.param[testVar1____________].val * flowPos).array());
         }
       }
     }
