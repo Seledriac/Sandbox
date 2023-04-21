@@ -91,11 +91,11 @@ class Data
 
   Data() {
     param.clear();
-    param.push_back(ParamUI("GR_WorldNbT_________", 3));
+    param.push_back(ParamUI("GR_WorldNbT_________", 1));
     param.push_back(ParamUI("GR_WorldNbX_________", 50));
     param.push_back(ParamUI("GR_WorldNbY_________", 50));
     param.push_back(ParamUI("GR_WorldNbZ_________", 50));
-    param.push_back(ParamUI("GR_ScreenNbT________", 3));
+    param.push_back(ParamUI("GR_ScreenNbT________", 1));
     param.push_back(ParamUI("GR_ScreenNbH________", 50));
     param.push_back(ParamUI("GR_ScreenNbV________", 50));
     param.push_back(ParamUI("GR_ScreenNbS________", 40));

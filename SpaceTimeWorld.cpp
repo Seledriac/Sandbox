@@ -121,6 +121,33 @@ class Ball
 };
 
 
+class Torus
+{
+  public:
+  Math::Vec3 posBeg;
+  Math::Vec3 posEnd;
+  Math::Vec3 col;
+  double rad0;
+  double rad1;
+  double mass;
+
+  Torus(
+      Math::Vec3 const iPosBeg,
+      Math::Vec3 const iPosEnd,
+      Math::Vec3 const iCol,
+      double const iRad0,
+      double const iRad1,
+      double const iMass) {
+    posBeg= iPosBeg;
+    posEnd= iPosEnd;
+    col= iCol;
+    rad0= iRad0;
+    rad1= iRad1;
+    mass= iMass;
+  }
+};
+
+
 SpaceTimeWorld::SpaceTimeWorld() {
   isInitialized= false;
 }
@@ -147,8 +174,10 @@ void SpaceTimeWorld::Init() {
   std::vector<Ball> balls;
   // balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), 0.1, 100.0));
   // balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), 0.1, -100.0));
-
   balls.push_back(Ball(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), 0.1, 100.0));
+
+  std::vector<Torus> tori;
+  // tori.push_back(Torus(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), 0.2, 0.06, 100.0));
 
   // Set the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -159,6 +188,8 @@ void SpaceTimeWorld::Init() {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
+          Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+
           // Add boundary conditions to spatial domain border
           if (x % (worldNbX - 1) == 0 || y % (worldNbY - 1) == 0 || z % (worldNbZ - 1) == 0) {
             worldIsFix[t][x][y][z]= true;
@@ -194,23 +225,42 @@ void SpaceTimeWorld::Init() {
           // }
 
           // Add balls
-          for (Ball ball : balls) {
-            Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
-            // Get the ball position
-            Math::Vec3 posBall;
+          for (Ball object : balls) {
+            // Get the object position
+            Math::Vec3 pos;
             if (worldNbT > 1)
-              posBall= ball.posBeg + (ball.posEnd - ball.posBeg) * (double(t) / double(worldNbT - 1));
+              pos= object.posBeg + (object.posEnd - object.posBeg) * (double(t) / double(worldNbT - 1));
             else
-              posBall= 0.5 * (ball.posBeg + ball.posEnd);
+              pos= 0.5 * (object.posBeg + object.posEnd);
 
             // Set the voxel values
-            if ((posCell - posBall).normSquared() < ball.rad * ball.rad) {
-              worldSolid[t][x][y][z]= true;
+            if ((posCell - pos).normSquared() < object.rad * object.rad) {
+              // worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
-              worldCurva[t][x][y][z]= ball.mass;
-              worldColor[t][x][y][z]= ball.col;
-              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - posBall)[1] / ball.rad) * ball.col;
-              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? ball.col : 0.8 * ball.col;
+              worldCurva[t][x][y][z]= object.mass;
+              worldColor[t][x][y][z]= object.col;
+              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - pos)[1] / object.rad) * object.col;
+              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? object.col : 0.8 * object.col;
+            }
+          }
+
+          // Add tori
+          for (Torus object : tori) {
+            // Get the object position
+            Math::Vec3 pos;
+            if (worldNbT > 1)
+              pos= object.posBeg + (object.posEnd - object.posBeg) * (double(t) / double(worldNbT - 1));
+            else
+              pos= 0.5 * (object.posBeg + object.posEnd);
+
+            // Set the voxel values
+            if (std::pow(std::sqrt(std::pow((posCell - pos)[1], 2.0) + std::pow((posCell - pos)[2], 2.0)) - object.rad0, 2.0) + std::pow((posCell - pos)[0], 2.0) - std::pow(object.rad1, 2.0) < 0.0) {
+              // worldSolid[t][x][y][z]= true;
+              worldIsFix[t][x][y][z]= true;
+              worldCurva[t][x][y][z]= object.mass;
+              worldColor[t][x][y][z]= object.col;
+              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - pos)[1] / object.rad) * object.col;
+              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? object.col : 0.8 * object.col;
             }
           }
         }
@@ -227,7 +277,7 @@ void SpaceTimeWorld::Init() {
       for (int x= 0; x < worldNbX; x++) {
         for (int y= 0; y < worldNbY; y++) {
           for (int z= 0; z < worldNbZ; z++) {
-            if (worldIsFix[t][x][y][z]) continue;
+            // if (worldIsFix[t][x][y][z]) continue;
             double sum= 0.0, sumWeight= 0;
             // for (int tOff= std::max(t - 2 * k, 0); tOff <= std::min(t + 2 * k, worldNbT - 1); tOff+= k) {
             //   for (int xOff= std::max(x - 2 * k, 0); xOff <= std::min(x + 2 * k, worldNbX - 1); xOff+= k) {
@@ -380,13 +430,13 @@ void SpaceTimeWorld::Draw() {
       idxT= std::min(std::max(int(std::floor(D.param[GR_CursorWorldT_____].val)), 0), worldNbT - 1);
 
     glBegin(GL_LINES);
-    // int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 1000, 1.0 / 3.0);
-    // for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
-    //   for (int y= displaySkipsize / 2; y < worldNbY; y+= displaySkipsize) {
-    //     for (int z= displaySkipsize / 2; z < worldNbZ; z+= displaySkipsize) {
-    for (int x= 0; x < worldNbX; x++) {
-      for (int y= 0; y < worldNbY; y++) {
-        for (int z= 0; z < worldNbZ; z++) {
+    int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 1000, 1.0 / 3.0);
+    for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
+      for (int y= displaySkipsize / 2; y < worldNbY; y+= displaySkipsize) {
+        for (int z= displaySkipsize / 2; z < worldNbZ; z+= displaySkipsize) {
+    // for (int x= 0; x < worldNbX; x++) {
+    //   for (int y= 0; y < worldNbY; y++) {
+    //     for (int z= 0; z < worldNbZ; z++) {
           if (worldSolid[idxT][x][y][z]) continue;
           Math::Vec3 flowPos(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           double r, g, b;
