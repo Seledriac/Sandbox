@@ -174,10 +174,10 @@ void SpaceTimeWorld::Init() {
   std::vector<Ball> balls;
   // balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), 0.1, 100.0));
   // balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), 0.1, -100.0));
-  balls.push_back(Ball(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), 0.1, 100.0));
+  // balls.push_back(Ball(Math::Vec3(0.2, 0.5, 0.5), Math::Vec3(0.8, 0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), 0.04, 200.0));
 
   std::vector<Torus> tori;
-  // tori.push_back(Torus(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), 0.2, 0.06, 100.0));
+  tori.push_back(Torus(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), 0.2, 0.06, 100.0));
 
   // Set the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -191,7 +191,7 @@ void SpaceTimeWorld::Init() {
           Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
 
           // Add boundary conditions to spatial domain border
-          if (x % (worldNbX - 1) == 0 || y % (worldNbY - 1) == 0 || z % (worldNbZ - 1) == 0) {
+          if (x % worldNbX == 0 || y % worldNbY == 0 || z % worldNbZ == 0) {
             worldIsFix[t][x][y][z]= true;
             worldCurva[t][x][y][z]= 0.0;
           }
@@ -203,18 +203,18 @@ void SpaceTimeWorld::Init() {
             if ((y + 1) % 10 <= 1 || (z + 1) % 10 <= 1)
               worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
           }
-          if (y == 0 || y == worldNbY - 1) {
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
-            if ((x + 1) % 10 <= 1 || (z + 1) % 10 <= 1)
-              worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
-          }
-          if (z == 0 || z == worldNbZ - 1) {
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
-            if ((x + 1) % 10 <= 1 || (y + 1) % 10 <= 1)
-              worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
-          }
+          // if (y == 0 || y == worldNbY - 1) {
+          //   worldSolid[t][x][y][z]= true;
+          //   worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+          //   if ((x + 1) % 10 <= 1 || (z + 1) % 10 <= 1)
+          //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+          // }
+          // if (z == 0 || z == worldNbZ - 1) {
+          //   worldSolid[t][x][y][z]= true;
+          //   worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+          //   if ((x + 1) % 10 <= 1 || (y + 1) % 10 <= 1)
+          //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+          // }
 
           // // Add PNG background layer
           // if (x == 0) {
@@ -235,7 +235,7 @@ void SpaceTimeWorld::Init() {
 
             // Set the voxel values
             if ((posCell - pos).normSquared() < object.rad * object.rad) {
-              // worldSolid[t][x][y][z]= true;
+              worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
               worldCurva[t][x][y][z]= object.mass;
               worldColor[t][x][y][z]= object.col;
@@ -255,7 +255,7 @@ void SpaceTimeWorld::Init() {
 
             // Set the voxel values
             if (std::pow(std::sqrt(std::pow((posCell - pos)[1], 2.0) + std::pow((posCell - pos)[2], 2.0)) - object.rad0, 2.0) + std::pow((posCell - pos)[0], 2.0) - std::pow(object.rad1, 2.0) < 0.0) {
-              // worldSolid[t][x][y][z]= true;
+              worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
               worldCurva[t][x][y][z]= object.mass;
               worldColor[t][x][y][z]= object.col;
@@ -268,51 +268,34 @@ void SpaceTimeWorld::Init() {
     }
   }
 
+
   // Jacobi style smooth
-  std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsSet= worldIsFix;
-  for (int k= int(std::floor(D.param[GR_CurvaSmoothness__].val)); k >= 1; k--) {
-    std::vector<std::vector<std::vector<std::vector<double>>>> worldCurvaOld= worldCurva;
-    // #pragma omp parallel for
-    for (int t= 0; t < worldNbT; t++) {
+  for (int t= 0; t < worldNbT; t++) {
+    if (t > 0) {
+      for (int x= 0; x < worldNbX; x++)
+        for (int y= 0; y < worldNbY; y++)
+          for (int z= 0; z < worldNbZ; z++)
+            worldCurva[t][x][y][z]= worldCurva[t][x][y][z] + D.param[GR_CurvaTimePersist_].val * worldCurva[t - 1][x][y][z];
+    }
+
+    for (int k= int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k >= 1; k/=2) {
+    // for (int k= 0; k < int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k++) {
+      std::vector<std::vector<std::vector<double>>> spaceCurvaOld= worldCurva[t];
       for (int x= 0; x < worldNbX; x++) {
         for (int y= 0; y < worldNbY; y++) {
           for (int z= 0; z < worldNbZ; z++) {
-            // if (worldIsFix[t][x][y][z]) continue;
-            double sum= 0.0, sumWeight= 0;
-            // for (int tOff= std::max(t - 2 * k, 0); tOff <= std::min(t + 2 * k, worldNbT - 1); tOff+= k) {
-            //   for (int xOff= std::max(x - 2 * k, 0); xOff <= std::min(x + 2 * k, worldNbX - 1); xOff+= k) {
-            //     for (int yOff= std::max(y - 2 * k, 0); yOff <= std::min(y + 2 * k, worldNbY - 1); yOff+= k) {
-            //       for (int zOff= std::max(z - 2 * k, 0); zOff <= std::min(z + 2 * k, worldNbZ - 1); zOff+= k) {
-            // for (int tOff= t - 2 * k; tOff <= t + 2 * k; tOff+= k) {
-            //   if (tOff < 0 || tOff >= worldNbT) continue;
-            //   for (int xOff= x - 2 * k; xOff <= x + 2 * k; xOff+= k) {
-            //     if (xOff < 0 || xOff >= worldNbX) continue;
-            //     for (int yOff= y - 2 * k; yOff <= y + 2 * k; yOff+= k) {
-            //       if (yOff < 0 || yOff >= worldNbY) continue;
-            //       for (int zOff= z - 2 * k; zOff <= z + 2 * k; zOff+= k) {
-            //         if (zOff < 0 || zOff >= worldNbZ) continue;
-
-            int tOff= t;
-            // for (int tOff= t - k; tOff <= t + k; tOff+= k) {
-            //   if (tOff < 0 || tOff >= worldNbT) continue;
-            for (int xOff= x - k; xOff <= x + k; xOff+= k) {
-              if (xOff < 0 || xOff >= worldNbX) continue;
-              for (int yOff= y - k; yOff <= y + k; yOff+= k) {
-                if (yOff < 0 || yOff >= worldNbY) continue;
-                for (int zOff= z - k; zOff <= z + k; zOff+= k) {
-                  if (zOff < 0 || zOff >= worldNbZ) continue;
-                  if (worldIsSet[tOff][xOff][yOff][zOff]) {
-                    // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
-                    // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
-                    double weight= 1.0;
-                    sum+= weight * worldCurvaOld[tOff][xOff][yOff][zOff];
-                    sumWeight+= weight;
-                  }
+            double sum= 0.0, sumWeight= 0.0;
+            for (int xOff= std::max(x - k, 0); xOff <= std::min(x + k, worldNbX - 1); xOff++) {
+              for (int yOff= std::max(y - k, 0); yOff <= std::min(y + k, worldNbY - 1); yOff++) {
+                for (int zOff= std::max(z - k, 0); zOff <= std::min(z + k, worldNbZ - 1); zOff++) {
+                  // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
+                  // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
+                  double weight= 1.0;
+                  sum+= weight * spaceCurvaOld[xOff][yOff][zOff];
+                  sumWeight+= weight;
                 }
               }
             }
-            // }
-            worldIsSet[t][x][y][z]= true;
             if (sumWeight != 0.0) worldCurva[t][x][y][z]= sum / double(sumWeight);
           }
         }
@@ -320,16 +303,60 @@ void SpaceTimeWorld::Init() {
     }
   }
 
+
+  // // Jacobi style smooth
+  // std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsSet= worldIsFix;
+  // for (int iter= 0; iter < int(std::floor(D.param[testVar2____________].val)); iter++) {
+  //   for (int k= int(std::floor(D.param[GR_CurvaSmoothness__].val)); k >= 1; k--) {
+  //     std::vector<std::vector<std::vector<std::vector<double>>>> worldCurvaOld= worldCurva;
+  //     // #pragma omp parallel for
+  //     for (int t= 0; t < worldNbT; t++) {
+  //       for (int x= 0; x < worldNbX; x++) {
+  //         for (int y= 0; y < worldNbY; y++) {
+  //           for (int z= 0; z < worldNbZ; z++) {
+  //             if (worldIsFix[t][x][y][z]) continue;
+  //             double sum= 0.0, sumWeight= 0.0;
+  //             for (int tOff= t - k; tOff <= t; tOff+= k) {
+  //               if (tOff < 0 || tOff >= worldNbT) continue;
+  //               for (int xOff= x - k; xOff <= x + k; xOff+= k) {
+  //                 if (xOff < 0 || xOff >= worldNbX) continue;
+  //                 for (int yOff= y - k; yOff <= y + k; yOff+= k) {
+  //                   if (yOff < 0 || yOff >= worldNbY) continue;
+  //                   for (int zOff= z - k; zOff <= z + k; zOff+= k) {
+  //                     if (zOff < 0 || zOff >= worldNbZ) continue;
+  //                     if (!worldIsSet[tOff][xOff][yOff][zOff]) continue;
+  //                     // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
+  //                     // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
+  //                     double weight= 1.0;
+  //                     sum+= weight * worldCurvaOld[tOff][xOff][yOff][zOff];
+  //                     sumWeight+= weight;
+  //                   }
+  //                 }
+  //               }
+  //             }
+  //             worldIsSet[t][x][y][z]= true;
+  //             if (sumWeight != 0.0) worldCurva[t][x][y][z]= sum / double(sumWeight);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
   // Compute the world flow
   worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          if (t > 0 && t < worldNbT - 1) worldFlows[t][x][y][z][0]= D.param[GR_CurvTime_________].val * (worldCurva[t + 1][x][y][z] - worldCurva[t - 1][x][y][z]);
-          if (x > 0 && x < worldNbX - 1) worldFlows[t][x][y][z][1]= D.param[GR_CurvSpace________].val * (worldCurva[t][x + 1][y][z] - worldCurva[t][x - 1][y][z]);
-          if (y > 0 && y < worldNbY - 1) worldFlows[t][x][y][z][2]= D.param[GR_CurvSpace________].val * (worldCurva[t][x][y + 1][z] - worldCurva[t][x][y - 1][z]);
-          if (z > 0 && z < worldNbZ - 1) worldFlows[t][x][y][z][3]= D.param[GR_CurvSpace________].val * (worldCurva[t][x][y][z + 1] - worldCurva[t][x][y][z - 1]);
+          // if (t > 0) worldFlows[t][x][y][z][0]= D.param[GR_CurvFactor_______].val * (worldCurva[t][x][y][z] - worldCurva[t - 1][x][y][z]);
+
+          if (x > 0) worldFlows[t][x][y][z][1]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x - 1][y][z]);
+          if (y > 0) worldFlows[t][x][y][z][2]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x][y - 1][z]);
+          if (z > 0) worldFlows[t][x][y][z][3]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x][y][z - 1]);
+          if (x < worldNbX - 1) worldFlows[t][x][y][z][1]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x + 1][y][z] - worldCurva[t][x][y][z]);
+          if (y < worldNbY - 1) worldFlows[t][x][y][z][2]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x][y + 1][z] - worldCurva[t][x][y][z]);
+          if (z < worldNbZ - 1) worldFlows[t][x][y][z][3]= D.param[GR_CurvFactor_______].val * 0.5 * (worldCurva[t][x][y][z + 1] - worldCurva[t][x][y][z]);
         }
       }
     }
@@ -353,8 +380,8 @@ void SpaceTimeWorld::Init() {
     }
   }
 
-// Loop through each screen frame
-#pragma omp parallel for
+  // Loop through each screen frame
+  // #pragma omp parallel for
   for (int t= 0; t < screenNbT; t++) {
     // Compute the photon paths to render the scene on the screen
     for (int h= 0; h < screenNbH; h++) {
@@ -434,17 +461,18 @@ void SpaceTimeWorld::Draw() {
     for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
       for (int y= displaySkipsize / 2; y < worldNbY; y+= displaySkipsize) {
         for (int z= displaySkipsize / 2; z < worldNbZ; z+= displaySkipsize) {
-    // for (int x= 0; x < worldNbX; x++) {
-    //   for (int y= 0; y < worldNbY; y++) {
-    //     for (int z= 0; z < worldNbZ; z++) {
-          if (worldSolid[idxT][x][y][z]) continue;
-          Math::Vec3 flowPos(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
+          // for (int x= 0; x < worldNbX; x++) {
+          //   for (int y= 0; y < worldNbY; y++) {
+          //     for (int z= 0; z < worldNbZ; z++) {
+          // if (worldSolid[idxT][x][y][z]) continue;
+          Math::Vec3 flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           double r, g, b;
-          SrtColormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0] * D.param[testVar0____________].val, r, g, b);
+          // SrtColormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0] * D.param[testVar0____________].val, r, g, b);
+          SrtColormap::RatioToJetBrightSmooth(0.5 + flowVec.norm() * D.param[testVar0____________].val, r, g, b);
           glColor3d(r, g, b);
           Math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
           glVertex3dv(pos.array());
-          glVertex3dv((pos + D.param[testVar1____________].val * flowPos).array());
+          glVertex3dv((pos + D.param[testVar1____________].val * flowVec).array());
         }
       }
     }

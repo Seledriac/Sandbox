@@ -11,5 +11,5 @@ SrtFileInput.o: SrtFileInput.cpp SrtFileInput.hpp SrtGenericPNGParser.hpp
 SrtGenericPNGParser.o: SrtGenericPNGParser.cpp SrtGenericPNGParser.hpp
 main.o: main.cpp Data.hpp math/Vectors.hpp tb/Camera.hpp tb/TrackBall.hpp \
  tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
- tb/TrackBallQuaternion.hpp FractalCurveDevelopment.hpp \
- ParticleSystem.hpp AgentSwarm.hpp SpaceTimeWorld.hpp SrtColormap.hpp
+ tb/TrackBallQuaternion.hpp AgentSwarm.hpp FractalCurveDevelopment.hpp \
+ ParticleSystem.hpp SpaceTimeWorld.hpp SrtColormap.hpp

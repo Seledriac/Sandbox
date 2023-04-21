@@ -87,5 +87,6 @@
     "semaphore": "cpp",
     "stop_token": "cpp",
     "cfenv": "cpp"
-  }
+  },
+  "cmake.configureOnOpen": true
 }

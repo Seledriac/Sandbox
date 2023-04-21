@@ -27,11 +27,11 @@ enum ParamType
   GR_ScreenNbH________,
   GR_ScreenNbV________,
   GR_ScreenNbS________,
-  GR_CurvaSmoothness__,
   GR_CursorWorldT_____,
   GR_CursorScreenT____,
-  GR_CurvSpace________,
-  GR_CurvTime_________,
+  GR_CurvaSmoothIter__,
+  GR_CurvaTimePersist_,
+  GR_CurvFactor_______,
   GR_DopplerShift_____,
   S0__________________,
   PD_Contrain2D_______,
@@ -91,19 +91,19 @@ class Data
 
   Data() {
     param.clear();
-    param.push_back(ParamUI("GR_WorldNbT_________", 1));
+    param.push_back(ParamUI("GR_WorldNbT_________", 10));
     param.push_back(ParamUI("GR_WorldNbX_________", 50));
     param.push_back(ParamUI("GR_WorldNbY_________", 50));
     param.push_back(ParamUI("GR_WorldNbZ_________", 50));
-    param.push_back(ParamUI("GR_ScreenNbT________", 1));
+    param.push_back(ParamUI("GR_ScreenNbT________", 10));
     param.push_back(ParamUI("GR_ScreenNbH________", 50));
     param.push_back(ParamUI("GR_ScreenNbV________", 50));
-    param.push_back(ParamUI("GR_ScreenNbS________", 40));
-    param.push_back(ParamUI("GR_CurvaSmoothness__", 8));
+    param.push_back(ParamUI("GR_ScreenNbS________", 50));
     param.push_back(ParamUI("GR_CursorWorldT_____", 0));
     param.push_back(ParamUI("GR_CursorScreenT____", 0));
-    param.push_back(ParamUI("GR_CurvSpace________", 1.0));
-    param.push_back(ParamUI("GR_CurvTime_________", 1.0));
+    param.push_back(ParamUI("GR_CurvaSmoothIter__", 4));
+    param.push_back(ParamUI("GR_CurvaTimePersist_", 0.8));
+    param.push_back(ParamUI("GR_CurvFactor_______", 1.0));
     param.push_back(ParamUI("GR_DopplerShift_____", 1.0));
     param.push_back(ParamUI("S0__________________", 1.0));
     param.push_back(ParamUI("PD_Contrain2D_______", 1));
