@@ -21,20 +21,20 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
   std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> worldFlows;
 
-  int screenNbT;
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<std::vector<Math::Vec3>>> screenColor;
-  std::vector<std::vector<std::vector<int>>> screenCount;
-
-  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> photonPos;
-  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> photonVel;
+  std::vector<std::vector<Math::Vec3>> screenColor;
+  std::vector<std::vector<int>> screenCount;
+  std::vector<std::vector<std::vector<Math::Vec4>>> photonPos;
+  std::vector<std::vector<std::vector<Math::Vec4>>> photonVel;
 
   bool isInitialized;
+  bool isRefreshed;
 
   SpaceTimeWorld();
 
   void Init();
+  void Refresh();
   void Draw();
 };

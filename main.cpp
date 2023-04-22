@@ -187,12 +187,11 @@ void callback_display() {
 
 // Timer program interruption callback
 void callback_timer(int v) {
+  // Compute animations
   if (D.playAnimation) {
-    // Compute animations
     myAgentSwarm.Animate();
     myParticleSystem.Animate();
 
-    // Refresh display and set timer for next frame
     glutPostRedisplay();
   }
   glutTimerFunc(1000 / winFPS, callback_timer, v);
@@ -216,6 +215,8 @@ void callback_keyboard(unsigned char key, int x, int y) {
     exit(EXIT_SUCCESS);
   else if (key == ' ')
     D.playAnimation= !D.playAnimation;
+  else if (key == 13)
+    D.autoRefresh= !D.autoRefresh;
   else if (key == '1')
     D.showWorld= !D.showWorld;
   else if (key == '2')
@@ -248,6 +249,11 @@ void callback_keyboard(unsigned char key, int x, int y) {
     myAgentSwarm= AgentSwarm();
   else if (key == 's')
     myAgentSwarm.Init();
+
+  // Compute refresh
+  if (D.autoRefresh) {
+    mySpaceTimeWorld.Refresh();
+  }
 
   glutPostRedisplay();
 }
@@ -284,6 +290,11 @@ void callback_keyboard_special(int key, int x, int y) {
     D.param[D.idxParamUI].val+= 0.01;
   else if (key == GLUT_KEY_RIGHT)
     D.param[D.idxParamUI].val+= 1.0;
+
+  // Compute refresh
+  if (D.autoRefresh && key != GLUT_KEY_UP && key != GLUT_KEY_DOWN) {
+    mySpaceTimeWorld.Refresh();
+  }
 
   glutPostRedisplay();
 }

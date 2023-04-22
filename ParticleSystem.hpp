@@ -31,8 +31,8 @@ class ParticleSystem
   ParticleSystem();
 
   void Init();
-  void Draw();
   void Animate();
+  void Draw();
 };
 
 #endif

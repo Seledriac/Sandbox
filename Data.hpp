@@ -23,12 +23,10 @@ enum ParamType
   GR_WorldNbX_________,
   GR_WorldNbY_________,
   GR_WorldNbZ_________,
-  GR_ScreenNbT________,
   GR_ScreenNbH________,
   GR_ScreenNbV________,
   GR_ScreenNbS________,
   GR_CursorWorldT_____,
-  GR_CursorScreenT____,
   GR_CurvaSmoothIter__,
   GR_CurvaTimePersist_,
   GR_CurvFactor_______,
@@ -70,6 +68,7 @@ class Data
 {
   public:
   bool playAnimation= false;
+  bool autoRefresh= true;
 
   bool showAxis= false;
 
@@ -95,12 +94,10 @@ class Data
     param.push_back(ParamUI("GR_WorldNbX_________", 50));
     param.push_back(ParamUI("GR_WorldNbY_________", 50));
     param.push_back(ParamUI("GR_WorldNbZ_________", 50));
-    param.push_back(ParamUI("GR_ScreenNbT________", 10));
     param.push_back(ParamUI("GR_ScreenNbH________", 50));
     param.push_back(ParamUI("GR_ScreenNbV________", 50));
     param.push_back(ParamUI("GR_ScreenNbS________", 50));
-    param.push_back(ParamUI("GR_CursorWorldT_____", 0));
-    param.push_back(ParamUI("GR_CursorScreenT____", 0));
+    param.push_back(ParamUI("GR_CursorWorldT_____", 6));
     param.push_back(ParamUI("GR_CurvaSmoothIter__", 4));
     param.push_back(ParamUI("GR_CurvaTimePersist_", 0.8));
     param.push_back(ParamUI("GR_CurvFactor_______", 1.0));

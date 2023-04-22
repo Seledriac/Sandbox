@@ -78,25 +78,6 @@ void ParticleSystem::Init() {
 }
 
 
-void ParticleSystem::Draw() {
-  if (!isInitialized) return;
-
-  for (int k= 0; k < NbParticles; k++) {
-    glPushMatrix();
-    glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
-    glScalef(RadCur[k], RadCur[k], RadCur[k]);
-    // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
-    double r, g, b;
-    // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
-    SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
-    // SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
-    glColor3f(r, g, b);
-    glutSolidSphere(1.0, 32, 16);
-    glPopMatrix();
-  }
-}
-
-
 void ParticleSystem::Animate() {
   if (!isInitialized) return;
 
@@ -204,4 +185,23 @@ void ParticleSystem::Animate() {
   if (D.plotData[0].second.size() < 1000) D.plotData[0].second.push_back(PosCur[0][0]);
   if (D.plotData[1].second.size() < 1000) D.plotData[1].second.push_back(PosCur[0][1]);
   if (D.plotData[2].second.size() < 1000) D.plotData[2].second.push_back(PosCur[0][2]);
+}
+
+
+void ParticleSystem::Draw() {
+  if (!isInitialized) return;
+
+  for (int k= 0; k < NbParticles; k++) {
+    glPushMatrix();
+    glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
+    glScalef(RadCur[k], RadCur[k], RadCur[k]);
+    // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
+    double r, g, b;
+    // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
+    SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
+    // SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
+    glColor3f(r, g, b);
+    glutSolidSphere(1.0, 32, 16);
+    glPopMatrix();
+  }
 }
