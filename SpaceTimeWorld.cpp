@@ -97,53 +97,44 @@ std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int 
 }
 
 
-class Ball
+class Shape
 {
   public:
   Math::Vec3 posBeg;
   Math::Vec3 posEnd;
   Math::Vec3 col;
-  double rad;
   double mass;
-
-  Ball(
-      Math::Vec3 const iPosBeg,
-      Math::Vec3 const iPosEnd,
-      Math::Vec3 const iCol,
-      double const iRad,
-      double const iMass) {
-    posBeg= iPosBeg;
-    posEnd= iPosEnd;
-    col= iCol;
-    rad= iRad;
-    mass= iMass;
-  }
-};
-
-
-class Torus
-{
-  public:
-  Math::Vec3 posBeg;
-  Math::Vec3 posEnd;
-  Math::Vec3 col;
+  int type;
   double rad0;
   double rad1;
-  double mass;
 
-  Torus(
+  Shape(
       Math::Vec3 const iPosBeg,
       Math::Vec3 const iPosEnd,
       Math::Vec3 const iCol,
+      double const iMass,
+      int const iType,
       double const iRad0,
-      double const iRad1,
-      double const iMass) {
+      double const iRad1) {
     posBeg= iPosBeg;
     posEnd= iPosEnd;
     col= iCol;
+    mass= iMass;
+    type= iType;
     rad0= iRad0;
     rad1= iRad1;
-    mass= iMass;
+  }
+
+  double ImplicitEval(Math::Vec3 const iPosCell, double const iTimeRatio) {
+    Math::Vec3 posObj= posBeg + (posEnd - posBeg) * iTimeRatio;
+
+    double val= 1.0;
+    if (type == 0)
+      val= (posObj - iPosCell).norm() - rad0;
+    if (type == 1)
+      val= std::pow(std::sqrt(std::pow((posObj - iPosCell)[1], 2.0) + std::pow((posObj - iPosCell)[2], 2.0)) - rad0, 2.0) + std::pow((posObj - iPosCell)[0], 2.0) - std::pow(rad1, 2.0);
+
+    return val;
   }
 };
 
@@ -156,6 +147,7 @@ SpaceTimeWorld::SpaceTimeWorld() {
 void SpaceTimeWorld::Init() {
   isInitialized= true;
 
+  // Get dimensions
   worldNbT= int(std::round(D.param[GR_WorldNbT_________].val));
   worldNbX= int(std::round(D.param[GR_WorldNbX_________].val));
   worldNbY= int(std::round(D.param[GR_WorldNbY_________].val));
@@ -170,26 +162,17 @@ void SpaceTimeWorld::Init() {
   if (loadedImage.empty())
     SrtFileInput::LoadImagePNGFile("HubbleDeepField.png", loadedImage, true);
 
-  // Create list of objects with macro properties
-  std::vector<Ball> balls;
-  // balls.push_back(Ball(Math::Vec3(0.6, -0.20, -0.20), Math::Vec3(0.6, 1.20, 1.20), Math::Vec3(0.2, 0.6, 0.2), 0.1, 100.0));
-  // balls.push_back(Ball(Math::Vec3(0.25, 1.20, -0.20), Math::Vec3(0.25, -0.20, 1.20), Math::Vec3(0.6, 0.2, 0.2), 0.1, -100.0));
-  // balls.push_back(Ball(Math::Vec3(0.2, 0.5, 0.5), Math::Vec3(0.8, 0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), 0.04, 200.0));
-
-  std::vector<Torus> tori;
-  tori.push_back(Torus(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), 0.2, 0.06, 100.0));
-
-  // Set the world fields
+  // Initialize the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   worldIsFix= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   worldCurva= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0);
   worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
+
+  // Add the background
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
-
           // Add boundary conditions to spatial domain border
           if (x % worldNbX == 0 || y % worldNbY == 0 || z % worldNbZ == 0) {
             worldIsFix[t][x][y][z]= true;
@@ -223,42 +206,30 @@ void SpaceTimeWorld::Init() {
           //   worldSolid[t][x][y][z]= true;
           //   worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
           // }
+        }
+      }
+    }
+  }
 
-          // Add balls
-          for (Ball object : balls) {
-            // Get the object position
-            Math::Vec3 pos;
-            if (worldNbT > 1)
-              pos= object.posBeg + (object.posEnd - object.posBeg) * (double(t) / double(worldNbT - 1));
-            else
-              pos= 0.5 * (object.posBeg + object.posEnd);
+  // Create list of shapes to add
+  std::vector<Shape> shapes;
+  shapes.push_back(Shape(Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +100.0, 0, 0.10, 0.00));  // 2 crossing balls
+  shapes.push_back(Shape(Math::Vec3(0.2, +1.2, -0.2), Math::Vec3(0.2, -0.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), -100.0, 0, 0.10, 0.00));  // 2 crossing balls
+  // shapes.push_back(Shape(Math::Vec3(0.2, +0.5, +0.5), Math::Vec3(0.8, +0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), +200.0, 0, 0.04, 0.00));  // 1 small approaching ball
+  // shapes.push_back(Shape(Math::Vec3(0.5, -0.2, -0.2), Math::Vec3(0.5, +1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +100.0, 1, 0.20, 0.06));  // 1 moving donut
 
-            // Set the voxel values
-            if ((posCell - pos).normSquared() < object.rad * object.rad) {
+  // Add the shapes
+  for (int t= 0; t < worldNbT; t++) {
+    for (int x= 0; x < worldNbX; x++) {
+      for (int y= 0; y < worldNbY; y++) {
+        for (int z= 0; z < worldNbZ; z++) {
+          Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+          for (Shape shape : shapes) {
+            if (shape.ImplicitEval(posCell, worldNbT > 1 ? double(t) / double(worldNbT - 1) : 0.5) < 0.0) {
               worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
-              worldCurva[t][x][y][z]= object.mass;
-              worldColor[t][x][y][z]= object.col;
-              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - pos)[1] / object.rad) * object.col;
-              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? object.col : 0.8 * object.col;
-            }
-          }
-
-          // Add tori
-          for (Torus object : tori) {
-            // Get the object position
-            Math::Vec3 pos;
-            if (worldNbT > 1)
-              pos= object.posBeg + (object.posEnd - object.posBeg) * (double(t) / double(worldNbT - 1));
-            else
-              pos= 0.5 * (object.posBeg + object.posEnd);
-
-            // Set the voxel values
-            if (std::pow(std::sqrt(std::pow((posCell - pos)[1], 2.0) + std::pow((posCell - pos)[2], 2.0)) - object.rad0, 2.0) + std::pow((posCell - pos)[0], 2.0) - std::pow(object.rad1, 2.0) < 0.0) {
-              worldSolid[t][x][y][z]= true;
-              worldIsFix[t][x][y][z]= true;
-              worldCurva[t][x][y][z]= object.mass;
-              worldColor[t][x][y][z]= object.col;
+              worldCurva[t][x][y][z]= shape.mass;
+              worldColor[t][x][y][z]= shape.col;
               // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - pos)[1] / object.rad) * object.col;
               // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? object.col : 0.8 * object.col;
             }
@@ -271,6 +242,7 @@ void SpaceTimeWorld::Init() {
 
   // Jacobi style smooth
   for (int t= 0; t < worldNbT; t++) {
+    // Add persistance form previous timestep
     if (t > 0) {
       for (int x= 0; x < worldNbX; x++)
         for (int y= 0; y < worldNbY; y++)
@@ -278,8 +250,8 @@ void SpaceTimeWorld::Init() {
             worldCurva[t][x][y][z]= worldCurva[t][x][y][z] + D.param[GR_CurvaTimePersist_].val * worldCurva[t - 1][x][y][z];
     }
 
-    for (int k= int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k >= 1; k/=2) {
-    // for (int k= 0; k < int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k++) {
+    for (int k= int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k >= 1; k/= 2) {
+      // for (int k= 0; k < int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k++) {
       std::vector<std::vector<std::vector<double>>> spaceCurvaOld= worldCurva[t];
       for (int x= 0; x < worldNbX; x++) {
         for (int y= 0; y < worldNbY; y++) {
@@ -302,46 +274,6 @@ void SpaceTimeWorld::Init() {
       }
     }
   }
-
-
-  // // Jacobi style smooth
-  // std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsSet= worldIsFix;
-  // for (int iter= 0; iter < int(std::floor(D.param[testVar2____________].val)); iter++) {
-  //   for (int k= int(std::floor(D.param[GR_CurvaSmoothness__].val)); k >= 1; k--) {
-  //     std::vector<std::vector<std::vector<std::vector<double>>>> worldCurvaOld= worldCurva;
-  //     // #pragma omp parallel for
-  //     for (int t= 0; t < worldNbT; t++) {
-  //       for (int x= 0; x < worldNbX; x++) {
-  //         for (int y= 0; y < worldNbY; y++) {
-  //           for (int z= 0; z < worldNbZ; z++) {
-  //             if (worldIsFix[t][x][y][z]) continue;
-  //             double sum= 0.0, sumWeight= 0.0;
-  //             for (int tOff= t - k; tOff <= t; tOff+= k) {
-  //               if (tOff < 0 || tOff >= worldNbT) continue;
-  //               for (int xOff= x - k; xOff <= x + k; xOff+= k) {
-  //                 if (xOff < 0 || xOff >= worldNbX) continue;
-  //                 for (int yOff= y - k; yOff <= y + k; yOff+= k) {
-  //                   if (yOff < 0 || yOff >= worldNbY) continue;
-  //                   for (int zOff= z - k; zOff <= z + k; zOff+= k) {
-  //                     if (zOff < 0 || zOff >= worldNbZ) continue;
-  //                     if (!worldIsSet[tOff][xOff][yOff][zOff]) continue;
-  //                     // double weight= D.param[GR_CurvTime_________].val * (1.0-double(std::abs(t - tOff))/(3.0*double(k)));
-  //                     // weight+= std::sqrt((3 * k) * (3 * k) - (x - xOff) * (x - xOff) + (y - yOff) * (y - yOff) + (z - zOff) * (z - zOff)) * D.param[GR_CurvSpace________].val;
-  //                     double weight= 1.0;
-  //                     sum+= weight * worldCurvaOld[tOff][xOff][yOff][zOff];
-  //                     sumWeight+= weight;
-  //                   }
-  //                 }
-  //               }
-  //             }
-  //             worldIsSet[t][x][y][z]= true;
-  //             if (sumWeight != 0.0) worldCurva[t][x][y][z]= sum / double(sumWeight);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 
   // Compute the world flow
   worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
