@@ -211,10 +211,10 @@ void SpaceTimeWorld::Init() {
 
   // Create list of shapes to add
   std::vector<Shape> shapes;
-  shapes.push_back(Shape(0, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +1.0, 0.10, 0.00));  // 2 crossing balls
+  // shapes.push_back(Shape(0, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +1.0, 0.10, 0.00));  // 2 crossing balls
   // shapes.push_back(Shape(0, Math::Vec3(0.2, +1.2, -0.2), Math::Vec3(0.2, -0.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), -1.0, 0.10, 0.00));  // 2 crossing balls
   // shapes.push_back(Shape(0, Math::Vec3(0.2, +0.5, +0.5), Math::Vec3(0.8, +0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), +2.0, 0.04, 0.00));  // 1 small approaching ball
-  // shapes.push_back(Shape(1, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +1.0, 0.20, 0.05));  // 1 moving donut
+  shapes.push_back(Shape(1, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +1.0, 0.20, 0.05));  // 1 moving donut
 
   // Add the shapes
   for (int t= 0; t < worldNbT; t++) {
@@ -272,11 +272,23 @@ void SpaceTimeWorld::Init() {
   //     }
   //   }
 
+  // Precompute a mask for the world flow
+  int maskSize= int(std::floor(D.param[GR_MassReach________].val));
+  std::vector<std::vector<std::vector<Math::Vec4>>> maskVec= Util::AllocField3D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4(0.0, 0.0, 0.0, 0.0));
+  for (int x= 0; x < maskSize * 2 + 1; x++) {
+    for (int y= 0; y < maskSize * 2 + 1; y++) {
+      for (int z= 0; z < maskSize * 2 + 1; z++) {
+        if (x == maskSize && y == maskSize && z == maskSize) continue;
+        Math::Vec4 vec(double(0.0), double(maskSize - x), double(maskSize - y), double(maskSize - z));
+        maskVec[x][y][z]= vec.normalized() / vec.normSquared();
+      }
+    }
+  }
+
   // Compute the world flow
   worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
 #pragma omp parallel for
   for (int t= 0; t < worldNbT; t++) {
-    int maskSize= int(std::floor(D.param[GR_MassReach________].val));
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
@@ -284,9 +296,7 @@ void SpaceTimeWorld::Init() {
           for (int xOff= std::max(x - maskSize, 0); xOff <= std::min(x + maskSize, worldNbX - 1); xOff++) {
             for (int yOff= std::max(y - maskSize, 0); yOff <= std::min(y + maskSize, worldNbY - 1); yOff++) {
               for (int zOff= std::max(z - maskSize, 0); zOff <= std::min(z + maskSize, worldNbZ - 1); zOff++) {
-                if (xOff == x && yOff == y && zOff == z) continue;
-                Math::Vec4 vec(double(0.0), double(x - xOff), double(y - yOff), double(z - zOff));
-                worldFlows[t][xOff][yOff][zOff]+= worldCurva[t][x][y][z] * vec.normalized() / vec.normSquared();
+                worldFlows[t][xOff][yOff][zOff]+= worldCurva[t][x][y][z] * maskVec[maskSize + xOff - x][maskSize + yOff - y][maskSize + zOff - z];
               }
             }
           }
