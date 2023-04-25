@@ -10,86 +10,117 @@ namespace Util {
 
   // Allocation of fields
   template <class element_type>
-  inline std::vector<std::vector<element_type>> AllocField2D(int const iNbX, int const iNbY, element_type const& val) {
-    return std::vector<std::vector<element_type>>(iNbX, std::vector<element_type>(iNbY, val));
+  inline std::vector<std::vector<element_type>> AllocField2D(int const iNbA, int const iNbB, element_type const& val) {
+    return std::vector<std::vector<element_type>>(iNbA, std::vector<element_type>(iNbB, val));
   }
   template <class element_type>
-  inline std::vector<std::vector<std::vector<element_type>>> AllocField3D(int const iNbX, int const iNbY, int const iNbZ, element_type const& val) {
-    return std::vector<std::vector<std::vector<element_type>>>(iNbX, std::vector<std::vector<element_type>>(iNbY, std::vector<element_type>(iNbZ, val)));
+  inline std::vector<std::vector<std::vector<element_type>>> AllocField3D(int const iNbA, int const iNbB, int const iNbC, element_type const& val) {
+    return std::vector<std::vector<std::vector<element_type>>>(iNbA, std::vector<std::vector<element_type>>(iNbB, std::vector<element_type>(iNbC, val)));
   }
   template <class element_type>
-  inline std::vector<std::vector<std::vector<std::vector<element_type>>>> AllocField4D(int const iNbX, int const iNbY, int const iNbZ, int const iNbW, element_type const& val) {
-    return std::vector<std::vector<std::vector<std::vector<element_type>>>>(iNbX, std::vector<std::vector<std::vector<element_type>>>(iNbY, std::vector<std::vector<element_type>>(iNbZ, std::vector<element_type>(iNbW, val))));
+  inline std::vector<std::vector<std::vector<std::vector<element_type>>>> AllocField4D(int const iNbA, int const iNbB, int const iNbC, int const iNbD, element_type const& val) {
+    return std::vector<std::vector<std::vector<std::vector<element_type>>>>(iNbA, std::vector<std::vector<std::vector<element_type>>>(iNbB, std::vector<std::vector<element_type>>(iNbC, std::vector<element_type>(iNbD, val))));
+  }
+  template <class element_type>
+  inline std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> AllocField5D(int const iNbA, int const iNbB, int const iNbC, int const iNbD, int const iNbE, element_type const& val) {
+    return std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>>(iNbA, std::vector<std::vector<std::vector<std::vector<element_type>>>>(iNbB, std::vector<std::vector<std::vector<element_type>>>(iNbC, std::vector<std::vector<element_type>>(iNbD, std::vector<element_type>(iNbE, val)))));
   }
 
   // Get dimensions of fields
   template <class element_type>
-  inline void GetFieldDimensions(std::vector<std::vector<element_type>> const& iField, int& oNbX, int& oNbY) {
-    oNbX= 0;
-    oNbY= 0;
+  inline void GetFieldDimensions(std::vector<std::vector<element_type>> const& iField, int& oNbA, int& oNbB) {
+    oNbA= 0;
+    oNbB= 0;
 
-    oNbX= int(iField.size());
-    if (oNbX > 0) {
-      oNbY= int(iField[0].size());
+    oNbA= int(iField.size());
+    if (oNbA > 0) {
+      oNbB= int(iField[0].size());
     }
   }
   template <class element_type>
-  inline void GetFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int& oNbX, int& oNbY, int& oNbZ) {
-    oNbX= 0;
-    oNbY= 0;
-    oNbZ= 0;
+  inline void GetFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int& oNbA, int& oNbB, int& oNbC) {
+    oNbA= 0;
+    oNbB= 0;
+    oNbC= 0;
 
-    oNbX= int(iField.size());
-    if (oNbX > 0) {
-      oNbY= int(iField[0].size());
-      if (oNbY > 0) {
-        oNbZ= int(iField[0][0].size());
+    oNbA= int(iField.size());
+    if (oNbA > 0) {
+      oNbB= int(iField[0].size());
+      if (oNbB > 0) {
+        oNbC= int(iField[0][0].size());
       }
     }
   }
   template <class element_type>
-  inline void GetFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int& oNbX, int& oNbY, int& oNbZ, int& oNbW) {
-    oNbX= 0;
-    oNbY= 0;
-    oNbZ= 0;
-    oNbW= 0;
+  inline void GetFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int& oNbA, int& oNbB, int& oNbC, int& oNbD) {
+    oNbA= 0;
+    oNbB= 0;
+    oNbC= 0;
+    oNbD= 0;
 
-    oNbX= int(iField.size());
-    if (oNbX > 0) {
-      oNbY= int(iField[0].size());
-      if (oNbY > 0) {
-        oNbZ= int(iField[0][0].size());
-        if (oNbZ > 0) {
-          oNbW= int(iField[0][0][0].size());
+    oNbA= int(iField.size());
+    if (oNbA > 0) {
+      oNbB= int(iField[0].size());
+      if (oNbB > 0) {
+        oNbC= int(iField[0][0].size());
+        if (oNbC > 0) {
+          oNbD= int(iField[0][0][0].size());
+        }
+      }
+    }
+  }
+  template <class element_type>
+  inline void GetFieldDimensions(std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> const& iField, int& oNbA, int& oNbB, int& oNbC, int& oNbD, int& oNbE) {
+    oNbA= 0;
+    oNbB= 0;
+    oNbC= 0;
+    oNbD= 0;
+    oNbE= 0;
+
+    oNbA= int(iField.size());
+    if (oNbA > 0) {
+      oNbB= int(iField[0].size());
+      if (oNbB > 0) {
+        oNbC= int(iField[0][0].size());
+        if (oNbC > 0) {
+          oNbD= int(iField[0][0][0].size());
+          if (oNbD > 0) {
+            oNbE= int(iField[0][0][0][0].size());
+          }
         }
       }
     }
   }
 
-
   // Check dimensions of fields
   template <class element_type>
-  inline bool CheckFieldDimensions(std::vector<std::vector<element_type>> const& iField, int const& iNbX, int const& iNbY) {
-    if (int(iField.size()) != iNbX) return false;
-    if (iNbX > 0 && int(iField[0].size()) != iNbY) return false;
-    if (iNbX > 0 && iNbY > 0 && int(iField[0].size()) != iNbY) return false;
+  inline bool CheckFieldDimensions(std::vector<std::vector<element_type>> const& iField, int const& iNbA, int const& iNbB) {
+    if (int(iField.size()) != iNbA) return false;
+    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
     return true;
   }
   template <class element_type>
-  inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int const& iNbX, int const& iNbY, int const& iNbZ) {
-    if (int(iField.size()) != iNbX) return false;
-    if (iNbX > 0 && int(iField[0].size()) != iNbY) return false;
-    if (iNbX > 0 && iNbY > 0 && int(iField[0].size()) != iNbY) return false;
-    if (iNbX > 0 && iNbY > 0 && iNbZ > 0 && int(iField[0][0].size()) != iNbZ) return false;
+  inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC) {
+    if (int(iField.size()) != iNbA) return false;
+    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
+    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
     return true;
   }
   template <class element_type>
-  inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int const& iNbX, int const& iNbY, int const& iNbZ, int const& iNbW) {
-    if (int(iField.size()) != iNbX) return false;
-    if (iNbX > 0 && int(iField[0].size()) != iNbY) return false;
-    if (iNbX > 0 && iNbY > 0 && int(iField[0].size()) != iNbY) return false;
-    if (iNbX > 0 && iNbY > 0 && iNbZ > 0 && int(iField[0][0].size()) != iNbZ) return false;
-    if (iNbX > 0 && iNbY > 0 && iNbZ > 0 && iNbW > 0 && int(iField[0][0][0].size()) != iNbW) return false;
+  inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC, int const& iNbD) {
+    if (int(iField.size()) != iNbA) return false;
+    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
+    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
+    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && int(iField[0][0][0].size()) != iNbD) return false;
+    return true;
+  }
+  template <class element_type>
+  inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC, int const& iNbD, int const& iNbE) {
+    if (int(iField.size()) != iNbA) return false;
+    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
+    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
+    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && int(iField[0][0][0].size()) != iNbD) return false;
+    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && iNbD > 0 && int(iField[0][0][0][0].size()) != iNbE) return false;
     return true;
   }
 

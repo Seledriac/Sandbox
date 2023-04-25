@@ -149,6 +149,12 @@ void SpaceTimeWorld::Init() {
   isInitialized= true;
   isRefreshed= false;
 
+  // Ensure parameter validity
+  D.param[GR_WorldNbT_________].val= std::max(1.0, D.param[GR_WorldNbT_________].val);
+  D.param[GR_WorldNbX_________].val= std::max(1.0, D.param[GR_WorldNbX_________].val);
+  D.param[GR_WorldNbY_________].val= std::max(1.0, D.param[GR_WorldNbY_________].val);
+  D.param[GR_WorldNbZ_________].val= std::max(1.0, D.param[GR_WorldNbZ_________].val);
+
   // Get dimensions
   worldNbT= int(std::round(D.param[GR_WorldNbT_________].val));
   worldNbX= int(std::round(D.param[GR_WorldNbX_________].val));
@@ -158,12 +164,12 @@ void SpaceTimeWorld::Init() {
   // Load the PNG image for the background
   static std::vector<std::vector<std::array<double, 4>>> loadedImage;
   if (loadedImage.empty())
-    SrtFileInput::LoadImagePNGFile("Background_AlbertArt.png", loadedImage, true);
+    SrtFileInput::LoadImagePNGFile("Background_DeepField.png", loadedImage, true);
 
   // Initialize the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   worldIsFix= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  worldCurva= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0);
+  worldMasss= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0);
   worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
 
   // Add the background
@@ -174,14 +180,14 @@ void SpaceTimeWorld::Init() {
           // Add boundary conditions to spatial domain border
           if (x % worldNbX == 0 || y % worldNbY == 0 || z % worldNbZ == 0) {
             worldIsFix[t][x][y][z]= true;
-            worldCurva[t][x][y][z]= 0.0;
+            worldMasss[t][x][y][z]= 0.0;
           }
 
           // Add grid background layer
           if (x == 0) {
             worldSolid[t][x][y][z]= true;
             worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
-            if ((y + 1) % 10 <= 1 || (z + 1) % 10 <= 1)
+            if ((y + 1) % 8 <= 1 || (z + 1) % 8 <= 1)
               worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
           }
           // if (y == 0 || y == worldNbY - 1) {
@@ -197,13 +203,13 @@ void SpaceTimeWorld::Init() {
           //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
           // }
 
-          // Add PNG background layer
-          if (x == 0) {
-            int imgY= y * int(loadedImage.size()) / worldNbY;
-            int imgZ= (worldNbZ - 1 - z) * int(loadedImage[0].size()) / worldNbZ;
-            worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
-          }
+          // // Add PNG background layer
+          // if (x == 0) {
+          //   int imgY= y * int(loadedImage.size()) / worldNbY;
+          //   int imgZ= (worldNbZ - 1 - z) * int(loadedImage[0].size()) / worldNbZ;
+          //   worldSolid[t][x][y][z]= true;
+          //   worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+          // }
         }
       }
     }
@@ -211,10 +217,10 @@ void SpaceTimeWorld::Init() {
 
   // Create list of shapes to add
   std::vector<Shape> shapes;
-  // shapes.push_back(Shape(0, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +1.0, 0.10, 0.00));  // 2 crossing balls
-  // shapes.push_back(Shape(0, Math::Vec3(0.2, +1.2, -0.2), Math::Vec3(0.2, -0.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), -1.0, 0.10, 0.00));  // 2 crossing balls
+  shapes.push_back(Shape(0, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +1.0, 0.10, 0.00));  // 2 crossing balls
+  shapes.push_back(Shape(0, Math::Vec3(0.2, +1.2, -0.2), Math::Vec3(0.2, -0.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), -1.0, 0.10, 0.00));  // 2 crossing balls
   // shapes.push_back(Shape(0, Math::Vec3(0.2, +0.5, +0.5), Math::Vec3(0.8, +0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), +2.0, 0.04, 0.00));  // 1 small approaching ball
-  shapes.push_back(Shape(1, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +1.0, 0.20, 0.05));  // 1 moving donut
+  // shapes.push_back(Shape(1, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +1.0, 0.20, 0.05));  // 1 moving donut
 
   // Add the shapes
   for (int t= 0; t < worldNbT; t++) {
@@ -228,10 +234,10 @@ void SpaceTimeWorld::Init() {
             if (shape.ImplicitEval(posCell, posT) < 0.0) {
               worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
-              worldCurva[t][x][y][z]= shape.mass;
+              worldMasss[t][x][y][z]= shape.mass;
               worldColor[t][x][y][z]= shape.col;
-              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posCell - pos)[1] / object.rad) * object.col;
-              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? object.col : 0.8 * object.col;
+              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posT-posCell)[1] / shape.rad0) * shape.col;
+              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? shape.col : 0.8 * shape.col;
             }
           }
         }
@@ -239,48 +245,17 @@ void SpaceTimeWorld::Init() {
     }
   }
 
-
-  //   // Jacobi style smooth
-  //   for (int t= 0; t < worldNbT; t++) {
-  //     for (int k= int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k >= 1; k--) {
-  //       // for (int k= 0; k < int(std::floor(D.param[GR_CurvaSmoothIter__].val)); k++) {
-  //       std::vector<std::vector<std::vector<double>>> spaceCurvaOld= worldCurva[t];
-  // #pragma omp parallel for
-  //       for (int x= 0; x < worldNbX; x++) {
-  //         for (int y= 0; y < worldNbY; y++) {
-  //           for (int z= 0; z < worldNbZ; z++) {
-  //             double sum= 0.0, sumWeight= 0.0;
-  //             // for (int xOff= std::max(x - k, 0); xOff <= std::min(x + k, worldNbX - 1); xOff+= k) {
-  //             //   for (int yOff= std::max(y - k, 0); yOff <= std::min(y + k, worldNbY - 1); yOff+= k) {
-  //             //     for (int zOff= std::max(z - k, 0); zOff <= std::min(z + k, worldNbZ - 1); zOff+= k) {
-  //             for (int xOff= x - k; xOff <= x + k; xOff+= k) {
-  //               if (xOff < 0 || xOff >= worldNbX) continue;
-  //               for (int yOff= y - k; yOff <= y + k; yOff+= k) {
-  //                 if (yOff < 0 || yOff >= worldNbY) continue;
-  //                 for (int zOff= z - k; zOff <= z + k; zOff+= k) {
-  //                   if (zOff < 0 || zOff >= worldNbZ) continue;
-  //                   double weight= 1.0;
-  //                   sum+= weight * spaceCurvaOld[xOff][yOff][zOff];
-  //                   sumWeight+= weight;
-  //                 }
-  //               }
-  //             }
-  //             if (sumWeight != 0.0) worldCurva[t][x][y][z]= sum / double(sumWeight);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-
   // Precompute a mask for the world flow
   int maskSize= int(std::floor(D.param[GR_MassReach________].val));
-  std::vector<std::vector<std::vector<Math::Vec4>>> maskVec= Util::AllocField3D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4(0.0, 0.0, 0.0, 0.0));
-  for (int x= 0; x < maskSize * 2 + 1; x++) {
-    for (int y= 0; y < maskSize * 2 + 1; y++) {
-      for (int z= 0; z < maskSize * 2 + 1; z++) {
-        if (x == maskSize && y == maskSize && z == maskSize) continue;
-        Math::Vec4 vec(double(0.0), double(maskSize - x), double(maskSize - y), double(maskSize - z));
-        maskVec[x][y][z]= vec.normalized() / vec.normSquared();
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> maskVec= Util::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4(0.0, 0.0, 0.0, 0.0));
+  for (int t= 0; t < maskSize * 2 + 1; t++) {
+    for (int x= 0; x < maskSize * 2 + 1; x++) {
+      for (int y= 0; y < maskSize * 2 + 1; y++) {
+        for (int z= 0; z < maskSize * 2 + 1; z++) {
+          if (t == maskSize && x == maskSize && y == maskSize && z == maskSize) continue;
+          Math::Vec4 vec(double(maskSize - t), double(maskSize - x), double(maskSize - y), double(maskSize - z));
+          maskVec[t][x][y][z]= vec.normalized() / vec.normSquared();
+        }
       }
     }
   }
@@ -292,72 +267,36 @@ void SpaceTimeWorld::Init() {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          if (worldCurva[t][x][y][z] == 0.0) continue;
-          for (int xOff= std::max(x - maskSize, 0); xOff <= std::min(x + maskSize, worldNbX - 1); xOff++) {
-            for (int yOff= std::max(y - maskSize, 0); yOff <= std::min(y + maskSize, worldNbY - 1); yOff++) {
-              for (int zOff= std::max(z - maskSize, 0); zOff <= std::min(z + maskSize, worldNbZ - 1); zOff++) {
-                worldFlows[t][xOff][yOff][zOff]+= worldCurva[t][x][y][z] * maskVec[maskSize + xOff - x][maskSize + yOff - y][maskSize + zOff - z];
-              }
-            }
-          }
+          if (worldMasss[t][x][y][z] == 0.0) continue;
+          // for (int tOff= t; tOff <= t; tOff++)
+          for (int tOff= std::max(t - maskSize, 0); tOff <= std::min(t + maskSize, worldNbT - 1); tOff++)
+            for (int xOff= std::max(x - maskSize, 0); xOff <= std::min(x + maskSize, worldNbX - 1); xOff++)
+              for (int yOff= std::max(y - maskSize, 0); yOff <= std::min(y + maskSize, worldNbY - 1); yOff++)
+                for (int zOff= std::max(z - maskSize, 0); zOff <= std::min(z + maskSize, worldNbZ - 1); zOff++)
+                  worldFlows[tOff][xOff][yOff][zOff]+= worldMasss[t][x][y][z] * maskVec[maskSize + tOff - t][maskSize + xOff - x][maskSize + yOff - y][maskSize + zOff - z];
         }
       }
     }
   }
 
-  // Add persistance between timesteps
-  for (int t= 1; t < worldNbT; t++)
-    for (int x= 0; x < worldNbX; x++)
-      for (int y= 0; y < worldNbY; y++)
-        for (int z= 0; z < worldNbZ; z++)
-          worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_MassTimePersist__].val * worldFlows[t - 1][x][y][z];
-
-
-  //   // Compute the world flow
-  //   worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
-  //   for (int t= 0; t < worldNbT; t++) {
-  //     int maskSize= int(std::floor(D.param[GR_MassReach________].val));
-  // #pragma omp parallel for
-  //     for (int x= 0; x < worldNbX; x++) {
-  //       for (int y= 0; y < worldNbY; y++) {
-  //         for (int z= 0; z < worldNbZ; z++) {
-  //           for (int xOff= std::max(x - maskSize, 0); xOff <= std::min(x + maskSize, worldNbX - 1); xOff++) {
-  //             for (int yOff= std::max(y - maskSize, 0); yOff <= std::min(y + maskSize, worldNbY - 1); yOff++) {
-  //               for (int zOff= std::max(z - maskSize, 0); zOff <= std::min(z + maskSize, worldNbZ - 1); zOff++) {
-  //                 if (xOff == x && yOff == y && zOff == z) continue;
-  //                 Math::Vec4 vec(double(0.0), double(xOff - x), double(yOff - y), double(zOff - z));
-  //                 worldFlows[t][x][y][z]+= worldCurva[t][xOff][yOff][zOff] * vec.normalized() / vec.normSquared();
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-
-  // worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
-  // for (int t= 0; t < worldNbT; t++) {
-  //   int maskSize= int(std::floor(D.param[GR_MassReach________].val));
-  //   for (int x= 0; x < worldNbX; x++) {
-  //     for (int y= 0; y < worldNbY; y++) {
-  //       for (int z= 0; z < worldNbZ; z++) {
-  //         // if (t > 0) worldFlows[t][x][y][z][0]= (worldCurva[t][x][y][z] - worldCurva[t - 1][x][y][z]);
-  //         if (x > 0) worldFlows[t][x][y][z][1]= 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x - 1][y][z]);
-  //         if (y > 0) worldFlows[t][x][y][z][2]= 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x][y - 1][z]);
-  //         if (z > 0) worldFlows[t][x][y][z][3]= 0.5 * (worldCurva[t][x][y][z] - worldCurva[t][x][y][z - 1]);
-  //         if (x < worldNbX - 1) worldFlows[t][x][y][z][1]= 0.5 * (worldCurva[t][x + 1][y][z] - worldCurva[t][x][y][z]);
-  //         if (y < worldNbY - 1) worldFlows[t][x][y][z][2]= 0.5 * (worldCurva[t][x][y + 1][z] - worldCurva[t][x][y][z]);
-  //         if (z < worldNbZ - 1) worldFlows[t][x][y][z][3]= 0.5 * (worldCurva[t][x][y][z + 1] - worldCurva[t][x][y][z]);
-  //       }
-  //     }
-  //   }
-  // }
+  // // Add persistance between timesteps
+  // for (int t= 1; t < worldNbT; t++)
+  //   for (int x= 0; x < worldNbX; x++)
+  //     for (int y= 0; y < worldNbY; y++)
+  //       for (int z= 0; z < worldNbZ; z++)
+  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_MassTimePersist__].val * worldFlows[t - 1][x][y][z];
 }
 
 
 void SpaceTimeWorld::Refresh() {
   if (!isInitialized) return;
   isRefreshed= true;
+
+  // Ensure parameter validity
+  D.param[GR_ScreenNbH________].val= std::max(1.0, D.param[GR_ScreenNbH________].val);
+  D.param[GR_ScreenNbV________].val= std::max(1.0, D.param[GR_ScreenNbV________].val);
+  D.param[GR_ScreenNbS________].val= std::max(1.0, D.param[GR_ScreenNbS________].val);
+  D.param[GR_CursorWorldT_____].val= std::min(std::max(std::floor(D.param[GR_CursorWorldT_____].val), 0.0), double(worldNbT - 1));
 
   // Get dimensions
   screenNbH= int(std::round(D.param[GR_ScreenNbH________].val));
@@ -389,14 +328,21 @@ void SpaceTimeWorld::Refresh() {
         int idxX= int(std::floor(photonPos[h][v][s][1] * double(worldNbX)));
         int idxY= int(std::floor(photonPos[h][v][s][2] * double(worldNbY)));
         int idxZ= int(std::floor(photonPos[h][v][s][3] * double(worldNbZ)));
-        if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-          double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
-          screenColor[h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
-          break;
-        }
+        if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) break;
+
+        // if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
+        //   double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   screenColor[h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
+        //   break;
+        // }
 
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[GR_FactorCurv_______].val * worldFlows[idxT][idxX][idxY][idxZ] / double(screenNbS);
+        Math::Vec4 flow(
+            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[GR_MassTimePersist__].val,
+            worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[GR_FactorCurv_______].val,
+            worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[GR_FactorCurv_______].val,
+            worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[GR_FactorCurv_______].val);
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[GR_FactorCurv_______].val * flow / double(screenNbS);
         screenCount[h][v]++;
 
         int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbX)), 0), worldNbX - 1);
@@ -406,12 +352,22 @@ void SpaceTimeWorld::Refresh() {
         std::vector<std::array<int, 3>> listVox= Bresenham3D(idxX, idxY, idxZ, endX, endY, endZ);
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            // double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
+            double velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
             screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
             foundCollision= true;
             break;
           }
         }
+        // if (worldSolid[idxT][endX][endY][endZ]) {
+        //   // double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
+        //   double velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+        //   screenColor[h][v]= worldColor[idxT][endX][endY][endZ] * (1.0 + velDif);
+        //   foundCollision= true;
+        //   break;
+        // }
         if (foundCollision) break;
       }
     }
@@ -425,10 +381,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the solid voxels
   if (D.showWorld) {
-    int idxT= (worldNbT - 1) / 2;
-    if (D.param[GR_CursorWorldT_____].val > 0)
-      idxT= std::min(std::max(int(std::floor(D.param[GR_CursorWorldT_____].val)), 0), worldNbT - 1);
-
+    int idxT= int(std::floor(D.param[GR_CursorWorldT_____].val));
     glPushMatrix();
     glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
     glTranslatef(0.5f, 0.5f, 0.5f);
@@ -438,7 +391,7 @@ void SpaceTimeWorld::Draw() {
           glPushMatrix();
           if (worldSolid[idxT][x][y][z]) {
             glTranslatef(float(x), float(y), float(z));
-            glColor3dv(worldColor[idxT][x][y][z].array());
+            glColor3fv(worldColor[idxT][x][y][z].array());
             glutSolidCube(1.0);
           }
           glPopMatrix();
@@ -450,10 +403,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the space time flow field
   if (D.showFlow) {
-    int idxT= (worldNbT - 1) / 2;
-    if (D.param[GR_CursorWorldT_____].val > 0)
-      idxT= std::min(std::max(int(std::floor(D.param[GR_CursorWorldT_____].val)), 0), worldNbT - 1);
-
+    int idxT= int(std::floor(D.param[GR_CursorWorldT_____].val));
     glBegin(GL_LINES);
     // int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 10000, 1.0 / 3.0);
     // for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
@@ -465,11 +415,11 @@ void SpaceTimeWorld::Draw() {
           // if (worldSolid[idxT][x][y][z]) continue;
           Math::Vec3 flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           double r, g, b;
-          SrtColormap::RatioToJetBrightSmooth(0.5 + D.param[GR_FactorCurv_______].val * flowVec.norm() / double(screenNbS), r, g, b);
+          SrtColormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0], r, g, b);
           glColor3d(r, g, b);
           Math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
-          glVertex3dv(pos.array());
-          glVertex3dv((pos + D.param[GR_FactorCurv_______].val * flowVec / double(screenNbS)).array());
+          glVertex3fv(pos.array());
+          glVertex3fv((pos + D.param[GR_FactorCurv_______].val * flowVec / double(screenNbS)).array());
         }
       }
     }
@@ -484,7 +434,7 @@ void SpaceTimeWorld::Draw() {
     glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
     for (int h= 0; h < screenNbH; h++) {
       for (int v= 0; v < screenNbV; v++) {
-        glColor3dv(screenColor[h][v].array());
+        glColor3fv(screenColor[h][v].array());
         glRectf(float(h) / float(screenNbH), float(v) / float(screenNbV), float(h + 1) / float(screenNbH), float(v + 1) / float(screenNbV));
       }
     }
@@ -494,32 +444,32 @@ void SpaceTimeWorld::Draw() {
   // Draw the photon paths
   if (D.showPhotonPath) {
     glBegin(GL_LINES);
-    for (int h= 0; h < screenNbH; h++) {
-      for (int v= 0; v < screenNbV; v++) {
-        // int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
-        // for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
-        //   for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+    // for (int h= 0; h < screenNbH; h++) {
+    //   for (int v= 0; v < screenNbV; v++) {
+    int displaySkipsize= std::sqrt((screenNbH * screenNbV) / 400);
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v] - 1; s++) {
           Math::Vec3 photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
           Math::Vec3 photonEnd(photonPos[h][v][s + 1][1], photonPos[h][v][s + 1][2], photonPos[h][v][s + 1][3]);
-          glColor3dv(screenColor[h][v].array());
-          glVertex3dv(photonBeg.array());
-          glColor3dv(screenColor[h][v].array());
-          glVertex3dv(photonEnd.array());
+          glColor3fv(screenColor[h][v].array());
+          glVertex3fv(photonBeg.array());
+          glColor3fv(screenColor[h][v].array());
+          glVertex3fv(photonEnd.array());
         }
       }
     }
     glEnd();
     glPointSize(2.0f);
     glBegin(GL_POINTS);
-    for (int h= 0; h < screenNbH; h++) {
-      for (int v= 0; v < screenNbV; v++) {
-        // for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
-        //   for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
+    // for (int h= 0; h < screenNbH; h++) {
+    //   for (int v= 0; v < screenNbV; v++) {
+    for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
+      for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v]; s++) {
           Math::Vec3 photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
-          glColor3dv(screenColor[h][v].array());
-          glVertex3dv(photonBeg.array());
+          glColor3fv(screenColor[h][v].array());
+          glVertex3fv(photonBeg.array());
         }
       }
     }

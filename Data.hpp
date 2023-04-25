@@ -97,7 +97,7 @@ class Data
     param.push_back(ParamUI("GR_ScreenNbH________", 64));
     param.push_back(ParamUI("GR_ScreenNbV________", 64));
     param.push_back(ParamUI("GR_ScreenNbS________", 64));
-    param.push_back(ParamUI("GR_CursorWorldT_____", 10));
+    param.push_back(ParamUI("GR_CursorWorldT_____", 8));
     param.push_back(ParamUI("GR_MassReach________", 8));
     param.push_back(ParamUI("GR_MassTimePersist__", 0.8));
     param.push_back(ParamUI("GR_FactorCurv_______", 1.0));

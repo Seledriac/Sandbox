@@ -139,7 +139,7 @@ void FractalCurveDevelopment::Draw() {
       SrtColormap::RatioToJetBrightSmooth(double(idxDepth) / double(Nodes.size() - 1), r, g, b);
       glColor3d(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {
-        glVertex3dv(Nodes[idxDepth][idxNode].array());
+        glVertex3fv(Nodes[idxDepth][idxNode].array());
       }
     }
     glEnd();
@@ -154,7 +154,7 @@ void FractalCurveDevelopment::Draw() {
       glBegin(GL_LINE_STRIP);
       glColor3d(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {
-        glVertex3dv(Nodes[idxDepth][idxNode].array());
+        glVertex3fv(Nodes[idxDepth][idxNode].array());
       }
       glEnd();
     }
@@ -167,10 +167,10 @@ void FractalCurveDevelopment::Draw() {
     glBegin(GL_TRIANGLES);
     for (auto face : Faces) {
       Math::Vec3 normal= (face[1] - face[0]).cross(face[2] - face[0]).normalized();
-      glNormal3dv(normal.array());
-      glVertex3dv(face[0].array());
-      glVertex3dv(face[1].array());
-      glVertex3dv(face[2].array());
+      glNormal3fv(normal.array());
+      glVertex3fv(face[0].array());
+      glVertex3fv(face[1].array());
+      glVertex3fv(face[2].array());
     }
     glEnd();
     glDisable(GL_LIGHTING);
