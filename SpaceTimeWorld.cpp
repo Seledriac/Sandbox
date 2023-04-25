@@ -13,9 +13,9 @@
 
 // Project lib
 #include "Data.hpp"
-#include "SrtColormap.hpp"
-#include "SrtFileInput.hpp"
-#include "math/Util.hpp"
+#include "util/SrtColormap.hpp"
+#include "util/SrtFileInput.hpp"
+#include "util/Util.hpp"
 #include "math/Vectors.hpp"
 
 
@@ -101,21 +101,21 @@ class Shape
 {
   public:
   int type;
-  Math::Vec3 posBeg;
-  Math::Vec3 posEnd;
-  Math::Vec3 col;
-  double mass;
-  double rad0;
-  double rad1;
+  Math::Vec3f posBeg;
+  Math::Vec3f posEnd;
+  Math::Vec3f col;
+  float mass;
+  float rad0;
+  float rad1;
 
   Shape(
       int const iType,
-      Math::Vec3 const iPosBeg,
-      Math::Vec3 const iPosEnd,
-      Math::Vec3 const iCol,
-      double const iMass,
-      double const iRad0,
-      double const iRad1) {
+      Math::Vec3f const iPosBeg,
+      Math::Vec3f const iPosEnd,
+      Math::Vec3f const iCol,
+      float const iMass,
+      float const iRad0,
+      float const iRad1) {
     type= iType;
     posBeg= iPosBeg;
     posEnd= iPosEnd;
@@ -125,10 +125,10 @@ class Shape
     rad1= iRad1;
   }
 
-  double ImplicitEval(Math::Vec3 const iPosCell, double const iTimeRatio) {
-    Math::Vec3 posObj= posBeg + (posEnd - posBeg) * iTimeRatio;
+  float ImplicitEval(Math::Vec3f const iPosCell, float const iTimeRatio) {
+    Math::Vec3f posObj= posBeg + (posEnd - posBeg) * iTimeRatio;
 
-    double val= 1.0;
+    float val= 1.0f;
     if (type == 0)
       val= (posObj - iPosCell).norm() - rad0;
     if (type == 1)
@@ -150,10 +150,10 @@ void SpaceTimeWorld::Init() {
   isRefreshed= false;
 
   // Ensure parameter validity
-  D.param[GR_WorldNbT_________].val= std::max(1.0, D.param[GR_WorldNbT_________].val);
-  D.param[GR_WorldNbX_________].val= std::max(1.0, D.param[GR_WorldNbX_________].val);
-  D.param[GR_WorldNbY_________].val= std::max(1.0, D.param[GR_WorldNbY_________].val);
-  D.param[GR_WorldNbZ_________].val= std::max(1.0, D.param[GR_WorldNbZ_________].val);
+  D.param[GR_WorldNbT_________].val= std::max(1.0f, D.param[GR_WorldNbT_________].val);
+  D.param[GR_WorldNbX_________].val= std::max(1.0f, D.param[GR_WorldNbX_________].val);
+  D.param[GR_WorldNbY_________].val= std::max(1.0f, D.param[GR_WorldNbY_________].val);
+  D.param[GR_WorldNbZ_________].val= std::max(1.0f, D.param[GR_WorldNbZ_________].val);
 
   // Get dimensions
   worldNbT= int(std::round(D.param[GR_WorldNbT_________].val));
@@ -162,15 +162,15 @@ void SpaceTimeWorld::Init() {
   worldNbZ= int(std::round(D.param[GR_WorldNbZ_________].val));
 
   // Load the PNG image for the background
-  static std::vector<std::vector<std::array<double, 4>>> loadedImage;
+  static std::vector<std::vector<std::array<float, 4>>> loadedImage;
   if (loadedImage.empty())
     SrtFileInput::LoadImagePNGFile("Background_DeepField.png", loadedImage, true);
 
   // Initialize the world fields
   worldSolid= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   worldIsFix= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  worldMasss= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0);
-  worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3(0.0, 0.0, 0.0));
+  worldMasss= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
+  worldColor= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
 
   // Add the background
   for (int t= 0; t < worldNbT; t++) {
@@ -180,27 +180,27 @@ void SpaceTimeWorld::Init() {
           // Add boundary conditions to spatial domain border
           if (x % worldNbX == 0 || y % worldNbY == 0 || z % worldNbZ == 0) {
             worldIsFix[t][x][y][z]= true;
-            worldMasss[t][x][y][z]= 0.0;
+            worldMasss[t][x][y][z]= 0.0f;
           }
 
           // Add grid background layer
           if (x == 0) {
             worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+            worldColor[t][x][y][z].set(0.6f, 0.6f, 0.6f);
             if ((y + 1) % 8 <= 1 || (z + 1) % 8 <= 1)
-              worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+              worldColor[t][x][y][z].set(0.4f, 0.4f, 0.4f);
           }
           // if (y == 0 || y == worldNbY - 1) {
           //   worldSolid[t][x][y][z]= true;
-          //   worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+          //   worldColor[t][x][y][z].set(0.6f, 0.6f, 0.6f);
           //   if ((x + 1) % 10 <= 1 || (z + 1) % 10 <= 1)
-          //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+          //     worldColor[t][x][y][z].set(0.4f, 0.4f, 0.4f);
           // }
           // if (z == 0 || z == worldNbZ - 1) {
           //   worldSolid[t][x][y][z]= true;
-          //   worldColor[t][x][y][z].set(0.6, 0.6, 0.6);
+          //   worldColor[t][x][y][z].set(0.6f, 0.6f, 0.6f);
           //   if ((x + 1) % 10 <= 1 || (y + 1) % 10 <= 1)
-          //     worldColor[t][x][y][z].set(0.4, 0.4, 0.4);
+          //     worldColor[t][x][y][z].set(0.4f, 0.4f, 0.4f);
           // }
 
           // // Add PNG background layer
@@ -217,27 +217,27 @@ void SpaceTimeWorld::Init() {
 
   // Create list of shapes to add
   std::vector<Shape> shapes;
-  shapes.push_back(Shape(0, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, +1.2, 1.2), Math::Vec3(0.2, 0.6, 0.2), +1.0, 0.10, 0.00));  // 2 crossing balls
-  shapes.push_back(Shape(0, Math::Vec3(0.2, +1.2, -0.2), Math::Vec3(0.2, -0.2, 1.2), Math::Vec3(0.6, 0.2, 0.2), -1.0, 0.10, 0.00));  // 2 crossing balls
-  // shapes.push_back(Shape(0, Math::Vec3(0.2, +0.5, +0.5), Math::Vec3(0.8, +0.5, 0.5), Math::Vec3(0.6, 0.2, 0.2), +2.0, 0.04, 0.00));  // 1 small approaching ball
-  // shapes.push_back(Shape(1, Math::Vec3(0.6, -0.2, -0.2), Math::Vec3(0.6, 1.2, 1.2), Math::Vec3(0.3, 0.3, 0.7), +1.0, 0.20, 0.05));  // 1 moving donut
+  shapes.push_back(Shape(0, Math::Vec3f(0.6f, -0.2f, -0.2f), Math::Vec3f(0.6f, +1.2f, 1.2f), Math::Vec3f(0.2f, 0.6f, 0.2f), +1.0f, 0.10f, 0.00f));  // 2 crossing balls
+  shapes.push_back(Shape(0, Math::Vec3f(0.3f, +1.2f, -0.2f), Math::Vec3f(0.3f, -0.2f, 1.2f), Math::Vec3f(0.6f, 0.2f, 0.2f), -1.0f, 0.10f, 0.00f));  // 2 crossing balls
+  shapes.push_back(Shape(0, Math::Vec3f(0.2f, +0.5f, +0.5f), Math::Vec3f(0.8f, +0.5f, 0.5f), Math::Vec3f(0.6f, 0.2f, 0.2f), +2.0f, 0.04f, 0.00f));  // 1 small approaching ball
+  shapes.push_back(Shape(1, Math::Vec3f(0.5f, -0.5f, +0.5f), Math::Vec3f(0.5f, +1.5f, 0.5f), Math::Vec3f(0.3f, 0.3f, 0.7f), +1.0f, 0.20f, 0.05f));  // 1 moving donut
 
   // Add the shapes
   for (int t= 0; t < worldNbT; t++) {
-    double posT= 0.5;
-    if (worldNbT > 1) posT= double(t) / double(worldNbT - 1);
+    float posT= 0.5f;
+    if (worldNbT > 1) posT= float(t) / float(worldNbT - 1);
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          Math::Vec3 posCell((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+          Math::Vec3f posCell((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           for (Shape shape : shapes) {
-            if (shape.ImplicitEval(posCell, posT) < 0.0) {
+            if (shape.ImplicitEval(posCell, posT) < 0.0f) {
               worldSolid[t][x][y][z]= true;
               worldIsFix[t][x][y][z]= true;
               worldMasss[t][x][y][z]= shape.mass;
               worldColor[t][x][y][z]= shape.col;
-              // worldColor[t][x][y][z]= (1.0 - 0.6 * (posT-posCell)[1] / shape.rad0) * shape.col;
-              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? shape.col : 0.8 * shape.col;
+              // worldColor[t][x][y][z]= (1.0f - 0.6f * (posT-posCell)[1] / shape.rad0) * shape.col;
+              // worldColor[t][x][y][z]= ((x + y + z) % 2 == 0) ? shape.col : 0.8f * shape.col;
             }
           }
         }
@@ -247,13 +247,13 @@ void SpaceTimeWorld::Init() {
 
   // Precompute a mask for the world flow
   int maskSize= int(std::floor(D.param[GR_MassReach________].val));
-  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> maskVec= Util::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4(0.0, 0.0, 0.0, 0.0));
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4f>>>> maskVec= Util::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
   for (int t= 0; t < maskSize * 2 + 1; t++) {
     for (int x= 0; x < maskSize * 2 + 1; x++) {
       for (int y= 0; y < maskSize * 2 + 1; y++) {
         for (int z= 0; z < maskSize * 2 + 1; z++) {
           if (t == maskSize && x == maskSize && y == maskSize && z == maskSize) continue;
-          Math::Vec4 vec(double(maskSize - t), double(maskSize - x), double(maskSize - y), double(maskSize - z));
+          Math::Vec4f vec(float(maskSize - t), float(maskSize - x), float(maskSize - y), float(maskSize - z));
           maskVec[t][x][y][z]= vec.normalized() / vec.normSquared();
         }
       }
@@ -261,7 +261,7 @@ void SpaceTimeWorld::Init() {
   }
 
   // Compute the world flow
-  worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4(0.0, 0.0, 0.0, 0.0));
+  worldFlows= Util::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 #pragma omp parallel for
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -293,10 +293,10 @@ void SpaceTimeWorld::Refresh() {
   isRefreshed= true;
 
   // Ensure parameter validity
-  D.param[GR_ScreenNbH________].val= std::max(1.0, D.param[GR_ScreenNbH________].val);
-  D.param[GR_ScreenNbV________].val= std::max(1.0, D.param[GR_ScreenNbV________].val);
-  D.param[GR_ScreenNbS________].val= std::max(1.0, D.param[GR_ScreenNbS________].val);
-  D.param[GR_CursorWorldT_____].val= std::min(std::max(std::floor(D.param[GR_CursorWorldT_____].val), 0.0), double(worldNbT - 1));
+  D.param[GR_ScreenNbH________].val= std::max(1.0f, D.param[GR_ScreenNbH________].val);
+  D.param[GR_ScreenNbV________].val= std::max(1.0f, D.param[GR_ScreenNbV________].val);
+  D.param[GR_ScreenNbS________].val= std::max(1.0f, D.param[GR_ScreenNbS________].val);
+  D.param[GR_CursorWorldT_____].val= std::min(std::max(std::floor(D.param[GR_CursorWorldT_____].val), 0.0f), float(worldNbT - 1));
 
   // Get dimensions
   screenNbH= int(std::round(D.param[GR_ScreenNbH________].val));
@@ -304,18 +304,18 @@ void SpaceTimeWorld::Refresh() {
   screenNbS= int(std::round(D.param[GR_ScreenNbS________].val));
 
   // Allocate the screen fields and photon fields
-  if (!Util::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Util::AllocField2D(screenNbH, screenNbV, Math::Vec3(0.0, 0.0, 0.0));
+  if (!Util::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Util::AllocField2D(screenNbH, screenNbV, Math::Vec3f(0.0f, 0.0f, 0.0f));
   if (!Util::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Util::AllocField2D(screenNbH, screenNbV, 1);
-  if (!Util::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4(0.0, 0.0, 0.0, 0.0));
-  if (!Util::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4(0.0, 0.0, 0.0, 0.0));
+  if (!Util::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Util::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Util::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 
   // Initialize the photon fields
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
-      screenColor[h][v]= Math::Vec3(0.0, 0.0, 0.0);
+      screenColor[h][v]= Math::Vec3f(0.0f, 0.0f, 0.0f);
       screenCount[h][v]= 1;
-      photonPos[h][v][0]= Math::Vec4((D.param[GR_CursorWorldT_____].val + 0.5) / double(worldNbT), 1.0 - 1.0 / double(worldNbX), (0.5 + double(h)) / double(screenNbH), (0.5 + double(v)) / double(screenNbV));
-      photonVel[h][v][0]= Math::Vec4(0.0, -2.0, 0.0, 0.0);
+      photonPos[h][v][0]= Math::Vec4f((D.param[GR_CursorWorldT_____].val + 0.5f) / float(worldNbT), 1.0f - 1.0f / float(worldNbX), (0.5f + float(h)) / float(screenNbH), (0.5f + float(v)) / float(screenNbV));
+      photonVel[h][v][0]= Math::Vec4f(0.0f, -2.0f, 0.0f, 0.0f);
     }
   }
 
@@ -324,25 +324,25 @@ void SpaceTimeWorld::Refresh() {
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
       for (int s= 0; s < screenNbS - 1; s++) {
-        int idxT= int(std::floor(photonPos[h][v][s][0] * double(worldNbT)));
-        int idxX= int(std::floor(photonPos[h][v][s][1] * double(worldNbX)));
-        int idxY= int(std::floor(photonPos[h][v][s][2] * double(worldNbY)));
-        int idxZ= int(std::floor(photonPos[h][v][s][3] * double(worldNbZ)));
+        int idxT= int(std::floor(photonPos[h][v][s][0] * float(worldNbT)));
+        int idxX= int(std::floor(photonPos[h][v][s][1] * float(worldNbX)));
+        int idxY= int(std::floor(photonPos[h][v][s][2] * float(worldNbY)));
+        int idxZ= int(std::floor(photonPos[h][v][s][3] * float(worldNbZ)));
         if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) break;
 
         // if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-        //   double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
-        //   screenColor[h][v]= Math::Vec3(0.1, 0.1, 0.1) * (1.0 + velDif);
+        //   float velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   screenColor[h][v]= Math::Vec3f(0.1, 0.1, 0.1) * (1.0 + velDif);
         //   break;
         // }
 
-        photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / double(screenNbS);
-        Math::Vec4 flow(
+        photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / float(screenNbS);
+        Math::Vec4f flow(
             worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[GR_MassTimePersist__].val,
             worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[GR_FactorCurv_______].val,
             worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[GR_FactorCurv_______].val,
             worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[GR_FactorCurv_______].val);
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[GR_FactorCurv_______].val * flow / double(screenNbS);
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[GR_FactorCurv_______].val * flow / float(screenNbS);
         screenCount[h][v]++;
 
         int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbX)), 0), worldNbX - 1);
@@ -352,19 +352,19 @@ void SpaceTimeWorld::Refresh() {
         std::vector<std::array<int, 3>> listVox= Bresenham3D(idxX, idxY, idxZ, endX, endY, endZ);
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            // double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            // float velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
             // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
-            double velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
-            screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
+            float velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+            screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
             foundCollision= true;
             break;
           }
         }
         // if (worldSolid[idxT][endX][endY][endZ]) {
-        //   // double velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
-        //   // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
-        //   double velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
-        //   screenColor[h][v]= worldColor[idxT][endX][endY][endZ] * (1.0 + velDif);
+        //   // float velDif= D.param[GR_FactorDoppler____].val * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
+        //   float velDif= D.param[GR_FactorDoppler____].val * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+        //   screenColor[h][v]= worldColor[idxT][endX][endY][endZ] * (1.0f + velDif);
         //   foundCollision= true;
         //   break;
         // }
@@ -413,13 +413,13 @@ void SpaceTimeWorld::Draw() {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
           // if (worldSolid[idxT][x][y][z]) continue;
-          Math::Vec3 flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
-          double r, g, b;
+          Math::Vec3f flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
+          float r, g, b;
           SrtColormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0], r, g, b);
           glColor3d(r, g, b);
-          Math::Vec3 pos((double(x) + 0.5) / double(worldNbX), (double(y) + 0.5) / double(worldNbY), (double(z) + 0.5) / double(worldNbZ));
+          Math::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           glVertex3fv(pos.array());
-          glVertex3fv((pos + D.param[GR_FactorCurv_______].val * flowVec / double(screenNbS)).array());
+          glVertex3fv((pos + D.param[GR_FactorCurv_______].val * flowVec / float(screenNbS)).array());
         }
       }
     }
@@ -450,8 +450,8 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v] - 1; s++) {
-          Math::Vec3 photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
-          Math::Vec3 photonEnd(photonPos[h][v][s + 1][1], photonPos[h][v][s + 1][2], photonPos[h][v][s + 1][3]);
+          Math::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
+          Math::Vec3f photonEnd(photonPos[h][v][s + 1][1], photonPos[h][v][s + 1][2], photonPos[h][v][s + 1][3]);
           glColor3fv(screenColor[h][v].array());
           glVertex3fv(photonBeg.array());
           glColor3fv(screenColor[h][v].array());
@@ -467,7 +467,7 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v]; s++) {
-          Math::Vec3 photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
+          Math::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
           glColor3fv(screenColor[h][v].array());
           glVertex3fv(photonBeg.array());
         }

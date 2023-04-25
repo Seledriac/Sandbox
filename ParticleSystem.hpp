@@ -1,7 +1,4 @@
-// #pragma once
-
-#ifndef PARTICLESYSTEM_H
-#define PARTICLESYSTEM_H
+#pragma once
 
 // Standard lib
 #include <vector>
@@ -14,17 +11,17 @@ class ParticleSystem
 {
   public:
   int NbParticles;
-  double BaseRadius;
+  float BaseRadius;
 
-  std::vector<Math::Vec3> PosOld;
-  std::vector<Math::Vec3> PosCur;
-  std::vector<Math::Vec3> VelCur;
-  std::vector<Math::Vec3> AccCur;
-  std::vector<Math::Vec3> ForCur;
-  std::vector<Math::Vec3> ColCur;
-  std::vector<double> RadCur;
-  std::vector<double> MasCur;
-  std::vector<double> HotCur;
+  std::vector<Math::Vec3f> PosOld;
+  std::vector<Math::Vec3f> PosCur;
+  std::vector<Math::Vec3f> VelCur;
+  std::vector<Math::Vec3f> AccCur;
+  std::vector<Math::Vec3f> ForCur;
+  std::vector<Math::Vec3f> ColCur;
+  std::vector<float> RadCur;
+  std::vector<float> MasCur;
+  std::vector<float> HotCur;
 
   bool isInitialized;
 
@@ -34,5 +31,3 @@ class ParticleSystem
   void Animate();
   void Draw();
 };
-
-#endif

@@ -1,6 +1,5 @@
 #pragma once
 
-
 // Standard lib
 #include <vector>
 
@@ -10,15 +9,15 @@
 class Agent
 {
   public:
-  Math::Vec3 p, v, n;
+  Math::Vec3f p, v, n;
 };
 
 
 class AgentSwarm
 {
   public:
-  Math::Vec3 PosFood;
-  Math::Vec3 PosPredator;
+  Math::Vec3f PosFood;
+  Math::Vec3f PosPredator;
 
   int NbAgents;
   double SizeAgent;

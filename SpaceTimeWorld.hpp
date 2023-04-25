@@ -17,17 +17,17 @@ class SpaceTimeWorld
   int worldNbZ;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsFix;
-  std::vector<std::vector<std::vector<std::vector<double>>>> worldMasss;
-  std::vector<std::vector<std::vector<std::vector<Math::Vec3>>>> worldColor;
-  std::vector<std::vector<std::vector<std::vector<Math::Vec4>>>> worldFlows;
+  std::vector<std::vector<std::vector<std::vector<float>>>> worldMasss;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3f>>>> worldColor;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4f>>>> worldFlows;
 
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<Math::Vec3>> screenColor;
+  std::vector<std::vector<Math::Vec3f>> screenColor;
   std::vector<std::vector<int>> screenCount;
-  std::vector<std::vector<std::vector<Math::Vec4>>> photonPos;
-  std::vector<std::vector<std::vector<Math::Vec4>>> photonVel;
+  std::vector<std::vector<std::vector<Math::Vec4f>>> photonPos;
+  std::vector<std::vector<std::vector<Math::Vec4f>>> photonVel;
 
   bool isInitialized;
   bool isRefreshed;

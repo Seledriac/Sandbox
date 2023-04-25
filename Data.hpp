@@ -9,9 +9,9 @@ class ParamUI
 {
   public:
   std::string name;
-  double val;
+  float val;
 
-  ParamUI(std::string const iName, double const iVal) {
+  ParamUI(std::string const iName, float const iVal) {
     name= iName;
     val= iVal;
   }

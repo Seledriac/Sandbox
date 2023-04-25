@@ -389,7 +389,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
 
 void SrtFileInput::LoadImagePNGFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::array<double, 4>>>& oImage,
+    std::vector<std::vector<std::array<float, 4>>>& oImage,
     bool const iVerbose) {
   // Open the file
   std::ifstream inputFile(iFullpath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
@@ -426,13 +426,13 @@ void SrtFileInput::LoadImagePNGFile(
   }
 
   // Convert the imageVector into the 2D field
-  oImage= std::vector<std::vector<std::array<double, 4>>>(width, std::vector<std::array<double, 4>>(height, {0.0, 0.0, 0.0, 0.0}));
+  oImage= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height, {0.0f, 0.0f, 0.0f, 0.0f}));
   for (int x= 0; x < int(width); x++) {
     for (int y= 0; y < int(height); y++) {
-      oImage[x][y][0]= double(imageVector[y * int(width) * 4 + x * 4 + 0]) / 255.0;
-      oImage[x][y][1]= double(imageVector[y * int(width) * 4 + x * 4 + 1]) / 255.0;
-      oImage[x][y][2]= double(imageVector[y * int(width) * 4 + x * 4 + 2]) / 255.0;
-      oImage[x][y][3]= double(imageVector[y * int(width) * 4 + x * 4 + 3]) / 255.0;
+      oImage[x][y][0]= float(imageVector[y * int(width) * 4 + x * 4 + 0]) / 255.0f;
+      oImage[x][y][1]= float(imageVector[y * int(width) * 4 + x * 4 + 1]) / 255.0f;
+      oImage[x][y][2]= float(imageVector[y * int(width) * 4 + x * 4 + 2]) / 255.0f;
+      oImage[x][y][3]= float(imageVector[y * int(width) * 4 + x * 4 + 3]) / 255.0f;
     }
   }
 

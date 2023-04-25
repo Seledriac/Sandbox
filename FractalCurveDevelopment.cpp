@@ -12,9 +12,9 @@
 
 // Project lib
 #include "Data.hpp"
-#include "SrtColormap.hpp"
-#include "math/Util.hpp"
 #include "math/Vectors.hpp"
+#include "util/SrtColormap.hpp"
+#include "util/Util.hpp"
 
 
 extern Data D;
@@ -38,34 +38,34 @@ void FractalCurveDevelopment::Init() {
   // Initialize the curve at depth 0
 #ifdef KOCH_SNOWFLAKE
   Nodes.resize(1);
-  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(std::sqrt(3.0) / 2.0, 0.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, 1.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(-std::sqrt(3.0) / 2.0, -1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(+std::sqrt(3.0f) / 2.0f, +0.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(-std::sqrt(3.0f) / 2.0f, +1.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
 #endif
 #ifdef DRAGON_CURVE
   Nodes.resize(1);
-  Nodes[0].push_back(Math::Vec3(0.0, -1.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(1.0, 0.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(0.0, 1.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(-1.0, 0.0, 0.0));
-  Nodes[0].push_back(Math::Vec3(0.0, -1.0, 0.0));
+  Nodes[0].push_back(Math::Vec3f(+0.0f, -1.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(+1.0f, +0.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(+0.0f, +1.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(-1.0f, +0.0f, 0.0f));
+  Nodes[0].push_back(Math::Vec3f(+0.0f, -1.0f, 0.0f));
 #endif
 
   // Iteratively build the next level in the fractal recursion depth
   for (int idxDepth= 1; idxDepth < maxDepth; idxDepth++) {
-    Nodes.push_back(std::vector<Math::Vec3>());
+    Nodes.push_back(std::vector<Math::Vec3f>());
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
-      Math::Vec3 posA= Nodes[idxDepth - 1][idxNode];
-      Math::Vec3 posB= Nodes[idxDepth - 1][idxNode + 1];
-      Math::Vec3 ZOffset(0.0, 0.0, -D.param[testVar1____________].val / std::pow(D.param[testVar2____________].val, double(idxDepth)));
+      Math::Vec3f posA= Nodes[idxDepth - 1][idxNode];
+      Math::Vec3f posB= Nodes[idxDepth - 1][idxNode + 1];
+      Math::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____________].val / std::pow(D.param[testVar2____________].val, double(idxDepth)));
 
 #ifdef KOCH_SNOWFLAKE
-      Math::Vec3 posN0= ZOffset + posA;
-      Math::Vec3 posN1= ZOffset + posA + (posB - posA) * 1.0 / 3.0;
-      Math::Vec3 posN2= ZOffset + (posA + posB) / 2.0 + (std::sqrt(3.0) / 6.0) * (posB - posA).norm() * (posB - posA).cross(Math::Vec3(0.0, 0.0, 1.0)).normalized();
-      Math::Vec3 posN3= ZOffset + posA + (posB - posA) * 2.0 / 3.0;
-      Math::Vec3 posN4= ZOffset + posB;
+      Math::Vec3f posN0= ZOffset + posA;
+      Math::Vec3f posN1= ZOffset + posA + (posB - posA) * 1.0 / 3.0;
+      Math::Vec3f posN2= ZOffset + (posA + posB) / 2.0 + (std::sqrt(3.0) / 6.0) * (posB - posA).norm() * (posB - posA).cross(Math::Vec3f(0.0, 0.0, 1.0)).normalized();
+      Math::Vec3f posN3= ZOffset + posA + (posB - posA) * 2.0 / 3.0;
+      Math::Vec3f posN4= ZOffset + posB;
 
       if (idxNode == 0)
         Nodes[idxDepth].push_back(posN0);
@@ -74,7 +74,7 @@ void FractalCurveDevelopment::Init() {
       Nodes[idxDepth].push_back(posN3);
       Nodes[idxDepth].push_back(posN4);
 
-      Math::Vec3 posM= (posA + posB) / 2.0;
+      Math::Vec3f posM= (posA + posB) / 2.0f;
       Faces.push_back({posM, posA, posN0});
       Faces.push_back({posM, posN0, posN1});
       Faces.push_back({posM, posN1, posN2});
@@ -83,19 +83,19 @@ void FractalCurveDevelopment::Init() {
       Faces.push_back({posM, posN4, posB});
 #endif
 #ifdef DRAGON_CURVE
-      Math::Vec3 dir= (posB - posA).cross(Math::Vec3(0.0, 0.0, 1.0)).normalized();
+      Math::Vec3f dir= (posB - posA).cross(Math::Vec3f(0.0f, 0.0f, 1.0f)).normalized();
       if (idxNode % 2 == 0)
-        dir= Math::Vec3()-dir;
-      Math::Vec3 posN0= ZOffset + posA;
-      Math::Vec3 posN1= ZOffset + 0.5 * (posA + posB) + 0.5*D.param[testVar3____________].val * (posB - posA).norm() * dir;
-      Math::Vec3 posN2= ZOffset + posB;
+        dir= Math::Vec3f() - dir;
+      Math::Vec3f posN0= ZOffset + posA;
+      Math::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____________].val * (posB - posA).norm() * dir;
+      Math::Vec3f posN2= ZOffset + posB;
 
       if (idxNode == 0)
         Nodes[idxDepth].push_back(posN0);
       Nodes[idxDepth].push_back(posN1);
       Nodes[idxDepth].push_back(posN2);
 
-      Math::Vec3 posM= (posA + posB) / 2.0;
+      Math::Vec3f posM= (posA + posB) / 2.0f;
       Faces.push_back({posM, posA, posN0});
       Faces.push_back({posM, posN0, posN1});
       Faces.push_back({posM, posN1, posN2});
@@ -135,9 +135,9 @@ void FractalCurveDevelopment::Draw() {
     glPointSize(2.0f);
     glBegin(GL_POINTS);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
-      double r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(double(idxDepth) / double(Nodes.size() - 1), r, g, b);
-      glColor3d(r, g, b);
+      float r, g, b;
+      SrtColormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
+      glColor3f(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {
         glVertex3fv(Nodes[idxDepth][idxNode].array());
       }
@@ -149,10 +149,10 @@ void FractalCurveDevelopment::Draw() {
   if (D.showEdges) {
     glLineWidth(2.0f);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
-      double r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(double(idxDepth) / double(Nodes.size() - 1), r, g, b);
+      float r, g, b;
+      SrtColormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
       glBegin(GL_LINE_STRIP);
-      glColor3d(r, g, b);
+      glColor3f(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {
         glVertex3fv(Nodes[idxDepth][idxNode].array());
       }
@@ -166,7 +166,7 @@ void FractalCurveDevelopment::Draw() {
     glColor3f(0.8f, 0.8f, 0.8f);
     glBegin(GL_TRIANGLES);
     for (auto face : Faces) {
-      Math::Vec3 normal= (face[1] - face[0]).cross(face[2] - face[0]).normalized();
+      Math::Vec3f normal= (face[1] - face[0]).cross(face[2] - face[0]).normalized();
       glNormal3fv(normal.array());
       glVertex3fv(face[0].array());
       glVertex3fv(face[1].array());

@@ -12,13 +12,13 @@
 // Project Utilities
 #include "math/Vectors.hpp"
 #include "tb/Camera.hpp"
+#include "util/SrtColormap.hpp"
 
 // Project Sandbox Classes
 #include "AgentSwarm.hpp"
 #include "FractalCurveDevelopment.hpp"
 #include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
-#include "SrtColormap.hpp"
 
 
 // Global variables used for the display
@@ -142,9 +142,9 @@ void callback_display() {
     for (unsigned int k0= 0; k0 < D.plotData.size(); k0++) {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
-      double r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(double(k0) / double(D.plotData.size() - 1), r, g, b);
-      glColor3f(float(r), float(g), float(b));
+      float r, g, b;
+      SrtColormap::RatioToJetBrightSmooth(float(k0) / float(D.plotData.size() - 1), r, g, b);
+      glColor3f(r, g, b);
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
       double valMax= D.plotData[k0].second[0];

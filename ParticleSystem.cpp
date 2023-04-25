@@ -13,7 +13,7 @@
 
 // Project lib
 #include "Data.hpp"
-#include "SrtColormap.hpp"
+#include "util/SrtColormap.hpp"
 #include "math/Vectors.hpp"
 
 
@@ -31,34 +31,34 @@ void ParticleSystem::Init() {
   NbParticles= int(std::round(D.param[PD_NbParticles______].val));
 
   // Allocate particle arrays
-  PosOld= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  PosCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  PosCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  VelCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  AccCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  ForCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  ColCur= std::vector<Math::Vec3>(NbParticles, Math::Vec3(0.0, 0.0, 0.0));
-  RadCur= std::vector<double>(NbParticles, 0.0);
-  MasCur= std::vector<double>(NbParticles, 0.0);
-  HotCur= std::vector<double>(NbParticles, 0.0);
+  PosOld= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  VelCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  AccCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  ForCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  ColCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  RadCur= std::vector<float>(NbParticles, 0.0f);
+  MasCur= std::vector<float>(NbParticles, 0.0f);
+  HotCur= std::vector<float>(NbParticles, 0.0f);
 
   // Compute radius based on box size and 2D or 3D
   BaseRadius= 0.6;
   if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1)
-    BaseRadius/= std::pow(double(NbParticles), 1.0 / 2.0);
+    BaseRadius/= std::pow(float(NbParticles), 1.0f / 2.0f);
   else
-    BaseRadius/= std::pow(double(NbParticles), 1.0 / 3.0);
+    BaseRadius/= std::pow(float(NbParticles), 1.0f / 3.0f);
 
   // Initialize with random particle properties
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
       if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1 && dim == 0) continue;
-      PosCur[k][dim]= (double(rand()) / double(RAND_MAX)) - 0.5;
-      ColCur[k][dim]= (double(rand()) / double(RAND_MAX));
+      PosCur[k][dim]= (float(rand()) / float(RAND_MAX)) - 0.5f;
+      ColCur[k][dim]= (float(rand()) / float(RAND_MAX));
     }
     RadCur[k]= BaseRadius;
-    MasCur[k]= 1.0;
-    HotCur[k]= (double(rand()) / double(RAND_MAX));
+    MasCur[k]= 1.0f;
+    HotCur[k]= (float(rand()) / float(RAND_MAX));
   }
 
   // Apply collision constraint (Gauss Seidel)
@@ -66,7 +66,7 @@ void ParticleSystem::Init() {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-          Math::Vec3 val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5 * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+          Math::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
           PosCur[k0]-= val;
           PosCur[k1]+= val;
         }
@@ -81,47 +81,47 @@ void ParticleSystem::Init() {
 void ParticleSystem::Animate() {
   if (!isInitialized) return;
 
-  double domainRad= 1.0;
+  float domainRad= 1.0f;
   int nbSubstep= int(std::round(D.param[PD_NbSubStep________].val));
-  double dt= D.param[PD_TimeStep_________].val / double(nbSubstep);
-  double velocityDecay= (1.0 - D.param[PD_VelocityDecay____].val * dt);
+  float dt= D.param[PD_TimeStep_________].val / float(nbSubstep);
+  float velocityDecay= (1.0f - D.param[PD_VelocityDecay____].val * dt);
 
-  Math::Vec3 gravity(0.0, 0.0, D.param[PD_ForceGravity_____].val);
-  Math::Vec3 buoyancy(0.0, 0.0, D.param[PD_ForceBuoyancy____].val);
+  Math::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].val);
+  Math::Vec3f buoyancy(0.0f, 0.0f, D.param[PD_ForceBuoyancy____].val);
 
-  double conductionFactor= D.param[PD_FactorConduction_].val;
+  float conductionFactor= D.param[PD_FactorConduction_].val;
 
-  double heatAdd= D.param[PD_HeatInput________].val;
-  double heatRem= D.param[PD_HeatOutput_______].val;
+  float heatAdd= D.param[PD_HeatInput________].val;
+  float heatRem= D.param[PD_HeatOutput_______].val;
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
     if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1) {
       for (int k0= 0; k0 < NbParticles; k0++) {
-        PosCur[k0][0]= 0.0;
-        VelCur[k0][0]= 0.0;
+        PosCur[k0][0]= 0.0f;
+        VelCur[k0][0]= 0.0f;
       }
     }
 
     // Add or remove heat to particles based on position in the domain
     for (int k0= 0; k0 < NbParticles; k0++) {
-      if (PosCur[k0][2] < -0.9 * domainRad && PosCur[k0][1] > -0.8 * domainRad && PosCur[k0][1] < 0.8 * domainRad && PosCur[k0][0] > -0.8 * domainRad && PosCur[k0][0] < 0.8 * domainRad)
+      if (PosCur[k0][2] < -0.9f * domainRad && PosCur[k0][1] > -0.8f * domainRad && PosCur[k0][1] < 0.8f * domainRad && PosCur[k0][0] > -0.8f * domainRad && PosCur[k0][0] < 0.8f * domainRad)
         HotCur[k0]+= heatAdd * dt;
       HotCur[k0]-= heatRem * dt;
-      HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
+      HotCur[k0]= std::min(std::max(HotCur[k0], 0.0f), 1.0f);
     }
 
     // Transfer heat between particles (Gauss Seidel)
-    std::vector<double> HotOld= HotCur;
+    std::vector<float> HotOld= HotCur;
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
-        if ((PosCur[k1] - PosCur[k0]).normSquared() <= 1.1 * (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-          double val= conductionFactor * (HotOld[k1] - HotOld[k0]) * dt;
+        if ((PosCur[k1] - PosCur[k0]).normSquared() <= 1.1f * (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
+          float val= conductionFactor * (HotOld[k1] - HotOld[k0]) * dt;
           HotCur[k0]+= val;
           HotCur[k1]-= val;
         }
       }
-      HotCur[k0]= std::min(std::max(HotCur[k0], 0.0), 1.0);
+      HotCur[k0]= std::min(std::max(HotCur[k0], 0.0f), 1.0f);
     }
 
     // // Update particle radii based on heat
@@ -130,7 +130,7 @@ void ParticleSystem::Animate() {
 
     // Reset forces
     for (int k0= 0; k0 < NbParticles; k0++)
-      ForCur[k0].set(0.0, 0.0, 0.0);
+      ForCur[k0].set(0.0f, 0.0f, 0.0f);
 
     // Add gravity forces
     for (int k0= 0; k0 < NbParticles; k0++)
@@ -154,7 +154,7 @@ void ParticleSystem::Animate() {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-          Math::Vec3 val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5 * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+          Math::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
           PosCur[k0]-= val;
           PosCur[k1]+= val;
         }
@@ -196,7 +196,7 @@ void ParticleSystem::Draw() {
     glTranslatef(PosCur[k][0], PosCur[k][1], PosCur[k][2]);
     glScalef(RadCur[k], RadCur[k], RadCur[k]);
     // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
-    double r, g, b;
+    float r, g, b;
     // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
     SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
     // SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
