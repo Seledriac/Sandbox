@@ -1,14 +1,14 @@
-#include "SrtFileInput.hpp"
+#include "FileInput.hpp"
 
 // Standard lib
 #include <fstream>
 #include <iostream>
 
 // Project
-#include "SrtGenericPNGParser.hpp"
+#include "GenericPNGParser.hpp"
 
 
-void SrtFileInput::LoadScalarFieldBinaryFile(
+void FileInput::LoadScalarFieldBinaryFile(
     std::string const iFullpath,
     int const iNbX,
     int const iNbY, int const iNbZ,
@@ -46,7 +46,7 @@ void SrtFileInput::LoadScalarFieldBinaryFile(
 }
 
 
-void SrtFileInput::LoadVectorFieldBinaryFile(
+void FileInput::LoadVectorFieldBinaryFile(
     std::string const iFullpath,
     int const iNbX,
     int const iNbY, int const iNbZ,
@@ -86,7 +86,7 @@ void SrtFileInput::LoadVectorFieldBinaryFile(
 }
 
 
-void SrtFileInput::LoadBoxTXTFile(
+void FileInput::LoadBoxTXTFile(
     std::string const iFullpath,
     std::array<double, 3>& oBBoxMin,
     std::array<double, 3>& oBBoxMax,
@@ -138,7 +138,7 @@ void SrtFileInput::LoadBoxTXTFile(
 }
 
 
-void SrtFileInput::LoadScalarFieldTXTFile(
+void FileInput::LoadScalarFieldTXTFile(
     std::string const iFullpath,
     std::vector<std::vector<std::vector<double>>>& oField,
     bool const iVerbose) {
@@ -188,7 +188,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
 }
 
 
-void SrtFileInput::LoadScalarFieldRawVTIFile(
+void FileInput::LoadScalarFieldRawVTIFile(
     std::string const iFullpath,
     std::array<double, 3>& oBBoxMin,
     std::array<double, 3>& oBBoxMax,
@@ -262,7 +262,7 @@ void SrtFileInput::LoadScalarFieldRawVTIFile(
 }
 
 
-void SrtFileInput::LoadVectorFieldRawVTIFile(
+void FileInput::LoadVectorFieldRawVTIFile(
     std::string const iFullpath,
     std::array<double, 3>& oBBoxMin,
     std::array<double, 3>& oBBoxMax,
@@ -338,7 +338,7 @@ void SrtFileInput::LoadVectorFieldRawVTIFile(
 }
 
 
-void SrtFileInput::LoadScalarFieldTXTFile(
+void FileInput::LoadScalarFieldTXTFile(
     std::string const iFullpath,
     std::vector<std::vector<std::vector<int>>>& oField,
     bool const iVerbose) {
@@ -387,7 +387,7 @@ void SrtFileInput::LoadScalarFieldTXTFile(
 }
 
 
-void SrtFileInput::LoadImagePNGFile(
+void FileInput::LoadImagePNGFile(
     std::string const iFullpath,
     std::vector<std::vector<std::array<float, 4>>>& oImage,
     bool const iVerbose) {
@@ -419,7 +419,7 @@ void SrtFileInput::LoadImagePNGFile(
   // Decode the buffer and store into an image vector (row/width major, col/height minor, with the 4 RGBA components for each pixel)
   unsigned long width, height;
   std::vector<unsigned char> imageVector;
-  int error= SrtGenericPNGParser::DecodePNG(imageVector, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true);
+  int error= GenericPNGParser::DecodePNG(imageVector, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true);
   if (error != 0) {
     printf("[ERROR] Error code %d when decoding the PNG file in buffer\n\n", error);
     throw 0;
@@ -442,7 +442,7 @@ void SrtFileInput::LoadImagePNGFile(
 }
 
 
-void SrtFileInput::LoadVectorFieldTXTFile(
+void FileInput::LoadVectorFieldTXTFile(
     std::string const iFullpath,
     std::vector<std::vector<std::vector<std::array<bool, 3>>>>& oField,
     bool const iVerbose) {
@@ -491,7 +491,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
 }
 
 
-void SrtFileInput::LoadVectorFieldTXTFile(
+void FileInput::LoadVectorFieldTXTFile(
     std::string const iFullpath,
     std::vector<std::vector<std::vector<std::array<double, 3>>>>& oField,
     bool const iVerbose) {
@@ -540,7 +540,7 @@ void SrtFileInput::LoadVectorFieldTXTFile(
 }
 
 
-void SrtFileInput::LoadTensorFieldTXTFile(
+void FileInput::LoadTensorFieldTXTFile(
     std::string const iFullpath,
     std::vector<std::vector<std::vector<std::array<double, 9>>>>& oField,
     bool const iVerbose) {
@@ -590,7 +590,7 @@ void SrtFileInput::LoadTensorFieldTXTFile(
 }
 
 
-void SrtFileInput::LoadMeshOBJFile(
+void FileInput::LoadMeshOBJFile(
     std::string const iFullpath,
     std::vector<std::array<double, 3>>& oPoints,
     std::vector<std::array<double, 3>>& oColors,

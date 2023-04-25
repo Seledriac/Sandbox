@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-class SrtFileInput
+class FileInput
 {
   public:
   static void LoadScalarFieldBinaryFile(

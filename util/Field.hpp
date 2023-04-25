@@ -6,7 +6,7 @@
 #include <vector>
 
 
-namespace Util {
+namespace Field {
 
   // Allocation of fields
   template <class element_type>
@@ -95,33 +95,27 @@ namespace Util {
   // Check dimensions of fields
   template <class element_type>
   inline bool CheckFieldDimensions(std::vector<std::vector<element_type>> const& iField, int const& iNbA, int const& iNbB) {
-    if (int(iField.size()) != iNbA) return false;
-    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
-    return true;
+    int nbA, nbB;
+    GetFieldDimensions(iField, nbA, nbB);
+    return (nbA == iNbA && nbB == iNbB);
   }
   template <class element_type>
   inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC) {
-    if (int(iField.size()) != iNbA) return false;
-    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
-    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
-    return true;
+    int nbA, nbB, nbC;
+    GetFieldDimensions(iField, nbA, nbB, nbC);
+    return (nbA == iNbA && nbB == iNbB && nbC == iNbC);
   }
   template <class element_type>
   inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC, int const& iNbD) {
-    if (int(iField.size()) != iNbA) return false;
-    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
-    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
-    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && int(iField[0][0][0].size()) != iNbD) return false;
-    return true;
+    int nbA, nbB, nbC, nbD;
+    GetFieldDimensions(iField, nbA, nbB, nbC, nbD);
+    return (nbA == iNbA && nbB == iNbB && nbC == iNbC && nbD == iNbD);
   }
   template <class element_type>
   inline bool CheckFieldDimensions(std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> const& iField, int const& iNbA, int const& iNbB, int const& iNbC, int const& iNbD, int const& iNbE) {
-    if (int(iField.size()) != iNbA) return false;
-    if (iNbA > 0 && int(iField[0].size()) != iNbB) return false;
-    if (iNbA > 0 && iNbB > 0 && int(iField[0][0].size()) != iNbC) return false;
-    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && int(iField[0][0][0].size()) != iNbD) return false;
-    if (iNbA > 0 && iNbB > 0 && iNbC > 0 && iNbD > 0 && int(iField[0][0][0][0].size()) != iNbE) return false;
-    return true;
+    int nbA, nbB, nbC, nbD, nbE;
+    GetFieldDimensions(iField, nbA, nbB, nbC, nbD, nbE);
+    return (nbA == iNbA && nbB == iNbB && nbC == iNbC && nbD == iNbD && nbE == iNbE);
   }
 
-}  // namespace Util
+}  // namespace Field

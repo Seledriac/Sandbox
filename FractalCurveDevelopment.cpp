@@ -13,8 +13,7 @@
 // Project lib
 #include "Data.hpp"
 #include "math/Vectors.hpp"
-#include "util/SrtColormap.hpp"
-#include "util/Util.hpp"
+#include "util/Colormap.hpp"
 
 
 extern Data D;
@@ -136,7 +135,7 @@ void FractalCurveDevelopment::Draw() {
     glBegin(GL_POINTS);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
       float r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
+      Colormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
       glColor3f(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {
         glVertex3fv(Nodes[idxDepth][idxNode].array());
@@ -150,7 +149,7 @@ void FractalCurveDevelopment::Draw() {
     glLineWidth(2.0f);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
       float r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
+      Colormap::RatioToJetBrightSmooth(float(idxDepth) / float(Nodes.size() - 1), r, g, b);
       glBegin(GL_LINE_STRIP);
       glColor3f(r, g, b);
       for (int idxNode= 0; idxNode < int(Nodes[idxDepth].size()); idxNode++) {

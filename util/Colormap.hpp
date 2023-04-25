@@ -1,7 +1,7 @@
 #pragma once
 
 
-class SrtColormap
+class Colormap
 {
   public:
   // Linear colormaps

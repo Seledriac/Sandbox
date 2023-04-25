@@ -3,7 +3,7 @@
 // Standard lib
 #include <vector>
 
-class SrtGenericPNGParser
+class GenericPNGParser
 {
   public:
   static int DecodePNG(

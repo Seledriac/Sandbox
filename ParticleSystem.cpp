@@ -13,8 +13,8 @@
 
 // Project lib
 #include "Data.hpp"
-#include "util/SrtColormap.hpp"
 #include "math/Vectors.hpp"
+#include "util/Colormap.hpp"
 
 
 extern Data D;
@@ -197,9 +197,9 @@ void ParticleSystem::Draw() {
     glScalef(RadCur[k], RadCur[k], RadCur[k]);
     // glScalef(RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5), RadCur[k] * (HotCur[k] + 0.5));
     float r, g, b;
-    // SrtColormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
-    SrtColormap::RatioToJetSmooth(HotCur[k], r, g, b);
-    // SrtColormap::RatioToBlackBody(HotCur[k], r, g, b);
+    // Colormap::RatioToJetSmooth(VelCur[k].norm(), r, g, b);
+    Colormap::RatioToJetSmooth(HotCur[k], r, g, b);
+    // Colormap::RatioToBlackBody(HotCur[k], r, g, b);
     glColor3f(r, g, b);
     glutSolidSphere(1.0, 32, 16);
     glPopMatrix();

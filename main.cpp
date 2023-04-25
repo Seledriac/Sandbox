@@ -12,7 +12,7 @@
 // Project Utilities
 #include "math/Vectors.hpp"
 #include "tb/Camera.hpp"
-#include "util/SrtColormap.hpp"
+#include "util/Colormap.hpp"
 
 // Project Sandbox Classes
 #include "AgentSwarm.hpp"
@@ -143,7 +143,7 @@ void callback_display() {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
       float r, g, b;
-      SrtColormap::RatioToJetBrightSmooth(float(k0) / float(D.plotData.size() - 1), r, g, b);
+      Colormap::RatioToJetBrightSmooth(float(k0) / float(D.plotData.size() - 1), r, g, b);
       glColor3f(r, g, b);
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
