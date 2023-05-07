@@ -1,6 +1,7 @@
 
 // Standard lib
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 
 // GLUT lib
@@ -19,6 +20,7 @@
 #include "FractalCurveDevelopment.hpp"
 #include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
+#include "TerrainErosion.hpp"
 
 
 // Global variables used for the display
@@ -31,6 +33,7 @@ Camera *cam;
 Data D;
 AgentSwarm myAgentSwarm;
 SpaceTimeWorld mySpaceTimeWorld;
+TerrainErosion myTerrainErosion;
 ParticleSystem myParticleSystem;
 FractalCurveDevelopment myFractalCurveDevelopment;
 
@@ -110,6 +113,7 @@ void callback_display() {
   // Draw stuff in the scene
   myAgentSwarm.Draw();
   mySpaceTimeWorld.Draw();
+  myTerrainErosion.Draw();
   myFractalCurveDevelopment.Draw();
   myParticleSystem.Draw();
 
@@ -217,16 +221,27 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.playAnimation= !D.playAnimation;
   else if (key == 13)
     D.autoRefresh= !D.autoRefresh;
+
   else if (key == '1')
-    D.showWorld= !D.showWorld;
+    D.displayMode1= !D.displayMode1;
   else if (key == '2')
-    D.showScreen= !D.showScreen;
+    D.displayMode2= !D.displayMode2;
   else if (key == '3')
-    D.showPhotonPath= !D.showPhotonPath;
+    D.displayMode3= !D.displayMode3;
   else if (key == '4')
-    D.showCursor= !D.showCursor;
+    D.displayMode4= !D.displayMode4;
   else if (key == '5')
-    D.showFlow= !D.showFlow;
+    D.displayMode5= !D.displayMode5;
+  else if (key == '6')
+    D.displayMode6= !D.displayMode6;
+  else if (key == '7')
+    D.displayMode7= !D.displayMode7;
+  else if (key == '8')
+    D.displayMode8= !D.displayMode8;
+  else if (key == '9')
+    D.displayMode9= !D.displayMode9;
+  else if (key == '0')
+    D.displayMode0= !D.displayMode0;
 
   else if (key == 'a')
     D.showAxis= !D.showAxis;
@@ -237,6 +252,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
     mySpaceTimeWorld= SpaceTimeWorld();
   else if (key == 'r')
     mySpaceTimeWorld.Init();
+  else if (key == 'E')
+    myTerrainErosion= TerrainErosion();
+  else if (key == 'e')
+    myTerrainErosion.Init();
   else if (key == 'F')
     myFractalCurveDevelopment= FractalCurveDevelopment();
   else if (key == 'f')
@@ -253,6 +272,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   // Compute refresh
   if (D.autoRefresh) {
     mySpaceTimeWorld.Refresh();
+    myTerrainErosion.Refresh();
   }
 
   glutPostRedisplay();
@@ -294,6 +314,7 @@ void callback_keyboard_special(int key, int x, int y) {
   // Compute refresh
   if (D.autoRefresh && key != GLUT_KEY_UP && key != GLUT_KEY_DOWN) {
     mySpaceTimeWorld.Refresh();
+    myTerrainErosion.Refresh();
   }
 
   glutPostRedisplay();
@@ -388,6 +409,8 @@ void init_GL() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glShadeModel(GL_SMOOTH);
+  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+  glEnable(GL_COLOR_MATERIAL);
   // glEnable(GL_POINT_SMOOTH);
   // glEnable(GL_LINE_SMOOTH);
 }
@@ -395,15 +418,15 @@ void init_GL() {
 
 // Scene initialization
 void init_scene() {
-  // Initialize pseudo random number generator
+  // Initialize pseudo random number generator to be used with float(rand())/float(RAND_MAX)
   srand(time(0));
 
-  // Initialize camera and arcball
+  // Initialize camera and arcball positions
   cam= new Camera;
-  cam->setEye(1.5f, 2.0f, 1.0f);
-  cam->setCenter(0.0f, 0.0f, 0.0f);
-  // cam->setEye(2.0f, 2.5f, 1.5f);
-  // cam->setCenter(0.5f, 0.5f, 0.5f);
+  // cam->setEye(1.5f, 2.0f, 1.0f);
+  // cam->setCenter(0.0f, 0.0f, 0.0f);
+  cam->setEye(2.0f, 2.5f, 1.5f);
+  cam->setCenter(0.5f, 0.5f, 0.5f);
 }
 
 

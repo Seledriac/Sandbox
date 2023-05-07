@@ -381,7 +381,7 @@ void SpaceTimeWorld::Draw() {
   if (!isRefreshed) return;
 
   // Draw the solid voxels
-  if (D.showWorld) {
+  if (D.displayMode1) {
     int idxT= int(std::floor(D.param[GR_CursorWorldT_____].val));
     glPushMatrix();
     glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
@@ -403,7 +403,7 @@ void SpaceTimeWorld::Draw() {
   }
 
   // Draw the space time flow field
-  if (D.showFlow) {
+  if (D.displayMode2) {
     int idxT= int(std::floor(D.param[GR_CursorWorldT_____].val));
     glBegin(GL_LINES);
     // int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 10000, 1.0 / 3.0);
@@ -417,7 +417,7 @@ void SpaceTimeWorld::Draw() {
           Math::Vec3f flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           float r, g, b;
           Colormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0], r, g, b);
-          glColor3d(r, g, b);
+          glColor3f(r, g, b);
           Math::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           glVertex3fv(pos.array());
           glVertex3fv((pos + D.param[GR_FactorCurv_______].val * flowVec / float(screenNbS)).array());
@@ -428,7 +428,7 @@ void SpaceTimeWorld::Draw() {
   }
 
   // Draw the screen
-  if (D.showScreen) {
+  if (D.displayMode3) {
     glPushMatrix();
     glTranslatef(1.0f, 0.0f, 0.0f);
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
@@ -443,7 +443,7 @@ void SpaceTimeWorld::Draw() {
   }
 
   // Draw the photon paths
-  if (D.showPhotonPath) {
+  if (D.displayMode4) {
     glBegin(GL_LINES);
     // for (int h= 0; h < screenNbH; h++) {
     //   for (int v= 0; v < screenNbV; v++) {

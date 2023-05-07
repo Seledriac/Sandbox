@@ -5,7 +5,10 @@ ParticleSystem.o: ParticleSystem.cpp ParticleSystem.hpp math/Vectors.hpp \
  Data.hpp util/Colormap.hpp
 SpaceTimeWorld.o: SpaceTimeWorld.cpp SpaceTimeWorld.hpp math/Vectors.hpp \
  Data.hpp fileio/FileInput.hpp util/Colormap.hpp util/Field.hpp
+TerrainErosion.o: TerrainErosion.cpp TerrainErosion.hpp math/Vectors.hpp \
+ Data.hpp util/Colormap.hpp util/Field.hpp util/Random.hpp
 main.o: main.cpp Data.hpp math/Vectors.hpp tb/Camera.hpp tb/TrackBall.hpp \
  tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
  tb/TrackBallQuaternion.hpp util/Colormap.hpp AgentSwarm.hpp \
- FractalCurveDevelopment.hpp ParticleSystem.hpp SpaceTimeWorld.hpp
+ FractalCurveDevelopment.hpp ParticleSystem.hpp SpaceTimeWorld.hpp \
+ TerrainErosion.hpp

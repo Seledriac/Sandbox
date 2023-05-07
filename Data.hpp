@@ -52,6 +52,11 @@ enum ParamType
   AS_CoeffHunger______,
   AS_CoeffFear________,
   S2__________________,
+  TE_TerrainNbX_______,
+  TE_TerrainNbY_______,
+  TE_DropletNbK_______,
+  TE_DropletNbS_______,
+  S3__________________,
   testVar0____________,
   testVar1____________,
   testVar2____________,
@@ -72,15 +77,16 @@ class Data
 
   bool showAxis= false;
 
-  bool showWorld= true;
-  bool showScreen= true;
-  bool showPhotonPath= false;
-  bool showCursor= false;
-  bool showFlow= false;
-
-  bool showNodes= true;
-  bool showEdges= true;
-  bool showFaces= true;
+  bool displayMode1= true;
+  bool displayMode2= true;
+  bool displayMode3= true;
+  bool displayMode4= true;
+  bool displayMode5= true;
+  bool displayMode6= true;
+  bool displayMode7= true;
+  bool displayMode8= true;
+  bool displayMode9= true;
+  bool displayMode0= true;
 
   unsigned int idxParamUI= 0;
 
@@ -123,6 +129,11 @@ class Data
     param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
     param.push_back(ParamUI("AS_CoeffFear________", 0.06));
     param.push_back(ParamUI("S2__________________", 1.0));
+    param.push_back(ParamUI("TE_TerrainNbX_______", 100.0));
+    param.push_back(ParamUI("TE_TerrainNbY_______", 100.0));
+    param.push_back(ParamUI("TE_DropletNbK_______", 1.0));
+    param.push_back(ParamUI("TE_DropletNbS_______", 100.0));
+    param.push_back(ParamUI("S3__________________", 1.0));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
     param.push_back(ParamUI("testVar2____________", 1.0));

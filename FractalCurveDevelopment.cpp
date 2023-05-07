@@ -130,7 +130,8 @@ void FractalCurveDevelopment::Init() {
 void FractalCurveDevelopment::Draw() {
   if (!isInitialized) return;
 
-  if (D.showNodes) {
+  // Draw vertices
+  if (D.displayMode1) {
     glPointSize(2.0f);
     glBegin(GL_POINTS);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
@@ -145,7 +146,8 @@ void FractalCurveDevelopment::Draw() {
     glPointSize(1.0f);
   }
 
-  if (D.showEdges) {
+  // Draw wireframe
+  if (D.displayMode2) {
     glLineWidth(2.0f);
     for (int idxDepth= 0; idxDepth < int(Nodes.size()); idxDepth++) {
       float r, g, b;
@@ -160,7 +162,8 @@ void FractalCurveDevelopment::Draw() {
     glLineWidth(1.0f);
   }
 
-  if (D.showFaces) {
+  // Draw faces
+  if (D.displayMode3) {
     glEnable(GL_LIGHTING);
     glColor3f(0.8f, 0.8f, 0.8f);
     glBegin(GL_TRIANGLES);
