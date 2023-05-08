@@ -15,9 +15,9 @@ class TerrainErosion
   int terrainNbCuts;
   std::vector<std::vector<Math::Vec3f>> terrainPos;
   std::vector<std::vector<Math::Vec3f>> terrainNor;
+  std::vector<std::vector<float>> terrainWet;
 
   int dropletNbK;
-  int dropletNbS;
   std::vector<Math::Vec3f> dropletPosOld;
   std::vector<Math::Vec3f> dropletPosCur;
   std::vector<Math::Vec3f> dropletVelCur;

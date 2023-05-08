@@ -72,6 +72,7 @@ void TerrainErosion::Init() {
   // Allocate terrain data
   terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
   terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  terrainWet= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
 
   // Compute terrain mesh vertex positions
   for (int x= 0; x < terrainNbX; x++)
@@ -93,16 +94,16 @@ void TerrainErosion::Init() {
   // Compute random terrain through iterative cutting
   for (int x= 0; x < terrainNbX; x++) {
     for (int y= 0; y < terrainNbY; y++) {
-      terrainPos[x][y][2]= 0.5f;
+      terrainPos[x][y][2]= 0.0f;
       for (int iter= 0; iter < terrainNbCuts; iter++) {
         Math::Vec2f pos(terrainPos[x][y][0], terrainPos[x][y][1]);
-        terrainPos[x][y][2]+= ((pos - cutPiv[iter]).dot(cutVec[iter]) < 0.0f) ? 0.25f : -0.25f;
+        terrainPos[x][y][2]+= ((pos - cutPiv[iter]).dot(cutVec[iter]) < 0.0f) ? 1.0f : -1.0f;
       }
     }
   }
 
   // Smooth the terrain
-  for (int iter= 0; iter < std::max(terrainNbX, terrainNbY) / 50; iter++) {
+  for (int iter= 0; iter < std::max(terrainNbX, terrainNbY) / 32; iter++) {
     std::vector<std::vector<Math::Vec3f>> terrainPosOld= terrainPos;
     for (int x= 0; x < terrainNbX; x++) {
       for (int y= 0; y < terrainNbY; y++) {
@@ -120,8 +121,8 @@ void TerrainErosion::Init() {
   }
 
   // Rescale terrain elevation
-  float terrainMinTarg= 0.25f;
-  float terrainMaxTarg= 0.75f;
+  float terrainMinTarg= 0.35f;
+  float terrainMaxTarg= 0.65f;
   float terrainMinVal= terrainPos[0][0][2];
   float terrainMaxVal= terrainPos[0][0][2];
   for (int x= 0; x < terrainNbX; x++) {
@@ -152,7 +153,6 @@ void TerrainErosion::Init() {
 
   // Get droplet parameters
   dropletNbK= std::max(1, int(std::round(D.param[TE_DropletNbK_______].val)));
-  dropletNbS= std::max(1, int(std::round(D.param[TE_DropletNbS_______].val)));
 
   // Allocate droplet data
   dropletPosOld= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -178,10 +178,10 @@ void TerrainErosion::Animate() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
-  int nbSubstep= int(std::round(D.param[PD_NbSubStep________].val));
-  float dt= D.param[PD_TimeStep_________].val / float(nbSubstep);
-  float velocityDecay= (1.0f - D.param[PD_VelocityDecay____].val * dt);
-  Math::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].val);
+  int nbSubstep= 1;
+  float dt= 0.02f / float(nbSubstep);
+  float velocityDecay= (1.0f - 0.8f * dt);
+  Math::Vec3f gravity(0.0f, 0.0f, -0.5f);
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Initialize invalid droplets with random properties
@@ -192,7 +192,7 @@ void TerrainErosion::Animate() {
         dropletColCur[k0].set(0.5f, 0.5f, 1.0f);
         dropletMasCur[k0]= 1.0f;
         dropletSatCur[k0]= 0.01f;
-        dropletRadCur[k0]= D.param[testVar0____________].val;
+        dropletRadCur[k0]= std::max(D.param[TE_DropletRad_______].val, 1.e-6f);
         dropletIsDead[k0]= false;
       }
     }
@@ -232,25 +232,13 @@ void TerrainErosion::Animate() {
         interpoNor+= terrainNor[x0][y1] * (xWeight0 * yWeight1);
         interpoNor+= terrainNor[x1][y0] * (xWeight1 * yWeight0);
         interpoNor+= terrainNor[x1][y1] * (xWeight1 * yWeight1);
-
-        // dropletPosCur[k0][2]= interpoVal + dropletRadCur[k0];
         dropletPosCur[k0]+= (interpoVal + dropletRadCur[k0] - dropletPosCur[k0][2]) * interpoNor.normalized();
+
+        terrainWet[x0][y0]+= 0.1f * (xWeight0 * yWeight0);
+        terrainWet[x0][y1]+= 0.1f * (xWeight0 * yWeight1);
+        terrainWet[x1][y0]+= 0.1f * (xWeight1 * yWeight0);
+        terrainWet[x1][y1]+= 0.1f * (xWeight1 * yWeight1);
       }
-
-      // int idxX= std::min(std::max(int(std::floor(dropletPosCur[k0][0] * float(terrainNbX))), 0), terrainNbX - 1);
-      // int idxY= std::min(std::max(int(std::floor(dropletPosCur[k0][1] * float(terrainNbY))), 0), terrainNbY - 1);
-      // if (dropletPosCur[k0][2] < terrainVal[idxX][idxY])
-      //   dropletPosCur[k0][2]= terrainVal[idxX][idxY];
-
-      // if ((dropletPosCur[k0] - terrainPos[idxX][idxY]).normSquared() < dropletRadCur[k0] * dropletRadCur[k0]) {
-      //   dropletPosCur[k0]+= (dropletPosCur[k0] - terrainPos[idxX][idxY]).normalized() * ((dropletPosCur[k0] - terrainPos[idxX][idxY]).norm() - dropletRadCur[k0]);
-      // }
-
-      // if (terrainVal[idxX][idxY] + dropletRadCur[k0] > dropletPosCur[k0][2])
-      //   dropletPosCur[k0]+= (terrainVal[idxX][idxY] + dropletRadCur[k0] - dropletPosCur[k0][2]) * terrainNor[idxX][idxY];
-
-      dropletPosCur[k0][0]= std::min(std::max(dropletPosCur[k0][0], 0.0f), 1.0f);
-      dropletPosCur[k0][1]= std::min(std::max(dropletPosCur[k0][1], 0.0f), 1.0f);
     }
 
     // Apply collision constraint (Gauss Seidel)
@@ -287,6 +275,11 @@ void TerrainErosion::Animate() {
     }
   }
 
+  // Decrease terrain wetness
+  for (int x= 0; x < terrainNbX; x++)
+    for (int y= 0; y < terrainNbY; y++)
+      terrainWet[x][y]= std::min(std::max(terrainWet[x][y] * 0.99f, 0.0f), 1.0f);
+
   // Plot some values
   D.plotData.resize(3);
   D.plotData[0].first= "valX";
@@ -303,14 +296,17 @@ void TerrainErosion::Draw() {
   if (!isRefreshed) return;
 
   // Draw the terrain
-  if (D.displayMode1) {
+  if (D.displayMode1 || D.displayMode2) {
     glEnable(GL_LIGHTING);
     glBegin(GL_QUADS);
     for (int x= 0; x < terrainNbX - 1; x++) {
       for (int y= 0; y < terrainNbY - 1; y++) {
         Math::Vec3f flatNormal= (terrainNor[x][y] + terrainNor[x + 1][y] + terrainNor[x + 1][y + 1] + terrainNor[x][y + 1]).normalized();
         float r, g, b;
-        Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
+        if (D.displayMode1)
+          Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
+        if (D.displayMode2)
+          Colormap::RatioToJetSmooth(1.0 - terrainWet[x][y] * D.param[testVar1____________].val, r, g, b);
         glColor3f(r / 2.0f, g / 2.0f, b / 2.0f);
         glNormal3fv(flatNormal.array());
         glVertex3fv(terrainPos[x][y].array());

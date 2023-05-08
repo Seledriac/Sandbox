@@ -56,7 +56,7 @@ enum ParamType
   TE_TerrainNbY_______,
   TE_TerrainNbCuts____,
   TE_DropletNbK_______,
-  TE_DropletNbS_______,
+  TE_DropletRad_______,
   S3__________________,
   testVar0____________,
   testVar1____________,
@@ -130,11 +130,11 @@ class Data
     param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
     param.push_back(ParamUI("AS_CoeffFear________", 0.06));
     param.push_back(ParamUI("S2__________________", 1.0));
-    param.push_back(ParamUI("TE_TerrainNbX_______", 100.0));
-    param.push_back(ParamUI("TE_TerrainNbY_______", 100.0));
-    param.push_back(ParamUI("TE_TerrainNbCuts____", 100.0));
-    param.push_back(ParamUI("TE_DropletNbK_______", 1.0));
-    param.push_back(ParamUI("TE_DropletNbS_______", 100.0));
+    param.push_back(ParamUI("TE_TerrainNbX_______", 128.0));
+    param.push_back(ParamUI("TE_TerrainNbY_______", 128.0));
+    param.push_back(ParamUI("TE_TerrainNbCuts____", 256.0));
+    param.push_back(ParamUI("TE_DropletNbK_______", 100.0));
+    param.push_back(ParamUI("TE_DropletRad_______", 0.01f));
     param.push_back(ParamUI("S3__________________", 1.0));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));
