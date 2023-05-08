@@ -12,16 +12,23 @@ class TerrainErosion
   public:
   int terrainNbX;
   int terrainNbY;
-  std::vector<std::vector<float>> terrainVal;
-  std::vector<std::vector<float>> terrainRef;
-  std::vector<std::vector<Math::Vec3f>> terrainGra;
+  int terrainNbCuts;
   std::vector<std::vector<Math::Vec3f>> terrainPos;
   std::vector<std::vector<Math::Vec3f>> terrainNor;
 
   int dropletNbK;
   int dropletNbS;
-  std::vector<std::vector<Math::Vec3f>> dropletPos;
-  std::vector<std::vector<Math::Vec3f>> dropletVel;
+  std::vector<Math::Vec3f> dropletPosOld;
+  std::vector<Math::Vec3f> dropletPosCur;
+  std::vector<Math::Vec3f> dropletVelCur;
+  std::vector<Math::Vec3f> dropletAccCur;
+  std::vector<Math::Vec3f> dropletForCur;
+  std::vector<Math::Vec3f> dropletColCur;
+  std::vector<float> dropletMasCur;
+  std::vector<float> dropletRadCur;
+  std::vector<float> dropletSatCur;
+  std::vector<bool> dropletIsDead;
+
 
   bool isInitialized;
   bool isRefreshed;
@@ -30,11 +37,6 @@ class TerrainErosion
 
   void Init();
   void Refresh();
+  void Animate();
   void Draw();
-
-  private:
-  void ComputeTerrainFractal();
-  void ComputeTerrainSmoothing();
-  void ComputeTerrainRescaling();
-  void ComputeTerrainMesh();
 };

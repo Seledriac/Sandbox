@@ -54,6 +54,7 @@ enum ParamType
   S2__________________,
   TE_TerrainNbX_______,
   TE_TerrainNbY_______,
+  TE_TerrainNbCuts____,
   TE_DropletNbK_______,
   TE_DropletNbS_______,
   S3__________________,
@@ -131,6 +132,7 @@ class Data
     param.push_back(ParamUI("S2__________________", 1.0));
     param.push_back(ParamUI("TE_TerrainNbX_______", 100.0));
     param.push_back(ParamUI("TE_TerrainNbY_______", 100.0));
+    param.push_back(ParamUI("TE_TerrainNbCuts____", 100.0));
     param.push_back(ParamUI("TE_DropletNbK_______", 1.0));
     param.push_back(ParamUI("TE_DropletNbS_______", 100.0));
     param.push_back(ParamUI("S3__________________", 1.0));

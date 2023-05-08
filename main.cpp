@@ -195,6 +195,7 @@ void callback_timer(int v) {
   if (D.playAnimation) {
     myAgentSwarm.Animate();
     myParticleSystem.Animate();
+    myTerrainErosion.Animate();
 
     glutPostRedisplay();
   }
