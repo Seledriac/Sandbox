@@ -22,38 +22,6 @@
 extern Data D;
 
 
-float InterpolateVal(std::vector<std::vector<float>> const& iField, Math::Vec2f const& iRelPos) {
-  int nbX, nbY;
-  Field::GetFieldDimensions(iField, nbX, nbY);
-
-  float xFloat= iRelPos[0] / float(nbX - 1);
-  float yFloat= iRelPos[1] / float(nbY - 1);
-
-  int x0= std::min(std::max(int(std::floor(xFloat)), 0), nbX - 1);
-  int y0= std::min(std::max(int(std::floor(yFloat)), 0), nbY - 1);
-  int x1= std::min(std::max(int(std::floor(xFloat)) + 1, 0), nbX - 1);
-  int y1= std::min(std::max(int(std::floor(yFloat)) + 1, 0), nbY - 1);
-
-  float xWeight1= xFloat - float(x0);
-  float yWeight1= yFloat - float(y0);
-  float xWeight0= 1.0 - xWeight1;
-  float yWeight0= 1.0 - yWeight1;
-
-  float v00= iField[x0][y0];
-  float v01= iField[x0][y1];
-  float v10= iField[x1][y0];
-  float v11= iField[x1][y1];
-
-  float val= 0.0;
-  val+= v00 * (xWeight0 * yWeight0);
-  val+= v01 * (xWeight0 * yWeight1);
-  val+= v10 * (xWeight1 * yWeight0);
-  val+= v11 * (xWeight1 * yWeight1);
-
-  return val;
-}
-
-
 TerrainErosion::TerrainErosion() {
   isInitialized= false;
   isRefreshed= false;
@@ -345,7 +313,7 @@ void TerrainErosion::Draw() {
   if (!isRefreshed) return;
 
   // Draw the terrain
-  if (D.displayMode1 || D.displayMode2) {
+  if (D.displayMode1 || D.displayMode2 || D.displayMode3) {
     glEnable(GL_LIGHTING);
     glBegin(GL_QUADS);
     for (int x= 0; x < terrainNbX - 1; x++) {
@@ -354,7 +322,12 @@ void TerrainErosion::Draw() {
         float r, g, b;
         if (D.displayMode1)
           Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
-        if (D.displayMode2)
+        else if (D.displayMode2) {
+          r= terrainNor[x][y][0];
+          g= terrainNor[x][y][1];
+          b= terrainNor[x][y][2];
+        }
+        else if (D.displayMode3)
           Colormap::RatioToJetSmooth(0.5f + terrainChg[x][y] * 100.0f, r, g, b);
         glColor3f(r / 2.0f, g / 2.0f, b / 2.0f);
         glNormal3fv(flatNormal.array());
@@ -372,7 +345,7 @@ void TerrainErosion::Draw() {
   }
 
   // Draw the terrain normals
-  if (D.displayMode3) {
+  if (D.displayMode4) {
     glBegin(GL_LINES);
     for (int x= 0; x < terrainNbX; x++) {
       for (int y= 0; y < terrainNbY; y++) {
@@ -387,7 +360,7 @@ void TerrainErosion::Draw() {
   }
 
   // Draw the droplets
-  if (D.displayMode4) {
+  if (D.displayMode5) {
     for (int k= 0; k < dropletNbK; k++) {
       glPushMatrix();
       glTranslatef(dropletPosCur[k][0], dropletPosCur[k][1], dropletPosCur[k][2]);
