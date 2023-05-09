@@ -323,9 +323,9 @@ void TerrainErosion::Draw() {
         if (D.displayMode1)
           Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
         else if (D.displayMode2) {
-          r= terrainNor[x][y][0];
-          g= terrainNor[x][y][1];
-          b= terrainNor[x][y][2];
+          r= 0.5f + terrainNor[x][y][0]/2.0f;
+          g= 0.5f + terrainNor[x][y][1]/2.0f;
+          b= 0.5f + terrainNor[x][y][2]/2.0f;
         }
         else if (D.displayMode3)
           Colormap::RatioToJetSmooth(0.5f + terrainChg[x][y] * 100.0f, r, g, b);
