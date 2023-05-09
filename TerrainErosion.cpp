@@ -72,7 +72,7 @@ void TerrainErosion::Init() {
   // Allocate terrain data
   terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
   terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  terrainWet= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
+  terrainChg= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
 
   // Compute terrain mesh vertex positions
   for (int x= 0; x < terrainNbX; x++)
@@ -178,107 +178,156 @@ void TerrainErosion::Animate() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
-  int nbSubstep= 1;
-  float dt= 0.02f / float(nbSubstep);
-  float velocityDecay= (1.0f - 0.8f * dt);
+  float dt= 0.02f;
+  float velocityDecay= (1.0f - (0.8f * dt));
   Math::Vec3f gravity(0.0f, 0.0f, -0.5f);
 
-  for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
-    // Initialize invalid droplets with random properties
-    for (int k0= 0; k0 < dropletNbK; k0++) {
-      if (dropletIsDead[k0]) {
-        dropletPosCur[k0].set(Random::Val(0.0f, 1.0f), Random::Val(0.0f, 1.0f), Random::Val(0.9f, 1.0f));
-        dropletPosOld[k0]= dropletPosCur[k0];
-        dropletColCur[k0].set(0.5f, 0.5f, 1.0f);
-        dropletMasCur[k0]= 1.0f;
-        dropletSatCur[k0]= 0.01f;
-        dropletRadCur[k0]= std::max(D.param[TE_DropletRad_______].val, 1.e-6f);
-        dropletIsDead[k0]= false;
-      }
-    }
-
-    // Reset forces
-    for (int k0= 0; k0 < dropletNbK; k0++)
-      dropletForCur[k0].set(0.0f, 0.0f, 0.0f);
-
-    // Add gravity forces
-    for (int k0= 0; k0 < dropletNbK; k0++)
-      dropletForCur[k0]+= gravity * dropletMasCur[k0];
-
-    // Apply boundary constraint
-    for (int k0= 0; k0 < dropletNbK; k0++) {
-      float xFloat= dropletPosCur[k0][0] / (1.0f / float(terrainNbX - 1));
-      float yFloat= dropletPosCur[k0][1] / (1.0f / float(terrainNbY - 1));
-
-      int x0= std::min(std::max(int(std::floor(xFloat)), 0), terrainNbX - 1);
-      int y0= std::min(std::max(int(std::floor(yFloat)), 0), terrainNbY - 1);
-      int x1= std::min(std::max(int(std::floor(xFloat)) + 1, 0), terrainNbX - 1);
-      int y1= std::min(std::max(int(std::floor(yFloat)) + 1, 0), terrainNbY - 1);
-
-      float xWeight1= xFloat - float(x0);
-      float yWeight1= yFloat - float(y0);
-      float xWeight0= 1.0 - xWeight1;
-      float yWeight0= 1.0 - yWeight1;
-
-      float interpoVal= 0.0;
-      interpoVal+= terrainPos[x0][y0][2] * (xWeight0 * yWeight0);
-      interpoVal+= terrainPos[x0][y1][2] * (xWeight0 * yWeight1);
-      interpoVal+= terrainPos[x1][y0][2] * (xWeight1 * yWeight0);
-      interpoVal+= terrainPos[x1][y1][2] * (xWeight1 * yWeight1);
-
-      if (dropletPosCur[k0][2] - dropletRadCur[k0] < interpoVal) {
-        Math::Vec3f interpoNor(0.0f, 0.0f, 0.0f);
-        interpoNor+= terrainNor[x0][y0] * (xWeight0 * yWeight0);
-        interpoNor+= terrainNor[x0][y1] * (xWeight0 * yWeight1);
-        interpoNor+= terrainNor[x1][y0] * (xWeight1 * yWeight0);
-        interpoNor+= terrainNor[x1][y1] * (xWeight1 * yWeight1);
-        dropletPosCur[k0]+= (interpoVal + dropletRadCur[k0] - dropletPosCur[k0][2]) * interpoNor.normalized();
-
-        terrainWet[x0][y0]+= 0.1f * (xWeight0 * yWeight0);
-        terrainWet[x0][y1]+= 0.1f * (xWeight0 * yWeight1);
-        terrainWet[x1][y0]+= 0.1f * (xWeight1 * yWeight0);
-        terrainWet[x1][y1]+= 0.1f * (xWeight1 * yWeight1);
-      }
-    }
-
-    // Apply collision constraint (Gauss Seidel)
-    for (int k0= 0; k0 < dropletNbK; k0++) {
-      for (int k1= k0 + 1; k1 < dropletNbK; k1++) {
-        if ((dropletPosCur[k1] - dropletPosCur[k0]).normSquared() <= (dropletRadCur[k0] + dropletRadCur[k1]) * (dropletRadCur[k0] + dropletRadCur[k1])) {
-          Math::Vec3f val= (dropletPosCur[k1] - dropletPosCur[k0]).normalized() * 0.5f * ((dropletRadCur[k0] + dropletRadCur[k1]) - (dropletPosCur[k1] - dropletPosCur[k0]).norm());
-          dropletPosCur[k0]-= val;
-          dropletPosCur[k1]+= val;
-        }
-      }
-    }
-
-    // Deduce velocities
-    for (int k0= 0; k0 < dropletNbK; k0++)
-      dropletVelCur[k0]= (dropletPosCur[k0] - dropletPosOld[k0]) / dt;
-
-    // Apply explicit velocity damping
-    for (int k0= 0; k0 < dropletNbK; k0++)
-      dropletVelCur[k0]= dropletVelCur[k0] * velocityDecay;
-
-    // Update positions
-    dropletPosOld= dropletPosCur;
-    for (int k0= 0; k0 < dropletNbK; k0++) {
-      dropletAccCur[k0]= dropletForCur[k0] / dropletMasCur[k0];
-      dropletPosCur[k0]= dropletPosCur[k0] + dropletVelCur[k0] * dt + dropletAccCur[k0] * dt * dt;
-    }
-
-    // Kill particles out of bounds
-    for (int k0= 0; k0 < dropletNbK; k0++) {
-      if (dropletPosCur[k0][0] < 0.0f || dropletPosCur[k0][0] > 1.0f) dropletIsDead[k0]= true;
-      if (dropletPosCur[k0][1] < 0.0f || dropletPosCur[k0][1] > 1.0f) dropletIsDead[k0]= true;
-      if (dropletPosCur[k0][2] < 0.0f || dropletPosCur[k0][2] > 1.0f) dropletIsDead[k0]= true;
+  // Reinitialize dead droplets
+  for (int k0= 0; k0 < dropletNbK; k0++) {
+    if (dropletIsDead[k0]) {
+      dropletPosCur[k0].set(Random::Val(0.0f, 1.0f), Random::Val(0.0f, 1.0f), Random::Val(0.9f, 1.0f));
+      dropletPosOld[k0]= dropletPosCur[k0];
+      dropletColCur[k0].set(0.5f, 0.5f, 1.0f);
+      dropletMasCur[k0]= 1.0f;
+      dropletSatCur[k0]= 0.01f;
+      dropletRadCur[k0]= std::max(D.param[TE_DropletRad_______].val, 1.e-6f);
+      dropletIsDead[k0]= false;
     }
   }
 
-  // Decrease terrain wetness
+  // Reset forces
+  for (int k0= 0; k0 < dropletNbK; k0++)
+    dropletForCur[k0].set(0.0f, 0.0f, 0.0f);
+
+  // Reset terrain change
   for (int x= 0; x < terrainNbX; x++)
     for (int y= 0; y < terrainNbY; y++)
-      terrainWet[x][y]= std::min(std::max(terrainWet[x][y] * 0.99f, 0.0f), 1.0f);
+      terrainChg[x][y]= 0.0f;
+
+  // Add gravity forces
+  for (int k0= 0; k0 < dropletNbK; k0++)
+    dropletForCur[k0]+= gravity * dropletMasCur[k0];
+
+  // Apply boundary constraint
+  for (int k0= 0; k0 < dropletNbK; k0++) {
+    float xFloat= dropletPosCur[k0][0] / (1.0f / float(terrainNbX - 1));
+    float yFloat= dropletPosCur[k0][1] / (1.0f / float(terrainNbY - 1));
+
+    int x0= std::min(std::max(int(std::floor(xFloat)), 0), terrainNbX - 1);
+    int y0= std::min(std::max(int(std::floor(yFloat)), 0), terrainNbY - 1);
+    int x1= std::min(std::max(int(std::floor(xFloat)) + 1, 0), terrainNbX - 1);
+    int y1= std::min(std::max(int(std::floor(yFloat)) + 1, 0), terrainNbY - 1);
+
+    float xWeight1= xFloat - float(x0);
+    float yWeight1= yFloat - float(y0);
+    float xWeight0= 1.0 - xWeight1;
+    float yWeight0= 1.0 - yWeight1;
+
+    float interpoVal= 0.0;
+    interpoVal+= terrainPos[x0][y0][2] * (xWeight0 * yWeight0);
+    interpoVal+= terrainPos[x0][y1][2] * (xWeight0 * yWeight1);
+    interpoVal+= terrainPos[x1][y0][2] * (xWeight1 * yWeight0);
+    interpoVal+= terrainPos[x1][y1][2] * (xWeight1 * yWeight1);
+
+    float change= D.param[testVar3____________].val;
+    if (Math::Vec2f(dropletVelCur[k0][0], dropletVelCur[k0][1]).normSquared() < D.param[testVar4____________].val)
+      change= 0.0f;
+    terrainChg[x0][y0]+= change * (xWeight0 * yWeight0);
+    terrainChg[x0][y1]+= change * (xWeight0 * yWeight1);
+    terrainChg[x1][y0]+= change * (xWeight1 * yWeight0);
+    terrainChg[x1][y1]+= change * (xWeight1 * yWeight1);
+
+
+    if (dropletPosCur[k0][2] - dropletRadCur[k0] < interpoVal) {
+      Math::Vec3f interpoNor(0.0f, 0.0f, 0.0f);
+      interpoNor+= terrainNor[x0][y0] * (xWeight0 * yWeight0);
+      interpoNor+= terrainNor[x0][y1] * (xWeight0 * yWeight1);
+      interpoNor+= terrainNor[x1][y0] * (xWeight1 * yWeight0);
+      interpoNor+= terrainNor[x1][y1] * (xWeight1 * yWeight1);
+      dropletPosCur[k0]+= (interpoVal + dropletRadCur[k0] - dropletPosCur[k0][2]) * interpoNor.normalized();
+
+      // terrainWet[x0][y0]+= 0.1f * (xWeight0 * yWeight0);
+      // terrainWet[x0][y1]+= 0.1f * (xWeight0 * yWeight1);
+      // terrainWet[x1][y0]+= 0.1f * (xWeight1 * yWeight0);
+      // terrainWet[x1][y1]+= 0.1f * (xWeight1 * yWeight1);
+    }
+  }
+
+  // Apply collision constraint (Gauss Seidel)
+  for (int k0= 0; k0 < dropletNbK; k0++) {
+    for (int k1= k0 + 1; k1 < dropletNbK; k1++) {
+      if ((dropletPosCur[k1] - dropletPosCur[k0]).normSquared() <= (dropletRadCur[k0] + dropletRadCur[k1]) * (dropletRadCur[k0] + dropletRadCur[k1])) {
+        Math::Vec3f val= (dropletPosCur[k1] - dropletPosCur[k0]).normalized() * 0.5f * ((dropletRadCur[k0] + dropletRadCur[k1]) - (dropletPosCur[k1] - dropletPosCur[k0]).norm());
+        dropletPosCur[k0]-= val;
+        dropletPosCur[k1]+= val;
+      }
+    }
+  }
+
+  // Deduce velocities
+  for (int k0= 0; k0 < dropletNbK; k0++)
+    dropletVelCur[k0]= (dropletPosCur[k0] - dropletPosOld[k0]) / dt;
+
+  // Apply explicit velocity damping
+  for (int k0= 0; k0 < dropletNbK; k0++)
+    dropletVelCur[k0]= dropletVelCur[k0] * velocityDecay;
+
+  // Update positions
+  dropletPosOld= dropletPosCur;
+  for (int k0= 0; k0 < dropletNbK; k0++) {
+    dropletAccCur[k0]= dropletForCur[k0] / dropletMasCur[k0];
+    dropletPosCur[k0]= dropletPosCur[k0] + dropletVelCur[k0] * dt + dropletAccCur[k0] * dt * dt;
+  }
+
+  // Kill particles out of bounds
+  for (int k0= 0; k0 < dropletNbK; k0++) {
+    if (dropletPosCur[k0][0] < 0.0f || dropletPosCur[k0][0] > 1.0f) dropletIsDead[k0]= true;
+    if (dropletPosCur[k0][1] < 0.0f || dropletPosCur[k0][1] > 1.0f) dropletIsDead[k0]= true;
+    if (dropletPosCur[k0][2] < 0.0f || dropletPosCur[k0][2] > 1.0f) dropletIsDead[k0]= true;
+  }
+
+  // // Decrease terrain wetness
+  // for (int x= 0; x < terrainNbX; x++)
+  //   for (int y= 0; y < terrainNbY; y++)
+  //     terrainWet[x][y]= std::min(std::max(terrainWet[x][y] * 0.99f, 0.0f), 1.0f);
+
+  // Apply terrain change
+  for (int x= 0; x < terrainNbX; x++)
+    for (int y= 0; y < terrainNbY; y++)
+      terrainPos[x][y][2]+= terrainChg[x][y];
+
+  // Smooth the terrain
+  std::vector<std::vector<Math::Vec3f>> terrainPosOld= terrainPos;
+  for (int x= 0; x < terrainNbX; x++) {
+    for (int y= 0; y < terrainNbY; y++) {
+      int count= 0;
+      terrainPos[x][y][2]= 0.0;
+      for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, terrainNbX - 1); xOff++) {
+        for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, terrainNbY - 1); yOff++) {
+          terrainPos[x][y][2]+= terrainPosOld[xOff][yOff][2];
+          count++;
+        }
+      }
+      terrainPos[x][y][2]/= float(count);
+      terrainPos[x][y][2]= D.param[testVar5____________].val * terrainPosOld[x][y][2] + (1.0f - D.param[testVar5____________].val) * terrainPos[x][y][2];
+    }
+  }
+
+  // Recompute terrain normals
+  for (int x= 0; x < terrainNbX; x++) {
+    for (int y= 0; y < terrainNbY; y++) {
+      terrainNor[x][y].set(0.0f, 0.0f, 0.0f);
+      if (x > 0 && y > 0)
+        terrainNor[x][y]+= ((terrainPos[x - 1][y] - terrainPos[x][y]).cross(terrainPos[x][y - 1] - terrainPos[x][y])).normalized();
+      if (x < terrainNbX - 1 && y > 0)
+        terrainNor[x][y]+= ((terrainPos[x][y - 1] - terrainPos[x][y]).cross(terrainPos[x + 1][y] - terrainPos[x][y])).normalized();
+      if (x < terrainNbX - 1 && y < terrainNbY - 1)
+        terrainNor[x][y]+= ((terrainPos[x + 1][y] - terrainPos[x][y]).cross(terrainPos[x][y + 1] - terrainPos[x][y])).normalized();
+      if (x > 0 && y < terrainNbY - 1)
+        terrainNor[x][y]+= ((terrainPos[x][y + 1] - terrainPos[x][y]).cross(terrainPos[x - 1][y] - terrainPos[x][y])).normalized();
+      terrainNor[x][y].normalize();
+    }
+  }
 
   // Plot some values
   D.plotData.resize(3);
@@ -306,7 +355,7 @@ void TerrainErosion::Draw() {
         if (D.displayMode1)
           Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
         if (D.displayMode2)
-          Colormap::RatioToJetSmooth(1.0 - terrainWet[x][y] * D.param[testVar1____________].val, r, g, b);
+          Colormap::RatioToJetSmooth(0.5f + terrainChg[x][y] * 100.0f, r, g, b);
         glColor3f(r / 2.0f, g / 2.0f, b / 2.0f);
         glNormal3fv(flatNormal.array());
         glVertex3fv(terrainPos[x][y].array());
