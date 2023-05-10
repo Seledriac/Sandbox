@@ -39,7 +39,8 @@ void TerrainErosion::Init() {
 
   // Allocate terrain data
   terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
+  terrainCol= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
   terrainChg= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
 
   // Compute terrain mesh vertex positions
@@ -71,7 +72,7 @@ void TerrainErosion::Init() {
   }
 
   // Smooth the terrain
-  for (int iter= 0; iter < std::max(terrainNbX, terrainNbY) / 32; iter++) {
+  for (int iter= 0; iter < std::max(terrainNbX, terrainNbY) / 64; iter++) {
     std::vector<std::vector<Math::Vec3f>> terrainPosOld= terrainPos;
     for (int x= 0; x < terrainNbX; x++) {
       for (int y= 0; y < terrainNbY; y++) {
@@ -178,8 +179,8 @@ void TerrainErosion::Animate() {
 
   // Apply boundary constraint
   for (int k0= 0; k0 < dropletNbK; k0++) {
-    float xFloat= dropletPosCur[k0][0] / (1.0f / float(terrainNbX - 1));
-    float yFloat= dropletPosCur[k0][1] / (1.0f / float(terrainNbY - 1));
+    float xFloat= dropletPosCur[k0][0] * float(terrainNbX - 1);
+    float yFloat= dropletPosCur[k0][1] * float(terrainNbY - 1);
 
     int x0= std::min(std::max(int(std::floor(xFloat)), 0), terrainNbX - 1);
     int y0= std::min(std::max(int(std::floor(yFloat)), 0), terrainNbY - 1);
@@ -197,14 +198,16 @@ void TerrainErosion::Animate() {
     interpoVal+= terrainPos[x1][y0][2] * (xWeight1 * yWeight0);
     interpoVal+= terrainPos[x1][y1][2] * (xWeight1 * yWeight1);
 
-    float change= D.param[testVar3____________].val;
-    if (Math::Vec2f(dropletVelCur[k0][0], dropletVelCur[k0][1]).normSquared() < D.param[testVar4____________].val)
-      change= 0.0f;
-    terrainChg[x0][y0]+= change * (xWeight0 * yWeight0);
-    terrainChg[x0][y1]+= change * (xWeight0 * yWeight1);
-    terrainChg[x1][y0]+= change * (xWeight1 * yWeight0);
-    terrainChg[x1][y1]+= change * (xWeight1 * yWeight1);
 
+    if (dropletPosCur[k0][2] - 3.0f * dropletRadCur[k0] < interpoVal) {
+      float change= D.param[testVar3____________].val;
+      if (Math::Vec2f(dropletVelCur[k0][0], dropletVelCur[k0][1]).normSquared() < D.param[testVar4____________].val)
+        change= 0.0f;
+      terrainChg[x0][y0]+= change * (xWeight0 * yWeight0);
+      terrainChg[x0][y1]+= change * (xWeight0 * yWeight1);
+      terrainChg[x1][y0]+= change * (xWeight1 * yWeight0);
+      terrainChg[x1][y1]+= change * (xWeight1 * yWeight1);
+    }
 
     if (dropletPosCur[k0][2] - dropletRadCur[k0] < interpoVal) {
       Math::Vec3f interpoNor(0.0f, 0.0f, 0.0f);
@@ -260,9 +263,19 @@ void TerrainErosion::Animate() {
   //     terrainWet[x][y]= std::min(std::max(terrainWet[x][y] * 0.99f, 0.0f), 1.0f);
 
   // Apply terrain change
-  for (int x= 0; x < terrainNbX; x++)
-    for (int y= 0; y < terrainNbY; y++)
-      terrainPos[x][y][2]+= terrainChg[x][y];
+  for (int x= 1; x < terrainNbX - 1; x++) {
+    for (int y= 1; y < terrainNbY - 1; y++) {
+      float minNeighbor= terrainPos[x][y][2];
+      float maxNeighbor= terrainPos[x][y][2];
+      for (int xOff= std::max(x - 1, 0); xOff < std::min(x + 1, terrainNbX - 1); xOff++) {
+        for (int yOff= std::max(y - 1, 0); yOff < std::min(y + 1, terrainNbY - 1); yOff++) {
+          if (minNeighbor > terrainPos[xOff][yOff][2]) minNeighbor= terrainPos[xOff][yOff][2];
+          if (maxNeighbor < terrainPos[xOff][yOff][2]) maxNeighbor= terrainPos[xOff][yOff][2];
+        }
+      }
+      terrainPos[x][y][2]= std::min(std::max(terrainPos[x][y][2] + terrainChg[x][y], minNeighbor), maxNeighbor);
+    }
+  }
 
   // Smooth the terrain
   std::vector<std::vector<Math::Vec3f>> terrainPosOld= terrainPos;
@@ -312,31 +325,57 @@ void TerrainErosion::Draw() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
+  // Set the terrain colors
+  for (int x= 0; x < terrainNbX; x++) {
+    for (int y= 0; y < terrainNbY; y++) {
+      if (D.displayMode1) {
+        Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, terrainCol[x][y][0], terrainCol[x][y][1], terrainCol[x][y][2]);
+      }
+      else if (D.displayMode2) {
+        terrainCol[x][y][0]= 0.5f + terrainNor[x][y][0] / 2.0f;
+        terrainCol[x][y][1]= 0.5f + terrainNor[x][y][1] / 2.0f;
+        terrainCol[x][y][2]= 0.5f + terrainNor[x][y][2] / 2.0f;
+      }
+      else if (D.displayMode3) {
+        if (terrainNor[x][y].dot(Math::Vec3f(0.0f, 0.0f, 1.0f)) < D.param[testVar6____________].val) {
+          terrainCol[x][y][0]= 0.7f;
+          terrainCol[x][y][1]= 0.6f;
+          terrainCol[x][y][2]= 0.3f;
+        }
+        else {
+          terrainCol[x][y][0]= 0.5f;
+          terrainCol[x][y][1]= 0.9f;
+          terrainCol[x][y][2]= 0.5f;
+        }
+      }
+    }
+  }
+
   // Draw the terrain
   if (D.displayMode1 || D.displayMode2 || D.displayMode3) {
     glEnable(GL_LIGHTING);
     glBegin(GL_QUADS);
     for (int x= 0; x < terrainNbX - 1; x++) {
       for (int y= 0; y < terrainNbY - 1; y++) {
-        Math::Vec3f flatNormal= (terrainNor[x][y] + terrainNor[x + 1][y] + terrainNor[x + 1][y + 1] + terrainNor[x][y + 1]).normalized();
-        float r, g, b;
-        if (D.displayMode1)
-          Colormap::RatioToJetSmooth(terrainPos[x][y][2] * 2.0f - 0.5f, r, g, b);
-        else if (D.displayMode2) {
-          r= 0.5f + terrainNor[x][y][0]/2.0f;
-          g= 0.5f + terrainNor[x][y][1]/2.0f;
-          b= 0.5f + terrainNor[x][y][2]/2.0f;
-        }
-        else if (D.displayMode3)
-          Colormap::RatioToJetSmooth(0.5f + terrainChg[x][y] * 100.0f, r, g, b);
-        glColor3f(r / 2.0f, g / 2.0f, b / 2.0f);
-        glNormal3fv(flatNormal.array());
+        // Math::Vec3f flatNormal= (terrainNor[x][y] + terrainNor[x + 1][y] + terrainNor[x + 1][y + 1] + terrainNor[x][y + 1]).normalized();
+        // glNormal3fv(flatNormal.array());
+        glNormal3fv(terrainNor[x][y].array());
+        glColor3fv((terrainCol[x][y] / 2.0).array());
         glVertex3fv(terrainPos[x][y].array());
-        glNormal3fv(flatNormal.array());
+
+        // glNormal3fv(flatNormal.array());
+        glNormal3fv(terrainNor[x + 1][y].array());
+        glColor3fv((terrainCol[x + 1][y] / 2.0).array());
         glVertex3fv(terrainPos[x + 1][y].array());
-        glNormal3fv(flatNormal.array());
+
+        // glNormal3fv(flatNormal.array());
+        glNormal3fv(terrainNor[x + 1][y + 1].array());
+        glColor3fv((terrainCol[x + 1][y + 1] / 2.0).array());
         glVertex3fv(terrainPos[x + 1][y + 1].array());
-        glNormal3fv(flatNormal.array());
+
+        // glNormal3fv(flatNormal.array());
+        glNormal3fv(terrainNor[x][y + 1].array());
+        glColor3fv((terrainCol[x][y + 1] / 2.0).array());
         glVertex3fv(terrainPos[x][y + 1].array());
       }
     }
