@@ -57,6 +57,10 @@ enum ParamType
   TE_TerrainNbCuts____,
   TE_DropletNbK_______,
   TE_DropletRad_______,
+  TE_SimuTimestep_____,
+  TE_VelocityDecay____,
+  TE_ErosionStrength__,
+  TE_SmoothResist_____,
   S3__________________,
   testVar0____________,
   testVar1____________,
@@ -130,11 +134,15 @@ class Data
     param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
     param.push_back(ParamUI("AS_CoeffFear________", 0.06));
     param.push_back(ParamUI("S2__________________", 1.0));
-    param.push_back(ParamUI("TE_TerrainNbX_______", 128.0));
-    param.push_back(ParamUI("TE_TerrainNbY_______", 128.0));
-    param.push_back(ParamUI("TE_TerrainNbCuts____", 256.0));
-    param.push_back(ParamUI("TE_DropletNbK_______", 100.0));
-    param.push_back(ParamUI("TE_DropletRad_______", 0.01f));
+    param.push_back(ParamUI("TE_TerrainNbX_______", 128));
+    param.push_back(ParamUI("TE_TerrainNbY_______", 128));
+    param.push_back(ParamUI("TE_TerrainNbCuts____", 256));
+    param.push_back(ParamUI("TE_DropletNbK_______", 400));
+    param.push_back(ParamUI("TE_DropletRad_______", 0.01));
+    param.push_back(ParamUI("TE_SimuTimestep_____", 0.02));
+    param.push_back(ParamUI("TE_VelocityDecay____", 0.5));
+    param.push_back(ParamUI("TE_ErosionStrength__", 0.05));
+    param.push_back(ParamUI("TE_SmoothResist_____", 0.99));
     param.push_back(ParamUI("S3__________________", 1.0));
     param.push_back(ParamUI("testVar0____________", 1.0));
     param.push_back(ParamUI("testVar1____________", 1.0));

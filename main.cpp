@@ -396,8 +396,10 @@ void init_GL() {
   // Define material shader properties
   GLfloat mat_ambiant[4]= {0.1f, 0.1f, 0.1f, 1.0f};
   GLfloat mat_diffuse[4]= {0.8f, 0.8f, 0.8f, 1.0f};
-  GLfloat mat_specular[4]= {1.0f, 1.0f, 1.0f, 1.0f};
-  GLfloat mat_shininess[1]= {128.0f};
+  GLfloat mat_specular[4]= {0.3f, 0.3f, 0.3f, 0.3f};
+  // GLfloat mat_specular[4]= {1.0f, 1.0f, 1.0f, 1.0f};
+  GLfloat mat_shininess[1]= {64.0f};
+  // GLfloat mat_shininess[1]= {128.0f};
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambiant);
   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
