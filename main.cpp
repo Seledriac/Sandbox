@@ -313,7 +313,7 @@ void callback_keyboard_special(int key, int x, int y) {
     D.param[D.idxParamUI].val+= 1.0;
 
   // Compute refresh
-  if (D.autoRefresh && key != GLUT_KEY_UP && key != GLUT_KEY_DOWN) {
+  if (D.autoRefresh && (key == GLUT_KEY_LEFT || key != GLUT_KEY_RIGHT)) {
     mySpaceTimeWorld.Refresh();
     myTerrainErosion.Refresh();
   }
@@ -359,15 +359,15 @@ void callback_mouse_motion(int x, int y) {
 void callback_passive_mouse_motion(int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
-  unsigned int prevParamIdx= D.idxParamUI;
+
+  // unsigned int prevParamIdx= D.idxParamUI;
   // if (x < 180) {
   //   int targetParam= (y - 3) / (characterSize + 2);
   //   if (targetParam >= 0 && targetParam < int(D.param.size()))
   //     D.idxParamUI= targetParam;
   // }
-
-  if (D.idxParamUI != prevParamIdx)
-    glutPostRedisplay();
+  // if (D.idxParamUI != prevParamIdx)
+  //   glutPostRedisplay();
 }
 
 
