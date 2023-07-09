@@ -94,6 +94,7 @@ class Data
   bool displayMode0= true;
 
   unsigned int idxParamUI= 0;
+  unsigned int idxCursorUI= 0;
 
   std::vector<ParamUI> param;
 
@@ -144,15 +145,15 @@ class Data
     param.push_back(ParamUI("TE_ErosionStrength__", 0.05));
     param.push_back(ParamUI("TE_SmoothResist_____", 0.99));
     param.push_back(ParamUI("S3__________________", 1.0));
-    param.push_back(ParamUI("testVar0____________", 100.0));
-    param.push_back(ParamUI("testVar1____________", 100.0));
-    param.push_back(ParamUI("testVar2____________", 1.0));
+    param.push_back(ParamUI("testVar0____________", 500.0));
+    param.push_back(ParamUI("testVar1____________", 500.0));
+    param.push_back(ParamUI("testVar2____________", 0.5));
     param.push_back(ParamUI("testVar3____________", 10.0));
     param.push_back(ParamUI("testVar4____________", 0.0));
     param.push_back(ParamUI("testVar5____________", 0.0));
-    param.push_back(ParamUI("testVar6____________", 0.0));
-    param.push_back(ParamUI("testVar7____________", 0.8));
-    param.push_back(ParamUI("testVar8____________", 0.1));
+    param.push_back(ParamUI("testVar6____________", -1.0));
+    param.push_back(ParamUI("testVar7____________", 0.0));
+    param.push_back(ParamUI("testVar8____________", 32.0));
     param.push_back(ParamUI("testVar9____________", 1.0));
   }
 };

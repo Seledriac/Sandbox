@@ -61,6 +61,7 @@ void FractalHeightMap::Refresh() {
   mapCol= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
 
   // Compute positions
+#pragma omp parallel for
   for (int x= 0; x < mapNbX; x++) {
     for (int y= 0; y < mapNbY; y++) {
       mapPos[x][y][0]= float(x) / float(mapNbX - 1);
@@ -74,8 +75,9 @@ void FractalHeightMap::Refresh() {
         z= Math::Vec2d(zr, zi) + mapConst;
         idxIter++;
       }
-      double val= double(idxIter) / double(mapNbIter-1);
-      // double val= double(idxIter) - std::log2(std::max(std::log2(z.normSquared()), 1.0));
+      // double val= double(idxIter) / double(mapNbIter-1);
+      double val= (double(idxIter) - std::log2(std::max(std::log2(z.normSquared()), 1.0))) / double(mapNbIter - 1);
+      // double val= - std::log2(std::max(std::log2(z.normSquared()), 1.0));
       // if (val != 0.0) val= std::log2(std::max(std::log2(val), 1.0));
 
       // mapPos[x][y][2]= float(z.norm());
@@ -86,7 +88,27 @@ void FractalHeightMap::Refresh() {
     }
   }
 
+  // Smooth the positions
+  for (int iter= 0; iter < std::max(mapNbX, mapNbY) / 128; iter++) {
+    std::vector<std::vector<Math::Vec3f>> mapPosOld= mapPos;
+#pragma omp parallel for
+    for (int x= 0; x < mapNbX; x++) {
+      for (int y= 0; y < mapNbY; y++) {
+        int count= 0;
+        mapPos[x][y][2]= 0.0;
+        for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, mapNbX - 1); xOff++) {
+          for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, mapNbY - 1); yOff++) {
+            mapPos[x][y][2]+= mapPosOld[xOff][yOff][2];
+            count++;
+          }
+        }
+        mapPos[x][y][2]/= float(count);
+      }
+    }
+  }
+
   // Compute normals
+#pragma omp parallel for
   for (int x= 0; x < mapNbX; x++) {
     for (int y= 0; y < mapNbY; y++) {
       mapNor[x][y].set(0.0f, 0.0f, 0.0f);

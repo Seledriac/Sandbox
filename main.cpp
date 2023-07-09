@@ -27,7 +27,9 @@
 // Global variables used for the display
 unsigned int winFPS= 60;
 int winW, winH;
-int characterSize= 13;
+int characHeight= 12;
+int characWidth= 8;
+int characterSpace= 1;
 Camera *cam;
 
 // Global variables used by the scene
@@ -61,7 +63,9 @@ float elapsed_time() {
 void draw_text(int const x, int const y, char *const text) {
   glPushMatrix();
   glTranslatef(float(x), float(y), 0.0f);
-  glScalef(float(characterSize) / 152.38f, float(characterSize) / 152.38f, float(characterSize) / 152.38f);
+  const float baseHeight= 152.38f;
+  const float baseWidth= 104.76f;
+  glScalef(float(characWidth) / baseWidth, float(characHeight) / baseHeight, 1.0f);
   for (char *p= text; *p; p++)
     glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *p);
   glPopMatrix();
@@ -136,8 +140,12 @@ void callback_display() {
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
-    sprintf(str, "%s = %4.6f", D.param[k].name.c_str(), D.param[k].val);
-    draw_text(0, winH - (k + 1) * (characterSize + 2), str);
+    sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].val);
+    draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
+    if (k == D.idxParamUI) {
+      sprintf(str, "_");
+      draw_text((23 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
+    }
   }
 
   // Draw the 2D plot
@@ -223,8 +231,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
     exit(EXIT_SUCCESS);
   else if (key == ' ')
     D.playAnimation= !D.playAnimation;
-  else if (key == 13) // Enter key
+  else if (key == '\n')
     D.autoRefresh= !D.autoRefresh;
+  else if (key == '\b')
+    D.param[D.idxParamUI].val= 0.0f;
 
   else if (key == '1')
     D.displayMode1= !D.displayMode1;
@@ -366,17 +376,22 @@ void callback_mouse_motion(int x, int y) {
 
 // Mouse motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
-  (void)x;  // Disable warning unused variable
-  (void)y;  // Disable warning unused variable
+  // (void)x;  // Disable warning unused variable
+  // (void)y;  // Disable warning unused variable
 
-  // unsigned int prevParamIdx= D.idxParamUI;
-  // if (x < 180) {
-  //   int targetParam= (y - 3) / (characterSize + 2);
-  //   if (targetParam >= 0 && targetParam < int(D.param.size()))
-  //     D.idxParamUI= targetParam;
-  // }
-  // if (D.idxParamUI != prevParamIdx)
-  //   glutPostRedisplay();
+  unsigned int prevParamIdx= D.idxParamUI;
+  unsigned int prevCursorIdx= D.idxCursorUI;
+  if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+    int paramIdx= (y - 3) / (characHeight + characterSpace);
+    if (paramIdx >= 0 && paramIdx < int(D.param.size()))
+      D.idxParamUI= paramIdx;
+    int cursorIdx= (x - 23 * characWidth) / characWidth;
+    if (cursorIdx >= 0 && cursorIdx <= 14)
+      D.idxCursorUI= cursorIdx;
+  }
+
+  if (D.idxParamUI != prevParamIdx || D.idxCursorUI != prevCursorIdx)
+    glutPostRedisplay();
 }
 
 
