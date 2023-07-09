@@ -81,6 +81,82 @@ private:
     float x[2];
   };
 
+    class Vec2d
+  {
+public:
+    // Constructors
+    Vec2d(double a= 0.0, double b= 0.0) {
+      this->x[0]= a;
+      this->x[1]= b;
+    }
+    Vec2d(const Vec2d& v) { *this= v; }
+
+    // Methods
+    inline void set(double a, double b) {
+      x[0]= a;
+      x[1]= b;
+    }
+    inline double dot(const Vec2d& v) const { return x[0] * v.x[0] + x[1] * v.x[1]; }
+    inline double normSquared() const { return x[0] * x[0] + x[1] * x[1]; }
+    inline double norm() const { return sqrt(normSquared()); }
+    inline Vec2d& normalize(double len= 1.0) {
+      double l= norm();
+      return (l != 0.0) ? (*this*= (len / l)) : (*this);
+    }
+    inline Vec2d normalized(double len= 1.0) {
+      double l= norm();
+      return (l != 0.0) ? (*this * len / l) : (*this);
+    }
+    inline Vec2d abs() {
+      return Vec2d(std::abs(x[0]), std::abs(x[1]));
+    }
+    inline double max() const { return std::max(x[0], x[1]); }
+    inline double min() const { return std::min(x[0], x[1]); }
+
+    // Operators
+    inline double operator[](int idx) const { return x[idx]; }
+    inline double& operator[](int idx) { return x[idx]; }
+    inline operator const double*(void) const { return x; }
+    inline Vec2d& operator=(const Vec2d& v) {
+      x[0]= v.x[0];
+      x[1]= v.x[1];
+      return *this;
+    }
+    inline bool operator==(const Vec2d& v) { return ((x[0] == v.x[0]) && (x[1] == v.x[1])); }
+    inline Vec2d& operator+=(const Vec2d& v) {
+      x[0]+= v.x[0];
+      x[1]+= v.x[1];
+      return *this;
+    }
+    inline Vec2d& operator-=(const Vec2d& v) {
+      x[0]-= v.x[0];
+      x[1]-= v.x[1];
+      return *this;
+    }
+    inline Vec2d& operator*=(double f) {
+      x[0]*= f;
+      x[1]*= f;
+      return *this;
+    }
+    inline Vec2d& operator/=(double f) {
+      x[0]/= f;
+      x[1]/= f;
+      return *this;
+    }
+    friend Vec2d operator+(const Vec2d& w, const Vec2d& v) { return Vec2d(w)+= v; }
+    friend Vec2d operator-(const Vec2d& w, const Vec2d& v) { return Vec2d(w)-= v; }
+    friend Vec2d operator*(const Vec2d& v, double f) { return Vec2d(v)*= f; }
+    friend Vec2d operator*(double f, const Vec2d& v) { return Vec2d(v)*= f; }
+    friend Vec2d operator/(const Vec2d& v, double f) { return Vec2d(v)/= f; }
+    friend Vec2d operator/(double f, const Vec2d& v) { return Vec2d(v)/= f; }
+    friend double operator*(const Vec2d& a, const Vec2d& b) { return a.dot(b); }
+
+    inline double* array() { return x; }
+
+private:
+    double x[2];
+  };
+
   class Vec3f
   {
 public:

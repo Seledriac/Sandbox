@@ -18,6 +18,7 @@
 // Project Sandbox Classes
 #include "AgentSwarm.hpp"
 #include "FractalCurveDevelopment.hpp"
+#include "FractalHeightMap.hpp"
 #include "ParticleSystem.hpp"
 #include "SpaceTimeWorld.hpp"
 #include "TerrainErosion.hpp"
@@ -36,6 +37,7 @@ SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
 ParticleSystem myParticleSystem;
 FractalCurveDevelopment myFractalCurveDevelopment;
+FractalHeightMap myFractalHeightMap;
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -115,6 +117,7 @@ void callback_display() {
   mySpaceTimeWorld.Draw();
   myTerrainErosion.Draw();
   myFractalCurveDevelopment.Draw();
+  myFractalHeightMap.Draw();
   myParticleSystem.Draw();
 
   // Set the camera transformation matrix for the HUD
@@ -220,7 +223,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
     exit(EXIT_SUCCESS);
   else if (key == ' ')
     D.playAnimation= !D.playAnimation;
-  else if (key == 13)
+  else if (key == 13) // Enter key
     D.autoRefresh= !D.autoRefresh;
 
   else if (key == '1')
@@ -261,6 +264,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
     myFractalCurveDevelopment= FractalCurveDevelopment();
   else if (key == 'f')
     myFractalCurveDevelopment.Init();
+  else if (key == 'H')
+    myFractalHeightMap= FractalHeightMap();
+  else if (key == 'h')
+    myFractalHeightMap.Init();
   else if (key == 'P')
     myParticleSystem= ParticleSystem();
   else if (key == 'p')
@@ -274,6 +281,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   if (D.autoRefresh) {
     mySpaceTimeWorld.Refresh();
     myTerrainErosion.Refresh();
+    myFractalHeightMap.Refresh();
   }
 
   glutPostRedisplay();
@@ -313,9 +321,10 @@ void callback_keyboard_special(int key, int x, int y) {
     D.param[D.idxParamUI].val+= 1.0;
 
   // Compute refresh
-  if (D.autoRefresh && (key == GLUT_KEY_LEFT || key != GLUT_KEY_RIGHT)) {
+  if (D.autoRefresh && (key == GLUT_KEY_LEFT || key == GLUT_KEY_RIGHT)) {
     mySpaceTimeWorld.Refresh();
     myTerrainErosion.Refresh();
+    myFractalHeightMap.Refresh();
   }
 
   glutPostRedisplay();
