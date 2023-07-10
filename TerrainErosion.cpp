@@ -148,7 +148,7 @@ void TerrainErosion::Animate() {
   if (!isRefreshed) return;
 
   float dt= D.param[TE_SimuTimestep_____].val;
-  float velocityDecay= std::min(std::max(D.param[TE_VelocityDecay____].val, 0.0f), 1.0f);
+  float velocityDecay= std::min(std::max(D.param[TE_VelocityDecay____].val, 0.0), 1.0);
   Math::Vec3f gravity(0.0f, 0.0f, -0.5f);
 
   // Respawn dead droplets
@@ -159,7 +159,7 @@ void TerrainErosion::Animate() {
       dropletColCur[k].set(0.5f, 0.5f, 1.0f);
       dropletMasCur[k]= 1.0f;
       dropletSatCur[k]= 0.01f;
-      dropletRadCur[k]= std::max(D.param[TE_DropletRad_______].val, 1.e-6f);
+      dropletRadCur[k]= std::max(D.param[TE_DropletRad_______].val, 1.e-6);
       dropletIsDead[k]= false;
     }
   }

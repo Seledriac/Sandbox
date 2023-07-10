@@ -150,10 +150,10 @@ void SpaceTimeWorld::Init() {
   isRefreshed= false;
 
   // Ensure parameter validity
-  D.param[GR_WorldNbT_________].val= std::max(1.0f, D.param[GR_WorldNbT_________].val);
-  D.param[GR_WorldNbX_________].val= std::max(1.0f, D.param[GR_WorldNbX_________].val);
-  D.param[GR_WorldNbY_________].val= std::max(1.0f, D.param[GR_WorldNbY_________].val);
-  D.param[GR_WorldNbZ_________].val= std::max(1.0f, D.param[GR_WorldNbZ_________].val);
+  D.param[GR_WorldNbT_________].val= std::max(1.0, D.param[GR_WorldNbT_________].val);
+  D.param[GR_WorldNbX_________].val= std::max(1.0, D.param[GR_WorldNbX_________].val);
+  D.param[GR_WorldNbY_________].val= std::max(1.0, D.param[GR_WorldNbY_________].val);
+  D.param[GR_WorldNbZ_________].val= std::max(1.0, D.param[GR_WorldNbZ_________].val);
 
   // Get dimensions
   worldNbT= int(std::round(D.param[GR_WorldNbT_________].val));
@@ -294,10 +294,10 @@ void SpaceTimeWorld::Refresh() {
   isRefreshed= true;
 
   // Ensure parameter validity
-  D.param[GR_ScreenNbH________].val= std::max(1.0f, D.param[GR_ScreenNbH________].val);
-  D.param[GR_ScreenNbV________].val= std::max(1.0f, D.param[GR_ScreenNbV________].val);
-  D.param[GR_ScreenNbS________].val= std::max(1.0f, D.param[GR_ScreenNbS________].val);
-  D.param[GR_CursorWorldT_____].val= std::min(std::max(std::floor(D.param[GR_CursorWorldT_____].val), 0.0f), float(worldNbT - 1));
+  D.param[GR_ScreenNbH________].val= std::max(1.0, D.param[GR_ScreenNbH________].val);
+  D.param[GR_ScreenNbV________].val= std::max(1.0, D.param[GR_ScreenNbV________].val);
+  D.param[GR_ScreenNbS________].val= std::max(1.0, D.param[GR_ScreenNbS________].val);
+  D.param[GR_CursorWorldT_____].val= std::min(std::max(std::floor(D.param[GR_CursorWorldT_____].val), 0.0), double(worldNbT - 1));
 
   // Get dimensions
   screenNbH= int(std::round(D.param[GR_ScreenNbH________].val));

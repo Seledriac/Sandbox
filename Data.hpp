@@ -9,9 +9,9 @@ class ParamUI
 {
   public:
   std::string name;
-  float val;
+  double val;
 
-  ParamUI(std::string const iName, float const iVal) {
+  ParamUI(std::string const iName, double const iVal) {
     name= iName;
     val= iVal;
   }
@@ -93,8 +93,8 @@ class Data
   bool displayMode9= true;
   bool displayMode0= true;
 
-  unsigned int idxParamUI= 0;
-  unsigned int idxCursorUI= 0;
+  int idxParamUI= 0;
+  int idxCursorUI= 0;
 
   std::vector<ParamUI> param;
 

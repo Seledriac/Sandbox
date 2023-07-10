@@ -25,7 +25,7 @@
 
 
 // Global variables used for the display
-unsigned int winFPS= 60;
+int winFPS= 60;
 int winW, winH;
 int characHeight= 12;
 int characWidth= 8;
@@ -134,7 +134,7 @@ void callback_display() {
   glLoadIdentity();
 
   // Draw the parameter list
-  for (unsigned int k= 0; k < D.param.size(); k++) {
+  for (int k= 0; k < int(D.param.size()); k++) {
     if (k == D.idxParamUI)
       glColor3f(0.8f, 0.4f, 0.4f);
     else
@@ -154,7 +154,7 @@ void callback_display() {
     int plotH= 100;
     int textW= 80;
     int textH= 12;
-    for (unsigned int k0= 0; k0 < D.plotData.size(); k0++) {
+    for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
       float r, g, b;
@@ -163,7 +163,7 @@ void callback_display() {
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
       double valMax= D.plotData[k0].second[0];
-      for (unsigned int k1= 0; k1 < D.plotData[k0].second.size(); k1++) {
+      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
         if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
         if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
       }
@@ -179,7 +179,7 @@ void callback_display() {
       draw_text(winW - textW, winH - textH - textH * k0, str);
       // Draw the polyline
       glBegin(GL_LINE_STRIP);
-      for (unsigned int k1= 0; k1 < D.plotData[k0].second.size(); k1++) {
+      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
         double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
         glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
       }
@@ -303,14 +303,49 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
+  // double cursorPower= (D.idxCursorUI <= 6) ? double(6 - D.idxCursorUI) : double(6 - D.idxCursorUI + 1);
+
+  // if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
+  //   if (key == GLUT_KEY_UP) D.param[D.idxParamUI].val+= std::pow(10.0, cursorPower);
+  //   if (key == GLUT_KEY_DOWN) D.param[D.idxParamUI].val-= std::pow(10.0, cursorPower);
+  //   if (key == GLUT_KEY_LEFT) D.idxCursorUI= std::max(D.idxCursorUI - 1, 0);
+  //   if (key == GLUT_KEY_RIGHT) D.idxCursorUI= std::min(D.idxCursorUI + 1, 13);
+  // }
+
+  // else {
+  //   if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 1 + int(D.param.size())) % int(D.param.size());
+  //   if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
+  //   if (key == GLUT_KEY_LEFT) D.idxCursorUI= std::max(D.idxCursorUI - 1, 0);
+  //   if (key == GLUT_KEY_RIGHT) D.idxCursorUI= std::min(D.idxCursorUI + 1, 13);
+  //   // if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val*= 10.0;
+  //   // if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val/= 10.0;
+  // }
+  // D.param[D.idxParamUI].val*= 1.e6;
+  // D.param[D.idxParamUI].val= std::floor(D.param[D.idxParamUI].val);
+  // D.param[D.idxParamUI].val/= 1.e6;
+  // D.param[D.idxParamUI].val= std::min(std::max(D.param[D.idxParamUI].val, -999999.0), 999999.0);
+
+  // // if (key == GLUT_KEY_UP) {
+  // //   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {}
+  // //   else if (glutGetModifiers() & GLUT_ACTIVE_CTRL) {}
+  // //   else if (glutGetModifiers() & GLUT_ACTIVE_ALT) {}
+  // //   else {}
+  // // }
+
   if (key == GLUT_KEY_UP && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
     D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 5) % int(D.param.size());
+  else if (key == GLUT_KEY_UP && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
+    D.param[D.idxParamUI].val+= std::pow(10.0, double(6-D.idxCursorUI));
   else if (key == GLUT_KEY_UP)
     D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 1) % int(D.param.size());
+
   else if (key == GLUT_KEY_DOWN && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
     D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
+  else if (key == GLUT_KEY_DOWN && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
+    D.param[D.idxParamUI].val/= 2.0;
   else if (key == GLUT_KEY_DOWN)
     D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
+
 
   else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
     D.param[D.idxParamUI].val/= 10.0;
@@ -379,8 +414,8 @@ void callback_passive_mouse_motion(int x, int y) {
   // (void)x;  // Disable warning unused variable
   // (void)y;  // Disable warning unused variable
 
-  unsigned int prevParamIdx= D.idxParamUI;
-  unsigned int prevCursorIdx= D.idxCursorUI;
+  int prevParamIdx= D.idxParamUI;
+  int prevCursorIdx= D.idxCursorUI;
   if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
     int paramIdx= (y - 3) / (characHeight + characterSpace);
     if (paramIdx >= 0 && paramIdx < int(D.param.size()))

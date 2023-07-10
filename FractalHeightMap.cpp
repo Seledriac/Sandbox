@@ -41,19 +41,15 @@ void FractalHeightMap::Refresh() {
   // Get UI parameters
   mapNbX= std::max(2, int(std::round(D.param[testVar0____________].val)));
   mapNbY= std::max(2, int(std::round(D.param[testVar1____________].val)));
-  D.param[testVar0____________].val= mapNbX;
-  D.param[testVar1____________].val= mapNbY;
 
-  mapZoom= std::max(0.0, double(D.param[testVar2____________].val));
-  D.param[testVar2____________].val= mapZoom;
+  mapZoom= std::max(1.e-6, double(D.param[testVar2____________].val));
 
   mapNbIter= std::max(1, int(std::round(D.param[testVar3____________].val)));
-  D.param[testVar3____________].val= mapNbIter;
 
   mapFocus= Math::Vec2d(D.param[testVar4____________].val, D.param[testVar5____________].val);
   mapConst= Math::Vec2d(D.param[testVar6____________].val, D.param[testVar7____________].val);
 
-  mapDivThresh= D.param[testVar8____________].val;
+  mapDivThresh= std::max(0.0, double(D.param[testVar8____________].val));
 
   // Allocate data
   mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -75,6 +71,7 @@ void FractalHeightMap::Refresh() {
         z= Math::Vec2d(zr, zi) + mapConst;
         idxIter++;
       }
+
       // double val= double(idxIter) / double(mapNbIter-1);
       double val= (double(idxIter) - std::log2(std::max(std::log2(z.normSquared()), 1.0))) / double(mapNbIter - 1);
       // double val= - std::log2(std::max(std::log2(z.normSquared()), 1.0));
@@ -84,7 +81,7 @@ void FractalHeightMap::Refresh() {
       // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____________].val;
       Colormap::RatioToJetSmooth(float(val), mapCol[x][y][0], mapCol[x][y][1], mapCol[x][y][2]);
 
-      mapPos[x][y][2]= 0.5f + 0.1f * std::min(std::max(float(val), 0.0f), 1.0f);
+      mapPos[x][y][2]= 0.5f + 0.04f * std::min(std::max(float(val), 0.0f), 1.0f);
     }
   }
 
