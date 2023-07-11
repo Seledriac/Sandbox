@@ -303,70 +303,35 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  // double cursorPower= (D.idxCursorUI <= 6) ? double(6 - D.idxCursorUI) : double(6 - D.idxCursorUI + 1);
+  if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
+    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 5 + int(D.param.size())) % int(D.param.size());
+    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
+  }
+  else {
+    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 1 + int(D.param.size())) % int(D.param.size());
+    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
+  }
 
-  // if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
-  //   if (key == GLUT_KEY_UP) D.param[D.idxParamUI].val+= std::pow(10.0, cursorPower);
-  //   if (key == GLUT_KEY_DOWN) D.param[D.idxParamUI].val-= std::pow(10.0, cursorPower);
-  //   if (key == GLUT_KEY_LEFT) D.idxCursorUI= std::max(D.idxCursorUI - 1, 0);
-  //   if (key == GLUT_KEY_RIGHT) D.idxCursorUI= std::min(D.idxCursorUI + 1, 13);
-  // }
+  if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val/= 2.0;
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val*= 2.0;
+  }
+  else if (glutGetModifiers() & GLUT_ACTIVE_CTRL) {
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val/= 1.0 + 1.0 / 128.0;
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val*= 1.0 + 1.0 / 128.0;
+  }
+  else if (glutGetModifiers() & GLUT_ACTIVE_ALT) {
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val-= 1.0 / 128.0;
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val+= 1.0 / 128.0;
+  }
+  else {
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val-= 1.0;
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val+= 1.0;
+  }
 
-  // else {
-  //   if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 1 + int(D.param.size())) % int(D.param.size());
-  //   if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
-  //   if (key == GLUT_KEY_LEFT) D.idxCursorUI= std::max(D.idxCursorUI - 1, 0);
-  //   if (key == GLUT_KEY_RIGHT) D.idxCursorUI= std::min(D.idxCursorUI + 1, 13);
-  //   // if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val*= 10.0;
-  //   // if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val/= 10.0;
-  // }
-  // D.param[D.idxParamUI].val*= 1.e6;
-  // D.param[D.idxParamUI].val= std::floor(D.param[D.idxParamUI].val);
-  // D.param[D.idxParamUI].val/= 1.e6;
-  // D.param[D.idxParamUI].val= std::min(std::max(D.param[D.idxParamUI].val, -999999.0), 999999.0);
-
-  // // if (key == GLUT_KEY_UP) {
-  // //   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {}
-  // //   else if (glutGetModifiers() & GLUT_ACTIVE_CTRL) {}
-  // //   else if (glutGetModifiers() & GLUT_ACTIVE_ALT) {}
-  // //   else {}
-  // // }
-
-  if (key == GLUT_KEY_UP && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
-    D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 5) % int(D.param.size());
-  else if (key == GLUT_KEY_UP && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
-    D.param[D.idxParamUI].val+= std::pow(10.0, double(6-D.idxCursorUI));
-  else if (key == GLUT_KEY_UP)
-    D.idxParamUI= (int(D.param.size()) + D.idxParamUI - 1) % int(D.param.size());
-
-  else if (key == GLUT_KEY_DOWN && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
-    D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
-  else if (key == GLUT_KEY_DOWN && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
-    D.param[D.idxParamUI].val/= 2.0;
-  else if (key == GLUT_KEY_DOWN)
-    D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
-
-
-  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
-    D.param[D.idxParamUI].val/= 10.0;
-  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
-    D.param[D.idxParamUI].val/= 2.0;
-  else if (key == GLUT_KEY_LEFT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
-    D.param[D.idxParamUI].val-= 0.01;
-  else if (key == GLUT_KEY_LEFT)
-    D.param[D.idxParamUI].val-= 1.0;
-
-  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_SHIFT))
-    D.param[D.idxParamUI].val*= 10.0;
-  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_CTRL))
-    D.param[D.idxParamUI].val*= 2.0;
-  else if (key == GLUT_KEY_RIGHT && (glutGetModifiers() & GLUT_ACTIVE_ALT))
-    D.param[D.idxParamUI].val+= 0.01;
-  else if (key == GLUT_KEY_RIGHT)
-    D.param[D.idxParamUI].val+= 1.0;
 
   // Compute refresh
-  if (D.autoRefresh && (key == GLUT_KEY_LEFT || key == GLUT_KEY_RIGHT)) {
+  if (D.autoRefresh) {
     mySpaceTimeWorld.Refresh();
     myTerrainErosion.Refresh();
     myFractalHeightMap.Refresh();
@@ -380,22 +345,32 @@ void callback_keyboard_special(int key, int x, int y) {
 void callback_mouse_click(int button, int state, int x, int y) {
   cam->setCurrentMousePos(float(x), float(y));
 
-  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON)
-    cam->beginRotate();
-  else if (state == GLUT_UP && button == GLUT_LEFT_BUTTON)
-    cam->endRotate();
-  else if (state == GLUT_DOWN && button == GLUT_RIGHT_BUTTON)
-    cam->beginZoom();
-  else if (state == GLUT_UP && button == GLUT_RIGHT_BUTTON)
-    cam->endZoom();
-  else if (state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON)
-    cam->beginPan();
-  else if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON)
-    cam->endPan();
-  else if (state == GLUT_UP && button == 3)
-    cam->zoom(20.0f);
-  else if (state == GLUT_UP && button == 4)
-    cam->zoom(-20.0f);
+  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON) cam->beginRotate();
+  if (state == GLUT_UP && button == GLUT_LEFT_BUTTON) cam->endRotate();
+  if (state == GLUT_DOWN && button == GLUT_RIGHT_BUTTON) cam->beginZoom();
+  if (state == GLUT_UP && button == GLUT_RIGHT_BUTTON) cam->endZoom();
+  if (state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON) cam->beginPan();
+  if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON) cam->endPan();
+
+  if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+    if (state == GLUT_UP && button == 3) {
+      if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
+      if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val+= std::pow(10.0, double(6 - D.idxCursorUI));
+      if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val+= std::pow(10.0, double(7 - D.idxCursorUI));
+    }
+    if (state == GLUT_UP && button == 4) {
+      if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
+      if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val-= std::pow(10.0, double(6 - D.idxCursorUI));
+      if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val-= std::pow(10.0, double(7 - D.idxCursorUI));
+    }
+  }
+
+  // Compute refresh
+  if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4))) {
+    mySpaceTimeWorld.Refresh();
+    myTerrainErosion.Refresh();
+    myFractalHeightMap.Refresh();
+  }
 
   glutPostRedisplay();
 }
