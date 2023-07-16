@@ -118,9 +118,9 @@ void AgentSwarm::Draw() {
 void AgentSwarm::Animate() {
     if (!isInitialized) return;
 
-  float a= float(D.param[AS_CoeffSeparation__].val);
-  float b= float(D.param[AS_CoeffAlignment___].val);
-  float c= float(D.param[AS_CoeffCohesion____].val);
+  float a= float(D.param[AS_CoeffSep_________].val);
+  float b= float(D.param[AS_CoeffAli_________].val);
+  float c= float(D.param[AS_CoeffCohes_______].val);
   float d= float(D.param[AS_CoeffHunger______].val);
   float e= float(D.param[AS_CoeffFear________].val);
   std::vector<Math::Vec3f> velocityChange(NbAgents);

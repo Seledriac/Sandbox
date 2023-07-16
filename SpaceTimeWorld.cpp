@@ -285,7 +285,7 @@ void SpaceTimeWorld::Init() {
   //   for (int x= 0; x < worldNbX; x++)
   //     for (int y= 0; y < worldNbY; y++)
   //       for (int z= 0; z < worldNbZ; z++)
-  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_MassTimePersist__].val * worldFlows[t - 1][x][y][z];
+  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_TimePersist______].val * worldFlows[t - 1][x][y][z];
 }
 
 
@@ -339,7 +339,7 @@ void SpaceTimeWorld::Refresh() {
 
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / float(screenNbS);
         Math::Vec4f flow(
-            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[GR_MassTimePersist__].val,
+            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[GR_TimePersist______].val,
             worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[GR_FactorCurv_______].val,
             worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[GR_FactorCurv_______].val,
             worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[GR_FactorCurv_______].val);

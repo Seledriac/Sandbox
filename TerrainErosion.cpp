@@ -186,7 +186,7 @@ void TerrainErosion::Animate() {
     for (int xOff= std::max(xRef - xRad, 0); xOff <= std::min(xRef + xRad, terrainNbX - 1); xOff++) {
       for (int yOff= std::max(yRef - yRad, 0); yOff <= std::min(yRef + yRad, terrainNbY - 1); yOff++) {
         float weight= std::max(dropletRadCur[k] * 2.0f - (dropletPosCur[k] - terrainPos[xOff][yOff]).norm(), 0.0f);
-        terrainChg[xOff][yOff]-= weight * D.param[TE_ErosionStrength__].val;
+        terrainChg[xOff][yOff]-= weight * D.param[TE_ErosionCoeff_____].val;
       }
     }
   }

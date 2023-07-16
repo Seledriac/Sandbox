@@ -89,7 +89,7 @@ void ParticleSystem::Animate() {
   Math::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].val);
   Math::Vec3f buoyancy(0.0f, 0.0f, D.param[PD_ForceBuoyancy____].val);
 
-  float conductionFactor= D.param[PD_FactorConduction_].val;
+  float conductionFactor= D.param[PD_FactorConduc_____].val;
 
   float heatAdd= D.param[PD_HeatInput________].val;
   float heatRem= D.param[PD_HeatOutput_______].val;
