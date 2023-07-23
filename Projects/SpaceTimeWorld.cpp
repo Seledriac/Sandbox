@@ -21,6 +21,21 @@
 
 extern Data D;
 
+enum ParamType
+{
+  GR_WorldNbT_________,
+  GR_WorldNbX_________,
+  GR_WorldNbY_________,
+  GR_WorldNbZ_________,
+  GR_ScreenNbH________,
+  GR_ScreenNbV________,
+  GR_ScreenNbS________,
+  GR_CursorWorldT_____,
+  GR_MassReach________,
+  GR_TimePersist______,
+  GR_FactorCurv_______,
+  GR_FactorDoppler____,
+};
 
 std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
   std::vector<std::array<int, 3>> listVoxels;
@@ -148,6 +163,26 @@ SpaceTimeWorld::SpaceTimeWorld() {
 void SpaceTimeWorld::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("GR_WorldNbT_________", 16));
+  D.param.push_back(ParamUI("GR_WorldNbX_________", 32));
+  D.param.push_back(ParamUI("GR_WorldNbY_________", 32));
+  D.param.push_back(ParamUI("GR_WorldNbZ_________", 32));
+  D.param.push_back(ParamUI("GR_ScreenNbH________", 64));
+  D.param.push_back(ParamUI("GR_ScreenNbV________", 64));
+  D.param.push_back(ParamUI("GR_ScreenNbS________", 64));
+  D.param.push_back(ParamUI("GR_CursorWorldT_____", 8));
+  D.param.push_back(ParamUI("GR_MassReach________", 8));
+  D.param.push_back(ParamUI("GR_TimePersist______", 0.8));
+  D.param.push_back(ParamUI("GR_FactorCurv_______", 1.0));
+  D.param.push_back(ParamUI("GR_FactorDoppler____", 1.0));
+}
+
+
+void SpaceTimeWorld::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
 
   // Ensure parameter validity
   D.param[GR_WorldNbT_________].val= std::max(1.0, D.param[GR_WorldNbT_________].val);
@@ -286,12 +321,6 @@ void SpaceTimeWorld::Init() {
   //     for (int y= 0; y < worldNbY; y++)
   //       for (int z= 0; z < worldNbZ; z++)
   //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_TimePersist______].val * worldFlows[t - 1][x][y][z];
-}
-
-
-void SpaceTimeWorld::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
 
   // Ensure parameter validity
   D.param[GR_ScreenNbH________].val= std::max(1.0, D.param[GR_ScreenNbH________].val);
@@ -395,13 +424,13 @@ void SpaceTimeWorld::Draw() {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          glPushMatrix();
           if (worldSolid[idxT][x][y][z]) {
+            glPushMatrix();
             glTranslatef(float(x), float(y), float(z));
             glColor3fv(worldColor[idxT][x][y][z].array());
             glutSolidCube(1.0);
+            glPopMatrix();
           }
-          glPopMatrix();
         }
       }
     }

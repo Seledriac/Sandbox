@@ -21,6 +21,20 @@
 
 extern Data D;
 
+enum ParamType
+{
+  TE_TerrainNbX_______,
+  TE_TerrainNbY_______,
+  TE_TerrainNbCuts____,
+  TE_DropletNbK_______,
+  TE_DropletRad_______,
+  TE_SimuTimestep_____,
+  TE_VelocityDecay____,
+  TE_ErosionCoeff_____,
+  TE_SmoothResist_____,
+  TE_CliffThreshold___,
+};
+
 
 TerrainErosion::TerrainErosion() {
   isInitialized= false;
@@ -31,6 +45,18 @@ TerrainErosion::TerrainErosion() {
 void TerrainErosion::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("TE_TerrainNbX_______", 128));
+  D.param.push_back(ParamUI("TE_TerrainNbY_______", 128));
+  D.param.push_back(ParamUI("TE_TerrainNbCuts____", 256));
+  D.param.push_back(ParamUI("TE_DropletNbK_______", 400));
+  D.param.push_back(ParamUI("TE_DropletRad_______", 0.01));
+  D.param.push_back(ParamUI("TE_SimuTimestep_____", 0.02));
+  D.param.push_back(ParamUI("TE_VelocityDecay____", 0.5));
+  D.param.push_back(ParamUI("TE_ErosionCoeff_____", 0.05));
+  D.param.push_back(ParamUI("TE_SmoothResist_____", 0.99));
+  D.param.push_back(ParamUI("TE_CliffThreshold___", 0.80));
 
   // Get terrain parameters
   terrainNbX= std::max(2, int(std::round(D.param[TE_TerrainNbX_______].val)));
@@ -322,7 +348,7 @@ void TerrainErosion::Draw() {
         terrainCol[x][y][2]= 0.5f + terrainNor[x][y][2] / 2.0f;
       }
       else if (D.displayMode3) {
-        if (terrainNor[x][y].dot(Math::Vec3f(0.0f, 0.0f, 1.0f)) < D.param[testVar6____________].val) {
+        if (terrainNor[x][y].dot(Math::Vec3f(0.0f, 0.0f, 1.0f)) < D.param[TE_CliffThreshold___].val) {
           terrainCol[x][y][0]= 0.7f;
           terrainCol[x][y][1]= 0.6f;
           terrainCol[x][y][2]= 0.3f;

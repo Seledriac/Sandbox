@@ -9,6 +9,9 @@
 
 class ProjectTemplate
 {
+  private:
+  int nbX;
+  
   public:
   bool isInitialized;
   bool isRefreshed;

@@ -16,6 +16,18 @@
 
 extern Data D;
 
+enum ParamType
+{
+  AS_NbAgents_________,
+  AS_SizeAgent________,
+  AS_TimeStep_________,
+  AS_CoeffSep_________,
+  AS_CoeffAli_________,
+  AS_CoeffCohes_______,
+  AS_CoeffHunger______,
+  AS_CoeffFear________,
+};
+
 
 AgentSwarm::AgentSwarm() {
   isInitialized= false;
@@ -26,6 +38,22 @@ AgentSwarm::AgentSwarm() {
 void AgentSwarm::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("AS_NbAgents_________", 100));
+  D.param.push_back(ParamUI("AS_SizeAgent________", 0.05));
+  D.param.push_back(ParamUI("AS_TimeStep_________", 0.05));
+  D.param.push_back(ParamUI("AS_CoeffSep_________", 0.75));
+  D.param.push_back(ParamUI("AS_CoeffAli_________", 0.015));
+  D.param.push_back(ParamUI("AS_CoeffCohes_______", 0.45));
+  D.param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
+  D.param.push_back(ParamUI("AS_CoeffFear________", 0.06));
+}
+
+
+void AgentSwarm::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
 
   NbAgents= int(std::round(D.param[AS_NbAgents_________].val));
   SizeAgent= D.param[AS_SizeAgent________].val;
@@ -49,12 +77,6 @@ void AgentSwarm::Init() {
     Agents[k].n[1]= 1.0f;
     Agents[k].n[2]= 0.0f;
   }
-}
-
-
-void AgentSwarm::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
 }
 
 

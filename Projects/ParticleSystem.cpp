@@ -18,7 +18,19 @@
 
 
 extern Data D;
-
+enum ParamType
+{
+  PD_Constrain2D______,
+  PD_NbParticles______,
+  PD_TimeStep_________,
+  PD_NbSubStep________,
+  PD_VelocityDecay____,
+  PD_FactorConduc_____,
+  PD_ForceGravity_____,
+  PD_ForceBuoyancy____,
+  PD_HeatInput________,
+  PD_HeatOutput_______,
+};
 
 ParticleSystem::ParticleSystem() {
   isInitialized= false;
@@ -29,6 +41,24 @@ ParticleSystem::ParticleSystem() {
 void ParticleSystem::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("PD_Constrain2D______", 1));
+  D.param.push_back(ParamUI("PD_NbParticles______", 1000));
+  D.param.push_back(ParamUI("PD_TimeStep_________", 0.05));
+  D.param.push_back(ParamUI("PD_NbSubStep________", 8));
+  D.param.push_back(ParamUI("PD_VelocityDecay____", 0.1));
+  D.param.push_back(ParamUI("PD_FactorConduc_____", 2.0));
+  D.param.push_back(ParamUI("PD_ForceGravity_____", -1.0));
+  D.param.push_back(ParamUI("PD_ForceBuoyancy____", 4.0));
+  D.param.push_back(ParamUI("PD_HeatInput________", 4.0));
+  D.param.push_back(ParamUI("PD_HeatOutput_______", 0.1));
+}
+
+
+void ParticleSystem::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
 
   NbParticles= int(std::round(D.param[PD_NbParticles______].val));
 
@@ -77,12 +107,6 @@ void ParticleSystem::Init() {
   }
 
   PosOld= PosCur;
-}
-
-
-void ParticleSystem::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
 }
 
 

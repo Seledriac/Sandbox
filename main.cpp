@@ -17,6 +17,7 @@
 
 // Project Sandbox Classes
 #include "Projects/AgentSwarm.hpp"
+#include "Projects/CompuFluidDyn.hpp"
 #include "Projects/FractalCurveDevelopment.hpp"
 #include "Projects/FractalHeightMap.hpp"
 #include "Projects/ParticleSystem.hpp"
@@ -37,6 +38,7 @@ Camera *cam;
 Data D;
 
 AgentSwarm myAgentSwarm;
+CompuFluidDyn myCompuFluidDyn;
 FractalCurveDevelopment myFractalCurveDevelopment;
 FractalHeightMap myFractalHeightMap;
 ParticleSystem myParticleSystem;
@@ -46,29 +48,43 @@ TerrainErosion myTerrainErosion;
 
 
 void project_constructor(unsigned char key) {
-  if (key == 'A') myAgentSwarm= AgentSwarm();
-  else if (key == 'F') myFractalCurveDevelopment= FractalCurveDevelopment();
-  else if (key == 'H') myFractalHeightMap= FractalHeightMap();
-  else if (key == 'P') myParticleSystem= ParticleSystem();
-  else if (key == 'Z') myProjectTemplate= ProjectTemplate();
-  else if (key == 'R') mySpaceTimeWorld= SpaceTimeWorld();
-  else if (key == 'E') myTerrainErosion= TerrainErosion();
+  (void)key;  // Disable warning unused variable
+
+  myAgentSwarm= AgentSwarm();
+  myCompuFluidDyn= CompuFluidDyn();
+  myFractalCurveDevelopment= FractalCurveDevelopment();
+  myFractalHeightMap= FractalHeightMap();
+  myParticleSystem= ParticleSystem();
+  myProjectTemplate= ProjectTemplate();
+  mySpaceTimeWorld= SpaceTimeWorld();
+  myTerrainErosion= TerrainErosion();
 }
 
 
 void project_init(unsigned char key) {
+  if (key != 'a') myAgentSwarm= AgentSwarm();
+  if (key != 'c') myCompuFluidDyn= CompuFluidDyn();
+  if (key != 'f') myFractalCurveDevelopment= FractalCurveDevelopment();
+  if (key != 'h') myFractalHeightMap= FractalHeightMap();
+  if (key != 'p') myParticleSystem= ParticleSystem();
+  if (key != 'z') myProjectTemplate= ProjectTemplate();
+  if (key != 'r') mySpaceTimeWorld= SpaceTimeWorld();
+  if (key != 'e') myTerrainErosion= TerrainErosion();
+
   if (key == 'a') myAgentSwarm.Init();
-  else if (key == 'f') myFractalCurveDevelopment.Init();
-  else if (key == 'h') myFractalHeightMap.Init();
-  else if (key == 'p') myParticleSystem.Init();
-  else if (key == 'z') myProjectTemplate.Init();
-  else if (key == 'r') mySpaceTimeWorld.Init();
-  else if (key == 'e') myTerrainErosion.Init();
+  if (key == 'c') myCompuFluidDyn.Init();
+  if (key == 'f') myFractalCurveDevelopment.Init();
+  if (key == 'h') myFractalHeightMap.Init();
+  if (key == 'p') myParticleSystem.Init();
+  if (key == 'z') myProjectTemplate.Init();
+  if (key == 'r') mySpaceTimeWorld.Init();
+  if (key == 'e') myTerrainErosion.Init();
 }
 
 
 void project_refresh() {
   myAgentSwarm.Refresh();
+  myCompuFluidDyn.Refresh();
   myFractalCurveDevelopment.Refresh();
   myFractalHeightMap.Refresh();
   myParticleSystem.Refresh();
@@ -80,6 +96,7 @@ void project_refresh() {
 
 void project_animate() {
   myAgentSwarm.Animate();
+  myCompuFluidDyn.Animate();
   myFractalCurveDevelopment.Animate();
   myFractalHeightMap.Animate();
   myParticleSystem.Animate();
@@ -91,6 +108,7 @@ void project_animate() {
 
 void project_draw() {
   myAgentSwarm.Draw();
+  myCompuFluidDyn.Draw();
   myFractalCurveDevelopment.Draw();
   myFractalHeightMap.Draw();
   myParticleSystem.Draw();
@@ -357,22 +375,26 @@ void callback_mouse_click(int button, int state, int x, int y) {
   if (state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON) cam->beginPan();
   if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON) cam->endPan();
 
-  if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
-    if (state == GLUT_UP && button == 3) {
-      if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
-      if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val+= std::pow(10.0, double(6 - D.idxCursorUI));
-      if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val+= std::pow(10.0, double(7 - D.idxCursorUI));
-    }
-    if (state == GLUT_UP && button == 4) {
-      if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
-      if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val-= std::pow(10.0, double(6 - D.idxCursorUI));
-      if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val-= std::pow(10.0, double(7 - D.idxCursorUI));
+  if (state == GLUT_UP && (button == 3 || button == 4)) {
+    if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+      if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
+        if (button == 3) {
+          if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
+          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val+= std::pow(10.0, double(6 - D.idxCursorUI));
+          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val+= std::pow(10.0, double(7 - D.idxCursorUI));
+        }
+        if (button == 4) {
+          if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
+          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val-= std::pow(10.0, double(6 - D.idxCursorUI));
+          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val-= std::pow(10.0, double(7 - D.idxCursorUI));
+        }
+
+        // Compute refresh
+        if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4)))
+          project_refresh();
+      }
     }
   }
-
-  // Compute refresh
-  if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4)))
-    project_refresh();
 
   glutPostRedisplay();
 }
@@ -394,12 +416,10 @@ void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
   if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
-    int paramIdx= (y - 3) / (characHeight + characterSpace);
-    if (paramIdx >= 0 && paramIdx < int(D.param.size()))
-      D.idxParamUI= paramIdx;
-    int cursorIdx= (x - 23 * characWidth) / characWidth;
-    if (cursorIdx >= 0 && cursorIdx <= 14)
-      D.idxCursorUI= cursorIdx;
+    if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
+      D.idxParamUI= (y - 3) / (characHeight + characterSpace);
+      D.idxCursorUI= (x - 23 * characWidth) / characWidth;
+    }
   }
 
   if (D.idxParamUI != prevParamIdx || D.idxCursorUI != prevCursorIdx)

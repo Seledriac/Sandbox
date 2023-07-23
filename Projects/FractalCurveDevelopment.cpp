@@ -17,6 +17,13 @@
 
 extern Data D;
 
+enum ParamType
+{
+  testVar0____________,
+  testVar1____________,
+  testVar2____________,
+  testVar3____________,
+};
 
 #define KOCH_SNOWFLAKE
 // #define DRAGON_CURVE
@@ -30,6 +37,18 @@ FractalCurveDevelopment::FractalCurveDevelopment() {
 void FractalCurveDevelopment::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("testVar0____________", 4.0));
+  D.param.push_back(ParamUI("testVar1____________", 0.005));
+  D.param.push_back(ParamUI("testVar2____________", 1.0));
+  D.param.push_back(ParamUI("testVar3____________", 1.0));
+}
+
+
+void FractalCurveDevelopment::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
 
   int maxDepth= int(std::round(D.param[testVar0____________].val));
   if (maxDepth < 2) return;
@@ -106,31 +125,25 @@ void FractalCurveDevelopment::Init() {
     }
   }
 
-  // Save OBJ file of developed surface
-  std::string iFullpath= "D:/3DModelsUnsorted/test.obj";
-  printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
-  FILE* outputFile= nullptr;
-  outputFile= fopen(iFullpath.c_str(), "w");
-  if (outputFile == nullptr) {
-    printf("[ERROR] Unable to create the file\n\n");
-    throw 0;
-  }
-  for (unsigned int k= 0; k < Faces.size(); k++) {
-    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
-    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
-    fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
-  }
-  for (unsigned int k= 0; k < Faces.size(); k++) {
-    fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
-  }
-  fclose(outputFile);
-  printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
-}
-
-
-void FractalCurveDevelopment::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
+  // // Save OBJ file of developed surface
+  // std::string iFullpath= "D:/3DModelsUnsorted/test.obj";
+  // printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
+  // FILE* outputFile= nullptr;
+  // outputFile= fopen(iFullpath.c_str(), "w");
+  // if (outputFile == nullptr) {
+  //   printf("[ERROR] Unable to create the file\n\n");
+  //   throw 0;
+  // }
+  // for (unsigned int k= 0; k < Faces.size(); k++) {
+  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
+  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
+  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
+  // }
+  // for (unsigned int k= 0; k < Faces.size(); k++) {
+  //   fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
+  // }
+  // fclose(outputFile);
+  // printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
 }
 
 
@@ -143,7 +156,7 @@ void FractalCurveDevelopment::Animate() {
 void FractalCurveDevelopment::Draw() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
-  
+
   // Draw vertices
   if (D.displayMode1) {
     glPointSize(2.0f);

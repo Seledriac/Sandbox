@@ -21,6 +21,19 @@
 
 extern Data D;
 
+enum ParamType
+{
+  testVar0____________,
+  testVar1____________,
+  testVar2____________,
+  testVar3____________,
+  testVar4____________,
+  testVar5____________,
+  testVar6____________,
+  testVar7____________,
+  testVar8____________,
+  testVar9____________,
+};
 
 FractalHeightMap::FractalHeightMap() {
   isInitialized= false;
@@ -31,6 +44,18 @@ FractalHeightMap::FractalHeightMap() {
 void FractalHeightMap::Init() {
   isInitialized= true;
   isRefreshed= false;
+
+  D.param.clear();
+  D.param.push_back(ParamUI("testVar0____________", 500.0));
+  D.param.push_back(ParamUI("testVar1____________", 500.0));
+  D.param.push_back(ParamUI("testVar2____________", 0.5));
+  D.param.push_back(ParamUI("testVar3____________", 40.0));
+  D.param.push_back(ParamUI("testVar4____________", 0.365242));
+  D.param.push_back(ParamUI("testVar5____________", 0.534752));
+  D.param.push_back(ParamUI("testVar6____________", -0.8350));
+  D.param.push_back(ParamUI("testVar7____________", -0.2241));
+  D.param.push_back(ParamUI("testVar8____________", 32.0));
+  D.param.push_back(ParamUI("testVar9____________", 1.0));
 }
 
 
