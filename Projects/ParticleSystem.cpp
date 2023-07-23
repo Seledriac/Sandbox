@@ -46,7 +46,7 @@ void ParticleSystem::Init() {
 
   // Compute radius based on box size and 2D or 3D
   BaseRadius= 0.6;
-  if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1)
+  if (int(std::round(D.param[PD_Constrain2D______].val)) >= 1)
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 2.0f);
   else
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 3.0f);
@@ -54,7 +54,7 @@ void ParticleSystem::Init() {
   // Initialize with random particle properties
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
-      if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1 && dim == 0) continue;
+      if (int(std::round(D.param[PD_Constrain2D______].val)) >= 1 && dim == 0) continue;
       PosCur[k][dim]= (float(rand()) / float(RAND_MAX)) - 0.5f;
       ColCur[k][dim]= (float(rand()) / float(RAND_MAX));
     }
@@ -105,7 +105,7 @@ void ParticleSystem::Animate() {
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
-    if (int(std::round(D.param[PD_Contrain2D_______].val)) >= 1) {
+    if (int(std::round(D.param[PD_Constrain2D______].val)) >= 1) {
       for (int k0= 0; k0 < NbParticles; k0++) {
         PosCur[k0][0]= 0.0f;
         VelCur[k0][0]= 0.0f;

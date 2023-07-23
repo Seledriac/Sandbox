@@ -1,5 +1,6 @@
 #pragma once
 
+// #include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -32,7 +33,7 @@ enum ParamType
   GR_FactorCurv_______,
   GR_FactorDoppler____,
   S0__________________,
-  PD_Contrain2D_______,
+  PD_Constrain2D______,
   PD_NbParticles______,
   PD_TimeStep_________,
   PD_NbSubStep________,
@@ -98,6 +99,26 @@ class Data
 
   std::vector<std::pair<std::string, std::vector<double>>> plotData;
 
+  // inline double GetParam(std::string const iName) {
+  //   for (int k= 0; k < int(param.size()); k++)
+  //     if (param[k].name == iName)
+  //       return param[k].val;
+  //   std::cout << "[ERROR] Parameter not found : " << iName << std::endl;
+  //   throw;
+  // }
+  // inline void AddParam(std::string const iName, double const iVal) {
+  //   param.push_back(ParamUI(iName, iVal));
+  // }
+  // inline void DelParam(std::string const iName) {
+  //   int idxParam= 0;
+  //   for (int k= 0; k < int(param.size()); k++) {
+  //     if (param[k].name == iName) {
+  //       param.erase(param.begin() + k);
+  //       k--;
+  //     }
+  //   }
+  // }
+
   Data() {
     param.clear();
     param.push_back(ParamUI("GR_WorldNbT_________", 16));
@@ -113,7 +134,7 @@ class Data
     param.push_back(ParamUI("GR_FactorCurv_______", 1.0));
     param.push_back(ParamUI("GR_FactorDoppler____", 1.0));
     param.push_back(ParamUI("S0__________________", 1.0));
-    param.push_back(ParamUI("PD_Contrain2D_______", 1));
+    param.push_back(ParamUI("PD_Constrain2D______", 1));
     param.push_back(ParamUI("PD_NbParticles______", 1000));
     param.push_back(ParamUI("PD_TimeStep_________", 0.05));
     param.push_back(ParamUI("PD_NbSubStep________", 8));
