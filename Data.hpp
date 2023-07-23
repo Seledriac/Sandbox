@@ -90,8 +90,6 @@ class Data
   bool displayMode6= true;
   bool displayMode7= true;
   bool displayMode8= true;
-  bool displayMode9= true;
-  bool displayMode0= true;
 
   int idxParamUI= 0;
   int idxCursorUI= 0;

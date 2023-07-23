@@ -11,23 +11,26 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "Data.hpp"
-#include "math/Vectors.hpp"
-#include "util/Colormap.hpp"
-
+#include "../Data.hpp"
+#include "../math/Vectors.hpp"
+#include "../util/Colormap.hpp"
 
 extern Data D;
+
 
 #define KOCH_SNOWFLAKE
 // #define DRAGON_CURVE
 
 FractalCurveDevelopment::FractalCurveDevelopment() {
   isInitialized= false;
-  Nodes.clear();
+  isRefreshed= false;
 }
 
 
 void FractalCurveDevelopment::Init() {
+  isInitialized= true;
+  isRefreshed= false;
+
   int maxDepth= int(std::round(D.param[testVar0____________].val));
   if (maxDepth < 2) return;
 
@@ -122,14 +125,25 @@ void FractalCurveDevelopment::Init() {
   }
   fclose(outputFile);
   printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
+}
 
-  isInitialized= true;
+
+void FractalCurveDevelopment::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
+}
+
+
+void FractalCurveDevelopment::Animate() {
+  if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 
 void FractalCurveDevelopment::Draw() {
   if (!isInitialized) return;
-
+  if (!isRefreshed) return;
+  
   // Draw vertices
   if (D.displayMode1) {
     glPointSize(2.0f);

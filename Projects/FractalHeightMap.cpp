@@ -12,11 +12,11 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "Data.hpp"
-#include "math/Vectors.hpp"
-#include "util/Colormap.hpp"
-#include "util/Field.hpp"
-#include "util/Random.hpp"
+#include "../Data.hpp"
+#include "../math/Vectors.hpp"
+#include "../util/Colormap.hpp"
+#include "../util/Field.hpp"
+#include "../util/Random.hpp"
 
 
 extern Data D;
@@ -120,6 +120,12 @@ void FractalHeightMap::Refresh() {
       mapNor[x][y].normalize();
     }
   }
+}
+
+
+void FractalHeightMap::Animate() {
+  if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 

@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vectors.hpp"
+#include "../math/Vectors.hpp"
 
 class Agent
 {
@@ -24,10 +24,12 @@ class AgentSwarm
   std::vector<Agent> Agents;
 
   bool isInitialized;
+  bool isRefreshed;
 
   AgentSwarm();
 
   void Init();
-  void Draw();
+  void Refresh();
   void Animate();
+  void Draw();
 };

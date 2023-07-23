@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vectors.hpp"
+#include "../math/Vectors.hpp"
 
 
 class ParticleSystem
@@ -24,10 +24,12 @@ class ParticleSystem
   std::vector<float> HotCur;
 
   bool isInitialized;
+  bool isRefreshed;
 
   ParticleSystem();
 
   void Init();
+  void Refresh();
   void Animate();
   void Draw();
 };

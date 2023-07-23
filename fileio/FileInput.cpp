@@ -4,9 +4,6 @@
 #include <fstream>
 #include <iostream>
 
-// Project
-#include "GenericPNGParser.hpp"
-
 
 void FileInput::LoadScalarFieldBinaryFile(
     std::string const iFullpath,
@@ -387,57 +384,43 @@ void FileInput::LoadScalarFieldTXTFile(
 }
 
 
-void FileInput::LoadImagePNGFile(
+void FileInput::LoadImageBMPFile(
     std::string const iFullpath,
     std::vector<std::vector<std::array<float, 4>>>& oImage,
     bool const iVerbose) {
-  // Open the file
-  std::ifstream inputFile(iFullpath.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
+  std::ifstream inputFile;
+  inputFile.open(iFullpath, std::ios::binary);
   if (!inputFile.is_open()) {
     printf("[ERROR] Unable to open the file\n\n");
     throw 0;
   }
 
-  // Get the file size
-  std::streamsize size= 0;
-  if (inputFile.seekg(0, std::ios::end).good()) size= inputFile.tellg();
-  if (inputFile.seekg(0, std::ios::beg).good()) size-= inputFile.tellg();
-  if (size <= 0) {
-    printf("[ERROR] empty file\n\n");
-    throw 0;
-  }
+  static constexpr size_t HEADER_SIZE= 54;
+  std::array<char, HEADER_SIZE> header;
+  inputFile.read(header.data(), header.size());
+  int fileSize= *reinterpret_cast<uint32_t*>(&header[2]);
+  int dataOffset= *reinterpret_cast<uint32_t*>(&header[10]);
+  int width= *reinterpret_cast<uint32_t*>(&header[18]);
+  int height= *reinterpret_cast<uint32_t*>(&header[22]);
+  int depth= *reinterpret_cast<uint16_t*>(&header[28]);
 
   if (iVerbose) {
-    printf("Loading PNG scalar field file [%s]...", iFullpath.c_str());
-    fflush(stdout);
+    std::cout << "fileSize: " << fileSize << std::endl;
+    std::cout << "dataOffset: " << dataOffset << std::endl;
+    std::cout << "width: " << width << std::endl;
+    std::cout << "height: " << height << std::endl;
+    std::cout << "depth: " << depth << "-bit" << std::endl;
   }
 
-  // Load the contents of the PNG file into a buffer
-  std::vector<unsigned char> buffer((size_t)size);
-  inputFile.read((char*)(&buffer[0]), size);
-
-  // Decode the buffer and store into an image vector (row/width major, col/height minor, with the 4 RGBA components for each pixel)
-  unsigned long width, height;
-  std::vector<unsigned char> imageVector;
-  int error= GenericPNGParser::DecodePNG(imageVector, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true);
-  if (error != 0) {
-    printf("[ERROR] Error code %d when decoding the PNG file in buffer\n\n", error);
-    throw 0;
-  }
-
-  // Convert the imageVector into the 2D field
-  oImage= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height, {0.0f, 0.0f, 0.0f, 0.0f}));
-  for (int x= 0; x < int(width); x++) {
-    for (int y= 0; y < int(height); y++) {
-      oImage[x][y][0]= float(imageVector[y * int(width) * 4 + x * 4 + 0]) / 255.0f;
-      oImage[x][y][1]= float(imageVector[y * int(width) * 4 + x * 4 + 1]) / 255.0f;
-      oImage[x][y][2]= float(imageVector[y * int(width) * 4 + x * 4 + 2]) / 255.0f;
-      oImage[x][y][3]= float(imageVector[y * int(width) * 4 + x * 4 + 3]) / 255.0f;
+  oImage= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height));
+  for (int y= 0; y < height; y++) {
+    for (int x= 0; x < width; x++) {
+      for (int k= 0; k < 3; k++) {
+        unsigned char c;
+        inputFile.read((char*)&c, 1);
+        oImage[x][y][2 - k]= float(c) / 255.0f;
+      }
     }
-  }
-
-  if (iVerbose) {
-    printf("File loaded: %d x %d pixels\n", int(width), int(height));
   }
 }
 

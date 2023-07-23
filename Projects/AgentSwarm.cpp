@@ -11,19 +11,21 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "Data.hpp"
-#include "math/Vectors.hpp"
+#include "../Data.hpp"
+#include "../math/Vectors.hpp"
 
 extern Data D;
 
 
 AgentSwarm::AgentSwarm() {
   isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void AgentSwarm::Init() {
   isInitialized= true;
+  isRefreshed= false;
 
   NbAgents= int(std::round(D.param[AS_NbAgents_________].val));
   SizeAgent= D.param[AS_SizeAgent________].val;
@@ -50,8 +52,62 @@ void AgentSwarm::Init() {
 }
 
 
+void AgentSwarm::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
+}
+
+
+void AgentSwarm::Animate() {
+  if (!isInitialized) return;
+  if (!isRefreshed) return;
+
+  float a= float(D.param[AS_CoeffSep_________].val);
+  float b= float(D.param[AS_CoeffAli_________].val);
+  float c= float(D.param[AS_CoeffCohes_______].val);
+  float d= float(D.param[AS_CoeffHunger______].val);
+  float e= float(D.param[AS_CoeffFear________].val);
+  std::vector<Math::Vec3f> velocityChange(NbAgents);
+
+  // Compute the forces
+  // #pragma omp parallel for
+  for (int k0= 0; k0 < NbAgents; k0++) {
+    int count= 0;
+    Math::Vec3f sep, ali, coh, aim, run;
+    for (int k1= 0; k1 < NbAgents; k1++) {
+      if ((Agents[k0].p - Agents[k1].p).normSquared() > SizeAgent * SizeAgent) continue;
+      if (k0 == k1) continue;
+      ali= ali + Agents[k1].v;
+      coh= coh + Agents[k1].p;
+      count++;
+    }
+    if (count > 0) {
+      sep= Agents[k0].p - coh / count;
+      ali= ali / count;
+      coh= coh / count - Agents[k0].p;
+    }
+    aim= PosFood - Agents[k0].p;
+    if ((Agents[k0].p - PosPredator).normSquared() < (5.0f * SizeAgent) * (5.0f * SizeAgent))
+      run= Agents[k0].p - PosPredator;
+
+    velocityChange[k0]= a * sep + b * ali + c * coh + d * aim + e * run;
+  }
+
+  // Apply the forces
+  for (int k= 0; k < NbAgents; k++) {
+    Agents[k].v+= velocityChange[k];
+    float l= Agents[k].v.norm();
+    if (l > 0.3f) {
+      Agents[k].v= 0.3f * Agents[k].v / l;
+    }
+    Agents[k].p= Agents[k].p + Agents[k].v * D.param[AS_TimeStep_________].val;
+  }
+}
+
+
 void AgentSwarm::Draw() {
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   glBegin(GL_LINES);
   for (int i= 0; i < NbAgents; i++) {
@@ -112,50 +168,4 @@ void AgentSwarm::Draw() {
   glVertex3fv(PosPredator.array());
   glEnd();
   glPointSize(1);
-}
-
-
-void AgentSwarm::Animate() {
-    if (!isInitialized) return;
-
-  float a= float(D.param[AS_CoeffSep_________].val);
-  float b= float(D.param[AS_CoeffAli_________].val);
-  float c= float(D.param[AS_CoeffCohes_______].val);
-  float d= float(D.param[AS_CoeffHunger______].val);
-  float e= float(D.param[AS_CoeffFear________].val);
-  std::vector<Math::Vec3f> velocityChange(NbAgents);
-
-  // Compute the forces
-  // #pragma omp parallel for
-  for (int k0= 0; k0 < NbAgents; k0++) {
-    int count= 0;
-    Math::Vec3f sep, ali, coh, aim, run;
-    for (int k1= 0; k1 < NbAgents; k1++) {
-      if ((Agents[k0].p - Agents[k1].p).normSquared() > SizeAgent * SizeAgent) continue;
-      if (k0 == k1) continue;
-      ali= ali + Agents[k1].v;
-      coh= coh + Agents[k1].p;
-      count++;
-    }
-    if (count > 0) {
-      sep= Agents[k0].p - coh / count;
-      ali= ali / count;
-      coh= coh / count - Agents[k0].p;
-    }
-    aim= PosFood - Agents[k0].p;
-    if ((Agents[k0].p - PosPredator).normSquared() < (5.0f * SizeAgent) * (5.0f * SizeAgent))
-      run= Agents[k0].p - PosPredator;
-
-    velocityChange[k0]= a * sep + b * ali + c * coh + d * aim + e * run;
-  }
-
-  // Apply the forces
-  for (int k= 0; k < NbAgents; k++) {
-    Agents[k].v+= velocityChange[k];
-    float l= Agents[k].v.norm();
-    if (l > 0.3f) {
-      Agents[k].v= 0.3f * Agents[k].v / l;
-    }
-    Agents[k].p= Agents[k].p + Agents[k].v * D.param[AS_TimeStep_________].val;
-  }
 }

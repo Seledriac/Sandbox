@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vectors.hpp"
+#include "../math/Vectors.hpp"
 
 
 class TerrainErosion

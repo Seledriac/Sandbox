@@ -12,9 +12,9 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "Data.hpp"
-#include "math/Vectors.hpp"
-#include "util/Colormap.hpp"
+#include "../Data.hpp"
+#include "../math/Vectors.hpp"
+#include "../util/Colormap.hpp"
 
 
 extern Data D;
@@ -22,11 +22,13 @@ extern Data D;
 
 ParticleSystem::ParticleSystem() {
   isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void ParticleSystem::Init() {
   isInitialized= true;
+  isRefreshed= false;
 
   NbParticles= int(std::round(D.param[PD_NbParticles______].val));
 
@@ -78,8 +80,15 @@ void ParticleSystem::Init() {
 }
 
 
+void ParticleSystem::Refresh() {
+  if (!isInitialized) return;
+  isRefreshed= true;
+}
+
+
 void ParticleSystem::Animate() {
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   float domainRad= 1.0f;
   int nbSubstep= int(std::round(D.param[PD_NbSubStep________].val));
@@ -190,6 +199,7 @@ void ParticleSystem::Animate() {
 
 void ParticleSystem::Draw() {
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   for (int k= 0; k < NbParticles; k++) {
     glPushMatrix();

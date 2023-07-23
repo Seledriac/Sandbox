@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vectors.hpp"
+#include "../math/Vectors.hpp"
 
 
 class FractalHeightMap
@@ -30,5 +30,6 @@ class FractalHeightMap
 
   void Init();
   void Refresh();
+  void Animate();
   void Draw();
 };

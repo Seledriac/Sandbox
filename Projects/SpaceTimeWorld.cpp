@@ -12,11 +12,11 @@
 #include <GL/freeglut.h>
 
 // Project lib
-#include "Data.hpp"
-#include "fileio/FileInput.hpp"
-#include "math/Vectors.hpp"
-#include "util/Colormap.hpp"
-#include "util/Field.hpp"
+#include "../Data.hpp"
+#include "../fileio/FileInput.hpp"
+#include "../math/Vectors.hpp"
+#include "../util/Colormap.hpp"
+#include "../util/Field.hpp"
 
 
 extern Data D;
@@ -164,7 +164,7 @@ void SpaceTimeWorld::Init() {
   // Load the PNG image for the background
   static std::vector<std::vector<std::array<float, 4>>> loadedImage;
   if (loadedImage.empty())
-    FileInput::LoadImagePNGFile("Background_DeepField.png", loadedImage, true);
+    FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", loadedImage, true);
 
   // Initialize the world fields
   worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -203,13 +203,13 @@ void SpaceTimeWorld::Init() {
           //     worldColor[t][x][y][z].set(0.4f, 0.4f, 0.4f);
           // }
 
-          // // Add PNG background layer
-          // if (x == 0) {
-          //   int imgY= y * int(loadedImage.size()) / worldNbY;
-          //   int imgZ= (worldNbZ - 1 - z) * int(loadedImage[0].size()) / worldNbZ;
-          //   worldSolid[t][x][y][z]= true;
-          //   worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
-          // }
+          // Add image background layer
+          if (x == 0) {
+            int imgY= y * int(loadedImage.size()) / worldNbY;
+            int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
+            worldSolid[t][x][y][z]= true;
+            worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+          }
         }
       }
     }
@@ -373,6 +373,12 @@ void SpaceTimeWorld::Refresh() {
       }
     }
   }
+}
+
+
+void SpaceTimeWorld::Animate() {
+  if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 

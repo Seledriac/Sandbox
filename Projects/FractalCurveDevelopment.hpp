@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "math/Vectors.hpp"
+#include "../math/Vectors.hpp"
 
 
 class FractalCurveDevelopment
@@ -15,9 +15,12 @@ class FractalCurveDevelopment
   std::vector<std::array<Math::Vec3f, 3>> Faces;
 
   bool isInitialized;
+  bool isRefreshed;
 
   FractalCurveDevelopment();
 
   void Init();
+  void Refresh();
+  void Animate();
   void Draw();
 };

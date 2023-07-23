@@ -11,7 +11,7 @@ FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
 FLAGS_WARNING = -W -Wall -g
 
 CFLAGS = ${FLAGS_BUILD} ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
-SOURCES = $(wildcard *.cpp) $(wildcard fileio/*.cpp) $(wildcard math/*.cpp) $(wildcard tb/*.cpp) $(wildcard util/*.cpp)
+SOURCES = $(wildcard *.cpp) $(wildcard fileio/*.cpp) $(wildcard math/*.cpp) $(wildcard tb/*.cpp) $(wildcard util/*.cpp) $(wildcard Projects/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECS = main.exe
 

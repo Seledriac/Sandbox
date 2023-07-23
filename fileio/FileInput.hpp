@@ -61,12 +61,7 @@ class FileInput
       std::vector<std::vector<std::vector<int>>>& oField,
       bool const iVerbose);
 
-  static void LoadScalarFieldImagePNGFile(
-      std::string const iFullpath,
-      std::vector<std::vector<std::vector<double>>>& oField,
-      bool const iVerbose);
-
-  static void LoadImagePNGFile(
+  static void LoadImageBMPFile(
       std::string const iFullpath,
       std::vector<std::vector<std::array<float, 4>>>& oImage,
       bool const iVerbose);

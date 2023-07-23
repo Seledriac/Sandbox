@@ -16,12 +16,13 @@
 #include "util/Colormap.hpp"
 
 // Project Sandbox Classes
-#include "AgentSwarm.hpp"
-#include "FractalCurveDevelopment.hpp"
-#include "FractalHeightMap.hpp"
-#include "ParticleSystem.hpp"
-#include "SpaceTimeWorld.hpp"
-#include "TerrainErosion.hpp"
+#include "Projects/AgentSwarm.hpp"
+#include "Projects/FractalCurveDevelopment.hpp"
+#include "Projects/FractalHeightMap.hpp"
+#include "Projects/ParticleSystem.hpp"
+#include "Projects/ProjectTemplate.hpp"
+#include "Projects/SpaceTimeWorld.hpp"
+#include "Projects/TerrainErosion.hpp"
 
 
 // Global variables used for the display
@@ -34,12 +35,70 @@ Camera *cam;
 
 // Global variables used by the scene
 Data D;
+
 AgentSwarm myAgentSwarm;
-SpaceTimeWorld mySpaceTimeWorld;
-TerrainErosion myTerrainErosion;
-ParticleSystem myParticleSystem;
 FractalCurveDevelopment myFractalCurveDevelopment;
 FractalHeightMap myFractalHeightMap;
+ParticleSystem myParticleSystem;
+ProjectTemplate myProjectTemplate;
+SpaceTimeWorld mySpaceTimeWorld;
+TerrainErosion myTerrainErosion;
+
+
+void project_constructor(unsigned char key) {
+  if (key == 'A') myAgentSwarm= AgentSwarm();
+  else if (key == 'F') myFractalCurveDevelopment= FractalCurveDevelopment();
+  else if (key == 'H') myFractalHeightMap= FractalHeightMap();
+  else if (key == 'P') myParticleSystem= ParticleSystem();
+  else if (key == 'Z') myProjectTemplate= ProjectTemplate();
+  else if (key == 'R') mySpaceTimeWorld= SpaceTimeWorld();
+  else if (key == 'E') myTerrainErosion= TerrainErosion();
+}
+
+
+void project_init(unsigned char key) {
+  if (key == 'a') myAgentSwarm.Init();
+  else if (key == 'f') myFractalCurveDevelopment.Init();
+  else if (key == 'h') myFractalHeightMap.Init();
+  else if (key == 'p') myParticleSystem.Init();
+  else if (key == 'z') myProjectTemplate.Init();
+  else if (key == 'r') mySpaceTimeWorld.Init();
+  else if (key == 'e') myTerrainErosion.Init();
+}
+
+
+void project_refresh() {
+  myAgentSwarm.Refresh();
+  myFractalCurveDevelopment.Refresh();
+  myFractalHeightMap.Refresh();
+  myParticleSystem.Refresh();
+  myProjectTemplate.Refresh();
+  mySpaceTimeWorld.Refresh();
+  myTerrainErosion.Refresh();
+}
+
+
+void project_animate() {
+  myAgentSwarm.Animate();
+  myFractalCurveDevelopment.Animate();
+  myFractalHeightMap.Animate();
+  myParticleSystem.Animate();
+  myProjectTemplate.Animate();
+  mySpaceTimeWorld.Animate();
+  myTerrainErosion.Animate();
+}
+
+
+void project_draw() {
+  myAgentSwarm.Draw();
+  myFractalCurveDevelopment.Draw();
+  myFractalHeightMap.Draw();
+  myParticleSystem.Draw();
+  myProjectTemplate.Draw();
+  mySpaceTimeWorld.Draw();
+  myTerrainErosion.Draw();
+}
+
 
 // Returns the elapsed time since its last call
 float elapsed_time() {
@@ -117,12 +176,7 @@ void callback_display() {
   }
 
   // Draw stuff in the scene
-  myAgentSwarm.Draw();
-  mySpaceTimeWorld.Draw();
-  myTerrainErosion.Draw();
-  myFractalCurveDevelopment.Draw();
-  myFractalHeightMap.Draw();
-  myParticleSystem.Draw();
+  project_draw();
 
   // Set the camera transformation matrix for the HUD
   glMatrixMode(GL_PROJECTION);
@@ -204,12 +258,10 @@ void callback_display() {
 void callback_timer(int v) {
   // Compute animations
   if (D.playAnimation) {
-    myAgentSwarm.Animate();
-    myParticleSystem.Animate();
-    myTerrainErosion.Animate();
-
+    project_animate();
     glutPostRedisplay();
   }
+
   glutTimerFunc(1000 / winFPS, callback_timer, v);
 }
 
@@ -227,72 +279,28 @@ void callback_keyboard(unsigned char key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  if (key == 27)
-    exit(EXIT_SUCCESS);
-  else if (key == ' ')
-    D.playAnimation= !D.playAnimation;
-  else if (key == '\n')
-    D.autoRefresh= !D.autoRefresh;
-  else if (key == '\b')
-    D.param[D.idxParamUI].val= 0.0f;
+  if (key == 27) exit(EXIT_SUCCESS);
+  else if (key == ' ') D.playAnimation= !D.playAnimation;
+  else if (key == '\n') D.autoRefresh= !D.autoRefresh;
+  else if (key == '\b') D.param[D.idxParamUI].val= 0.0f;
 
-  else if (key == '1')
-    D.displayMode1= !D.displayMode1;
-  else if (key == '2')
-    D.displayMode2= !D.displayMode2;
-  else if (key == '3')
-    D.displayMode3= !D.displayMode3;
-  else if (key == '4')
-    D.displayMode4= !D.displayMode4;
-  else if (key == '5')
-    D.displayMode5= !D.displayMode5;
-  else if (key == '6')
-    D.displayMode6= !D.displayMode6;
-  else if (key == '7')
-    D.displayMode7= !D.displayMode7;
-  else if (key == '8')
-    D.displayMode8= !D.displayMode8;
-  else if (key == '9')
-    D.displayMode9= !D.displayMode9;
-  else if (key == '0')
-    D.displayMode0= !D.displayMode0;
+  else if (key == '1') D.displayMode1= !D.displayMode1;
+  else if (key == '2') D.displayMode2= !D.displayMode2;
+  else if (key == '3') D.displayMode3= !D.displayMode3;
+  else if (key == '4') D.displayMode4= !D.displayMode4;
+  else if (key == '5') D.displayMode5= !D.displayMode5;
+  else if (key == '6') D.displayMode6= !D.displayMode6;
+  else if (key == '7') D.displayMode7= !D.displayMode7;
+  else if (key == '8') D.displayMode8= !D.displayMode8;
+  else if (key == '9') D.showAxis= !D.showAxis;
+  else if (key == '0') D.plotData.clear();
 
-  else if (key == 'a')
-    D.showAxis= !D.showAxis;
-  else if (key == 'q')
-    D.plotData.clear();
-
-  else if (key == 'R')
-    mySpaceTimeWorld= SpaceTimeWorld();
-  else if (key == 'r')
-    mySpaceTimeWorld.Init();
-  else if (key == 'E')
-    myTerrainErosion= TerrainErosion();
-  else if (key == 'e')
-    myTerrainErosion.Init();
-  else if (key == 'F')
-    myFractalCurveDevelopment= FractalCurveDevelopment();
-  else if (key == 'f')
-    myFractalCurveDevelopment.Init();
-  else if (key == 'H')
-    myFractalHeightMap= FractalHeightMap();
-  else if (key == 'h')
-    myFractalHeightMap.Init();
-  else if (key == 'P')
-    myParticleSystem= ParticleSystem();
-  else if (key == 'p')
-    myParticleSystem.Init();
-  else if (key == 'S')
-    myAgentSwarm= AgentSwarm();
-  else if (key == 's')
-    myAgentSwarm.Init();
+  else if (key >= 'A' && key <= 'Z') project_constructor(key);
+  else if (key >= 'a' && key <= 'z') project_init(key);
 
   // Compute refresh
-  if (D.autoRefresh) {
-    mySpaceTimeWorld.Refresh();
-    myTerrainErosion.Refresh();
-    myFractalHeightMap.Refresh();
-  }
+  if (D.autoRefresh)
+    project_refresh();
 
   glutPostRedisplay();
 }
@@ -331,11 +339,8 @@ void callback_keyboard_special(int key, int x, int y) {
 
 
   // Compute refresh
-  if (D.autoRefresh) {
-    mySpaceTimeWorld.Refresh();
-    myTerrainErosion.Refresh();
-    myFractalHeightMap.Refresh();
-  }
+  if (D.autoRefresh)
+    project_refresh();
 
   glutPostRedisplay();
 }
@@ -366,11 +371,8 @@ void callback_mouse_click(int button, int state, int x, int y) {
   }
 
   // Compute refresh
-  if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4))) {
-    mySpaceTimeWorld.Refresh();
-    myTerrainErosion.Refresh();
-    myFractalHeightMap.Refresh();
-  }
+  if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4)))
+    project_refresh();
 
   glutPostRedisplay();
 }
