@@ -5,6 +5,7 @@ INCLUDE_DIRS = -I"freeglut\include"
 LIB_DIRS = -L"freeglut\lib\x64"
 
 FLAGS_BUILD = -m64
+# FLAGS_OPTIMIZATION =
 FLAGS_OPTIMIZATION = -O3
 FLAGS_OPENMP = -fopenmp
 FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
