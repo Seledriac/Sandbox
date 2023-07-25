@@ -13,7 +13,29 @@ class CompuFluidDyn
   int nbX;
   int nbY;
   int nbZ;
-  int simSteps;
+  int N;
+
+  float dt;
+  int iterMax;
+  int iter;
+
+  float diffu;
+  float visco;
+  float force;
+  float input;
+  
+  float* u;
+  float* v;
+  float* u_prev;
+  float* v_prev;
+  float* dens;
+  float* dens_prev;
+  // std::vector<float> u;
+  // std::vector<float> v;
+  // std::vector<float> u_prev;
+  // std::vector<float> v_prev;
+  // std::vector<float> dens;
+  // std::vector<float> dens_prev;
 
   std::vector<std::vector<std::vector<float>>> Press;
   std::vector<std::vector<std::vector<float>>> Solid;
