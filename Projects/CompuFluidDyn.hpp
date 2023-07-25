@@ -4,6 +4,7 @@
 #include <vector>
 
 // Project lib
+#include "../math/Fields.hpp"
 #include "../math/Vectors.hpp"
 
 
@@ -13,40 +14,33 @@ class CompuFluidDyn
   int nbX;
   int nbY;
   int nbZ;
-  int N;
 
-  float dt;
-  int iterMax;
   int iter;
 
-  float diffu;
-  float visco;
-  float force;
-  float input;
-  
-  float* u;
-  float* v;
-  float* u_prev;
-  float* v_prev;
-  float* dens;
-  float* dens_prev;
-  // std::vector<float> u;
-  // std::vector<float> v;
-  // std::vector<float> u_prev;
-  // std::vector<float> v_prev;
-  // std::vector<float> dens;
-  // std::vector<float> dens_prev;
+  float* VelXNew;
+  float* VelYNew;
+  float* VelZNew;
+  float* VelXOld;
+  float* VelYOld;
+  float* VelZOld;
+  float* DensNew;
+  float* DensOld;
 
-  std::vector<std::vector<std::vector<float>>> Press;
-  std::vector<std::vector<std::vector<float>>> Solid;
-  std::vector<std::vector<std::vector<Math::Vec3f>>> Veloc;
-  std::vector<std::vector<std::vector<bool>>> BCond;
+  Math::Field3D<float> Press;
+  Math::Field3D<float> Densi;
+  Math::Field3D<int> Solid;
+  Math::Field3D<int> Force;
+  Math::Field3D<Math::Vec3f> VelCu;
+
+  void AllocateFields();
+  void DeallocateFields();
 
   public:
   bool isInitialized;
   bool isRefreshed;
 
   CompuFluidDyn();
+  ~CompuFluidDyn();
 
   void Init();
   void Refresh();

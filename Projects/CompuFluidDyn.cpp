@@ -11,6 +11,7 @@
 
 // Project lib
 #include "../Data.hpp"
+#include "../math/Fields.hpp"
 #include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
 #include "../util/Field.hpp"
@@ -32,7 +33,8 @@
 
 void add_source(int N, float *x, float *s, float dt) {
   int i, size= (N + 2) * (N + 2);
-  for (i= 0; i < size; i++) x[i]+= dt * s[i];
+  for (i= 0; i < size; i++)
+    x[i]+= dt * s[i];
 }
 
 void set_bnd(int N, int b, float *x) {
@@ -122,10 +124,10 @@ void dens_step(int N, float *x, float *x0, float *u, float *v, float diff, float
 
 void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float dt) {
   add_source(N, u, u0, dt);
-  add_source(N, v, v0, dt);
   SWAP(u0, u);
-  diffuse(N, 1, u, u0, visc, dt);
+  add_source(N, v, v0, dt);
   SWAP(v0, v);
+  diffuse(N, 1, u, u0, visc, dt);
   diffuse(N, 2, v, v0, visc, dt);
   project(N, u, v, u0, v0);
   SWAP(u0, u);
@@ -133,6 +135,29 @@ void vel_step(int N, float *u, float *v, float *u0, float *v0, float visc, float
   advect(N, 1, u, u0, u0, v0, dt);
   advect(N, 2, v, v0, u0, v0, dt);
   project(N, u, v, u0, v0);
+}
+
+void CompuFluidDyn::AllocateFields() {
+  int size= (nbZ + 2) * (nbZ * 2);
+  VelXNew= new float[size];
+  VelYNew= new float[size];
+  VelZNew= new float[size];
+  VelXOld= new float[size];
+  VelYOld= new float[size];
+  VelZOld= new float[size];
+  DensNew= new float[size];
+  DensOld= new float[size];
+}
+
+void CompuFluidDyn::DeallocateFields() {
+  if (VelXNew) delete VelXNew;
+  if (VelYNew) delete VelYNew;
+  if (VelZNew) delete VelZNew;
+  if (VelXOld) delete VelXOld;
+  if (VelYOld) delete VelYOld;
+  if (VelZOld) delete VelZOld;
+  if (DensNew) delete DensNew;
+  if (DensOld) delete DensOld;
 }
 
 
@@ -147,8 +172,14 @@ enum ParamType
   TimeStepCount_______,
   CoeffDiffusion______,
   CoeffViscosity______,
-  CoeffForce__________,
+  CoeffForceX_________,
+  CoeffForceY_________,
+  CoeffForceZ_________,
   CoeffSource_________,
+  ObstaclePosX________,
+  ObstaclePosY________,
+  ObstaclePosZ________,
+  ObstacleSize________,
   ScaleFactor_________,
   ColorFactor_________,
 };
@@ -160,20 +191,31 @@ CompuFluidDyn::CompuFluidDyn() {
 }
 
 
+CompuFluidDyn::~CompuFluidDyn() {
+  DeallocateFields();
+}
+
+
 void CompuFluidDyn::Init() {
   isInitialized= true;
   isRefreshed= false;
 
   D.param.clear();
-  D.param.push_back(ParamUI("ResolutionX_________", 1));
-  D.param.push_back(ParamUI("ResolutionY_________", 64));
-  D.param.push_back(ParamUI("ResolutionZ_________", 64));
+  D.param.push_back(ParamUI("ResolutionX_________", 3));
+  D.param.push_back(ParamUI("ResolutionY_________", 128));
+  D.param.push_back(ParamUI("ResolutionZ_________", 128));
   D.param.push_back(ParamUI("TimeStepSize________", 0.1));
-  D.param.push_back(ParamUI("TimeStepCount_______", 1));
+  D.param.push_back(ParamUI("TimeStepCount_______", 1000));
   D.param.push_back(ParamUI("CoeffDiffusion______", 0.0));
   D.param.push_back(ParamUI("CoeffViscosity______", 0.0));
-  D.param.push_back(ParamUI("CoeffForce__________", 5.0));
-  D.param.push_back(ParamUI("CoeffSource_________", 100.0));
+  D.param.push_back(ParamUI("CoeffForceX_________", 0.0));
+  D.param.push_back(ParamUI("CoeffForceY_________", 0.5));
+  D.param.push_back(ParamUI("CoeffForceZ_________", 0.1));
+  D.param.push_back(ParamUI("CoeffSource_________", 0.5));
+  D.param.push_back(ParamUI("ObstaclePosX________", 0.5));
+  D.param.push_back(ParamUI("ObstaclePosY________", 0.3));
+  D.param.push_back(ParamUI("ObstaclePosZ________", 0.6));
+  D.param.push_back(ParamUI("ObstacleSize________", 0.2));
   D.param.push_back(ParamUI("ScaleFactor_________", 1.0));
   D.param.push_back(ParamUI("ColorFactor_________", 1.0));
 }
@@ -183,89 +225,68 @@ void CompuFluidDyn::Refresh() {
   if (!isInitialized) return;
   isRefreshed= true;
 
-  // Get UI parameters
-  nbX= std::max(int(std::round(D.param[ResolutionX_________].val)), 1);
-  nbY= std::max(int(std::round(D.param[ResolutionY_________].val)), 1);
-  nbZ= std::max(int(std::round(D.param[ResolutionZ_________].val)), 1);
+  bool needReset= false;
+  if (nbX != std::max(int(std::round(D.param[ResolutionX_________].val)), 1)) needReset= true;
+  if (nbY != std::max(int(std::round(D.param[ResolutionY_________].val)), 1)) needReset= true;
+  if (nbZ != std::max(int(std::round(D.param[ResolutionZ_________].val)), 1)) needReset= true;
 
-  nbY= nbZ;
-  N= nbZ;
+  if (needReset) {
+    // Get UI parameters
+    nbX= std::max(int(std::round(D.param[ResolutionX_________].val)), 1);
+    nbY= std::max(int(std::round(D.param[ResolutionY_________].val)), 1);
+    nbZ= std::max(int(std::round(D.param[ResolutionZ_________].val)), 1);
+    iter= 0;
 
-  dt= std::max(D.param[TimeStepSize________].val, 0.0);
-  iterMax= std::max(int(std::round(D.param[TimeStepCount_______].val)), 0);
-  iter= 0;
-
-  diffu= D.param[CoeffDiffusion______].val;
-  visco= D.param[CoeffViscosity______].val;
-  force= D.param[CoeffForce__________].val;
-  input= D.param[CoeffSource_________].val;
-
-  // Allocate fields
-  // u= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  // v= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  // u_prev= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  // v_prev= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  // dens= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  // dens_prev= std::vector<float>(nbX*nbY*nbZ, 0.0f);
-  int size= (nbY + 2) * (nbZ + 2);
-  u= (float *)malloc(size * sizeof(float));
-  v= (float *)malloc(size * sizeof(float));
-  u_prev= (float *)malloc(size * sizeof(float));
-  v_prev= (float *)malloc(size * sizeof(float));
-  dens= (float *)malloc(size * sizeof(float));
-  dens_prev= (float *)malloc(size * sizeof(float));
-
-  for (int i= 0; i < size; i++) {
-    u[i]= v[i]= u_prev[i]= v_prev[i]= dens[i]= dens_prev[i]= 0.0f;
+    // Allocated fields
+    Press= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
+    Densi= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
+    Solid= Math::Field3D<int>(nbX, nbY, nbZ, 0);
+    Force= Math::Field3D<int>(nbX, nbY, nbZ, 0);
+    VelCu= Math::Field3D<Math::Vec3f>(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
   }
 
-  for (int i= 1; i < nbY + 2; i++) {
-    for (int j= 1; j < nbZ + 2; j++) {
-      if (i > 5 && i < 30) {
-        if (j > 5 && j < 30) {
-          u[IX(i, j)]= v[IX(i, j)]= dens[IX(i, j)]= 0.5f;
+  // Initialize problem
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        // Add walls on X and Z faces
+        if (x == 0 || x == nbX - 1 || z == 0 || z == nbZ - 1) {
+          Solid(x, y, z)= 1;
+        }
+
+        // Set inlet on Y-
+        if (y == 0 && x > 0 && x < nbX - 1 && z > 0 && z < nbZ - 1) {
+          Force(x, y, z)= 1;
+        }
+
+        // Add obstacle
+        Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
+        Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
+        if ((posCell - posObstacle).normSquared() <= std::pow(std::max(D.param[ObstacleSize________].val, 0.0), 2.0)) {
+          Solid(x, y, z)= 1;
+          Force(x, y, z)= 1;
         }
       }
     }
   }
 
-  Press= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-  Solid= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-  Veloc= Field::AllocField3D(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  BCond= Field::AllocField3D(nbX, nbY, nbZ, false);
+  if (needReset) {
+    // Deallocate fields if they already exist
+    DeallocateFields();
 
-  // for (int x= 0; x < nbX; x++) {
-  //   for (int y= 0; y < nbY; y++) {
-  //     for (int z= 0; z < nbZ; z++) {
-  //       // Add walls on X and Z faces
-  //       if (x == 0 || x == nbX - 1 || z == 0 || z == nbZ - 1) {
-  //         BCond[x][y][z]= true;
-  //         Veloc[x][y][z]= Math::Vec3f(0.0f, 0.0f, 0.0f);
-  //       }
-
-  //       // Set inlet on Y-
-  //       if (y == 0 && x > 0 && x < nbX - 1 && z > 0 && z < nbZ - 1) {
-  //         BCond[x][y][z]= true;
-  //         Veloc[x][y][z]= Math::Vec3f(0.0f, D.param[InletVelocity_______].val, 0.0f);
-  //       }
-
-  //       // Set outlet on Y+
-  //       if (y == nbY - 1 && x > 0 && x < nbX - 1 && z > 0 && z < nbZ - 1) {
-  //         BCond[x][y][z]= false;
-  //         Veloc[x][y][z]= Math::Vec3f(0.0f, 0.0f, 0.0f);
-  //       }
-
-  //       // Add obstacle
-  //       Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
-  //       Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
-  //       if ((posCell - posObstacle).normSquared() <= std::pow(std::max(D.param[ObstacleSize________].val, 0.0), 2.0)) {
-  //         Solid[x][y][z]= 1.0f;
-  //         BCond[x][y][z]= true;
-  //         Veloc[x][y][z]= Math::Vec3f(0.0f, 0.0f, 0.0f);
-  //       }
-  //     }
-  //   }
-  // }
+    // Allocate new fields with correct size
+    AllocateFields();
+    for (int k= 0; k < (nbZ + 2) * (nbZ * 2); k++) {
+      VelXNew[k]= 0.0f;
+      VelYNew[k]= 0.0f;
+      VelZNew[k]= 0.0f;
+      VelXOld[k]= 0.0f;
+      VelYOld[k]= 0.0f;
+      VelZOld[k]= 0.0f;
+      DensNew[k]= 0.0f;
+      DensOld[k]= 0.0f;
+    }
+  }
 }
 
 
@@ -274,21 +295,37 @@ void CompuFluidDyn::Animate() {
   if (!isRefreshed) return;
 
   // Check stopping condition
-  if (iter >= iterMax) return;
+  if (iter >= int(std::round(D.param[TimeStepCount_______].val))) return;
   iter++;
 
-  vel_step(N, u, v, u_prev, v_prev, visco, dt);
-  dens_step(N, dens, dens_prev, u, v, diffu, dt);
-
-  int N= nbZ - 2;
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        Veloc[x][y][z][0]= 0.0f;
-        Veloc[x][y][z][1]= u[IX(y, z)];
-        Veloc[x][y][z][2]= v[IX(y, z)];
-        Press[x][y][z]= dens[IX(y, z)];
+  for (int y= 0; y < nbY; y++) {
+    for (int z= 0; z < nbZ; z++) {
+      int N= nbZ;
+      if (Solid(1, y, z) == 1) {
+        VelXNew[IX(y, z)]= 0.0f;
+        VelYNew[IX(y, z)]= 0.0f;
+        VelZNew[IX(y, z)]= 0.0f;
+        DensNew[IX(y, z)]= 0.0f;
       }
+      if (Force(1, y, z) == 1) {
+        VelXNew[IX(y, z)]= D.param[CoeffForceX_________].val;
+        VelYNew[IX(y, z)]= D.param[CoeffForceY_________].val;
+        VelZNew[IX(y, z)]= D.param[CoeffForceZ_________].val;
+        DensNew[IX(y, z)]= D.param[CoeffSource_________].val;
+      }
+    }
+  }
+
+  vel_step(nbZ, VelYNew, VelZNew, VelYOld, VelZOld, D.param[CoeffViscosity______].val, D.param[TimeStepSize________].val);
+  dens_step(nbZ, DensNew, DensOld, VelYNew, VelZNew, D.param[CoeffDiffusion______].val, D.param[TimeStepSize________].val);
+
+  for (int y= 0; y < nbY; y++) {
+    for (int z= 0; z < nbZ; z++) {
+      int N= nbZ;
+      VelCu(1, y, z)[0]= 0.0f;
+      VelCu(1, y, z)[1]= VelYNew[IX(y, z)];
+      VelCu(1, y, z)[2]= VelZNew[IX(y, z)];
+      Press(1, y, z)= DensNew[IX(y, z)];
     }
   }
 
@@ -329,7 +366,7 @@ void CompuFluidDyn::Draw() {
           if (nbX == 3 && (x == 0 || x == 2)) continue;
           if (nbY == 3 && (y == 0 || y == 2)) continue;
           if (nbZ == 3 && (z == 0 || z == 2)) continue;
-          if (Solid[x][y][z] > 0.5f) {
+          if (Solid(x, y, z) == 1) {
             glPushMatrix();
             glTranslatef(float(x), float(y), float(z));
             glColor3f(0.5f, 0.5f, 0.5f);
@@ -355,7 +392,7 @@ void CompuFluidDyn::Draw() {
           if (nbX == 3 && (x == 0 || x == 2)) continue;
           if (nbY == 3 && (y == 0 || y == 2)) continue;
           if (nbZ == 3 && (z == 0 || z == 2)) continue;
-          Math::Vec3f vec= Veloc[x][y][z];
+          Math::Vec3f vec= VelCu(x, y, z);
           float r= 0.0f, g= 0.0f, b= 0.0f;
           if (vec.normSquared() > 0.0)
             Colormap::RatioToJetBrightSmooth(vec.norm() * std::max(D.param[ColorFactor_________].val, 0.0), r, g, b);
@@ -385,7 +422,7 @@ void CompuFluidDyn::Draw() {
           if (nbY == 3 && (y == 0 || y == 2)) continue;
           if (nbZ == 3 && (z == 0 || z == 2)) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + Press[x][y][z] * std::max(D.param[ColorFactor_________].val, 0.0), r, g, b);
+          Colormap::RatioToJetBrightSmooth(0.5f + Press(x, y, z) * std::max(D.param[ColorFactor_________].val, 0.0), r, g, b);
           glColor3f(r, g, b);
           glVertex3f(float(x), float(y), float(z));
         }
