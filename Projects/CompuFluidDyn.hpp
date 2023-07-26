@@ -15,8 +15,6 @@ class CompuFluidDyn
   int nbY;
   int nbZ;
 
-  int iter;
-
   float* VelXNew;
   float* VelYNew;
   float* VelZNew;
@@ -34,6 +32,7 @@ class CompuFluidDyn
 
   void AllocateFields();
   void DeallocateFields();
+  void CheckNeedRefresh();
 
   public:
   bool isInitialized;
