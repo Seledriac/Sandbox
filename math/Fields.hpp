@@ -45,10 +45,10 @@ public:
 
     // Overloads of operator() to access data
     inline element_type& operator()(int const idxX) {
-      return data[idxX];
+      return data[idxX]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxX) const {
-      return data[idxX];
+      return data[idxX]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
 
     // Overload of operator=
@@ -104,16 +104,16 @@ public:
 
     // Overloads of operator() to access data
     inline element_type& operator()(int const idxK) {
-      return data[idxK / nbY][idxK % nbY];
+      return data[idxK / nbY][idxK % nbY]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxK) const {
-      return data[idxK / nbY][idxK % nbY];
+      return data[idxK / nbY][idxK % nbY]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline element_type& operator()(int const idxX, int const idxY) {
-      return data[idxX][idxY];
+      return data[idxX][idxY]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxX, int const idxY) const {
-      return data[idxX][idxY];
+      return data[idxX][idxY]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
 
     // Overload of operator=
@@ -174,16 +174,16 @@ public:
 
     // Overloads of operator() to access data
     inline element_type& operator()(int const idxK) {
-      return data[idxK / (nbY * nbZ)][(idxK % nbY) / nbZ][idxK % nbZ];
+      return data[idxK / (nbY * nbZ)][(idxK % nbY) / nbZ][idxK % nbZ]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxK) const {
-      return data[idxK / (nbY * nbZ)][(idxK % nbY) / nbZ][idxK % nbZ];
+      return data[idxK / (nbY * nbZ)][(idxK % nbY) / nbZ][idxK % nbZ]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline element_type& operator()(int const idxX, int const idxY, int const idxZ) {
-      return data[idxX][idxY][idxZ];
+      return data[idxX][idxY][idxZ]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxX, int const idxY, int const idxZ) const {
-      return data[idxX][idxY][idxZ];
+      return data[idxX][idxY][idxZ]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
 
     // Overload of operator=
@@ -249,16 +249,16 @@ public:
 
     // Overloads of operator() to access data
     inline element_type& operator()(int const idxK) {
-      return data[idxK / (nbY * nbZ * nbW)][(idxK % nbY) / (nbZ * nbW)][(idxK % nbZ) / nbW][(idxK % nbW)];
+      return data[idxK / (nbY * nbZ * nbW)][(idxK % nbY) / (nbZ * nbW)][(idxK % nbZ) / nbW][(idxK % nbW)]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxK) const {
-      return data[idxK / (nbY * nbZ * nbW)][(idxK % nbY) / (nbZ * nbW)][(idxK % nbZ) / nbW][(idxK % nbW)];
+      return data[idxK / (nbY * nbZ * nbW)][(idxK % nbY) / (nbZ * nbW)][(idxK % nbZ) / nbW][(idxK % nbW)]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline element_type& operator()(int const idxX, int const idxY, int const idxZ, int const idxW) {
-      return data[idxX][idxY][idxZ][idxW];
+      return data[idxX][idxY][idxZ][idxW]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
     inline const element_type& operator()(int const idxX, int const idxY, int const idxZ, int const idxW) const {
-      return data[idxX][idxY][idxZ][idxW];
+      return data[idxX][idxY][idxZ][idxW]; // Cannot use element_type = bool due to weird quirk of std::vector
     }
 
     // Overload of operator=
