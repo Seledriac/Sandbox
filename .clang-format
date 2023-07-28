@@ -8,6 +8,7 @@ BreakBeforeBraces: Custom
 MaxEmptyLinesToKeep: 2
 SpaceBeforeAssignmentOperators: false
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+InsertNewlineAtEOF: true
 BraceWrapping:
   AfterEnum: true
   AfterStruct: true

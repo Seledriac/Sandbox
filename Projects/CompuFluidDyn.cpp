@@ -11,7 +11,6 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../math/Fields.hpp"
 #include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
 #include "../util/Field.hpp"
@@ -25,9 +24,57 @@
     x= tmp;         \
   }
 
+const int MaskSize= 6;
+const int Mask[MaskSize][3]=
+    {{+1, 0, 0},
+     {-1, 0, 0},
+     {0, +1, 0},
+     {0, -1, 0},
+     {0, 0, +1},
+     {0, 0, -1}};
+
+void CompuFluidDyn::AddSource(std::vector<std::vector<std::vector<float>>> const& iSource, float const iTimestep,
+                              std::vector<std::vector<std::vector<float>>>& ioField) {
+  for (int x= 0; x < nbX; x++)
+    for (int y= 0; y < nbY; y++)
+      for (int z= 0; z < nbZ; z++)
+        ioField[x][y][z]+= iTimestep * iSource[x][y][z];
+}
+
 void add_source(int N, float* x, float* s, float dt) {
   for (int i= 0; i < (N + 2) * (N + 2); i++)
     x[i]+= dt * s[i];
+}
+
+
+void CompuFluidDyn::ApplyBC(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
+                            std::vector<std::vector<std::vector<float>>>& ioField) {
+  // Sweep through the field
+  std::vector<std::vector<std::vector<float>>> oldField(ioField);
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        // Find BC voxels
+        if (iType[x][y][z] == 0) continue;
+        ioField[x][y][z]= 0.0f;
+        int count= 0;
+        // Set BC voxel according to valid neighborhood values and flags
+        for (int k= 0; k < MaskSize; k++) {
+          if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+          if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+          if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+          if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] != 0) continue;
+          float val= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+          if (iMirror)
+            val= -val;
+          ioField[x][y][z]+= val;
+          count++;
+        }
+        if (iAverage)
+          ioField[x][y][z]/= float(count);
+      }
+    }
+  }
 }
 
 void set_bnd(int N, int b, float* x) {
@@ -46,6 +93,43 @@ void set_bnd(int N, int b, float* x) {
   x[IX(N + 1, N + 1)]= 0.5f * (x[IX(N, N + 1)] + x[IX(N + 1, N)]);
 }
 
+
+void CompuFluidDyn::GaussSeidelSolve(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
+                                     int const iIter, bool const iAdvancedMode, float const iMultip,
+                                     std::vector<std::vector<std::vector<float>>> const& iFieldRef,
+                                     std::vector<std::vector<std::vector<float>>>& ioField) {
+  // Sweep through the field
+  for (int k= 0; k < iIter; k++) {
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          // Work on active voxels
+          if (iType[x][y][z] != 0) continue;
+          ioField[x][y][z]= 0.0f;
+          int count= 0;
+          float sum= 0.0f;
+          // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+          for (int k= 0; k < MaskSize; k++) {
+            if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+            if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+            if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+            if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] != 0) continue;
+            sum+= ioField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+            count++;
+          }
+          // Set new value according to coefficients and flags
+          if (iAdvancedMode)
+            ioField[x][y][z]= (iFieldRef[x][y][z] + iMultip * sum) / (1.0f + iMultip * float(count));
+          else
+            ioField[x][y][z]= (iFieldRef[x][y][z] + sum) / float(count);
+        }
+      }
+    }
+    // Reapply BC to maintain consistency
+    ApplyBC(iType, iMirror, iAverage, ioField);
+  }
+}
+
 void lin_solve(int N, int b, float* x, float* x0, float a, float c) {
   for (int iter= 0; iter < 20; iter++) {
     for (int i= 1; i <= N; i++) {
@@ -57,9 +141,52 @@ void lin_solve(int N, int b, float* x, float* x0, float a, float c) {
   }
 }
 
+
+void CompuFluidDyn::DiffuseField(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
+                                 int const iIter, float const iTimeStep, float const iDiffusionCoeff,
+                                 std::vector<std::vector<std::vector<float>>> const& iFieldRef,
+                                 std::vector<std::vector<std::vector<float>>>& ioField) {
+  float multip= iTimeStep * float(nbX * nbY * nbZ) * iDiffusionCoeff;
+  GaussSeidelSolve(iType, iMirror, iAverage, iIter, true, multip, iFieldRef, ioField);
+}
+
 void diffuse(int N, int b, float* x, float* x0, float diff, float dt) {
-  float a= dt * diff * N * N;
+  float a= dt * N * N * diff;
   lin_solve(N, b, x, x0, a, 1 + 4 * a);
+}
+
+
+void CompuFluidDyn::AdvectField(std::vector<std::vector<std::vector<int>>> const& iType,
+                                bool const iMirror, bool const iAverage, float const iTimeStep,
+                                std::vector<std::vector<std::vector<float>>> const& iVelX,
+                                std::vector<std::vector<std::vector<float>>> const& iVelY,
+                                std::vector<std::vector<std::vector<float>>> const& iVelZ,
+                                std::vector<std::vector<std::vector<float>>> const& iFieldRef,
+                                std::vector<std::vector<std::vector<float>>>& ioField) {
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        if (iType[x][y][z] != 0) continue;
+        float posX= float(x) - iTimeStep * float(nbX * nbY * nbZ) * iVelX[x][y][z];
+        float posY= float(x) - iTimeStep * float(nbX * nbY * nbZ) * iVelX[x][y][z];
+        float posZ= float(x) - iTimeStep * float(nbX * nbY * nbZ) * iVelX[x][y][z];
+        posX= std::min(std::max(posX, 0.5f), nbX-0.5f);
+        if (posX < 0.5f) posX= 0.5f;
+        if (posX > nbX + 0.5f) posX= N + 0.5f;
+        int i0= (int)posX;
+        int i1= i0 + 1;
+        if (posY < 0.5f) posY= 0.5f;
+        if (posY > N + 0.5f) posY= N + 0.5f;
+        int j0= (int)posY;
+        int j1= j0 + 1;
+        float s1= posX - i0;
+        float s0= 1 - s1;
+        float t1= posY - j0;
+        float t0= 1 - t1;
+        d[IX(i, j)]= s0 * (t0 * d0[IX(i0, j0)] + t1 * d0[IX(i0, j1)]) + s1 * (t0 * d0[IX(i1, j0)] + t1 * d0[IX(i1, j1)]);
+      }
+    }
+  }
 }
 
 void advect(int N, int b, float* d, float* d0, float* u, float* v, float dt) {
@@ -246,11 +373,11 @@ void CompuFluidDyn::Refresh() {
   if (isRefreshed) return;
 
   // Allocated fields
-  OSPress= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
-  OSDensi= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
-  OSSolid= Math::Field3D<int>(nbX, nbY, nbZ, 0);
-  OSForce= Math::Field3D<int>(nbX, nbY, nbZ, 0);
-  OSVelCu= Math::Field3D<Math::Vec3f>(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  OSPress= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  OSDensi= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  OSSolid= Field::AllocField3D(nbX, nbY, nbZ, 0);
+  OSForce= Field::AllocField3D(nbX, nbY, nbZ, 0);
+  OSVelCu= Field::AllocField3D(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
 
   // Deallocate fields if they already exist
   DeallocateFields();
@@ -272,22 +399,22 @@ void CompuFluidDyn::Animate() {
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        OSSolid(x, y, z)= 0;
-        OSForce(x, y, z)= 0;
+        OSSolid[x][y][z]= 0;
+        OSForce[x][y][z]= 0;
 
         // // Add walls on X and Z faces
         // if (x == 0 || x == nbX - 1 || z == 0 || z == nbZ - 1) {
-        //   OSSolid(x, y, z)= 1;
+        //   OSSolid[x][y][z]= 1;
         // }
 
         // // Set inlet on Y-
         // if (y == 0 && x > 0 && x < nbX - 1 && z > 0 && z < nbZ - 1) {
-        //   OSForce(x, y, z)= 1;
+        //   OSForce[x][y][z]= 1;
         // }
 
         // Add thin wall
         if (y == nbY / 2 || y + 1 == nbY / 2) {
-          OSSolid(x, y, z)= 1;
+          OSSolid[x][y][z]= 1;
         }
 
         // Add Pac Man positive inlet
@@ -298,11 +425,11 @@ void CompuFluidDyn::Animate() {
           if ((posCell - posObstacle).norm() <= refRadius) {
             Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
             vecFlow.normalize();
-            OSSolid(x, y, z)= 1;
+            OSSolid[x][y][z]= 1;
             if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.7) {
-              OSSolid(x, y, z)= 0;
+              OSSolid[x][y][z]= 0;
               if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.4) {
-                OSForce(x, y, z)= 1;
+                OSForce[x][y][z]= 1;
               }
             }
           }
@@ -317,11 +444,11 @@ void CompuFluidDyn::Animate() {
             Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
             vecFlow.normalize();
             vecFlow= -1.0 * vecFlow;
-            OSSolid(x, y, z)= 1;
+            OSSolid[x][y][z]= 1;
             if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.7) {
-              OSSolid(x, y, z)= 0;
+              OSSolid[x][y][z]= 0;
               if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.4) {
-                OSForce(x, y, z)= -1;
+                OSForce[x][y][z]= -1;
               }
             }
           }
@@ -339,18 +466,18 @@ void CompuFluidDyn::Animate() {
     for (int z= 0; z < nbZ; z++) {
       int N= nbZ;
 
-      if (OSSolid(0, y, z) != 0) {
+      if (OSSolid[0][y][z] != 0) {
         VelXNew[IX(y + 1, z + 1)]= 0.0f;
         VelYNew[IX(y + 1, z + 1)]= 0.0f;
         VelZNew[IX(y + 1, z + 1)]= 0.0f;
         DensNew[IX(y + 1, z + 1)]= 0.0f;
       }
 
-      if (OSForce(0, y, z) != 0) {
-        VelXOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceX_________].val;
-        VelYOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceY_________].val;
-        VelZOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceZ_________].val;
-        DensOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffSource_________].val;
+      if (OSForce[0][y][z] != 0) {
+        VelXOld[IX(y + 1, z + 1)]= float(OSForce[0][y][z]) * D.param[CoeffForceX_________].val;
+        VelYOld[IX(y + 1, z + 1)]= float(OSForce[0][y][z]) * D.param[CoeffForceY_________].val;
+        VelZOld[IX(y + 1, z + 1)]= float(OSForce[0][y][z]) * D.param[CoeffForceZ_________].val;
+        DensOld[IX(y + 1, z + 1)]= float(OSForce[0][y][z]) * D.param[CoeffSource_________].val;
       }
     }
   }
@@ -372,10 +499,10 @@ void CompuFluidDyn::Animate() {
   for (int y= 0; y < nbY; y++) {
     for (int z= 0; z < nbZ; z++) {
       int N= nbZ;
-      OSVelCu(0, y, z)[0]= 0.0f;
-      OSVelCu(0, y, z)[1]= VelYNew[IX(y + 1, z + 1)];
-      OSVelCu(0, y, z)[2]= VelZNew[IX(y + 1, z + 1)];
-      OSPress(0, y, z)= DensNew[IX(y + 1, z + 1)];
+      OSVelCu[0][y][z][0]= 0.0f;
+      OSVelCu[0][y][z][1]= VelYNew[IX(y + 1, z + 1)];
+      OSVelCu[0][y][z][2]= VelZNew[IX(y + 1, z + 1)];
+      OSPress[0][y][z]= DensNew[IX(y + 1, z + 1)];
     }
   }
 }
@@ -397,7 +524,7 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          if (OSSolid(x, y, z) != 0) {
+          if (OSSolid[x][y][z] != 0) {
             glPushMatrix();
             glTranslatef(float(x), float(y), float(z));
             glColor3f(0.5f, 0.5f, 0.5f);
@@ -421,7 +548,7 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          Math::Vec3f vec= OSVelCu(x, y, z);
+          Math::Vec3f vec= OSVelCu[x][y][z];
           float r= 0.0f, g= 0.0f, b= 0.0f;
           if (vec.normSquared() > 0.0)
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_________].val, r, g, b);
@@ -448,9 +575,9 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          if (std::abs(OSPress(x, y, z)) < D.param[ColorThresh_________].val) continue;
+          if (std::abs(OSPress[x][y][z]) < D.param[ColorThresh_________].val) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * OSPress(x, y, z) * D.param[ColorFactor_________].val, r, g, b);
+          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * OSPress[x][y][z] * D.param[ColorFactor_________].val, r, g, b);
           glColor3f(r, g, b);
           glVertex3f(float(x), float(y), float(z));
         }

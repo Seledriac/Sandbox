@@ -5,7 +5,6 @@
 #include <utility>
 #include <vector>
 
-
 class ParamUI
 {
   public:
