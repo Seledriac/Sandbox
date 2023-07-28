@@ -24,11 +24,12 @@ class CompuFluidDyn
   float* DensNew;
   float* DensOld;
 
-  Math::Field3D<float> Press;
-  Math::Field3D<float> Densi;
-  Math::Field3D<int> Solid;
-  Math::Field3D<int> Force;
-  Math::Field3D<Math::Vec3f> VelCu;
+  Math::Field3D<float> OSDensi;
+  Math::Field3D<float> OSPress;
+  Math::Field3D<float> OSDiver;
+  Math::Field3D<int> OSSolid;
+  Math::Field3D<int> OSForce;
+  Math::Field3D<Math::Vec3f> OSVelCu;
 
   void AllocateInitializeFields();
   void DeallocateFields();

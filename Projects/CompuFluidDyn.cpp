@@ -31,6 +31,9 @@ void add_source(int N, float* x, float* s, float dt) {
 }
 
 void set_bnd(int N, int b, float* x) {
+  // b= 0 for density, pressure and divergence
+  // b= 1 for u
+  // b= 2 for v
   for (int i= 1; i <= N; i++) {
     x[IX(0, i)]= b == 1 ? -x[IX(1, i)] : x[IX(1, i)];
     x[IX(N + 1, i)]= b == 1 ? -x[IX(N, i)] : x[IX(N, i)];
@@ -44,7 +47,7 @@ void set_bnd(int N, int b, float* x) {
 }
 
 void lin_solve(int N, int b, float* x, float* x0, float a, float c) {
-  for (int k= 0; k < 20; k++) {
+  for (int iter= 0; iter < 20; iter++) {
     for (int i= 1; i <= N; i++) {
       for (int j= 1; j <= N; j++) {
         x[IX(i, j)]= (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
@@ -129,6 +132,7 @@ void vel_step(int N, float* u, float* v, float* u0, float* v0, float visc, float
   project(N, u, v, u0, v0);
 }
 
+
 void CompuFluidDyn::AllocateInitializeFields() {
   int size= (nbZ + 2) * (nbZ * 2);
   VelXNew= new float[size];
@@ -146,6 +150,7 @@ void CompuFluidDyn::AllocateInitializeFields() {
     DensOld[k]= 0.0f;
   }
 }
+
 
 void CompuFluidDyn::DeallocateFields() {
   if (VelXNew != NULL) delete[] VelXNew;
@@ -179,6 +184,7 @@ enum ParamType
   ObstacleSize________,
   ScaleFactor_________,
   ColorFactor_________,
+  ColorThresh_________,
 };
 
 
@@ -216,6 +222,7 @@ void CompuFluidDyn::Init() {
     D.param.push_back(ParamUI("ObstacleSize________", 0.1));
     D.param.push_back(ParamUI("ScaleFactor_________", 100.0));
     D.param.push_back(ParamUI("ColorFactor_________", 1.0));
+    D.param.push_back(ParamUI("ColorThresh_________", 0.2));
   }
 
   isInitialized= true;
@@ -239,11 +246,11 @@ void CompuFluidDyn::Refresh() {
   if (isRefreshed) return;
 
   // Allocated fields
-  Press= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
-  Densi= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
-  Solid= Math::Field3D<int>(nbX, nbY, nbZ, 0);
-  Force= Math::Field3D<int>(nbX, nbY, nbZ, 0);
-  VelCu= Math::Field3D<Math::Vec3f>(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  OSPress= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
+  OSDensi= Math::Field3D<float>(nbX, nbY, nbZ, 0.0f);
+  OSSolid= Math::Field3D<int>(nbX, nbY, nbZ, 0);
+  OSForce= Math::Field3D<int>(nbX, nbY, nbZ, 0);
+  OSVelCu= Math::Field3D<Math::Vec3f>(nbX, nbY, nbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
 
   // Deallocate fields if they already exist
   DeallocateFields();
@@ -252,6 +259,8 @@ void CompuFluidDyn::Refresh() {
   AllocateInitializeFields();
 
   isRefreshed= true;
+
+  CompuFluidDyn::Animate();
 }
 
 
@@ -263,20 +272,25 @@ void CompuFluidDyn::Animate() {
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        Solid(x, y, z)= 0;
-        Force(x, y, z)= 0;
+        OSSolid(x, y, z)= 0;
+        OSForce(x, y, z)= 0;
 
         // // Add walls on X and Z faces
         // if (x == 0 || x == nbX - 1 || z == 0 || z == nbZ - 1) {
-        //   Solid(x, y, z)= 1;
+        //   OSSolid(x, y, z)= 1;
         // }
 
         // // Set inlet on Y-
         // if (y == 0 && x > 0 && x < nbX - 1 && z > 0 && z < nbZ - 1) {
-        //   Force(x, y, z)= 1;
+        //   OSForce(x, y, z)= 1;
         // }
 
-        // Add obstacle
+        // Add thin wall
+        if (y == nbY / 2 || y + 1 == nbY / 2) {
+          OSSolid(x, y, z)= 1;
+        }
+
+        // Add Pac Man positive inlet
         {
           Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
           Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
@@ -284,17 +298,17 @@ void CompuFluidDyn::Animate() {
           if ((posCell - posObstacle).norm() <= refRadius) {
             Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
             vecFlow.normalize();
-            Solid(x, y, z)= 1;
+            OSSolid(x, y, z)= 1;
             if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.7) {
-              Solid(x, y, z)= 0;
+              OSSolid(x, y, z)= 0;
               if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.4) {
-                Force(x, y, z)= 1;
+                OSForce(x, y, z)= 1;
               }
             }
           }
         }
 
-        // Add obstacle
+        // Add Pac Man negative inlet
         {
           Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
           Math::Vec3f posObstacle(1.0 - D.param[ObstaclePosX________].val, 1.0 - D.param[ObstaclePosY________].val, 1.0 - D.param[ObstaclePosZ________].val);
@@ -303,11 +317,11 @@ void CompuFluidDyn::Animate() {
             Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
             vecFlow.normalize();
             vecFlow= -1.0 * vecFlow;
-            Solid(x, y, z)= 1;
+            OSSolid(x, y, z)= 1;
             if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.7) {
-              Solid(x, y, z)= 0;
+              OSSolid(x, y, z)= 0;
               if ((posCell - posObstacle - vecFlow * 0.4 * refRadius).norm() <= refRadius * 0.4) {
-                Force(x, y, z)= -1;
+                OSForce(x, y, z)= -1;
               }
             }
           }
@@ -325,24 +339,24 @@ void CompuFluidDyn::Animate() {
     for (int z= 0; z < nbZ; z++) {
       int N= nbZ;
 
-      if (Solid(0, y, z) != 0) {
+      if (OSSolid(0, y, z) != 0) {
         VelXNew[IX(y + 1, z + 1)]= 0.0f;
         VelYNew[IX(y + 1, z + 1)]= 0.0f;
         VelZNew[IX(y + 1, z + 1)]= 0.0f;
         DensNew[IX(y + 1, z + 1)]= 0.0f;
       }
 
-      if (Force(0, y, z) != 0) {
-        VelXOld[IX(y + 1, z + 1)]= float(Force(0, y, z)) * D.param[CoeffForceX_________].val;
-        VelYOld[IX(y + 1, z + 1)]= float(Force(0, y, z)) * D.param[CoeffForceY_________].val;
-        VelZOld[IX(y + 1, z + 1)]= float(Force(0, y, z)) * D.param[CoeffForceZ_________].val;
-        DensOld[IX(y + 1, z + 1)]= float(Force(0, y, z)) * D.param[CoeffSource_________].val;
+      if (OSForce(0, y, z) != 0) {
+        VelXOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceX_________].val;
+        VelYOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceY_________].val;
+        VelZOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffForceZ_________].val;
+        DensOld[IX(y + 1, z + 1)]= float(OSForce(0, y, z)) * D.param[CoeffSource_________].val;
       }
     }
   }
 
-  vel_step(nbZ, VelYNew, VelZNew, VelYOld, VelZOld, D.param[CoeffViscosity______].val, D.param[TimeStepSize________].val);
-  dens_step(nbZ, DensNew, DensOld, VelYNew, VelZNew, D.param[CoeffDiffusion______].val, D.param[TimeStepSize________].val);
+  vel_step(nbZ, VelYNew, VelZNew, VelYOld, VelZOld, std::max(D.param[CoeffViscosity______].val, 0.0), D.param[TimeStepSize________].val);
+  dens_step(nbZ, DensNew, DensOld, VelYNew, VelZNew, std::max(D.param[CoeffDiffusion______].val, 0.0), D.param[TimeStepSize________].val);
 
   for (int k= 0; k < (nbZ + 2) * (nbZ * 2); k++) {
     if (std::isnan(VelXNew[k])) throw;
@@ -358,10 +372,10 @@ void CompuFluidDyn::Animate() {
   for (int y= 0; y < nbY; y++) {
     for (int z= 0; z < nbZ; z++) {
       int N= nbZ;
-      VelCu(0, y, z)[0]= 0.0f;
-      VelCu(0, y, z)[1]= VelYNew[IX(y + 1, z + 1)];
-      VelCu(0, y, z)[2]= VelZNew[IX(y + 1, z + 1)];
-      Press(0, y, z)= DensNew[IX(y + 1, z + 1)];
+      OSVelCu(0, y, z)[0]= 0.0f;
+      OSVelCu(0, y, z)[1]= VelYNew[IX(y + 1, z + 1)];
+      OSVelCu(0, y, z)[2]= VelZNew[IX(y + 1, z + 1)];
+      OSPress(0, y, z)= DensNew[IX(y + 1, z + 1)];
     }
   }
 }
@@ -383,7 +397,7 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          if (Solid(x, y, z) != 0) {
+          if (OSSolid(x, y, z) != 0) {
             glPushMatrix();
             glTranslatef(float(x), float(y), float(z));
             glColor3f(0.5f, 0.5f, 0.5f);
@@ -407,7 +421,7 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          Math::Vec3f vec= VelCu(x, y, z);
+          Math::Vec3f vec= OSVelCu(x, y, z);
           float r= 0.0f, g= 0.0f, b= 0.0f;
           if (vec.normSquared() > 0.0)
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_________].val, r, g, b);
@@ -434,8 +448,9 @@ void CompuFluidDyn::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
+          if (std::abs(OSPress(x, y, z)) < D.param[ColorThresh_________].val) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * Press(x, y, z) * D.param[ColorFactor_________].val, r, g, b);
+          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * OSPress(x, y, z) * D.param[ColorFactor_________].val, r, g, b);
           glColor3f(r, g, b);
           glVertex3f(float(x), float(y), float(z));
         }
