@@ -6,6 +6,7 @@
 // Project lib
 #include "../math/Vectors.hpp"
 
+#define NEW_IMPLEM
 
 class CompuFluidDyn
 {
@@ -14,6 +15,20 @@ class CompuFluidDyn
   int nbY;
   int nbZ;
 
+#ifdef NEW_IMPLEM
+#else
+#endif
+
+#ifdef NEW_IMPLEM
+  std::vector<std::vector<std::vector<float>>> DensOld;
+  std::vector<std::vector<std::vector<float>>> DensNew;
+  std::vector<std::vector<std::vector<float>>> VelXOld;
+  std::vector<std::vector<std::vector<float>>> VelYOld;
+  std::vector<std::vector<std::vector<float>>> VelZOld;
+  std::vector<std::vector<std::vector<float>>> VelXNew;
+  std::vector<std::vector<std::vector<float>>> VelYNew;
+  std::vector<std::vector<std::vector<float>>> VelZNew;
+#else
   float* VelXNew;
   float* VelYNew;
   float* VelZNew;
@@ -22,6 +37,7 @@ class CompuFluidDyn
   float* VelZOld;
   float* DensNew;
   float* DensOld;
+#endif
 
   std::vector<std::vector<std::vector<float>>> OSDensi;
   std::vector<std::vector<std::vector<float>>> OSPress;
@@ -30,29 +46,54 @@ class CompuFluidDyn
   std::vector<std::vector<std::vector<int>>> OSForce;
   std::vector<std::vector<std::vector<Math::Vec3f>>> OSVelCu;
 
+#ifdef NEW_IMPLEM
+  void AddSource(const std::vector<std::vector<std::vector<float>>>& iSource, const float iTimestep,
+                 std::vector<std::vector<std::vector<float>>>& ioField);
+  void ApplyBC(const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror, const bool iAverage,
+               std::vector<std::vector<std::vector<float>>>& ioField);
+  void GaussSeidelSolve(const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror, const bool iAverage,
+                        const int iIter, const bool iAdvancedMode, const float iMultip,
+                        const std::vector<std::vector<std::vector<float>>>& iFieldRef,
+                        std::vector<std::vector<std::vector<float>>>& ioField);
+  void DiffuseField(const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror, const bool iAverage,
+                    const int iIter, const float iTimeStep, const float iDiffusionCoeff,
+                    const std::vector<std::vector<std::vector<float>>>& iFieldRef,
+                    std::vector<std::vector<std::vector<float>>>& ioField);
+  float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
+                               const std::vector<std::vector<std::vector<float>>>& iFieldRef);
+  void AdvectField(const std::vector<std::vector<std::vector<int>>>& iType,
+                   const bool iMirror, const bool iAverage, const float iTimeStep,
+                   const std::vector<std::vector<std::vector<float>>>& iVelX,
+                   const std::vector<std::vector<std::vector<float>>>& iVelY,
+                   const std::vector<std::vector<std::vector<float>>>& iVelZ,
+                   std::vector<std::vector<std::vector<float>>>& ioField);
+  void ProjectField(const std::vector<std::vector<std::vector<int>>>& iType, const int iIter,
+                    std::vector<std::vector<std::vector<float>>>& ioVelX,
+                    std::vector<std::vector<std::vector<float>>>& ioVelY,
+                    std::vector<std::vector<std::vector<float>>>& ioVelZ);
+  void SwapFields(std::vector<std::vector<std::vector<float>>>& ioFieldA,
+                  std::vector<std::vector<std::vector<float>>>& ioFieldB);
+  void DensityStep(const std::vector<std::vector<std::vector<int>>>& iType,
+                   const int iIter, const float iTimeStep, const float iDiffusionCoeff,
+                   const std::vector<std::vector<std::vector<float>>>& iVelX,
+                   const std::vector<std::vector<std::vector<float>>>& iVelY,
+                   const std::vector<std::vector<std::vector<float>>>& iVelZ,
+                   std::vector<std::vector<std::vector<float>>>& ioDensOld,
+                   std::vector<std::vector<std::vector<float>>>& ioDensNew);
+  void VelocityStep(const std::vector<std::vector<std::vector<int>>>& iType,
+                    const int iIter, const float iTimeStep, const float iDiffusionCoeff,
+                    std::vector<std::vector<std::vector<float>>>& ioVelXOld,
+                    std::vector<std::vector<std::vector<float>>>& ioVelYOld,
+                    std::vector<std::vector<std::vector<float>>>& ioVelZOld,
+                    std::vector<std::vector<std::vector<float>>>& ioVelXNew,
+                    std::vector<std::vector<std::vector<float>>>& ioVelYNew,
+                    std::vector<std::vector<std::vector<float>>>& ioVelZNew);
+#else
   void AllocateInitializeFields();
   void DeallocateFields();
-  void CheckNeedRefresh();
+#endif
 
-  void AddSource(std::vector<std::vector<std::vector<float>>> const& iSource, float const iTimestep,
-                 std::vector<std::vector<std::vector<float>>>& ioField);
-  void ApplyBC(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
-               std::vector<std::vector<std::vector<float>>>& ioField);
-  void GaussSeidelSolve(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
-                        int const iIter, bool const iAdvancedMode, float const iMultip,
-                        std::vector<std::vector<std::vector<float>>> const& iFieldRef,
-                        std::vector<std::vector<std::vector<float>>>& ioField);
-  void DiffuseField(std::vector<std::vector<std::vector<int>>> const& iType, bool const iMirror, bool const iAverage,
-                    int const iIter, float const iTimeStep, float const iDiffusionCoeff,
-                    std::vector<std::vector<std::vector<float>>> const& iFieldRef,
-                    std::vector<std::vector<std::vector<float>>>& ioField);
-  void AdvectField(std::vector<std::vector<std::vector<int>>> const& iType,
-                   bool const iMirror, bool const iAverage, float const iTimeStep,
-                   std::vector<std::vector<std::vector<float>>> const& iVelX,
-                   std::vector<std::vector<std::vector<float>>> const& iVelY,
-                   std::vector<std::vector<std::vector<float>>> const& iVelZ,
-                   std::vector<std::vector<std::vector<float>>> const& iFieldRef,
-                   std::vector<std::vector<std::vector<float>>>& ioField);
+  void CheckNeedRefresh();
 
   public:
   bool isInitialized;
