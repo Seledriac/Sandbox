@@ -11,6 +11,7 @@
 
 // Project lib
 #include "../Data.hpp"
+#include "../fileio/FileInput.hpp"
 #include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
 #include "../util/Field.hpp"
@@ -464,6 +465,7 @@ enum ParamType
   ScaleFactor_________,
   ColorFactor_________,
   ColorThresh_________,
+  DisplayUpsampling___,
 };
 
 
@@ -497,7 +499,7 @@ void CompuFluidDyn::Init() {
     D.param.push_back(ParamUI("CoeffViscosity______", 0.0));
     D.param.push_back(ParamUI("CoeffForceX_________", 0.0));
     D.param.push_back(ParamUI("CoeffForceY_________", 0.5));
-    D.param.push_back(ParamUI("CoeffForceZ_________", 0.2));
+    D.param.push_back(ParamUI("CoeffForceZ_________", 0.0));
     D.param.push_back(ParamUI("CoeffSource_________", 1.0));
     D.param.push_back(ParamUI("ObstaclePosX________", 0.5));
     D.param.push_back(ParamUI("ObstaclePosY________", 0.2));
@@ -506,6 +508,7 @@ void CompuFluidDyn::Init() {
     D.param.push_back(ParamUI("ScaleFactor_________", 100.0));
     D.param.push_back(ParamUI("ColorFactor_________", 1.0));
     D.param.push_back(ParamUI("ColorThresh_________", 0.2));
+    D.param.push_back(ParamUI("DisplayUpsampling___", 1.0));
   }
 
   isInitialized= true;
@@ -520,6 +523,9 @@ void CompuFluidDyn::CheckNeedRefresh() {
   nbX= std::max(int(std::round(D.param[ResolutionX_________].val)), 1);
   nbY= std::max(int(std::round(D.param[ResolutionY_________].val)), 1);
   nbZ= std::max(int(std::round(D.param[ResolutionZ_________].val)), 1);
+
+  if (loadedImage.empty())
+    FileInput::LoadImageBMPFile("Resources/CFD_TeslaValve.bmp", loadedImage, false);
 }
 
 
@@ -568,6 +574,23 @@ void CompuFluidDyn::Animate() {
       for (int z= 0; z < nbZ; z++) {
         OSSolid[x][y][z]= 0;
         OSForce[x][y][z]= 0;
+
+        // // Add data from loaded image
+        // int idxPixelW= std::min(std::max((int(loadedImage.size()) - 1) * y / nbY, 0), int(loadedImage.size()) - 1);
+        // int idxPixelH= std::min(std::max((int(loadedImage[0].size()) - 1) * z / nbZ, 0), int(loadedImage[0].size()) - 1);
+        // std::array<float, 4> pixel= loadedImage[idxPixelW][idxPixelH];
+        // if (pixel[0] == 1.0 && pixel[1] == 1.0 && pixel[2] == 1.0) {
+        //   OSSolid[x][y][z]= 0;
+        //   OSForce[x][y][z]= 0;
+        // }
+        // else if (pixel[0] == 0.0 && pixel[1] == 0.0 && pixel[2] == 0.0) {
+        //   OSSolid[x][y][z]= 1;
+        //   OSForce[x][y][z]= 0;
+        // }
+        // else {
+        //   OSSolid[x][y][z]= 0;
+        //   OSForce[x][y][z]= 1;
+        // }
 
         // // Add walls on Y and Z faces
         // if (y == 0 || y == nbY - 1 || z == 0 || z == nbZ - 1)
@@ -753,6 +776,13 @@ void CompuFluidDyn::Draw() {
             glutSolidCube(1.0);
             glPopMatrix();
           }
+          if (OSForce[x][y][z] != 0) {
+            glPushMatrix();
+            glTranslatef(float(x), float(y), float(z));
+            glColor3f(0.8f, 0.8f, 0.8f);
+            glutSolidCube(1.0);
+            glPopMatrix();
+          }
         }
       }
     }
@@ -788,18 +818,29 @@ void CompuFluidDyn::Draw() {
 
   // Draw the pressure field
   if (D.displayMode3) {
+    int nbXUp= int(std::round(float(nbX) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    int nbYUp= int(std::round(float(nbY) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    int nbZUp= int(std::round(float(nbZ) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    if (nbX == 1) nbXUp= 1;
+    if (nbY == 1) nbYUp= 1;
+    if (nbZ == 1) nbZUp= 1;
+    std::vector<std::vector<std::vector<float>>> upsamp= Field::AllocField3D(nbXUp, nbYUp, nbZUp, 0.0f);
+    int maxDimUp= std::max(std::max(nbXUp, nbYUp), nbZUp);
+    float voxSizeUp= 1.0 / float(maxDimUp);
+
     glPointSize(3.0f);
     glPushMatrix();
-    glTranslatef(0.5f - 0.5f * float(nbX) / float(maxDim), 0.5f - 0.5f * float(nbY) / float(maxDim), 0.5f - 0.5f * float(nbZ) / float(maxDim));
-    glScalef(voxSize, voxSize, voxSize);
+    glTranslatef(0.5f - 0.5f * float(nbXUp) / float(maxDimUp), 0.5f - 0.5f * float(nbYUp) / float(maxDimUp), 0.5f - 0.5f * float(nbZUp) / float(maxDimUp));
+    glScalef(voxSizeUp, voxSizeUp, voxSizeUp);
     glTranslatef(0.5f, 0.5f, 0.5f);
     glBegin(GL_POINTS);
-    for (int x= 0; x < nbX; x++) {
-      for (int y= 0; y < nbY; y++) {
-        for (int z= 0; z < nbZ; z++) {
-          if (std::abs(OSPress[x][y][z]) < D.param[ColorThresh_________].val) continue;
+    for (int x= 0; x < nbXUp; x++) {
+      for (int y= 0; y < nbYUp; y++) {
+        for (int z= 0; z < nbZUp; z++) {
+          float val= TrilinearInterpolation(float(x * nbX) / float(nbXUp), float(y * nbY) / float(nbYUp), float(z * nbZ) / float(nbZUp), OSPress);
+          if (std::abs(val) < D.param[ColorThresh_________].val) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * OSPress[x][y][z] * D.param[ColorFactor_________].val, r, g, b);
+          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_________].val, r, g, b);
           glColor3f(r, g, b);
           glVertex3f(float(x), float(y), float(z));
         }

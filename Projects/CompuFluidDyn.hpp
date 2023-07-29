@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard lib
+#include <array>
 #include <vector>
 
 // Project lib
@@ -38,6 +39,8 @@ class CompuFluidDyn
   float* DensNew;
   float* DensOld;
 #endif
+
+  std::vector<std::vector<std::array<float, 4>>> loadedImage;
 
   std::vector<std::vector<std::vector<float>>> OSDensi;
   std::vector<std::vector<std::vector<float>>> OSPress;

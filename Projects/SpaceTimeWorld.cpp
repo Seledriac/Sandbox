@@ -196,7 +196,7 @@ void SpaceTimeWorld::Refresh() {
   worldNbY= int(std::round(D.param[GR_WorldNbY_________].val));
   worldNbZ= int(std::round(D.param[GR_WorldNbZ_________].val));
 
-  // Load the PNG image for the background
+  // Load the BMP image for the background
   static std::vector<std::vector<std::array<float, 4>>> loadedImage;
   if (loadedImage.empty())
     FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", loadedImage, true);
