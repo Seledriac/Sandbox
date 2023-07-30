@@ -383,11 +383,11 @@ void CompuFluidDyn::Init() {
     D.param.push_back(ParamUI("ObstaclePosY________", 0.2));
     D.param.push_back(ParamUI("ObstaclePosZ________", 0.5));
     D.param.push_back(ParamUI("ObstacleSize________", 0.1));
-    D.param.push_back(ParamUI("ScaleFactor_________", 100.0));
+    D.param.push_back(ParamUI("ScaleFactor_________", 10.0));
     D.param.push_back(ParamUI("ColorFactor_________", 1.0));
     D.param.push_back(ParamUI("ColorThresh_________", 0.2));
     D.param.push_back(ParamUI("DisplayUpsampling___", 1.0));
-    D.param.push_back(ParamUI("Scenario____________", 1.0));
+    D.param.push_back(ParamUI("Scenario____________", 0.0));
   }
 
   isInitialized= true;
@@ -402,9 +402,6 @@ void CompuFluidDyn::CheckNeedRefresh() {
   nbX= std::max(int(std::round(D.param[ResolutionX_________].val)), 1);
   nbY= std::max(int(std::round(D.param[ResolutionY_________].val)), 1);
   nbZ= std::max(int(std::round(D.param[ResolutionZ_________].val)), 1);
-
-  if (loadedImage.empty())
-    FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", loadedImage, false);
 }
 
 
@@ -435,6 +432,11 @@ void CompuFluidDyn::Animate() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
+  if (int(std::round(D.param[Scenario____________].val)) == 0) {
+    if (loadedImage.empty())
+      FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", loadedImage, false);
+  }
+
   // Initialize problem
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
@@ -442,6 +444,33 @@ void CompuFluidDyn::Animate() {
         Solid[x][y][z]= 0;
         Force[x][y][z]= 0;
         Sourc[x][y][z]= 0;
+
+        if (int(std::round(D.param[Scenario____________].val)) == 0) {
+          // Add data from loaded image
+          int idxPixelW= std::min(std::max((int(loadedImage.size()) - 1) * y / nbY, 0), int(loadedImage.size()) - 1);
+          int idxPixelH= std::min(std::max((int(loadedImage[0].size()) - 1) * z / nbZ, 0), int(loadedImage[0].size()) - 1);
+          std::array<float, 4> pixel= loadedImage[idxPixelW][idxPixelH];
+          if (pixel[0] > 0.9f && pixel[1] > 0.9f && pixel[2] > 0.9f) {
+            Solid[x][y][z]= 0;
+            Force[x][y][z]= 0;
+            Sourc[x][y][z]= 0;
+          }
+          else if (pixel[0] < 0.1f && pixel[1] < 0.1f && pixel[2] < 0.1f) {
+            Solid[x][y][z]= 1;
+            Force[x][y][z]= 0;
+            Sourc[x][y][z]= 0;
+          }
+          else if (pixel[0] < 0.4f || pixel[0] > 0.6f) {
+            Solid[x][y][z]= 0;
+            Force[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
+            Sourc[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
+          }
+          else if (pixel[1] < 0.4f || pixel[1] > 0.6f) {
+            Solid[x][y][z]= -1;
+            Force[x][y][z]= 0;
+            Sourc[x][y][z]= 0;
+          }
+        }
 
         if (int(std::round(D.param[Scenario____________].val)) == 1) {
           // Add Pac Man positive inlet
@@ -485,33 +514,6 @@ void CompuFluidDyn::Animate() {
         }
 
         if (int(std::round(D.param[Scenario____________].val)) == 2) {
-          // Add data from loaded image
-          int idxPixelW= std::min(std::max((int(loadedImage.size()) - 1) * y / nbY, 0), int(loadedImage.size()) - 1);
-          int idxPixelH= std::min(std::max((int(loadedImage[0].size()) - 1) * z / nbZ, 0), int(loadedImage[0].size()) - 1);
-          std::array<float, 4> pixel= loadedImage[idxPixelW][idxPixelH];
-          if (pixel[0] > 0.9f && pixel[1] > 0.9f && pixel[2] > 0.9f) {
-            Solid[x][y][z]= 0;
-            Force[x][y][z]= 0;
-            Sourc[x][y][z]= 0;
-          }
-          else if (pixel[0] < 0.1f && pixel[1] < 0.1f && pixel[2] < 0.1f) {
-            Solid[x][y][z]= 1;
-            Force[x][y][z]= 0;
-            Sourc[x][y][z]= 0;
-          }
-          else if (pixel[0] < 0.4f || pixel[0] > 0.6f) {
-            Solid[x][y][z]= 0;
-            Force[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
-            Sourc[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
-          }
-          else if (pixel[1] < 0.4f || pixel[1] > 0.6f) {
-            Solid[x][y][z]= -1;
-            Force[x][y][z]= 0;
-            Sourc[x][y][z]= 0;
-          }
-        }
-
-        if (int(std::round(D.param[Scenario____________].val)) == 3) {
           if (z < 2) {
             Solid[x][y][z]= 0;
             Force[x][y][z]= 1;
@@ -529,7 +531,7 @@ void CompuFluidDyn::Animate() {
           }
         }
 
-        if (int(std::round(D.param[Scenario____________].val)) == 4) {
+        if (int(std::round(D.param[Scenario____________].val)) == 3) {
           Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
           Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
           double refRadius= std::max(D.param[ObstacleSize________].val, 0.0);
@@ -643,13 +645,14 @@ void CompuFluidDyn::Draw() {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
           Math::Vec3f vec(VelXCur[x][y][z], VelYCur[x][y][z], VelZCur[x][y][z]);
-          float r= 0.0f, g= 0.0f, b= 0.0f;
-          if (vec.normSquared() > 0.0)
+          if (vec.normSquared() > 0.0) {
+            float r= 0.0f, g= 0.0f, b= 0.0f;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_________].val, r, g, b);
-          glColor3f(r, g, b);
-          Math::Vec3f pos= Math::Vec3f(float(x), float(y), float(z));
-          glVertex3fv(pos.array());
-          glVertex3fv(pos + vec * D.param[ScaleFactor_________].val);
+            glColor3f(r, g, b);
+            Math::Vec3f pos= Math::Vec3f(float(x), float(y), float(z));
+            glVertex3fv(pos.array());
+            glVertex3fv(pos + std::log(vec.norm() + 1.0f) * vec * D.param[ScaleFactor_________].val);
+          }
         }
       }
     }
