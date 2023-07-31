@@ -25,7 +25,30 @@ const int Mask[MaskSize][3]=
      {0, -1, 0},
      {0, 0, +1},
      {0, 0, -1}};
-
+extern Data D;
+enum ParamType
+{
+  ResolutionX_________,
+  ResolutionY_________,
+  ResolutionZ_________,
+  TimeStepSize________,
+  GaussSeiderIter_____,
+  CoeffDiffusion______,
+  CoeffViscosity______,
+  CoeffForceX_________,
+  CoeffForceY_________,
+  CoeffForceZ_________,
+  CoeffSource_________,
+  ObstaclePosX________,
+  ObstaclePosY________,
+  ObstaclePosZ________,
+  ObstacleSize________,
+  ScaleFactor_________,
+  ColorFactor_________,
+  ColorThresh_________,
+  DisplayUpsampling___,
+  Scenario____________,
+};
 
 void CompuFluidDyn::AddSource(
     const std::vector<std::vector<std::vector<float>>>& iSource, const float iTimestep,
@@ -35,6 +58,8 @@ void CompuFluidDyn::AddSource(
     for (int y= 0; y < nbY; y++)
       for (int z= 0; z < nbZ; z++)
         ioField[x][y][z]+= iTimestep * iSource[x][y][z];
+        // if (iSource[x][y][z] != 0.0f)
+        //   ioField[x][y][z]= iSource[x][y][z];
   // todo consider changing from additive forces to forced values
 }
 
@@ -66,6 +91,8 @@ void CompuFluidDyn::ApplyBC(
         }
         if (count > 0)
           ioField[x][y][z]= sum / (float)count;
+        else
+          ioField[x][y][z]= 0.0f;
       }
     }
   }
@@ -79,136 +106,80 @@ void CompuFluidDyn::GaussSeidelSolve(
   // Skip if non changing field
   if (iAdvancedMode && iMultip == 0.0f) return;
 
-  std::vector<std::vector<std::vector<float>>> oldField= ioField;
+  // Solve
+  std::vector<std::vector<std::vector<float>>> refField= ioField;
   for (int k= 0; k < iIter; k++) {
-    // Prepare the multiple parallel Gauss Seidel passes
-    const int nbPass= 2;
-    std::vector<std::array<int, 9>> sweepOrder(nbPass);
-    sweepOrder[0]= {0, 0, 0, nbX, nbY, nbZ, 1, 1, 1};
-    sweepOrder[1]= {nbX - 1, nbY - 1, nbZ - 1, -1, -1, -1, -1, -1, -1};
-    std::vector<std::vector<std::vector<std::vector<float>>>> passField(nbPass);
-    // Run the passes in parallel
-#pragma omp parallel for
-    for (int idxPass= 0; idxPass < nbPass; idxPass++) {
-      passField[idxPass]= ioField;
-      for (int x= sweepOrder[idxPass][0]; x != sweepOrder[idxPass][3]; x+= sweepOrder[idxPass][6]) {
-        for (int y= sweepOrder[idxPass][1]; y != sweepOrder[idxPass][4]; y+= sweepOrder[idxPass][7]) {
-          for (int z= sweepOrder[idxPass][2]; z != sweepOrder[idxPass][5]; z+= sweepOrder[idxPass][8]) {
-            // Work on active voxels
-            if (iType[x][y][z] > 0) continue;
-            int count= 0;
-            float sum= 0.0f;
-            // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
-            for (int k= 0; k < MaskSize; k++) {
-              if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-              if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-              if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-              if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
-              sum+= passField[idxPass][x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-              count++;
+    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
+    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
+#pragma omp parallel sections
+    {
+#pragma omp section
+      {
+        // Forward pass
+        for (int x= 0; x < nbX; x++) {
+          for (int y= 0; y < nbY; y++) {
+            for (int z= 0; z < nbZ; z++) {
+              // Work on active voxels
+              if (iType[x][y][z] > 0) continue;
+              int count= 0;
+              float sum= 0.0f;
+              // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+              for (int k= 0; k < MaskSize; k++) {
+                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+                if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+                sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                count++;
+              }
+              // Set new value according to coefficients and flags
+              if (iAdvancedMode)
+                FieldA[x][y][z]= (refField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
+              else if (count > 0)
+                FieldA[x][y][z]= (refField[x][y][z] + sum) / (float)count;
             }
-            // Set new value according to coefficients and flags
-            if (iAdvancedMode)
-              passField[idxPass][x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
-            else {
-              if (count > 0)
-                passField[idxPass][x][y][z]= (oldField[x][y][z] + sum) / (float)count;
+          }
+        }
+      }
+#pragma omp section
+      {
+        // Backward pass
+        for (int x= nbX - 1; x >= 0; x--) {
+          for (int y= nbY - 1; y >= 0; y--) {
+            for (int z= nbZ - 1; z >= 0; z--) {
+              // Work on active voxels
+              if (iType[x][y][z] > 0) continue;
+              int count= 0;
+              float sum= 0.0f;
+              // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+              for (int k= 0; k < MaskSize; k++) {
+                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+                if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+                sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                count++;
+              }
+              // Set new value according to coefficients and flags
+              if (iAdvancedMode)
+                FieldB[x][y][z]= (refField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
+              else if (count > 0)
+                FieldB[x][y][z]= (refField[x][y][z] + sum) / (float)count;
             }
           }
         }
       }
     }
-    // Recombine all the parallel passes
-    for (int x= 0; x < nbX; x++) {
-      for (int y= 0; y < nbY; y++) {
-        for (int z= 0; z < nbZ; z++) {
-          ioField[x][y][z]= 0.0f;
-          for (int idxPass= 0; idxPass < nbPass; idxPass++)
-            ioField[x][y][z]+= passField[idxPass][x][y][z];
-          ioField[x][y][z]/= (float)nbPass;
-        }
-      }
-    }
+
+    // Recombine forward and backward passes
+    for (int x= 0; x < nbX; x++)
+      for (int y= 0; y < nbY; y++)
+        for (int z= 0; z < nbZ; z++)
+          ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
+
     // Reapply BC to maintain consistency
     ApplyBC(iType, iMirror, ioField);
   }
-
-
-  //   std::vector<std::vector<std::vector<float>>> oldField= ioField;
-  //   for (int k= 0; k < iIter; k++) {
-  //     std::vector<std::vector<std::vector<float>>> FieldA= ioField;
-  //     std::vector<std::vector<std::vector<float>>> FieldB= ioField;
-  // #pragma omp parallel sections
-  //     {
-  // #pragma omp section
-  //       {
-  //         // Forward pass
-  //         for (int x= 0; x < nbX; x++) {
-  //           for (int y= 0; y < nbY; y++) {
-  //             for (int z= 0; z < nbZ; z++) {
-  //               // Work on active voxels
-  //               if (iType[x][y][z] > 0) continue;
-  //               int count= 0;
-  //               float sum= 0.0f;
-  //               // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
-  //               for (int k= 0; k < MaskSize; k++) {
-  //                 if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-  //                 if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-  //                 if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-  //                 if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
-  //                 sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-  //                 count++;
-  //               }
-  //               // Set new value according to coefficients and flags
-  //               if (iAdvancedMode)
-  //                 FieldA[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
-  //               else {
-  //                 if (count > 0)
-  //                   FieldA[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  // #pragma omp section
-  //       {
-  //         // Backward pass
-  //         for (int x= nbX - 1; x >= 0; x--) {
-  //           for (int y= nbY - 1; y >= 0; y--) {
-  //             for (int z= nbZ - 1; z >= 0; z--) {
-  //               // Work on active voxels
-  //               if (iType[x][y][z] > 0) continue;
-  //               int count= 0;
-  //               float sum= 0.0f;
-  //               // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
-  //               for (int k= 0; k < MaskSize; k++) {
-  //                 if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-  //                 if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-  //                 if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-  //                 if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
-  //                 sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-  //                 count++;
-  //               }
-  //               // Set new value according to coefficients and flags
-  //               if (iAdvancedMode)
-  //                 FieldB[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
-  //               else {
-  //                 if (count > 0)
-  //                   FieldB[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //       // Recombine forward and backward passes
-  //       for (int x= 0; x < nbX; x++)
-  //         for (int y= 0; y < nbY; y++)
-  //           for (int z= 0; z < nbZ; z++)
-  //             ioField[x][y][z]= 0.5 * (FieldA[x][y][z] + FieldB[x][y][z]);
-  //       // Reapply BC to maintain consistency
-  //       ApplyBC(iType, iMirror, ioField);
-  //     }
-  //   }
 }
 
 
@@ -378,33 +349,6 @@ void CompuFluidDyn::VelocityStep(
   AdvectField(iType, true, iTimeStep, tmpVelX, tmpVelY, tmpVelZ, ioVelZCur);
   ProjectField(iType, iIter, ioVelXCur, ioVelYCur, ioVelZCur);
 }
-
-
-extern Data D;
-
-enum ParamType
-{
-  ResolutionX_________,
-  ResolutionY_________,
-  ResolutionZ_________,
-  TimeStepSize________,
-  GaussSeiderIter_____,
-  CoeffDiffusion______,
-  CoeffViscosity______,
-  CoeffForceX_________,
-  CoeffForceY_________,
-  CoeffForceZ_________,
-  CoeffSource_________,
-  ObstaclePosX________,
-  ObstaclePosY________,
-  ObstaclePosZ________,
-  ObstacleSize________,
-  ScaleFactor_________,
-  ColorFactor_________,
-  ColorThresh_________,
-  DisplayUpsampling___,
-  Scenario____________,
-};
 
 
 CompuFluidDyn::CompuFluidDyn() {
