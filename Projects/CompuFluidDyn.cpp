@@ -35,6 +35,7 @@ void CompuFluidDyn::AddSource(
     for (int y= 0; y < nbY; y++)
       for (int z= 0; z < nbZ; z++)
         ioField[x][y][z]+= iTimestep * iSource[x][y][z];
+  // todo consider changing from additive forces to forced values
 }
 
 
@@ -226,6 +227,7 @@ void CompuFluidDyn::AdvectField(
         float posY= float(y) - iTimeStep * float(std::max(std::max(nbX, nbY), nbZ)) * iVelY[x][y][z];
         float posZ= float(z) - iTimeStep * float(std::max(std::max(nbX, nbY), nbZ)) * iVelZ[x][y][z];
         // Trilinear interpolation
+        // todo check validity of spatial localization
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
       }
     }
@@ -532,6 +534,7 @@ void CompuFluidDyn::Animate() {
           }
         }
 
+        // todo rework vortex shedding BC setup
         if (int(std::round(D.param[Scenario____________].val)) == 3) {
           Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
           Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
@@ -662,6 +665,8 @@ void CompuFluidDyn::Draw() {
     glLineWidth(1.0f);
   }
 
+  // todo only subsample if DisplayUpsampling___ is not 1
+  // todo fix spatial localization issue on domain boundary
   // Draw the pressure field
   if (D.displayMode3) {
     int nbXUp= int(std::round(float(nbX) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
