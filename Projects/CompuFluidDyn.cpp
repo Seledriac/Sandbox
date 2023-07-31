@@ -75,6 +75,7 @@ void CompuFluidDyn::GaussSeidelSolve(
     const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror,
     const int iIter, const bool iAdvancedMode, const float iMultip,
     std::vector<std::vector<std::vector<float>>>& ioField) {
+  if (iAdvancedMode && iMultip == 0.0f) return;
   // Sweep through the field
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
   for (int k= 0; k < iIter; k++) {
@@ -661,39 +662,39 @@ void CompuFluidDyn::Draw() {
     glLineWidth(1.0f);
   }
 
-  // // Draw the pressure field
-  // if (D.displayMode3) {
-  //   int nbXUp= int(std::round(float(nbX) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-  //   int nbYUp= int(std::round(float(nbY) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-  //   int nbZUp= int(std::round(float(nbZ) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-  //   if (nbX == 1) nbXUp= 1;
-  //   if (nbY == 1) nbYUp= 1;
-  //   if (nbZ == 1) nbZUp= 1;
-  //   int maxDimUp= std::max(std::max(nbXUp, nbYUp), nbZUp);
-  //   float voxSizeUp= 1.0 / float(maxDimUp);
+  // Draw the pressure field
+  if (D.displayMode3) {
+    int nbXUp= int(std::round(float(nbX) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    int nbYUp= int(std::round(float(nbY) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    int nbZUp= int(std::round(float(nbZ) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
+    if (nbX == 1) nbXUp= 1;
+    if (nbY == 1) nbYUp= 1;
+    if (nbZ == 1) nbZUp= 1;
+    int maxDimUp= std::max(std::max(nbXUp, nbYUp), nbZUp);
+    float voxSizeUp= 1.0 / float(maxDimUp);
 
-  //   glPointSize(3.0f);
-  //   glPushMatrix();
-  //   glTranslatef(0.5f - 0.5f * float(nbXUp) / float(maxDimUp), 0.5f - 0.5f * float(nbYUp) / float(maxDimUp), 0.5f - 0.5f * float(nbZUp) / float(maxDimUp));
-  //   glScalef(voxSizeUp, voxSizeUp, voxSizeUp);
-  //   glTranslatef(0.5f, 0.5f, 0.5f);
-  //   glBegin(GL_POINTS);
-  //   for (int x= 0; x < nbXUp; x++) {
-  //     for (int y= 0; y < nbYUp; y++) {
-  //       for (int z= 0; z < nbZUp; z++) {
-  //         float val= TrilinearInterpolation(float(x * nbX) / float(nbXUp), float(y * nbY) / float(nbYUp), float(z * nbZ) / float(nbZUp), DensCur);
-  //         if (std::abs(val) < D.param[ColorThresh_________].val) continue;
-  //         float r= 0.0f, g= 0.0f, b= 0.0f;
-  //         Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_________].val, r, g, b);
-  //         glColor3f(r, g, b);
-  //         glVertex3f(float(x), float(y), float(z));
-  //       }
-  //     }
-  //   }
-  //   glEnd();
-  //   glPopMatrix();
-  //   glPointSize(1.0f);
-  // }
+    glPointSize(3.0f);
+    glPushMatrix();
+    glTranslatef(0.5f - 0.5f * float(nbXUp) / float(maxDimUp), 0.5f - 0.5f * float(nbYUp) / float(maxDimUp), 0.5f - 0.5f * float(nbZUp) / float(maxDimUp));
+    glScalef(voxSizeUp, voxSizeUp, voxSizeUp);
+    glTranslatef(0.5f, 0.5f, 0.5f);
+    glBegin(GL_POINTS);
+    for (int x= 0; x < nbXUp; x++) {
+      for (int y= 0; y < nbYUp; y++) {
+        for (int z= 0; z < nbZUp; z++) {
+          float val= TrilinearInterpolation(float(x * nbX) / float(nbXUp), float(y * nbY) / float(nbYUp), float(z * nbZ) / float(nbZUp), DensCur);
+          if (std::abs(val) < D.param[ColorThresh_________].val) continue;
+          float r= 0.0f, g= 0.0f, b= 0.0f;
+          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_________].val, r, g, b);
+          glColor3f(r, g, b);
+          glVertex3f(float(x), float(y), float(z));
+        }
+      }
+    }
+    glEnd();
+    glPopMatrix();
+    glPointSize(1.0f);
+  }
 
   // Draw the pressure field
   if (D.displayMode4) {
