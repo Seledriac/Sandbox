@@ -386,7 +386,7 @@ void FileInput::LoadScalarFieldTXTFile(
 
 void FileInput::LoadImageBMPFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::array<float, 4>>>& oImage,
+    std::vector<std::vector<std::array<float, 3>>>& oImage,
     bool const iVerbose) {
   std::ifstream inputFile;
   inputFile.open(iFullpath, std::ios::binary);
@@ -412,7 +412,7 @@ void FileInput::LoadImageBMPFile(
     std::cout << "depth: " << depth << "-bit" << std::endl;
   }
 
-  oImage= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height));
+  oImage= std::vector<std::vector<std::array<float, 3>>>(width, std::vector<std::array<float, 3>>(height));
   for (int y= 0; y < height; y++) {
     for (int x= 0; x < width; x++) {
       for (int k= 0; k < 3; k++) {

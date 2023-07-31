@@ -15,7 +15,7 @@ class CompuFluidDyn
   int nbY;
   int nbZ;
 
-  std::vector<std::vector<std::vector<int>>> Solid;
+  std::vector<std::vector<std::vector<int>>> Bound;
   std::vector<std::vector<std::vector<int>>> Force;
   std::vector<std::vector<std::vector<int>>> Sourc;
   std::vector<std::vector<std::vector<float>>> DensAdd;
@@ -26,7 +26,7 @@ class CompuFluidDyn
   std::vector<std::vector<std::vector<float>>> VelXCur;
   std::vector<std::vector<std::vector<float>>> VelYCur;
   std::vector<std::vector<std::vector<float>>> VelZCur;
-  std::vector<std::vector<std::array<float, 4>>> loadedImage;
+  std::vector<std::vector<std::array<float, 3>>> loadedImage;
 
 
   void AddSource(const std::vector<std::vector<std::vector<float>>>& iSource, const float iTimestep,
@@ -69,14 +69,11 @@ class CompuFluidDyn
                     std::vector<std::vector<std::vector<float>>>& ioVelYCur,
                     std::vector<std::vector<std::vector<float>>>& ioVelZCur);
 
-  void CheckNeedRefresh();
-
   public:
   bool isInitialized;
   bool isRefreshed;
 
   CompuFluidDyn();
-  ~CompuFluidDyn();
 
   void Init();
   void Refresh();

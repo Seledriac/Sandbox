@@ -65,7 +65,7 @@ void CompuFluidDyn::ApplyBC(
           count++;
         }
         if (count > 0)
-          ioField[x][y][z]= sum / float(count);
+          ioField[x][y][z]= sum / (float)count;
       }
     }
   }
@@ -76,86 +76,139 @@ void CompuFluidDyn::GaussSeidelSolve(
     const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror,
     const int iIter, const bool iAdvancedMode, const float iMultip,
     std::vector<std::vector<std::vector<float>>>& ioField) {
+  // Skip if non changing field
   if (iAdvancedMode && iMultip == 0.0f) return;
-  // Sweep through the field
+
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
   for (int k= 0; k < iIter; k++) {
-    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
-    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
-#pragma omp parallel sections
-    {
-#pragma omp section
-      {
-        // Forward pass
-        for (int x= 0; x < nbX; x++) {
-          for (int y= 0; y < nbY; y++) {
-            for (int z= 0; z < nbZ; z++) {
-              // Work on active voxels
-              if (iType[x][y][z] > 0) continue;
-              int count= 0;
-              float sum= 0.0f;
-              // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
-              for (int k= 0; k < MaskSize; k++) {
-                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-                if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
-                sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-                count++;
-              }
-              // Set new value according to coefficients and flags
-              if (iAdvancedMode)
-                FieldA[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * float(count));
-              else {
-                if (count > 0)
-                  FieldA[x][y][z]= (oldField[x][y][z] + sum) / float(count);
-              }
+    // Prepare the multiple parallel Gauss Seidel passes
+    const int nbPass= 2;
+    std::vector<std::array<int, 9>> sweepOrder(nbPass);
+    sweepOrder[0]= {0, 0, 0, nbX, nbY, nbZ, 1, 1, 1};
+    sweepOrder[1]= {nbX - 1, nbY - 1, nbZ - 1, -1, -1, -1, -1, -1, -1};
+    std::vector<std::vector<std::vector<std::vector<float>>>> passField(nbPass);
+    // Run the passes in parallel
+#pragma omp parallel for
+    for (int idxPass= 0; idxPass < nbPass; idxPass++) {
+      passField[idxPass]= ioField;
+      for (int x= sweepOrder[idxPass][0]; x != sweepOrder[idxPass][3]; x+= sweepOrder[idxPass][6]) {
+        for (int y= sweepOrder[idxPass][1]; y != sweepOrder[idxPass][4]; y+= sweepOrder[idxPass][7]) {
+          for (int z= sweepOrder[idxPass][2]; z != sweepOrder[idxPass][5]; z+= sweepOrder[idxPass][8]) {
+            // Work on active voxels
+            if (iType[x][y][z] > 0) continue;
+            int count= 0;
+            float sum= 0.0f;
+            // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+            for (int k= 0; k < MaskSize; k++) {
+              if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+              if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+              if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+              if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+              sum+= passField[idxPass][x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+              count++;
+            }
+            // Set new value according to coefficients and flags
+            if (iAdvancedMode)
+              passField[idxPass][x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
+            else {
+              if (count > 0)
+                passField[idxPass][x][y][z]= (oldField[x][y][z] + sum) / (float)count;
             }
           }
         }
       }
-
-#pragma omp section
-      {
-        // Backward pass
-        for (int x= nbX - 1; x >= 0; x--) {
-          for (int y= nbY - 1; y >= 0; y--) {
-            for (int z= nbZ - 1; z >= 0; z--) {
-              // Work on active voxels
-              if (iType[x][y][z] > 0) continue;
-              int count= 0;
-              float sum= 0.0f;
-              // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
-              for (int k= 0; k < MaskSize; k++) {
-                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-                if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
-                sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-                count++;
-              }
-              // Set new value according to coefficients and flags
-              if (iAdvancedMode)
-                FieldB[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * float(count));
-              else {
-                if (count > 0)
-                  FieldB[x][y][z]= (oldField[x][y][z] + sum) / float(count);
-              }
-            }
-          }
-        }
-      }
-
-      // Recombine forward and backward passes
-      for (int x= 0; x < nbX; x++)
-        for (int y= 0; y < nbY; y++)
-          for (int z= 0; z < nbZ; z++)
-            ioField[x][y][z]= 0.5 * (FieldA[x][y][z] + FieldB[x][y][z]);
-
-      // Reapply BC to maintain consistency
-      ApplyBC(iType, iMirror, ioField);
     }
+    // Recombine all the parallel passes
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          ioField[x][y][z]= 0.0f;
+          for (int idxPass= 0; idxPass < nbPass; idxPass++)
+            ioField[x][y][z]+= passField[idxPass][x][y][z];
+          ioField[x][y][z]/= (float)nbPass;
+        }
+      }
+    }
+    // Reapply BC to maintain consistency
+    ApplyBC(iType, iMirror, ioField);
   }
+
+
+  //   std::vector<std::vector<std::vector<float>>> oldField= ioField;
+  //   for (int k= 0; k < iIter; k++) {
+  //     std::vector<std::vector<std::vector<float>>> FieldA= ioField;
+  //     std::vector<std::vector<std::vector<float>>> FieldB= ioField;
+  // #pragma omp parallel sections
+  //     {
+  // #pragma omp section
+  //       {
+  //         // Forward pass
+  //         for (int x= 0; x < nbX; x++) {
+  //           for (int y= 0; y < nbY; y++) {
+  //             for (int z= 0; z < nbZ; z++) {
+  //               // Work on active voxels
+  //               if (iType[x][y][z] > 0) continue;
+  //               int count= 0;
+  //               float sum= 0.0f;
+  //               // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+  //               for (int k= 0; k < MaskSize; k++) {
+  //                 if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+  //                 if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+  //                 if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+  //                 if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+  //                 sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+  //                 count++;
+  //               }
+  //               // Set new value according to coefficients and flags
+  //               if (iAdvancedMode)
+  //                 FieldA[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
+  //               else {
+  //                 if (count > 0)
+  //                   FieldA[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  // #pragma omp section
+  //       {
+  //         // Backward pass
+  //         for (int x= nbX - 1; x >= 0; x--) {
+  //           for (int y= nbY - 1; y >= 0; y--) {
+  //             for (int z= nbZ - 1; z >= 0; z--) {
+  //               // Work on active voxels
+  //               if (iType[x][y][z] > 0) continue;
+  //               int count= 0;
+  //               float sum= 0.0f;
+  //               // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+  //               for (int k= 0; k < MaskSize; k++) {
+  //                 if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+  //                 if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+  //                 if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+  //                 if (iType[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+  //                 sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+  //                 count++;
+  //               }
+  //               // Set new value according to coefficients and flags
+  //               if (iAdvancedMode)
+  //                 FieldB[x][y][z]= (oldField[x][y][z] + iMultip * sum) / (1.0f + iMultip * (float)count);
+  //               else {
+  //                 if (count > 0)
+  //                   FieldB[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //       // Recombine forward and backward passes
+  //       for (int x= 0; x < nbX; x++)
+  //         for (int y= 0; y < nbY; y++)
+  //           for (int z= 0; z < nbZ; z++)
+  //             ioField[x][y][z]= 0.5 * (FieldA[x][y][z] + FieldB[x][y][z]);
+  //       // Reapply BC to maintain consistency
+  //       ApplyBC(iType, iMirror, ioField);
+  //     }
+  //   }
 }
 
 
@@ -163,7 +216,7 @@ void CompuFluidDyn::DiffuseField(
     const std::vector<std::vector<std::vector<int>>>& iType, const bool iMirror,
     const int iIter, const float iTimeStep, const float iDiffusionCoeff,
     std::vector<std::vector<std::vector<float>>>& ioField) {
-  float multip= iTimeStep * float(nbX * nbY * nbZ) * iDiffusionCoeff;
+  float multip= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffusionCoeff;
   GaussSeidelSolve(iType, iMirror, iIter, true, multip, ioField);
 }
 
@@ -178,9 +231,9 @@ float CompuFluidDyn::TrilinearInterpolation(
   int y1= std::min(std::max(int(std::floor(iPosY)) + 1, 0), nbY - 1);
   int z1= std::min(std::max(int(std::floor(iPosZ)) + 1, 0), nbZ - 1);
 
-  float xWeight1= iPosX - float(x0);
-  float yWeight1= iPosY - float(y0);
-  float zWeight1= iPosZ - float(z0);
+  float xWeight1= iPosX - (float)x0;
+  float yWeight1= iPosY - (float)y0;
+  float zWeight1= iPosZ - (float)z0;
   float xWeight0= 1.0f - xWeight1;
   float yWeight0= 1.0f - yWeight1;
   float zWeight0= 1.0f - zWeight1;
@@ -223,9 +276,9 @@ void CompuFluidDyn::AdvectField(
       for (int z= 0; z < nbZ; z++) {
         // Find source position for active voxel
         if (iType[x][y][z] != 0) continue;
-        float posX= float(x) - iTimeStep * float(std::max(std::max(nbX, nbY), nbZ)) * iVelX[x][y][z];
-        float posY= float(y) - iTimeStep * float(std::max(std::max(nbX, nbY), nbZ)) * iVelY[x][y][z];
-        float posZ= float(z) - iTimeStep * float(std::max(std::max(nbX, nbY), nbZ)) * iVelZ[x][y][z];
+        float posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelX[x][y][z];
+        float posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelY[x][y][z];
+        float posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelZ[x][y][z];
         // Trilinear interpolation
         // todo check validity of spatial localization
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
@@ -242,7 +295,7 @@ void CompuFluidDyn::ProjectField(
     std::vector<std::vector<std::vector<float>>>& ioVelX,
     std::vector<std::vector<std::vector<float>>>& ioVelY,
     std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  float maxDim= float(std::max(std::max(nbX, nbY), nbZ));
+  float maxDim= (float)std::max(std::max(nbX, nbY), nbZ);
   // Compute divergence
   std::vector<std::vector<std::vector<float>>> Diver= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 #pragma omp parallel for
@@ -360,12 +413,6 @@ CompuFluidDyn::CompuFluidDyn() {
 }
 
 
-CompuFluidDyn::~CompuFluidDyn() {
-  isInitialized= false;
-  isRefreshed= false;
-}
-
-
 void CompuFluidDyn::Init() {
   isRefreshed= false;
   if (isInitialized) return;
@@ -386,7 +433,7 @@ void CompuFluidDyn::Init() {
     D.param.push_back(ParamUI("ObstaclePosY________", 0.2));
     D.param.push_back(ParamUI("ObstaclePosZ________", 0.5));
     D.param.push_back(ParamUI("ObstacleSize________", 0.1));
-    D.param.push_back(ParamUI("ScaleFactor_________", 10.0));
+    D.param.push_back(ParamUI("ScaleFactor_________", 100.0));
     D.param.push_back(ParamUI("ColorFactor_________", 1.0));
     D.param.push_back(ParamUI("ColorThresh_________", 0.2));
     D.param.push_back(ParamUI("DisplayUpsampling___", 1.0));
@@ -397,23 +444,18 @@ void CompuFluidDyn::Init() {
 }
 
 
-void CompuFluidDyn::CheckNeedRefresh() {
+void CompuFluidDyn::Refresh() {
+  if (!isInitialized) return;
   if (nbX != std::max(int(std::round(D.param[ResolutionX_________].val)), 1)) isRefreshed= false;
   if (nbY != std::max(int(std::round(D.param[ResolutionY_________].val)), 1)) isRefreshed= false;
   if (nbZ != std::max(int(std::round(D.param[ResolutionZ_________].val)), 1)) isRefreshed= false;
+  if (isRefreshed) return;
 
   nbX= std::max(int(std::round(D.param[ResolutionX_________].val)), 1);
   nbY= std::max(int(std::round(D.param[ResolutionY_________].val)), 1);
   nbZ= std::max(int(std::round(D.param[ResolutionZ_________].val)), 1);
-}
 
-
-void CompuFluidDyn::Refresh() {
-  if (!isInitialized) return;
-  CheckNeedRefresh();
-  if (isRefreshed) return;
-
-  Solid= Field::AllocField3D(nbX, nbY, nbZ, 0);
+  Bound= Field::AllocField3D(nbX, nbY, nbZ, 0);
   Force= Field::AllocField3D(nbX, nbY, nbZ, 0);
   Sourc= Field::AllocField3D(nbX, nbY, nbZ, 0);
   DensAdd= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -444,7 +486,7 @@ void CompuFluidDyn::Animate() {
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        Solid[x][y][z]= 0;
+        Bound[x][y][z]= 0;
         Force[x][y][z]= 0;
         Sourc[x][y][z]= 0;
 
@@ -452,24 +494,24 @@ void CompuFluidDyn::Animate() {
           // Add data from loaded image
           int idxPixelW= std::min(std::max((int(loadedImage.size()) - 1) * y / nbY, 0), int(loadedImage.size()) - 1);
           int idxPixelH= std::min(std::max((int(loadedImage[0].size()) - 1) * z / nbZ, 0), int(loadedImage[0].size()) - 1);
-          std::array<float, 4> pixel= loadedImage[idxPixelW][idxPixelH];
+          std::array<float, 3> pixel= loadedImage[idxPixelW][idxPixelH];
           if (pixel[0] > 0.9f && pixel[1] > 0.9f && pixel[2] > 0.9f) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
           else if (pixel[0] < 0.1f && pixel[1] < 0.1f && pixel[2] < 0.1f) {
-            Solid[x][y][z]= 1;
+            Bound[x][y][z]= 1;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
           else if (pixel[0] < 0.4f || pixel[0] > 0.6f) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
             Sourc[x][y][z]= (pixel[0] < 0.5f) ? (-1) : (1);
           }
           else if (pixel[1] < 0.4f || pixel[1] > 0.6f) {
-            Solid[x][y][z]= -1;
+            Bound[x][y][z]= -1;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
@@ -478,15 +520,15 @@ void CompuFluidDyn::Animate() {
         if (int(std::round(D.param[Scenario____________].val)) == 1) {
           // Add Pac Man positive inlet
           {
-            Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
+            Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
             double refRadius= std::max(D.param[ObstacleSize________].val, 0.0);
             if ((posCell - posObstacle).norm() <= refRadius) {
               Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
               vecFlow.normalize();
-              Solid[x][y][z]= 1;
+              Bound[x][y][z]= 1;
               if ((posCell - posObstacle - vecFlow * 0.5 * refRadius).norm() <= refRadius * 0.8) {
-                Solid[x][y][z]= 0;
+                Bound[x][y][z]= 0;
                 if ((posCell - posObstacle - vecFlow * 0.5 * refRadius).norm() <= refRadius * 0.4) {
                   Force[x][y][z]= 1;
                   Sourc[x][y][z]= 1;
@@ -497,16 +539,16 @@ void CompuFluidDyn::Animate() {
 
           // Add Pac Man negative inlet
           {
-            Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
+            Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(1.0 - D.param[ObstaclePosX________].val, 1.0 - D.param[ObstaclePosY________].val, 1.0 - D.param[ObstaclePosZ________].val);
             double refRadius= std::max(D.param[ObstacleSize________].val, 0.0);
             if ((posCell - posObstacle).norm() <= refRadius) {
               Math::Vec3f vecFlow(D.param[CoeffForceX_________].val, D.param[CoeffForceY_________].val, D.param[CoeffForceZ_________].val);
               vecFlow.normalize();
               vecFlow= -1.0 * vecFlow;
-              Solid[x][y][z]= 1;
+              Bound[x][y][z]= 1;
               if ((posCell - posObstacle - vecFlow * 0.5 * refRadius).norm() <= refRadius * 0.8) {
-                Solid[x][y][z]= 0;
+                Bound[x][y][z]= 0;
                 if ((posCell - posObstacle - vecFlow * 0.5 * refRadius).norm() <= refRadius * 0.4) {
                   Force[x][y][z]= -1;
                   Sourc[x][y][z]= -1;
@@ -518,17 +560,17 @@ void CompuFluidDyn::Animate() {
 
         if (int(std::round(D.param[Scenario____________].val)) == 2) {
           if (z < 2) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= 1;
             Sourc[x][y][z]= 1;
           }
           if (z >= nbZ - 2) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= -1;
             Sourc[x][y][z]= -1;
           }
           if (y < 2 || y >= nbY - 2) {
-            Solid[x][y][z]= -1;
+            Bound[x][y][z]= -1;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
@@ -536,27 +578,27 @@ void CompuFluidDyn::Animate() {
 
         // todo rework vortex shedding BC setup
         if (int(std::round(D.param[Scenario____________].val)) == 3) {
-          Math::Vec3f posCell((float(x) + 0.5f) / float(nbX), (float(y) + 0.5f) / float(nbY), (float(z) + 0.5f) / float(nbZ));
+          Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
           Math::Vec3f posObstacle(D.param[ObstaclePosX________].val, D.param[ObstaclePosY________].val, D.param[ObstaclePosZ________].val);
           double refRadius= std::max(D.param[ObstacleSize________].val, 0.0);
           if ((posCell - posObstacle).norm() <= refRadius) {
-            Solid[x][y][z]= 1;
+            Bound[x][y][z]= 1;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
           if (y < 2 || y >= nbY - 2 || z < 2 || z >= nbZ - 2) {
-            Solid[x][y][z]= -1;
+            Bound[x][y][z]= -1;
             Force[x][y][z]= 0;
             Sourc[x][y][z]= 0;
           }
           else if (y >= 2 && y <= 6) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= 0;
             if (z < (nbZ - 1) / 2) Sourc[x][y][z]= 1;
             if ((nbZ - 1) - z < (nbZ - 1) / 2) Sourc[x][y][z]= -1;
           }
           else if (y >= 7 && y <= 8) {
-            Solid[x][y][z]= 0;
+            Bound[x][y][z]= 0;
             Force[x][y][z]= 1;
             Sourc[x][y][z]= 0;
           }
@@ -573,20 +615,20 @@ void CompuFluidDyn::Animate() {
         VelZAdd[x][y][z]= 0.0f;
         DensAdd[x][y][z]= 0.0f;
         if (Force[x][y][z] != 0) {
-          VelXAdd[x][y][z]= float(Force[x][y][z]) * D.param[CoeffForceX_________].val;
-          VelYAdd[x][y][z]= float(Force[x][y][z]) * D.param[CoeffForceY_________].val;
-          VelZAdd[x][y][z]= float(Force[x][y][z]) * D.param[CoeffForceZ_________].val;
+          VelXAdd[x][y][z]= (float)Force[x][y][z] * D.param[CoeffForceX_________].val;
+          VelYAdd[x][y][z]= (float)Force[x][y][z] * D.param[CoeffForceY_________].val;
+          VelZAdd[x][y][z]= (float)Force[x][y][z] * D.param[CoeffForceZ_________].val;
         }
         if (Sourc[x][y][z] != 0) {
-          DensAdd[x][y][z]= float(Sourc[x][y][z]) * D.param[CoeffSource_________].val;
+          DensAdd[x][y][z]= (float)Sourc[x][y][z] * D.param[CoeffSource_________].val;
         }
       }
     }
   }
 
-  VelocityStep(Solid, std::max(int(std::round(D.param[GaussSeiderIter_____].val)), 0), D.param[TimeStepSize________].val,
+  VelocityStep(Bound, std::max(int(std::round(D.param[GaussSeiderIter_____].val)), 0), D.param[TimeStepSize________].val,
                D.param[CoeffViscosity______].val, VelXAdd, VelYAdd, VelZAdd, VelXCur, VelYCur, VelZCur);
-  DensityStep(Solid, std::max(int(std::round(D.param[GaussSeiderIter_____].val)), 0), D.param[TimeStepSize________].val,
+  DensityStep(Bound, std::max(int(std::round(D.param[GaussSeiderIter_____].val)), 0), D.param[TimeStepSize________].val,
               D.param[CoeffDiffusion______].val, VelXCur, VelYCur, VelZCur, DensAdd, DensCur);
 }
 
@@ -596,38 +638,36 @@ void CompuFluidDyn::Draw() {
   if (!isRefreshed) return;
 
   int maxDim= std::max(std::max(nbX, nbY), nbZ);
-  float voxSize= 1.0 / float(maxDim);
+  float voxSize= 1.0 / (float)maxDim;
 
-  // Draw the solid voxels
+  // Draw the voxels
   if (D.displayMode1) {
     glPushMatrix();
-    glTranslatef(0.5f - 0.5f * float(nbX) / float(maxDim), 0.5f - 0.5f * float(nbY) / float(maxDim), 0.5f - 0.5f * float(nbZ) / float(maxDim));
+    glTranslatef(0.5f - 0.5f * (float)nbX / (float)maxDim, 0.5f - 0.5f * (float)nbY / (float)maxDim, 0.5f - 0.5f * (float)nbZ / (float)maxDim);
     glScalef(voxSize, voxSize, voxSize);
     glTranslatef(0.5f, 0.5f, 0.5f);
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          if (Solid[x][y][z] != 0) {
-            glPushMatrix();
-            glTranslatef(float(x), float(y), float(z));
-            if (Solid[x][y][z] > 0) glColor3f(0.5f, 0.5f, 0.5f);
-            if (Solid[x][y][z] < 0) glColor3f(0.2f, 0.5f, 0.2f);
-            glutSolidCube(1.0);
-            glPopMatrix();
+          bool drawCube= false;
+          if (Bound[x][y][z] != 0) {
+            drawCube= true;
+            if (Bound[x][y][z] > 0) glColor3f(0.5f, 0.5f, 0.5f);
+            if (Bound[x][y][z] < 0) glColor3f(0.2f, 0.5f, 0.2f);
           }
           if (Force[x][y][z] != 0) {
-            glPushMatrix();
-            glTranslatef(float(x), float(y), float(z));
+            drawCube= true;
             if (Force[x][y][z] > 0) glColor3f(0.8f, 0.8f, 0.8f);
             if (Force[x][y][z] < 0) glColor3f(0.2f, 0.2f, 0.2f);
-            glutSolidCube(1.0);
-            glPopMatrix();
           }
           if (Sourc[x][y][z] != 0) {
+            drawCube= true;
+            if (Sourc[x][y][z] > 0) glColor3f(0.7f, 0.0f, 0.0f);
+            if (Sourc[x][y][z] < 0) glColor3f(0.0f, 0.0f, 0.7f);
+          }
+          if (drawCube) {
             glPushMatrix();
-            glTranslatef(float(x), float(y), float(z));
-            if (Sourc[x][y][z] > 0) glColor3f(1.0f, 0.0f, 0.0f);
-            if (Sourc[x][y][z] < 0) glColor3f(0.0f, 0.0f, 1.0f);
+            glTranslatef((float)x, (float)y, (float)z);
             glutSolidCube(1.0);
             glPopMatrix();
           }
@@ -637,11 +677,11 @@ void CompuFluidDyn::Draw() {
     glPopMatrix();
   }
 
-  // Draw the cell velocity field
+  // Draw the velocity field
   if (D.displayMode2) {
     glLineWidth(2.0f);
     glPushMatrix();
-    glTranslatef(0.5f - 0.5f * float(nbX) / float(maxDim), 0.5f - 0.5f * float(nbY) / float(maxDim), 0.5f - 0.5f * float(nbZ) / float(maxDim));
+    glTranslatef(0.5f - 0.5f * (float)nbX / (float)maxDim, 0.5f - 0.5f * (float)nbY / (float)maxDim, 0.5f - 0.5f * (float)nbZ / (float)maxDim);
     glScalef(voxSize, voxSize, voxSize);
     glTranslatef(0.5f, 0.5f, 0.5f);
     glBegin(GL_LINES);
@@ -653,7 +693,7 @@ void CompuFluidDyn::Draw() {
             float r= 0.0f, g= 0.0f, b= 0.0f;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_________].val, r, g, b);
             glColor3f(r, g, b);
-            Math::Vec3f pos= Math::Vec3f(float(x), float(y), float(z));
+            Math::Vec3f pos((float)x, (float)y, (float)z);
             glVertex3fv(pos.array());
             glVertex3fv(pos + std::log(vec.norm() + 1.0f) * vec * D.param[ScaleFactor_________].val);
           }
@@ -665,59 +705,22 @@ void CompuFluidDyn::Draw() {
     glLineWidth(1.0f);
   }
 
-  // todo only subsample if DisplayUpsampling___ is not 1
-  // todo fix spatial localization issue on domain boundary
-  // Draw the pressure field
+  // Draw the scalar field
   if (D.displayMode3) {
-    int nbXUp= int(std::round(float(nbX) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-    int nbYUp= int(std::round(float(nbY) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-    int nbZUp= int(std::round(float(nbZ) * std::max(D.param[DisplayUpsampling___].val, 1.0)));
-    if (nbX == 1) nbXUp= 1;
-    if (nbY == 1) nbYUp= 1;
-    if (nbZ == 1) nbZUp= 1;
-    int maxDimUp= std::max(std::max(nbXUp, nbYUp), nbZUp);
-    float voxSizeUp= 1.0 / float(maxDimUp);
-
     glPointSize(3.0f);
     glPushMatrix();
-    glTranslatef(0.5f - 0.5f * float(nbXUp) / float(maxDimUp), 0.5f - 0.5f * float(nbYUp) / float(maxDimUp), 0.5f - 0.5f * float(nbZUp) / float(maxDimUp));
-    glScalef(voxSizeUp, voxSizeUp, voxSizeUp);
-    glTranslatef(0.5f, 0.5f, 0.5f);
-    glBegin(GL_POINTS);
-    for (int x= 0; x < nbXUp; x++) {
-      for (int y= 0; y < nbYUp; y++) {
-        for (int z= 0; z < nbZUp; z++) {
-          float val= TrilinearInterpolation(float(x * nbX) / float(nbXUp), float(y * nbY) / float(nbYUp), float(z * nbZ) / float(nbZUp), DensCur);
-          if (std::abs(val) < D.param[ColorThresh_________].val) continue;
-          float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_________].val, r, g, b);
-          glColor3f(r, g, b);
-          glVertex3f(float(x), float(y), float(z));
-        }
-      }
-    }
-    glEnd();
-    glPopMatrix();
-    glPointSize(1.0f);
-  }
-
-  // Draw the pressure field
-  if (D.displayMode4) {
-    glPointSize(3.0f);
-    glPushMatrix();
-    glTranslatef(0.5f - 0.5f * float(nbX) / float(maxDim), 0.5f - 0.5f * float(nbY) / float(maxDim), 0.5f - 0.5f * float(nbZ) / float(maxDim));
+    glTranslatef(0.5f - 0.5f * (float)nbX / (float)maxDim, 0.5f - 0.5f * (float)nbY / (float)maxDim, 0.5f - 0.5f * (float)nbZ / (float)maxDim);
     glScalef(voxSize, voxSize, voxSize);
     glTranslatef(0.5f, 0.5f, 0.5f);
     glBegin(GL_POINTS);
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          float val= TrilinearInterpolation(float(x * nbX) / float(nbX), float(y * nbY) / float(nbY), float(z * nbZ) / float(nbZ), DensCur);
-          if (std::abs(val) < D.param[ColorThresh_________].val) continue;
+          if (std::abs(DensCur[x][y][z]) < D.param[ColorThresh_________].val) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_________].val, r, g, b);
+          Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * DensCur[x][y][z] * D.param[ColorFactor_________].val, r, g, b);
           glColor3f(r, g, b);
-          glVertex3f(float(x), float(y), float(z));
+          glVertex3f((float)x, (float)y, (float)z);
         }
       }
     }
