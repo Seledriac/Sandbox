@@ -8,19 +8,20 @@
 #include "../math/Vectors.hpp"
 
 
-class FractalCurveDevelopment
+class FractalCurvDev
 {
-  public:
+  private:
   std::vector<std::vector<Math::Vec3f>> Nodes;
   std::vector<std::array<Math::Vec3f, 3>> Faces;
 
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
-  FractalCurveDevelopment();
+  FractalCurvDev();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

@@ -9,10 +9,10 @@
 
 class TerrainErosion
 {
-  public:
+  private:
   int terrainNbX;
   int terrainNbY;
-  int terrainNbCuts;
+  int terrainNbC;
   std::vector<std::vector<Math::Vec3f>> terrainPos;
   std::vector<std::vector<Math::Vec3f>> terrainNor;
   std::vector<std::vector<Math::Vec3f>> terrainCol;
@@ -30,14 +30,14 @@ class TerrainErosion
   std::vector<float> dropletSatCur;
   std::vector<bool> dropletIsDead;
 
-
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
   TerrainErosion();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

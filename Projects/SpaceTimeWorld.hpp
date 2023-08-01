@@ -9,7 +9,7 @@
 
 class SpaceTimeWorld
 {
-  public:
+  private:
   int worldNbT;
   int worldNbX;
   int worldNbY;
@@ -28,13 +28,14 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<Math::Vec4f>>> photonPos;
   std::vector<std::vector<std::vector<Math::Vec4f>>> photonVel;
 
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
   SpaceTimeWorld();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

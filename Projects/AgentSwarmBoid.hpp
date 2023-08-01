@@ -6,6 +6,7 @@
 // Project lib
 #include "../math/Vectors.hpp"
 
+
 class Agent
 {
   public:
@@ -13,23 +14,22 @@ class Agent
 };
 
 
-class AgentSwarm
+class AgentSwarmBoid
 {
-  public:
+  private:
+  int NbAgents;
+  std::vector<Agent> Agents;
   Math::Vec3f PosFood;
   Math::Vec3f PosPredator;
 
-  int NbAgents;
-  double SizeAgent;
-  std::vector<Agent> Agents;
-
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
-  AgentSwarm();
+  AgentSwarmBoid();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

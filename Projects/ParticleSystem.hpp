@@ -9,9 +9,8 @@
 
 class ParticleSystem
 {
-  public:
+  private:
   int NbParticles;
-  float BaseRadius;
 
   std::vector<Math::Vec3f> PosOld;
   std::vector<Math::Vec3f> PosCur;
@@ -23,13 +22,14 @@ class ParticleSystem
   std::vector<float> MasCur;
   std::vector<float> HotCur;
 
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
   ParticleSystem();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

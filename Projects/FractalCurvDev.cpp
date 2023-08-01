@@ -1,4 +1,4 @@
-#include "FractalCurveDevelopment.hpp"
+#include "FractalCurvDev.hpp"
 
 
 // Standard lib
@@ -25,34 +25,42 @@ enum ParamType
   testVar3____________,
 };
 
+
 #define KOCH_SNOWFLAKE
 // #define DRAGON_CURVE
 
-FractalCurveDevelopment::FractalCurveDevelopment() {
+FractalCurvDev::FractalCurvDev() {
+  isActiveProject= false;
   isInitialized= false;
-  isRefreshed= false;
-}
-
-
-void FractalCurveDevelopment::Init() {
-  isInitialized= true;
-  isRefreshed= false;
-
   D.param.clear();
-  D.param.push_back(ParamUI("testVar0____________", 4.0));
-  D.param.push_back(ParamUI("testVar1____________", 0.005));
-  D.param.push_back(ParamUI("testVar2____________", 1.0));
-  D.param.push_back(ParamUI("testVar3____________", 1.0));
+  D.plotData.clear();
 }
 
 
-void FractalCurveDevelopment::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
+void FractalCurvDev::SetActiveProject() {
+  isInitialized= false;
+  if (isActiveProject) return;
+  isActiveProject= true;
 
-  int maxDepth= int(std::round(D.param[testVar0____________].val));
+  if (D.param.empty()) {
+    D.param.push_back(ParamUI("testVar0____________", 4.0));
+    D.param.push_back(ParamUI("testVar1____________", 0.005));
+    D.param.push_back(ParamUI("testVar2____________", 1.0));
+    D.param.push_back(ParamUI("testVar3____________", 1.0));
+  }
+}
+
+
+void FractalCurvDev::Initialize() {
+  // Check if need to skip
+  if (!isActiveProject) return;
+  isInitialized= true;
+
+  // Get persistent parameters
+  int maxDepth= int(std::round(D.param[testVar0____________].Get()));
   if (maxDepth < 2) return;
 
+  // Allocate and initialize data
   Faces.clear();
   Nodes.clear();
 
@@ -79,7 +87,7 @@ void FractalCurveDevelopment::Refresh() {
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
       Math::Vec3f posA= Nodes[idxDepth - 1][idxNode];
       Math::Vec3f posB= Nodes[idxDepth - 1][idxNode + 1];
-      Math::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____________].val / std::pow(D.param[testVar2____________].val, double(idxDepth)));
+      Math::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____________].Get() / std::pow(D.param[testVar2____________].Get(), double(idxDepth)));
 
 #ifdef KOCH_SNOWFLAKE
       Math::Vec3f posN0= ZOffset + posA;
@@ -108,7 +116,7 @@ void FractalCurveDevelopment::Refresh() {
       if (idxNode % 2 == 0)
         dir= Math::Vec3f() - dir;
       Math::Vec3f posN0= ZOffset + posA;
-      Math::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____________].val * (posB - posA).norm() * dir;
+      Math::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____________].Get() * (posB - posA).norm() * dir;
       Math::Vec3f posN2= ZOffset + posB;
 
       if (idxNode == 0)
@@ -147,15 +155,15 @@ void FractalCurveDevelopment::Refresh() {
 }
 
 
-void FractalCurveDevelopment::Animate() {
+void FractalCurvDev::Animate() {
+  if (!isActiveProject) return;
   if (!isInitialized) return;
-  if (!isRefreshed) return;
 }
 
 
-void FractalCurveDevelopment::Draw() {
+void FractalCurvDev::Draw() {
+  if (!isActiveProject) return;
   if (!isInitialized) return;
-  if (!isRefreshed) return;
 
   // Draw vertices
   if (D.displayMode1) {

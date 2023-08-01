@@ -9,6 +9,7 @@ MaxEmptyLinesToKeep: 2
 SpaceBeforeAssignmentOperators: false
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 InsertNewlineAtEOF: true
+IndentPPDirectives: BeforeHash
 BraceWrapping:
   AfterEnum: true
   AfterStruct: true

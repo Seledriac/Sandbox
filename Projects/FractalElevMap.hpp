@@ -1,16 +1,15 @@
 #pragma once
 
 // Standard lib
-#include <array>
 #include <vector>
 
 // Project lib
 #include "../math/Vectors.hpp"
 
 
-class FractalHeightMap
+class FractalElevMap
 {
-  public:
+  private:
   int mapNbX;
   int mapNbY;
   int mapNbIter;
@@ -23,13 +22,14 @@ class FractalHeightMap
   std::vector<std::vector<Math::Vec3f>> mapNor;
   std::vector<std::vector<Math::Vec3f>> mapCol;
 
+  public:
+  bool isActiveProject;
   bool isInitialized;
-  bool isRefreshed;
 
-  FractalHeightMap();
+  FractalElevMap();
 
-  void Init();
-  void Refresh();
+  void SetActiveProject();
+  void Initialize();
   void Animate();
   void Draw();
 };

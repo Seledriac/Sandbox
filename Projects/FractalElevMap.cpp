@@ -1,4 +1,4 @@
-#include "FractalHeightMap.hpp"
+#include "FractalElevMap.hpp"
 
 
 // Standard lib
@@ -35,46 +35,52 @@ enum ParamType
   testVar9____________,
 };
 
-FractalHeightMap::FractalHeightMap() {
+
+FractalElevMap::FractalElevMap() {
+  isActiveProject= false;
   isInitialized= false;
-  isRefreshed= false;
-}
-
-
-void FractalHeightMap::Init() {
-  isInitialized= true;
-  isRefreshed= false;
-
   D.param.clear();
-  D.param.push_back(ParamUI("testVar0____________", 500.0));
-  D.param.push_back(ParamUI("testVar1____________", 500.0));
-  D.param.push_back(ParamUI("testVar2____________", 0.5));
-  D.param.push_back(ParamUI("testVar3____________", 40.0));
-  D.param.push_back(ParamUI("testVar4____________", 0.365242));
-  D.param.push_back(ParamUI("testVar5____________", 0.534752));
-  D.param.push_back(ParamUI("testVar6____________", -0.8350));
-  D.param.push_back(ParamUI("testVar7____________", -0.2241));
-  D.param.push_back(ParamUI("testVar8____________", 32.0));
-  D.param.push_back(ParamUI("testVar9____________", 1.0));
+  D.plotData.clear();
 }
 
 
-void FractalHeightMap::Refresh() {
-  if (!isInitialized) return;
-  isRefreshed= true;
+void FractalElevMap::SetActiveProject() {
+  isInitialized= false;
+  if (isActiveProject) return;
+  isActiveProject= true;
+
+  if (D.param.empty()) {
+    D.param.push_back(ParamUI("testVar0____________", 500.0));
+    D.param.push_back(ParamUI("testVar1____________", 500.0));
+    D.param.push_back(ParamUI("testVar2____________", 0.5));
+    D.param.push_back(ParamUI("testVar3____________", 40.0));
+    D.param.push_back(ParamUI("testVar4____________", 0.365242));
+    D.param.push_back(ParamUI("testVar5____________", 0.534752));
+    D.param.push_back(ParamUI("testVar6____________", -0.8350));
+    D.param.push_back(ParamUI("testVar7____________", -0.2241));
+    D.param.push_back(ParamUI("testVar8____________", 32.0));
+    D.param.push_back(ParamUI("testVar9____________", 1.0));
+  }
+}
+
+
+void FractalElevMap::Initialize() {
+  // Check if need to skip
+  if (!isActiveProject) return;
+  isInitialized= true;
 
   // Get UI parameters
-  mapNbX= std::max(2, int(std::round(D.param[testVar0____________].val)));
-  mapNbY= std::max(2, int(std::round(D.param[testVar1____________].val)));
+  mapNbX= std::max(2, int(std::round(D.param[testVar0____________].Get())));
+  mapNbY= std::max(2, int(std::round(D.param[testVar1____________].Get())));
 
-  mapZoom= std::max(1.e-6, double(D.param[testVar2____________].val));
+  mapZoom= std::max(1.e-6, double(D.param[testVar2____________].Get()));
 
-  mapNbIter= std::max(1, int(std::round(D.param[testVar3____________].val)));
+  mapNbIter= std::max(1, int(std::round(D.param[testVar3____________].Get())));
 
-  mapFocus= Math::Vec2d(D.param[testVar4____________].val, D.param[testVar5____________].val);
-  mapConst= Math::Vec2d(D.param[testVar6____________].val, D.param[testVar7____________].val);
+  mapFocus= Math::Vec2d(D.param[testVar4____________].Get(), D.param[testVar5____________].Get());
+  mapConst= Math::Vec2d(D.param[testVar6____________].Get(), D.param[testVar7____________].Get());
 
-  mapDivThresh= std::max(0.0, double(D.param[testVar8____________].val));
+  mapDivThresh= std::max(0.0, double(D.param[testVar8____________].Get()));
 
   // Allocate data
   mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -103,7 +109,7 @@ void FractalHeightMap::Refresh() {
       // if (val != 0.0) val= std::log2(std::max(std::log2(val), 1.0));
 
       // mapPos[x][y][2]= float(z.norm());
-      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____________].val;
+      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____________].Get();
       Colormap::RatioToJetSmooth(float(val), mapCol[x][y][0], mapCol[x][y][1], mapCol[x][y][2]);
 
       mapPos[x][y][2]= 0.5f + 0.04f * std::min(std::max(float(val), 0.0f), 1.0f);
@@ -148,15 +154,15 @@ void FractalHeightMap::Refresh() {
 }
 
 
-void FractalHeightMap::Animate() {
+void FractalElevMap::Animate() {
+  if (!isActiveProject) return;
   if (!isInitialized) return;
-  if (!isRefreshed) return;
 }
 
 
-void FractalHeightMap::Draw() {
+void FractalElevMap::Draw() {
+  if (!isActiveProject) return;
   if (!isInitialized) return;
-  if (!isRefreshed) return;
 
   // Draw the map
   glEnable(GL_LIGHTING);

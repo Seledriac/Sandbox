@@ -8,9 +8,10 @@
 #include "../math/Vectors.hpp"
 
 
-class CompuFluidDyn
+class CompuFluidDyna
 {
   private:
+  int scenarioType;
   int nbX;
   int nbY;
   int nbZ;
@@ -27,7 +28,6 @@ class CompuFluidDyn
   std::vector<std::vector<std::vector<float>>> VelYCur;
   std::vector<std::vector<std::vector<float>>> VelZCur;
   std::vector<std::vector<std::array<float, 3>>> loadedImage;
-
 
   void AddSource(const std::vector<std::vector<std::vector<float>>>& iSource, const float iTimestep,
                  std::vector<std::vector<std::vector<float>>>& ioField);
@@ -51,8 +51,6 @@ class CompuFluidDyn
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
                     std::vector<std::vector<std::vector<float>>>& ioVelZ);
-  void SwapFields(std::vector<std::vector<std::vector<float>>>& ioFieldA,
-                  std::vector<std::vector<std::vector<float>>>& ioFieldB);
   void DensityStep(const std::vector<std::vector<std::vector<int>>>& iType,
                    const int iIter, const float iTimeStep, const float iDiffusionCoeff,
                    const std::vector<std::vector<std::vector<float>>>& iVelX,
@@ -70,12 +68,14 @@ class CompuFluidDyn
                     std::vector<std::vector<std::vector<float>>>& ioVelZCur);
 
   public:
+  bool isActiveProject;
   bool isInitialized;
   bool isRefreshed;
 
-  CompuFluidDyn();
+  CompuFluidDyna();
 
-  void Init();
+  void SetActiveProject();
+  void Initialize();
   void Refresh();
   void Animate();
   void Draw();

@@ -16,12 +16,11 @@
 #include "util/Colormap.hpp"
 
 // Project Sandbox Classes
-#include "Projects/AgentSwarm.hpp"
-#include "Projects/CompuFluidDyn.hpp"
-#include "Projects/FractalCurveDevelopment.hpp"
-#include "Projects/FractalHeightMap.hpp"
+#include "Projects/AgentSwarmBoid.hpp"
+#include "Projects/CompuFluidDyna.hpp"
+#include "Projects/FractalCurvDev.hpp"
+#include "Projects/FractalElevMap.hpp"
 #include "Projects/ParticleSystem.hpp"
-#include "Projects/ProjectTemplate.hpp"
 #include "Projects/SpaceTimeWorld.hpp"
 #include "Projects/TerrainErosion.hpp"
 
@@ -37,82 +36,75 @@ Camera *cam;
 // Global variables used by the scene
 Data D;
 
-AgentSwarm myAgentSwarm;
-CompuFluidDyn myCompuFluidDyn;
-FractalCurveDevelopment myFractalCurveDevelopment;
-FractalHeightMap myFractalHeightMap;
+AgentSwarmBoid myAgentSwarmBoid;
+CompuFluidDyna myCompuFluidDyna;
+FractalCurvDev myFractalCurvDev;
+FractalElevMap myFractalElevMap;
 ParticleSystem myParticleSystem;
-ProjectTemplate myProjectTemplate;
 SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
 
 
-void project_constructor(unsigned char key) {
+void project_Constructor(unsigned char key) {
   (void)key;  // Disable warning unused variable
 
-  myAgentSwarm= AgentSwarm();
-  myCompuFluidDyn= CompuFluidDyn();
-  myFractalCurveDevelopment= FractalCurveDevelopment();
-  myFractalHeightMap= FractalHeightMap();
+  myAgentSwarmBoid= AgentSwarmBoid();
+  myCompuFluidDyna= CompuFluidDyna();
+  myFractalCurvDev= FractalCurvDev();
+  myFractalElevMap= FractalElevMap();
   myParticleSystem= ParticleSystem();
-  myProjectTemplate= ProjectTemplate();
   mySpaceTimeWorld= SpaceTimeWorld();
   myTerrainErosion= TerrainErosion();
 }
 
 
-void project_init(unsigned char key) {
-  if (key != 'a') myAgentSwarm= AgentSwarm();
-  if (key != 'c') myCompuFluidDyn= CompuFluidDyn();
-  if (key != 'f') myFractalCurveDevelopment= FractalCurveDevelopment();
-  if (key != 'h') myFractalHeightMap= FractalHeightMap();
-  if (key != 'p') myParticleSystem= ParticleSystem();
-  if (key != 'z') myProjectTemplate= ProjectTemplate();
-  if (key != 'r') mySpaceTimeWorld= SpaceTimeWorld();
-  if (key != 'e') myTerrainErosion= TerrainErosion();
+void project_SetActiveProject(unsigned char key) {
+  if (key != 'a' && myAgentSwarmBoid.isActiveProject) myAgentSwarmBoid= AgentSwarmBoid();
+  if (key != 'c' && myCompuFluidDyna.isActiveProject) myCompuFluidDyna= CompuFluidDyna();
+  if (key != 'f' && myFractalCurvDev.isActiveProject) myFractalCurvDev= FractalCurvDev();
+  if (key != 'h' && myFractalElevMap.isActiveProject) myFractalElevMap= FractalElevMap();
+  if (key != 'p' && myParticleSystem.isActiveProject) myParticleSystem= ParticleSystem();
+  if (key != 'r' && mySpaceTimeWorld.isActiveProject) mySpaceTimeWorld= SpaceTimeWorld();
+  if (key != 'e' && myTerrainErosion.isActiveProject) myTerrainErosion= TerrainErosion();
 
-  if (key == 'a') myAgentSwarm.Init();
-  if (key == 'c') myCompuFluidDyn.Init();
-  if (key == 'f') myFractalCurveDevelopment.Init();
-  if (key == 'h') myFractalHeightMap.Init();
-  if (key == 'p') myParticleSystem.Init();
-  if (key == 'z') myProjectTemplate.Init();
-  if (key == 'r') mySpaceTimeWorld.Init();
-  if (key == 'e') myTerrainErosion.Init();
+  if (key == 'a') myAgentSwarmBoid.SetActiveProject();
+  if (key == 'c') myCompuFluidDyna.SetActiveProject();
+  if (key == 'f') myFractalCurvDev.SetActiveProject();
+  if (key == 'h') myFractalElevMap.SetActiveProject();
+  if (key == 'p') myParticleSystem.SetActiveProject();
+  if (key == 'r') mySpaceTimeWorld.SetActiveProject();
+  if (key == 'e') myTerrainErosion.SetActiveProject();
 }
 
 
-void project_refresh() {
-  myAgentSwarm.Refresh();
-  myCompuFluidDyn.Refresh();
-  myFractalCurveDevelopment.Refresh();
-  myFractalHeightMap.Refresh();
-  myParticleSystem.Refresh();
-  myProjectTemplate.Refresh();
-  mySpaceTimeWorld.Refresh();
-  myTerrainErosion.Refresh();
+void project_Initialize() {
+  myAgentSwarmBoid.Initialize();
+  myCompuFluidDyna.Initialize();
+  myFractalCurvDev.Initialize();
+  myFractalElevMap.Initialize();
+  myParticleSystem.Initialize();
+  mySpaceTimeWorld.Initialize();
+  myTerrainErosion.Initialize();
 }
 
 
-void project_animate() {
-  myAgentSwarm.Animate();
-  myCompuFluidDyn.Animate();
-  myFractalCurveDevelopment.Animate();
-  myFractalHeightMap.Animate();
+void project_Animate() {
+  myAgentSwarmBoid.Animate();
+  myCompuFluidDyna.Animate();
+  myFractalCurvDev.Animate();
+  myFractalElevMap.Animate();
   myParticleSystem.Animate();
-  myProjectTemplate.Animate();
   mySpaceTimeWorld.Animate();
   myTerrainErosion.Animate();
 }
 
 
-void project_draw() {
-  myAgentSwarm.Draw();
-  myCompuFluidDyn.Draw();
-  myFractalCurveDevelopment.Draw();
-  myFractalHeightMap.Draw();
+void project_Draw() {
+  myAgentSwarmBoid.Draw();
+  myCompuFluidDyna.Draw();
+  myFractalCurvDev.Draw();
+  myFractalElevMap.Draw();
   myParticleSystem.Draw();
-  myProjectTemplate.Draw();
   mySpaceTimeWorld.Draw();
   myTerrainErosion.Draw();
 }
@@ -227,7 +219,7 @@ void callback_display() {
   }
 
   // Draw stuff in the scene
-  project_draw();
+  project_Draw();
 
   // Set the camera transformation matrix for the HUD
   glMatrixMode(GL_PROJECTION);
@@ -245,7 +237,7 @@ void callback_display() {
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
-    sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].val);
+    sprintf(str, "%s = %+014.6f", D.param[k].GetName().c_str(), D.param[k].Get());
     draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
     if (k == D.idxParamUI) {
       sprintf(str, "_");
@@ -309,7 +301,7 @@ void callback_display() {
 void callback_timer(int v) {
   // Compute animations
   if (D.playAnimation) {
-    project_animate();
+    project_Animate();
     glutPostRedisplay();
   }
 
@@ -333,7 +325,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   if (key == 27) exit(EXIT_SUCCESS);
   else if (key == ' ') D.playAnimation= !D.playAnimation;
   else if (key == '\n') D.autoRefresh= !D.autoRefresh;
-  else if (key == '\b') D.param[D.idxParamUI].val= 0.0f;
+  else if (key == '\b') D.param[D.idxParamUI].Set(0.0);
 
   else if (key == '1') D.displayMode1= !D.displayMode1;
   else if (key == '2') D.displayMode2= !D.displayMode2;
@@ -346,12 +338,8 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '9') D.showAxis= !D.showAxis;
   else if (key == '0') D.plotData.clear();
 
-  else if (key >= 'A' && key <= 'Z') project_constructor(key);
-  else if (key >= 'a' && key <= 'z') project_init(key);
-
-  // Compute refresh
-  if (D.autoRefresh)
-    project_refresh();
+  else if (key >= 'A' && key <= 'Z') project_Constructor(key);
+  else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
 
   glutPostRedisplay();
 }
@@ -372,26 +360,26 @@ void callback_keyboard_special(int key, int x, int y) {
   }
 
   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val/= 2.0;
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val*= 2.0;
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() / 2.0);
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() * 2.0);
   }
   else if (glutGetModifiers() & GLUT_ACTIVE_CTRL) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val/= 1.0 + 1.0 / 16.0;
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val*= 1.0 + 1.0 / 16.0;
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() / (1.0 + 1.0 / 16.0));
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() * (1.0 + 1.0 / 16.0));
   }
   else if (glutGetModifiers() & GLUT_ACTIVE_ALT) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val-= 1.0 / 16.0;
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val+= 1.0 / 16.0;
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - 1.0 / 16.0);
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + 1.0 / 16.0);
   }
   else {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].val-= 1.0;
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].val+= 1.0;
+    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - 1.0);
+    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + 1.0);
   }
 
 
   // Compute refresh
   if (D.autoRefresh)
-    project_refresh();
+    project_Initialize();
 
   glutPostRedisplay();
 }
@@ -412,19 +400,23 @@ void callback_mouse_click(int button, int state, int x, int y) {
     if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
       if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
         if (button == 3) {
-          if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
-          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val+= std::pow(10.0, double(6 - D.idxCursorUI));
-          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val+= std::pow(10.0, double(7 - D.idxCursorUI));
+          if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
+            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(6 - D.idxCursorUI)));
+          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
+            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(7 - D.idxCursorUI)));
         }
         if (button == 4) {
-          if (D.idxCursorUI == 0) D.param[D.idxParamUI].val= -D.param[D.idxParamUI].val;
-          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6) D.param[D.idxParamUI].val-= std::pow(10.0, double(6 - D.idxCursorUI));
-          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13) D.param[D.idxParamUI].val-= std::pow(10.0, double(7 - D.idxCursorUI));
+          if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
+            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(6 - D.idxCursorUI)));
+          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
+            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(7 - D.idxCursorUI)));
         }
 
         // Compute refresh
-        if (D.autoRefresh && ((state == GLUT_UP && button == 3) || (state == GLUT_UP && button == 4)))
-          project_refresh();
+        if (D.autoRefresh)
+          project_Initialize();
       }
     }
   }
