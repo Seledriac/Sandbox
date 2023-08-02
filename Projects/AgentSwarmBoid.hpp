@@ -25,11 +25,13 @@ class AgentSwarmBoid
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   AgentSwarmBoid();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
 };

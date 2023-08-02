@@ -156,19 +156,16 @@ enum ParamType
 
 
 SpaceTimeWorld::SpaceTimeWorld() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void SpaceTimeWorld::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
+  if (!isActiveProject) {
     D.param.push_back(ParamUI("GR_WorldNbT_________", 16));
     D.param.push_back(ParamUI("GR_WorldNbX_________", 32));
     D.param.push_back(ParamUI("GR_WorldNbY_________", 32));
@@ -182,14 +179,23 @@ void SpaceTimeWorld::SetActiveProject() {
     D.param.push_back(ParamUI("GR_FactorCurv_______", 1.0));
     D.param.push_back(ParamUI("GR_FactorDoppler____", 1.0));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
 void SpaceTimeWorld::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
+  if (isInitialized) return;
   isInitialized= true;
+  isRefreshed= false;
 
+  todo; // reformat to match other projects
+  
   // Get dimensions
   worldNbT= std::max(int(std::round(D.param[GR_WorldNbT_________].Get())), 1);
   worldNbX= std::max(int(std::round(D.param[GR_WorldNbX_________].Get())), 1);
@@ -399,18 +405,30 @@ void SpaceTimeWorld::Initialize() {
       }
     }
   }
+
+  Refresh();
+}
+
+
+void SpaceTimeWorld::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 }
 
 
 void SpaceTimeWorld::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 
 void SpaceTimeWorld::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   // Draw the solid voxels
   if (D.displayMode1) {

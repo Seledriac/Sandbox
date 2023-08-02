@@ -37,19 +37,16 @@ enum ParamType
 
 
 TerrainErosion::TerrainErosion() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void TerrainErosion::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
+  if (!isActiveProject) {
     D.param.push_back(ParamUI("TE_TerrainNbX_______", 128));
     D.param.push_back(ParamUI("TE_TerrainNbY_______", 128));
     D.param.push_back(ParamUI("TE_TerrainNbCuts____", 256));
@@ -61,6 +58,11 @@ void TerrainErosion::SetActiveProject() {
     D.param.push_back(ParamUI("TE_SmoothResist_____", 0.99));
     D.param.push_back(ParamUI("TE_CliffThreshold___", 0.80));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
@@ -73,6 +75,9 @@ void TerrainErosion::Initialize() {
   if (D.param[TE_DropletNbK_______].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
+  isRefreshed= false;
+
+  todo;  // reformat to match other projects
 
   // Get persistent parameters
   terrainNbX= std::max(2, int(std::round(D.param[TE_TerrainNbX_______].Get())));
@@ -174,12 +179,23 @@ void TerrainErosion::Initialize() {
   dropletRadCur= std::vector<float>(dropletNbK, 0.0f);
   dropletSatCur= std::vector<float>(dropletNbK, 0.0f);
   dropletIsDead= std::vector<bool>(dropletNbK, true);
+
+  Refresh();
+}
+
+
+void TerrainErosion::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 }
 
 
 void TerrainErosion::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   float dt= D.param[TE_SimuTimestep_____].Get();
   float velocityDecay= std::min(std::max(D.param[TE_VelocityDecay____].Get(), 0.0), 1.0);
@@ -343,6 +359,7 @@ void TerrainErosion::Animate() {
 void TerrainErosion::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   // Set the terrain colors
   for (int x= 0; x < terrainNbX; x++) {

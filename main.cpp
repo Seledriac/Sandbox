@@ -237,7 +237,7 @@ void callback_display() {
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
-    sprintf(str, "%s = %+014.6f", D.param[k].GetName().c_str(), D.param[k].Get());
+    sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].Get());
     draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
     if (k == D.idxParamUI) {
       sprintf(str, "_");

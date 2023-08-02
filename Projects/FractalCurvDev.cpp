@@ -19,7 +19,7 @@ extern Data D;
 
 enum ParamType
 {
-  testVar0____________,
+  MaxDepth____________,
   testVar1____________,
   testVar2____________,
   testVar3____________,
@@ -30,39 +30,55 @@ enum ParamType
 // #define DRAGON_CURVE
 
 FractalCurvDev::FractalCurvDev() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void FractalCurvDev::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
-    D.param.push_back(ParamUI("testVar0____________", 4.0));
+  if (!isActiveProject) {
+    D.param.push_back(ParamUI("MaxDepth____________", 4.0));
     D.param.push_back(ParamUI("testVar1____________", 0.005));
     D.param.push_back(ParamUI("testVar2____________", 1.0));
     D.param.push_back(ParamUI("testVar3____________", 1.0));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
 void FractalCurvDev::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
+  if (D.param[MaxDepth____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar1____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar2____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar3____________].hasChanged()) isInitialized= false;
+  if (isInitialized) return;
   isInitialized= true;
-
-  // Get persistent parameters
-  int maxDepth= int(std::round(D.param[testVar0____________].Get()));
-  if (maxDepth < 2) return;
+  isRefreshed= false;
 
   // Allocate and initialize data
   Faces.clear();
   Nodes.clear();
+
+  Refresh();
+}
+
+
+void FractalCurvDev::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
+
+  int maxDepth= std::max((int)std::round(D.param[MaxDepth____________].Get()), 2);
 
   // Initialize the curve at depth 0
 #ifdef KOCH_SNOWFLAKE
@@ -158,12 +174,14 @@ void FractalCurvDev::Initialize() {
 void FractalCurvDev::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 
 void FractalCurvDev::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   // Draw vertices
   if (D.displayMode1) {
@@ -200,7 +218,7 @@ void FractalCurvDev::Draw() {
   // Draw faces
   if (D.displayMode3) {
     glEnable(GL_LIGHTING);
-    glColor3f(0.8f, 0.8f, 0.8f);
+    glColor3f(0.3f, 0.3f, 0.3f);
     glBegin(GL_TRIANGLES);
     for (auto face : Faces) {
       Math::Vec3f normal= (face[1] - face[0]).cross(face[2] - face[0]).normalized();

@@ -35,19 +35,16 @@ enum ParamType
 
 
 ParticleSystem::ParticleSystem() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void ParticleSystem::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
+  if (!isActiveProject) {
     D.param.push_back(ParamUI("PD_Constrain2D______", 1));
     D.param.push_back(ParamUI("PD_NbParticles______", 1000));
     D.param.push_back(ParamUI("PD_TimeStep_________", 0.05));
@@ -59,15 +56,31 @@ void ParticleSystem::SetActiveProject() {
     D.param.push_back(ParamUI("PD_HeatInput________", 4.0));
     D.param.push_back(ParamUI("PD_HeatOutput_______", 0.1));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
 void ParticleSystem::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (NbParticles != std::max((int)std::round(D.param[PD_NbParticles______].Get()), 1)) isInitialized= false;
+  if (D.param[PD_NbParticles______].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
+  isRefreshed= false;
+
+  Refresh();
+}
+
+
+void ParticleSystem::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 
   // Get persistent parameters
   NbParticles= std::max((int)std::round(D.param[PD_NbParticles______].Get()), 1);
@@ -123,6 +136,7 @@ void ParticleSystem::Initialize() {
 void ParticleSystem::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   float domainRad= 1.0f;
   int nbSubstep= int(std::round(D.param[PD_NbSubStep________].Get()));
@@ -225,6 +239,7 @@ void ParticleSystem::Animate() {
 void ParticleSystem::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   for (int k= 0; k < NbParticles; k++) {
     glPushMatrix();

@@ -25,11 +25,13 @@ class ParticleSystem
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   ParticleSystem();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
 };

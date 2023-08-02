@@ -17,11 +17,13 @@ class FractalCurvDev
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   FractalCurvDev();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
 };

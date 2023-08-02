@@ -11,7 +11,6 @@
 class CompuFluidDyna
 {
   private:
-  int scenarioType;
   int nbX;
   int nbY;
   int nbZ;

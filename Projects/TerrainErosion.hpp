@@ -33,11 +33,13 @@ class TerrainErosion
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   TerrainErosion();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
 };

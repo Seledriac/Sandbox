@@ -31,11 +31,13 @@ class SpaceTimeWorld
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   SpaceTimeWorld();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
 };

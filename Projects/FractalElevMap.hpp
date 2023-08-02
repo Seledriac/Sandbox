@@ -25,11 +25,14 @@ class FractalElevMap
   public:
   bool isActiveProject;
   bool isInitialized;
+  bool isRefreshed;
 
   FractalElevMap();
 
   void SetActiveProject();
   void Initialize();
+  void Refresh();
   void Animate();
   void Draw();
+
 };

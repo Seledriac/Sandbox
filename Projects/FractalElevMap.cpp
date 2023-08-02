@@ -37,19 +37,16 @@ enum ParamType
 
 
 FractalElevMap::FractalElevMap() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void FractalElevMap::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
+  if (!isActiveProject) {
     D.param.push_back(ParamUI("testVar0____________", 500.0));
     D.param.push_back(ParamUI("testVar1____________", 500.0));
     D.param.push_back(ParamUI("testVar2____________", 0.5));
@@ -61,13 +58,40 @@ void FractalElevMap::SetActiveProject() {
     D.param.push_back(ParamUI("testVar8____________", 32.0));
     D.param.push_back(ParamUI("testVar9____________", 1.0));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
 void FractalElevMap::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
+  if (D.param[testVar0____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar1____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar2____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar3____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar4____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar5____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar6____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar7____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar8____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar9____________].hasChanged()) isInitialized= false;
+  if (isInitialized) return;
   isInitialized= true;
+  isRefreshed= false;
+
+  Refresh();
+}
+
+
+void FractalElevMap::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 
   // Get UI parameters
   mapNbX= std::max(2, int(std::round(D.param[testVar0____________].Get())));
@@ -157,12 +181,14 @@ void FractalElevMap::Initialize() {
 void FractalElevMap::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 }
 
 
 void FractalElevMap::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   // Draw the map
   glEnable(GL_LIGHTING);

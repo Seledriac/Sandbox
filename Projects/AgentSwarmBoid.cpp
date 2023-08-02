@@ -31,19 +31,16 @@ enum ParamType
 
 
 AgentSwarmBoid::AgentSwarmBoid() {
-  isActiveProject= false;
-  isInitialized= false;
   D.param.clear();
   D.plotData.clear();
+  isActiveProject= false;
+  isInitialized= false;
+  isRefreshed= false;
 }
 
 
 void AgentSwarmBoid::SetActiveProject() {
-  isInitialized= false;
-  if (isActiveProject) return;
-  isActiveProject= true;
-
-  if (D.param.empty()) {
+  if (!isActiveProject) {
     D.param.push_back(ParamUI("AS_NbAgents_________", 100));
     D.param.push_back(ParamUI("AS_SizeAgent________", 0.05));
     D.param.push_back(ParamUI("AS_TimeStep_________", 0.05));
@@ -53,6 +50,11 @@ void AgentSwarmBoid::SetActiveProject() {
     D.param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
     D.param.push_back(ParamUI("AS_CoeffFear________", 0.06));
   }
+
+  isActiveProject= true;
+  isInitialized= false;
+  isRefreshed= false;
+  Initialize();
 }
 
 
@@ -62,6 +64,7 @@ void AgentSwarmBoid::Initialize() {
   if (D.param[AS_NbAgents_________].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
+  isRefreshed= false;
 
   // Get persistent parameters
   NbAgents= std::max((int)std::round(D.param[AS_NbAgents_________].Get()), 1);
@@ -73,7 +76,7 @@ void AgentSwarmBoid::Initialize() {
   Math::Vec3f dp= Math::Vec3f(0.5f, 0.0f, 0.5f);
   Math::Vec3f v= Math::Vec3f(0.0f, 0.0f, 0.0f);
   Math::Vec3f dv= Math::Vec3f(0.2f, 0.2f, 0.2f);
-  
+
   Agents= std::vector<Agent>(NbAgents);
   for (int k= 0; k < NbAgents; k++) {
     Agents[k].p[0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
@@ -86,12 +89,23 @@ void AgentSwarmBoid::Initialize() {
     Agents[k].n[1]= 1.0f;
     Agents[k].n[2]= 0.0f;
   }
+
+  Refresh();
+}
+
+
+void AgentSwarmBoid::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 }
 
 
 void AgentSwarmBoid::Animate() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   float sizeAgent= (float)D.param[AS_SizeAgent________].Get();
   float a= (float)D.param[AS_CoeffSep_________].Get();
@@ -140,6 +154,7 @@ void AgentSwarmBoid::Animate() {
 void AgentSwarmBoid::Draw() {
   if (!isActiveProject) return;
   if (!isInitialized) return;
+  if (!isRefreshed) return;
 
   float sizeAgent= (float)D.param[AS_SizeAgent________].Get();
 

@@ -9,31 +9,28 @@ class ParamUI
 {
   private:
   double val;
-  double valOld;
-  bool flag;
-  std::string name;
+  bool changeFlag;
 
   public:
+  std::string name;
   ParamUI(std::string const iName, double const iVal) {
     name= iName;
     val= iVal;
-    flag= true;
-    valOld= iVal - 1.0;
+    changeFlag= true;
   }
+
   void Set(double const iVal) {
-    flag= true;
-    valOld= val;
+    changeFlag= true;
     val= iVal;
   }
+
   double Get() {
     return val;
   }
-  std::string GetName() {
-    return name;
-  }
+
   bool hasChanged() {
-    if (flag) {
-      flag= false;
+    if (changeFlag) {
+      changeFlag= false;
       return true;
     }
     return false;

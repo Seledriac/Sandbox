@@ -78,7 +78,6 @@ void CompuFluidDyna::SetActiveProject() {
   isActiveProject= true;
   isInitialized= false;
   isRefreshed= false;
-
   Initialize();
 }
 
@@ -95,7 +94,6 @@ void CompuFluidDyna::Initialize() {
   isRefreshed= false;
 
   // Get persistent parameters
-  scenarioType= (int)std::round(D.param[Scenario____________].Get());
   nbX= std::max((int)std::round(D.param[ResolutionX_________].Get()), 1);
   nbY= std::max((int)std::round(D.param[ResolutionY_________].Get()), 1);
   nbZ= std::max((int)std::round(D.param[ResolutionZ_________].Get()), 1);
@@ -121,10 +119,10 @@ void CompuFluidDyna::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  if (scenarioType == 0) {
-    if (loadedImage.empty())
-      FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", loadedImage, false);
-  }
+  int scenarioType= (int)std::round(D.param[Scenario____________].Get());
+
+  if (scenarioType == 0 && loadedImage.empty())
+    FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", loadedImage, false);
 
   // Initialize problem
   for (int x= 0; x < nbX; x++) {
