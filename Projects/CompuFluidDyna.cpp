@@ -91,14 +91,13 @@ void CompuFluidDyna::Initialize() {
   if (D.param[ResolutionZ_________].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  // Get persistent parameters
+  // Get UI parameters
   nbX= std::max((int)std::round(D.param[ResolutionX_________].Get()), 1);
   nbY= std::max((int)std::round(D.param[ResolutionY_________].Get()), 1);
   nbZ= std::max((int)std::round(D.param[ResolutionZ_________].Get()), 1);
 
-  // Allocate and initialize data
+  // Allocate data
   Bound= Field::AllocField3D(nbX, nbY, nbZ, 0);
   Force= Field::AllocField3D(nbX, nbY, nbZ, 0);
   Sourc= Field::AllocField3D(nbX, nbY, nbZ, 0);
@@ -111,6 +110,8 @@ void CompuFluidDyna::Initialize() {
   VelYCur= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   VelZCur= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 
+  // Force refresh
+  isRefreshed= false;
   Refresh();
 }
 

@@ -190,28 +190,58 @@ void SpaceTimeWorld::SetActiveProject() {
 void SpaceTimeWorld::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
+  if (D.param[GR_WorldNbT_________].hasChanged()) isInitialized= false;
+  if (D.param[GR_WorldNbX_________].hasChanged()) isInitialized= false;
+  if (D.param[GR_WorldNbY_________].hasChanged()) isInitialized= false;
+  if (D.param[GR_WorldNbZ_________].hasChanged()) isInitialized= false;
+  if (D.param[GR_ScreenNbH________].hasChanged()) isInitialized= false;
+  if (D.param[GR_ScreenNbV________].hasChanged()) isInitialized= false;
+  if (D.param[GR_ScreenNbS________].hasChanged()) isInitialized= false;
+  if (D.param[GR_CursorWorldT_____].hasChanged()) isInitialized= false;
+  if (D.param[GR_MassReach________].hasChanged()) isInitialized= false;
+  if (D.param[GR_TimePersist______].hasChanged()) isInitialized= false;
+  if (D.param[GR_FactorCurv_______].hasChanged()) isInitialized= false;
+  if (D.param[GR_FactorDoppler____].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  todo; // reformat to match other projects
-  
-  // Get dimensions
+  // Get UI parameters
   worldNbT= std::max(int(std::round(D.param[GR_WorldNbT_________].Get())), 1);
   worldNbX= std::max(int(std::round(D.param[GR_WorldNbX_________].Get())), 1);
   worldNbY= std::max(int(std::round(D.param[GR_WorldNbY_________].Get())), 1);
   worldNbZ= std::max(int(std::round(D.param[GR_WorldNbZ_________].Get())), 1);
 
+  screenNbH= std::max(int(std::round(D.param[GR_ScreenNbH________].Get())), 1);
+  screenNbV= std::max(int(std::round(D.param[GR_ScreenNbV________].Get())), 1);
+  screenNbS= std::max(int(std::round(D.param[GR_ScreenNbS________].Get())), 1);
+
+  // Allocate data
+  if (!Field::CheckFieldDimensions(worldSolid, worldNbT, worldNbX, worldNbY, worldNbZ)) worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
+  if (!Field::CheckFieldDimensions(worldIsFix, worldNbT, worldNbX, worldNbY, worldNbZ)) worldIsFix= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
+  if (!Field::CheckFieldDimensions(worldMasss, worldNbT, worldNbX, worldNbY, worldNbZ)) worldMasss= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
+  if (!Field::CheckFieldDimensions(worldColor, worldNbT, worldNbX, worldNbY, worldNbZ)) worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(worldFlows, worldNbT, worldNbX, worldNbY, worldNbZ)) worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Field::AllocField2D(screenNbH, screenNbV, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
+  if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+
+  // Force refresh
+  isRefreshed= false;
+  Refresh();
+}
+
+
+void SpaceTimeWorld::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
+
   // Load the BMP image for the background
   static std::vector<std::vector<std::array<float, 3>>> loadedImage;
   if (loadedImage.empty())
-    FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", loadedImage, true);
-
-  // Initialize the world fields
-  worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  worldIsFix= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  worldMasss= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
-  worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
+    FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", loadedImage, false);
 
   // Add the background
   for (int t= 0; t < worldNbT; t++) {
@@ -302,7 +332,13 @@ void SpaceTimeWorld::Initialize() {
   }
 
   // Compute the world flow
-  worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+#pragma omp parallel for
+  for (int t= 0; t < worldNbT; t++)
+    for (int x= 0; x < worldNbX; x++)
+      for (int y= 0; y < worldNbY; y++)
+        for (int z= 0; z < worldNbZ; z++)
+          worldFlows[t][x][y][z]= Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f);
+
 #pragma omp parallel for
   for (int t= 0; t < worldNbT; t++) {
     for (int x= 0; x < worldNbX; x++) {
@@ -331,17 +367,7 @@ void SpaceTimeWorld::Initialize() {
   // Ensure parameter validity
   int idxT= std::min(std::max((int)std::floor(D.param[GR_CursorWorldT_____].Get()), 0), worldNbT - 1);
 
-  // Get dimensions
-  screenNbH= std::max(int(std::round(D.param[GR_ScreenNbH________].Get())), 1);
-  screenNbV= std::max(int(std::round(D.param[GR_ScreenNbV________].Get())), 1);
-  screenNbS= std::max(int(std::round(D.param[GR_ScreenNbS________].Get())), 1);
-
   // Allocate the screen fields and photon fields
-  if (!Field::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Field::AllocField2D(screenNbH, screenNbV, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
-  if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
   // Initialize the photon fields
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
@@ -405,16 +431,6 @@ void SpaceTimeWorld::Initialize() {
       }
     }
   }
-
-  Refresh();
-}
-
-
-void SpaceTimeWorld::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (isRefreshed) return;
-  isRefreshed= true;
 }
 
 

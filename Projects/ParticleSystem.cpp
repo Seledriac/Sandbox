@@ -70,22 +70,11 @@ void ParticleSystem::Initialize() {
   if (D.param[PD_NbParticles______].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  Refresh();
-}
-
-
-void ParticleSystem::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (isRefreshed) return;
-  isRefreshed= true;
-
-  // Get persistent parameters
+  // Get UI parameters
   NbParticles= std::max((int)std::round(D.param[PD_NbParticles______].Get()), 1);
 
-  // Allocate and initialize data
+  // Allocate data
   PosOld= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
   PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
   PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -96,6 +85,18 @@ void ParticleSystem::Refresh() {
   RadCur= std::vector<float>(NbParticles, 0.0f);
   MasCur= std::vector<float>(NbParticles, 0.0f);
   HotCur= std::vector<float>(NbParticles, 0.0f);
+
+  // Force refresh
+  isRefreshed= false;
+  Refresh();
+}
+
+
+void ParticleSystem::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 
   // Compute radius based on box size and 2D or 3D
   float BaseRadius= 0.6;

@@ -62,12 +62,13 @@ void FractalCurvDev::Initialize() {
   if (D.param[testVar3____________].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  // Allocate and initialize data
+  // Allocate data
   Faces.clear();
   Nodes.clear();
 
+  // Force refresh
+  isRefreshed= false;
   Refresh();
 }
 

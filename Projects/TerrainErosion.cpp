@@ -75,21 +75,41 @@ void TerrainErosion::Initialize() {
   if (D.param[TE_DropletNbK_______].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  todo;  // reformat to match other projects
-
-  // Get persistent parameters
+  // Get UI parameters
   terrainNbX= std::max(2, int(std::round(D.param[TE_TerrainNbX_______].Get())));
   terrainNbY= std::max(2, int(std::round(D.param[TE_TerrainNbY_______].Get())));
   terrainNbC= std::max(0, int(std::round(D.param[TE_TerrainNbCuts____].Get())));
   dropletNbK= std::max(1, int(std::round(D.param[TE_DropletNbK_______].Get())));
 
-  // Allocate and initialize data
+  // Allocate data
   terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
   terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
   terrainCol= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
   terrainChg= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
+
+  dropletPosOld= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletPosCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletVelCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletAccCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletForCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletColCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletMasCur= std::vector<float>(dropletNbK, 0.0f);
+  dropletRadCur= std::vector<float>(dropletNbK, 0.0f);
+  dropletSatCur= std::vector<float>(dropletNbK, 0.0f);
+  dropletIsDead= std::vector<bool>(dropletNbK, true);
+
+  // Force refresh
+  isRefreshed= false;
+  Refresh();
+}
+
+
+void TerrainErosion::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
 
   // Precompute cut planes
   srand(0);
@@ -167,28 +187,6 @@ void TerrainErosion::Initialize() {
       terrainNor[x][y].normalize();
     }
   }
-
-  // Allocate droplet data
-  dropletPosOld= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletPosCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletVelCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletAccCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletForCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletColCur= std::vector<Math::Vec3f>(dropletNbK, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletMasCur= std::vector<float>(dropletNbK, 0.0f);
-  dropletRadCur= std::vector<float>(dropletNbK, 0.0f);
-  dropletSatCur= std::vector<float>(dropletNbK, 0.0f);
-  dropletIsDead= std::vector<bool>(dropletNbK, true);
-
-  Refresh();
-}
-
-
-void TerrainErosion::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (isRefreshed) return;
-  isRefreshed= true;
 }
 
 

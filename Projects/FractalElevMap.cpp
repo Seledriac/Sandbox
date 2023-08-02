@@ -81,8 +81,18 @@ void FractalElevMap::Initialize() {
   if (D.param[testVar9____________].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
+  // Get UI parameters
+  mapNbX= std::max(2, int(std::round(D.param[testVar0____________].Get())));
+  mapNbY= std::max(2, int(std::round(D.param[testVar1____________].Get())));
+
+  // Allocate data
+  mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  mapNor= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
+  mapCol= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
+
+  // Force refresh
+  isRefreshed= false;
   Refresh();
 }
 
@@ -93,9 +103,6 @@ void FractalElevMap::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  // Get UI parameters
-  mapNbX= std::max(2, int(std::round(D.param[testVar0____________].Get())));
-  mapNbY= std::max(2, int(std::round(D.param[testVar1____________].Get())));
 
   mapZoom= std::max(1.e-6, double(D.param[testVar2____________].Get()));
 
@@ -106,10 +113,6 @@ void FractalElevMap::Refresh() {
 
   mapDivThresh= std::max(0.0, double(D.param[testVar8____________].Get()));
 
-  // Allocate data
-  mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  mapNor= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
-  mapCol= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
 
   // Compute positions
 #pragma omp parallel for

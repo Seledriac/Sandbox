@@ -64,12 +64,25 @@ void AgentSwarmBoid::Initialize() {
   if (D.param[AS_NbAgents_________].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
-  isRefreshed= false;
 
-  // Get persistent parameters
+  // Get UI parameters
   NbAgents= std::max((int)std::round(D.param[AS_NbAgents_________].Get()), 1);
 
-  // Allocate and initialize data
+  // Allocate data
+  Agents= std::vector<Agent>(NbAgents);
+
+  // Force refresh
+  isRefreshed= false;
+  Refresh();
+}
+
+
+void AgentSwarmBoid::Refresh() {
+  if (!isActiveProject) return;
+  if (!isInitialized) return;
+  if (isRefreshed) return;
+  isRefreshed= true;
+
   PosFood= Math::Vec3f(0.5f, 0.5f, 0.6f);
   PosPredator= Math::Vec3f(0.5f, 0.5f, 0.4f);
   Math::Vec3f p= Math::Vec3f(0.0f, 0.5f, 0.0f);
@@ -77,7 +90,6 @@ void AgentSwarmBoid::Initialize() {
   Math::Vec3f v= Math::Vec3f(0.0f, 0.0f, 0.0f);
   Math::Vec3f dv= Math::Vec3f(0.2f, 0.2f, 0.2f);
 
-  Agents= std::vector<Agent>(NbAgents);
   for (int k= 0; k < NbAgents; k++) {
     Agents[k].p[0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
     Agents[k].p[1]= 2.0f * dp[1] * (float)rand() / (float)RAND_MAX - dp[1] + p[1];
@@ -89,16 +101,6 @@ void AgentSwarmBoid::Initialize() {
     Agents[k].n[1]= 1.0f;
     Agents[k].n[2]= 0.0f;
   }
-
-  Refresh();
-}
-
-
-void AgentSwarmBoid::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (isRefreshed) return;
-  isRefreshed= true;
 }
 
 
