@@ -321,6 +321,7 @@ void CompuFluidDyna::Draw() {
 
   // Draw the voxels
   if (D.displayMode1) {
+    glEnable(GL_LIGHTING);
     glPushMatrix();
     glTranslatef(0.5f - 0.5f * (float)nbX / (float)maxDim, 0.5f - 0.5f * (float)nbY / (float)maxDim, 0.5f - 0.5f * (float)nbZ / (float)maxDim);
     glScalef(voxSize, voxSize, voxSize);
@@ -354,6 +355,7 @@ void CompuFluidDyna::Draw() {
       }
     }
     glPopMatrix();
+    glDisable(GL_LIGHTING);
   }
 
   // Draw the velocity field
