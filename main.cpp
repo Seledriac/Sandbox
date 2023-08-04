@@ -20,6 +20,7 @@
 #include "Projects/CompuFluidDyna.hpp"
 #include "Projects/FractalCurvDev.hpp"
 #include "Projects/FractalElevMap.hpp"
+#include "Projects/MarkovProcGene.hpp"
 #include "Projects/ParticleSystem.hpp"
 #include "Projects/SpaceTimeWorld.hpp"
 #include "Projects/TerrainErosion.hpp"
@@ -40,6 +41,7 @@ AgentSwarmBoid myAgentSwarmBoid;
 CompuFluidDyna myCompuFluidDyna;
 FractalCurvDev myFractalCurvDev;
 FractalElevMap myFractalElevMap;
+MarkovProcGene myMarkovProcGene;
 ParticleSystem myParticleSystem;
 SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
@@ -52,6 +54,7 @@ void project_Constructor(unsigned char key) {
   myCompuFluidDyna= CompuFluidDyna();
   myFractalCurvDev= FractalCurvDev();
   myFractalElevMap= FractalElevMap();
+  myMarkovProcGene= MarkovProcGene();
   myParticleSystem= ParticleSystem();
   mySpaceTimeWorld= SpaceTimeWorld();
   myTerrainErosion= TerrainErosion();
@@ -63,6 +66,7 @@ void project_SetActiveProject(unsigned char key) {
   if (key != 'c' && myCompuFluidDyna.isActiveProject) myCompuFluidDyna= CompuFluidDyna();
   if (key != 'f' && myFractalCurvDev.isActiveProject) myFractalCurvDev= FractalCurvDev();
   if (key != 'h' && myFractalElevMap.isActiveProject) myFractalElevMap= FractalElevMap();
+  if (key != 'm' && myMarkovProcGene.isActiveProject) myMarkovProcGene= MarkovProcGene();
   if (key != 'p' && myParticleSystem.isActiveProject) myParticleSystem= ParticleSystem();
   if (key != 'r' && mySpaceTimeWorld.isActiveProject) mySpaceTimeWorld= SpaceTimeWorld();
   if (key != 'e' && myTerrainErosion.isActiveProject) myTerrainErosion= TerrainErosion();
@@ -71,6 +75,7 @@ void project_SetActiveProject(unsigned char key) {
   if (key == 'c') myCompuFluidDyna.SetActiveProject();
   if (key == 'f') myFractalCurvDev.SetActiveProject();
   if (key == 'h') myFractalElevMap.SetActiveProject();
+  if (key == 'm') myMarkovProcGene.SetActiveProject();
   if (key == 'p') myParticleSystem.SetActiveProject();
   if (key == 'r') mySpaceTimeWorld.SetActiveProject();
   if (key == 'e') myTerrainErosion.SetActiveProject();
@@ -82,6 +87,7 @@ void project_Initialize() {
   myCompuFluidDyna.Initialize();
   myFractalCurvDev.Initialize();
   myFractalElevMap.Initialize();
+  myMarkovProcGene.Initialize();
   myParticleSystem.Initialize();
   mySpaceTimeWorld.Initialize();
   myTerrainErosion.Initialize();
@@ -93,6 +99,7 @@ void project_Animate() {
   myCompuFluidDyna.Animate();
   myFractalCurvDev.Animate();
   myFractalElevMap.Animate();
+  myMarkovProcGene.Animate();
   myParticleSystem.Animate();
   mySpaceTimeWorld.Animate();
   myTerrainErosion.Animate();
@@ -104,6 +111,7 @@ void project_Draw() {
   myCompuFluidDyna.Draw();
   myFractalCurvDev.Draw();
   myFractalElevMap.Draw();
+  myMarkovProcGene.Draw();
   myParticleSystem.Draw();
   mySpaceTimeWorld.Draw();
   myTerrainErosion.Draw();
