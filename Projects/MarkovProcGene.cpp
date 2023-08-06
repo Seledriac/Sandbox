@@ -38,10 +38,10 @@ MarkovProcGene::MarkovProcGene() {
 
 void MarkovProcGene::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("Scenario____________", 2));
-    D.param.push_back(ParamUI("ResolutionX_________", 10));
-    D.param.push_back(ParamUI("ResolutionY_________", 10));
-    D.param.push_back(ParamUI("ResolutionZ_________", 10));
+    D.param.push_back(ParamUI("Scenario____________", 5));
+    D.param.push_back(ParamUI("ResolutionX_________", 20));
+    D.param.push_back(ParamUI("ResolutionY_________", 20));
+    D.param.push_back(ParamUI("ResolutionZ_________", 20));
     D.param.push_back(ParamUI("MaxSubstiCount______", 1000));
   }
 
@@ -87,10 +87,13 @@ void MarkovProcGene::Refresh() {
   // Initialize dictionnary and field values
   Dict.clear();
   Field= Field::AllocField3D(nbX, nbY, nbZ, 0);
-  if (scenario == 0) {
+  if (scenario == 0) {  // Random noise
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 2;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
@@ -101,7 +104,7 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 3;
   }
 
-  if (scenario == 1) {
+  if (scenario == 1) {  // Spread
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 2, 0), Field::AllocField3D(1, 1, 2, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
@@ -127,7 +130,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
 
-  if (scenario == 2) {
+  if (scenario == 2) {  // Flower garden
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 2), Field::AllocField3D(5, 5, 1, 2)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][2][2][0]= 2;
@@ -189,7 +192,7 @@ void MarkovProcGene::Refresh() {
         Field[x][y][0]= 2;
   }
 
-  if (scenario == 3) {
+  if (scenario == 3) {  // Snake
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
@@ -215,7 +218,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
 
-  if (scenario == 4) {
+  if (scenario == 4) {  // Spanning tree
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
@@ -245,6 +248,32 @@ void MarkovProcGene::Refresh() {
 
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
+
+  if (scenario == 5) {  // Firework
+    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 6), Field::AllocField3D(5, 5, 1, 6)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][2][2][0]= 6;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][2][2][0]= 1;
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 6;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][1]= 4;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][2]= 3;
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 4, 0), Field::AllocField3D(1, 1, 4, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 4;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][1]= 3;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][2]= 4;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][3]= 3;
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 4, 0), Field::AllocField3D(1, 1, 4, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 4;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][1]= 3;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][2]= 4;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][3]= 3;
+
+    for (int x= 0; x < nbX; x++)
+      for (int y= 0; y < nbY; y++)
+        Field[x][y][0]= 6;
+  }
 }
 
 
@@ -254,7 +283,7 @@ void MarkovProcGene::Animate() {
   if (!isRefreshed) return;
 
   if (idxSubsti >= (int)std::round(D.param[MaxSubstiCount______].Get())) return;
-  if (activeSeq >= (int)Dict.size()) return;
+  if (activeSeq >= (int)Dict.size()) activeSeq= 0;
 
   int matchCount= 0;
   for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size(); idxRule++) {
@@ -304,7 +333,7 @@ void MarkovProcGene::Animate() {
             for (int xR= 0; xR < nbXRule && isMatch; xR++)
               for (int yR= 0; yR < nbYRule && isMatch; yR++)
                 for (int zR= 0; zR < nbZRule && isMatch; zR++)
-                  if (Dict[activeSeq][idxRule][0][xR][yR][zR] >= 0)
+                  if (Dict[activeSeq][idxRule][1][xR][yR][zR] >= 0)
                     Field[xF + xR][yF + yR][zF + zR]= Dict[activeSeq][idxRule][1][xR][yR][zR];
         }
       }

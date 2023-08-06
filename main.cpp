@@ -358,6 +358,8 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
+  if (D.param.empty()) return;
+
   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
     if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 5 + int(D.param.size())) % int(D.param.size());
     if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
@@ -405,26 +407,28 @@ void callback_mouse_click(int button, int state, int x, int y) {
   if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON) cam->endPan();
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
-    if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
-      if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
-        if (button == 3) {
-          if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
-          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(6 - D.idxCursorUI)));
-          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(7 - D.idxCursorUI)));
-        }
-        if (button == 4) {
-          if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
-          if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(6 - D.idxCursorUI)));
-          if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-            D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(7 - D.idxCursorUI)));
-        }
+    if (!D.param.empty()) {
+      if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+        if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
+          if (button == 3) {
+            if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+            if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
+              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(6 - D.idxCursorUI)));
+            if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
+              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(7 - D.idxCursorUI)));
+          }
+          if (button == 4) {
+            if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+            if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
+              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(6 - D.idxCursorUI)));
+            if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
+              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(7 - D.idxCursorUI)));
+          }
 
-        // Compute refresh
-        if (D.autoRefresh)
-          project_Initialize();
+          // Compute refresh
+          if (D.autoRefresh)
+            project_Initialize();
+        }
       }
     }
   }
