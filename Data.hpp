@@ -44,7 +44,7 @@ class Data
   bool playAnimation= false;
   bool autoRefresh= true;
 
-  bool showAxis= true;
+  bool showAxis= false;
 
   bool displayMode1= true;
   bool displayMode2= true;
