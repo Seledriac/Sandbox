@@ -92,6 +92,13 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
+  }
+
+  if (scenario == 1) {  // Random noise
+    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 2;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
@@ -104,7 +111,7 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 3;
   }
 
-  if (scenario == 1) {  // Spread
+  if (scenario == 2) {  // Spread
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 2, 0), Field::AllocField3D(1, 1, 2, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
@@ -130,7 +137,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
 
-  if (scenario == 2) {  // Flower garden
+  if (scenario == 3) {  // Flower garden
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 2), Field::AllocField3D(5, 5, 1, 2)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][2][2][0]= 2;
@@ -192,7 +199,7 @@ void MarkovProcGene::Refresh() {
         Field[x][y][0]= 2;
   }
 
-  if (scenario == 3) {  // Tron infinite wall
+  if (scenario == 4) {  // Tron infinite wall
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
@@ -218,7 +225,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
 
-  if (scenario == 4) {  // Snake
+  if (scenario == 5) {  // Snake
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 5, 0), Field::AllocField3D(1, 1, 5, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][2]= 3;
@@ -275,7 +282,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 3;
   }
 
-  if (scenario == 5) {  // Spanning tree
+  if (scenario == 6) {  // Spanning tree
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
@@ -306,7 +313,7 @@ void MarkovProcGene::Refresh() {
     Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
   }
 
-  if (scenario == 6) {  // Galton
+  if (scenario == 7) {  // Galton
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 2, 0), Field::AllocField3D(1, 1, 2, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][1]= 3;
