@@ -369,12 +369,12 @@ void MarkovProcGene::Animate() {
 
 
 void util_SetColorVoxel(const int iVal, const float iShading) {
-  if (iVal == 1) glColor3f(iShading * 0.5f, iShading * 0.2f, iShading * 0.2f);
-  if (iVal == 2) glColor3f(iShading * 0.2f, iShading * 0.5f, iShading * 0.2f);
-  if (iVal == 3) glColor3f(iShading * 0.2f, iShading * 0.2f, iShading * 0.5f);
-  if (iVal == 4) glColor3f(iShading * 0.1f, iShading * 0.4f, iShading * 0.4f);
-  if (iVal == 5) glColor3f(iShading * 0.4f, iShading * 0.1f, iShading * 0.4f);
-  if (iVal == 6) glColor3f(iShading * 0.4f, iShading * 0.4f, iShading * 0.1f);
+  if (iVal == 1) glColor3f(iShading * 0.7f, iShading * 0.3f, iShading * 0.3f);
+  if (iVal == 2) glColor3f(iShading * 0.3f, iShading * 0.7f, iShading * 0.3f);
+  if (iVal == 3) glColor3f(iShading * 0.3f, iShading * 0.3f, iShading * 0.7f);
+  if (iVal == 4) glColor3f(iShading * 0.2f, iShading * 0.5f, iShading * 0.5f);
+  if (iVal == 5) glColor3f(iShading * 0.5f, iShading * 0.2f, iShading * 0.5f);
+  if (iVal == 6) glColor3f(iShading * 0.5f, iShading * 0.5f, iShading * 0.2f);
 }
 
 void util_DrawBoxPosPos(const float begX, const float begY, const float begZ,
@@ -404,84 +404,64 @@ void MarkovProcGene::Draw() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
-  int maxDim= std::max(std::max(nbX, nbY), nbZ);
-  float voxSize= 1.0 / (float)maxDim;
+  // Compute the shading directions
+  std::vector<std::array<int, 3>> ShaDir;
+  for (int y= -1; y <= 1; y++)
+    for (int z= -1; z <= 1; z++)
+      for (int x= -1; x <= 1; x++)
+        if (x != 0 || y != 0 || z != 0)
+          ShaDir.push_back(std::array<int, 3>({x, y, z}));
 
-  // Compute the voxel shading
+  // Compute the voxel shading map
   std::vector<std::vector<std::vector<float>>> FieldVisi= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-  // for (int y= 0; y < nbY; y++) {
-  //   for (int z= 0; z < nbZ; z++) {
-  //     for (int x= 0; x < nbX; x++) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
-  //     }
-  //     for (int x= nbX - 1; x >= 0; x--) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
-  //     }
-  //   }
-  // }
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        int countVisi= 0;
+        for (int idxDir= 0; idxDir < (int)ShaDir.size(); idxDir++) {
+          int xOff= x;
+          int yOff= y;
+          int zOff= z;
+          bool isOccluded= false;
+          while (!isOccluded) {
+            xOff+= ShaDir[idxDir][0];
+            yOff+= ShaDir[idxDir][1];
+            zOff+= ShaDir[idxDir][2];
+            if (xOff < 0 || xOff >= nbX) break;
+            if (yOff < 0 || yOff >= nbY) break;
+            if (zOff < 0 || zOff >= nbZ) break;
+            if (Field[xOff][yOff][zOff] > 0) isOccluded= true;
+          }
+          if (!isOccluded)
+            countVisi++;
+        }
+        FieldVisi[x][y][z]= (float)countVisi / (float)ShaDir.size();
+      }
+    }
+  }
 
-  // for (int x= 0; x < nbX; x++) {
-  //   for (int z= 0; z < nbZ; z++) {
-  //     for (int y= 0; y < nbY; y++) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
-  //     }
-  //     for (int y= nbY - 1; y >= 0; y--) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
-  //     }
-  //   }
-  // }
-
+  // // Smooth the voxel shading map
+  // std::vector<std::vector<std::vector<float>>> FieldVisiOld= FieldVisi;
   // for (int x= 0; x < nbX; x++) {
   //   for (int y= 0; y < nbY; y++) {
   //     for (int z= 0; z < nbZ; z++) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
-  //     }
-  //     for (int z= nbZ - 1; z >= 0; z--) {
-  //       FieldVisi[x][y][z]+= 1.0f / 6.0f;
-  //       if (Field[x][y][z] > 0) break;
+  //       FieldVisi[x][y][z]= 0.0f;
+  //       int count= 0;
+  //       for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, nbX - 1); xOff++) {
+  //         for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, nbY - 1); yOff++) {
+  //           for (int zOff= std::max(z - 1, 0); zOff <= std::min(z + 1, nbZ - 1); zOff++) {
+  //             FieldVisi[x][y][z]+= FieldVisiOld[xOff][yOff][zOff];
+  //             count++;
+  //           }
+  //         }
+  //       }
+  //       FieldVisi[x][y][z]= (FieldVisi[x][y][z] + 27.0f - (float)count) / 27.0f;
   //     }
   //   }
   // }
 
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        // if (Field[x][y][z] == 0) continue;
-        int countOpaque= 0;
-        for (int xOff= std::max(x - 2, 0); xOff <= std::min(x + 2, nbX - 1); xOff++)
-          for (int yOff= std::max(y - 2, 0); yOff <= std::min(y + 2, nbY - 1); yOff++)
-            for (int zOff= std::max(z - 2, 0); zOff <= std::min(z + 2, nbZ - 1); zOff++)
-              if (Field[xOff][yOff][zOff] > 0)
-                countOpaque++;
-        FieldVisi[x][y][z]= 1.0f - (float)countOpaque / 50.0f;
-      }
-    }
-  }
-  std::vector<std::vector<std::vector<float>>> FieldVisiOld= FieldVisi;
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        // if (Field[x][y][z] == 0) continue;
-        FieldVisi[x][y][z]= 0.0f;
-        int count= 0;
-        for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, nbX - 1); xOff++) {
-          for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, nbY - 1); yOff++) {
-            for (int zOff= std::max(z - 1, 0); zOff <= std::min(z + 1, nbZ - 1); zOff++) {
-              // if (Field[xOff][yOff][zOff] > 0)
-              FieldVisi[x][y][z]+= FieldVisiOld[xOff][yOff][zOff];
-              count++;
-            }
-          }
-        }
-        FieldVisi[x][y][z]/= (float)count;
-      }
-    }
-  }
+  int maxDim= std::max(std::max(nbX, nbY), nbZ);
+  float voxSize= 1.0 / (float)maxDim;
 
   // Draw the voxels
   if (D.displayMode1) {
