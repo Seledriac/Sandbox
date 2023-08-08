@@ -78,8 +78,8 @@ void MarkovProcGene::Refresh() {
   isRefreshed= true;
 
   // Reset progress counters
-  idxSubsti= 0;
   activeSeq= 0;
+  activeRul= 0;
 
   // Get the scenario ID
   int scenario= (int)std::round(D.param[Scenario____________].Get());
@@ -306,7 +306,6 @@ void MarkovProcGene::Animate() {
   for (int idxIter= 0; idxIter < (int)std::round(D.param[StepsPerIter________].Get()); idxIter++) {
     if (Dict.empty()) return;
     if (activeSeq >= (int)Dict.size()) activeSeq= 0;
-
     int matchCount= 0;
     for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size(); idxRule++) {
       int nbXRule= (int)Dict[activeSeq][idxRule][0].size();
@@ -332,16 +331,17 @@ void MarkovProcGene::Animate() {
       activeSeq++;
       return;
     }
-    idxSubsti++;
 
+    activeRul= 0;
     int matchChosen= rand() % matchCount;
-    for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size(); idxRule++) {
+    bool substitutionDone= false;
+    for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size() && !substitutionDone; idxRule++) {
       int nbXRule= (int)Dict[activeSeq][idxRule][0].size();
       int nbYRule= (int)Dict[activeSeq][idxRule][0][0].size();
       int nbZRule= (int)Dict[activeSeq][idxRule][0][0][0].size();
-      for (int xF= 0; xF <= nbX - nbXRule; xF++) {
-        for (int yF= 0; yF <= nbY - nbYRule; yF++) {
-          for (int zF= 0; zF <= nbZ - nbZRule; zF++) {
+      for (int xF= 0; xF <= nbX - nbXRule && !substitutionDone; xF++) {
+        for (int yF= 0; yF <= nbY - nbYRule && !substitutionDone; yF++) {
+          for (int zF= 0; zF <= nbZ - nbZRule && !substitutionDone; zF++) {
             bool isMatch= true;
             for (int xR= 0; xR < nbXRule && isMatch; xR++)
               for (int yR= 0; yR < nbYRule && isMatch; yR++)
@@ -351,12 +351,15 @@ void MarkovProcGene::Animate() {
                       isMatch= false;
             if (isMatch)
               matchCount--;
-            if (matchCount == matchChosen)
+            if (matchCount == matchChosen) {
               for (int xR= 0; xR < nbXRule && isMatch; xR++)
                 for (int yR= 0; yR < nbYRule && isMatch; yR++)
                   for (int zR= 0; zR < nbZRule && isMatch; zR++)
                     if (Dict[activeSeq][idxRule][1][xR][yR][zR] >= 0)
                       Field[xF + xR][yF + yR][zF + zR]= Dict[activeSeq][idxRule][1][xR][yR][zR];
+              substitutionDone= true;
+              activeRul= idxRule;
+            }
           }
         }
       }
@@ -427,6 +430,7 @@ void MarkovProcGene::Draw() {
     glLineWidth(3.0);
     glEnable(GL_LIGHTING);
     int offsetZ= 0;
+    int currentRul= 0;
     for (int idxSequ= 0; idxSequ < (int)Dict.size(); idxSequ++) {
       for (int idxRule= 0; idxRule < (int)Dict[idxSequ].size(); idxRule++) {
         int nbXRule= (int)Dict[idxSequ][idxRule][0].size();
@@ -438,7 +442,10 @@ void MarkovProcGene::Draw() {
         float begXO= 0.5f;
         float begYO= 1.0f + voxSize + (nbYRule + 1) * voxSize;
         float begZO= 0.0f + offsetZ * voxSize;
-        glColor3f(0.3f, 0.3f, 0.3f);
+        if (idxSequ == activeSeq && idxRule == activeRul)
+          glColor3f(1.0f, 1.0f, 1.0f);
+        else
+          glColor3f(0.3f, 0.3f, 0.3f);
         util_DrawBoxPosSiz(begXI, begYI, begZI, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
         util_DrawBoxPosSiz(begXO, begYO, begZO, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
         for (int xR= 0; xR < nbXRule; xR++) {
@@ -456,6 +463,7 @@ void MarkovProcGene::Draw() {
           }
         }
         offsetZ+= nbZRule + 1;
+        currentRul++;
       }
       offsetZ+= 1;
     }
