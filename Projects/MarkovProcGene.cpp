@@ -440,25 +440,27 @@ void MarkovProcGene::Draw() {
     }
   }
 
-  // // Smooth the voxel shading map
-  // std::vector<std::vector<std::vector<float>>> FieldVisiOld= FieldVisi;
-  // for (int x= 0; x < nbX; x++) {
-  //   for (int y= 0; y < nbY; y++) {
-  //     for (int z= 0; z < nbZ; z++) {
-  //       FieldVisi[x][y][z]= 0.0f;
-  //       int count= 0;
-  //       for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, nbX - 1); xOff++) {
-  //         for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, nbY - 1); yOff++) {
-  //           for (int zOff= std::max(z - 1, 0); zOff <= std::min(z + 1, nbZ - 1); zOff++) {
-  //             FieldVisi[x][y][z]+= FieldVisiOld[xOff][yOff][zOff];
-  //             count++;
-  //           }
-  //         }
-  //       }
-  //       FieldVisi[x][y][z]= (FieldVisi[x][y][z] + 27.0f - (float)count) / 27.0f;
-  //     }
-  //   }
-  // }
+  // Smooth the voxel shading map
+  std::vector<std::vector<std::vector<float>>> FieldVisiOld= FieldVisi;
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        FieldVisi[x][y][z]= 0.0f;
+        int count= 0;
+        for (int xOff= std::max(x - 2, 0); xOff <= std::min(x + 2, nbX - 1); xOff++) {
+          for (int yOff= std::max(y - 2, 0); yOff <= std::min(y + 2, nbY - 1); yOff++) {
+            for (int zOff= std::max(z - 2, 0); zOff <= std::min(z + 2, nbZ - 1); zOff++) {
+              if (Field[xOff][yOff][zOff] > 0) {
+                FieldVisi[x][y][z]+= FieldVisiOld[xOff][yOff][zOff];
+                count++;
+              }
+            }
+          }
+        }
+        FieldVisi[x][y][z]/= (float)count;
+      }
+    }
+  }
 
   int maxDim= std::max(std::max(nbX, nbY), nbZ);
   float voxSize= 1.0 / (float)maxDim;
