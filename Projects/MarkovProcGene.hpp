@@ -18,7 +18,6 @@ class MarkovProcGene
   int activeSeq;
   int activeRul;
 
-  std::vector<std::vector<std::vector<int>>> FieldOcclu;
   std::vector<std::vector<std::vector<int>>> Field;
   std::vector<std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>> Dict;
 

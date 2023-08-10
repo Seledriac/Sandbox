@@ -38,10 +38,10 @@ MarkovProcGene::MarkovProcGene() {
 
 void MarkovProcGene::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("Scenario____________", 5));
-    D.param.push_back(ParamUI("ResolutionX_________", 20));
-    D.param.push_back(ParamUI("ResolutionY_________", 20));
-    D.param.push_back(ParamUI("ResolutionZ_________", 20));
+    D.param.push_back(ParamUI("Scenario____________", 1));
+    D.param.push_back(ParamUI("ResolutionX_________", 1));
+    D.param.push_back(ParamUI("ResolutionY_________", 10));
+    D.param.push_back(ParamUI("ResolutionZ_________", 10));
     D.param.push_back(ParamUI("StepsPerIter________", 1));
   }
 
@@ -104,6 +104,7 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 2;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
+
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
@@ -202,7 +203,6 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][4]= 1;
 
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)});
     tmpRule[0][0][0][0]= 1;
     tmpRule[1][0][0][0]= 2;
@@ -233,12 +233,11 @@ void MarkovProcGene::Refresh() {
 
   if (scenario == 6) {  // Spanning tree
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)});
-    tmpRule[0][0][0][0]= 1;
-    tmpRule[1][0][0][0]= 1;
-    tmpRule[1][0][0][1]= 2;
-    tmpRule[1][0][0][2]= 1;
+    tmpRule[0][0][0][0]= 3;
+    tmpRule[1][0][0][0]= 3;
+    tmpRule[1][0][0][1]= 8;
+    tmpRule[1][0][0][2]= 3;
     Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, +3, tmpRule));
     Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, -3, tmpRule));
     Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+2, +3, +1, tmpRule));
@@ -248,10 +247,10 @@ void MarkovProcGene::Refresh() {
 
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 2;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 3;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 8;
 
-    Field[nbX / 2][nbY / 2][nbZ / 2]= 1;
+    Field[nbX / 2][nbY / 2][nbZ / 2]= 3;
   }
 
   if (scenario == 7) {  // Galton
@@ -260,8 +259,6 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][1]= 3;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][1]= 3;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 6;
-
-
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 2, 2, 0), Field::AllocField3D(1, 2, 2, 0)});
     tmpRule[0][0][0][1]= 4;
     tmpRule[0][0][1][0]= 4;
@@ -303,8 +300,8 @@ void MarkovProcGene::Animate() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
+  if (Dict.empty()) return;
   for (int idxIter= 0; idxIter < (int)std::round(D.param[StepsPerIter________].Get()); idxIter++) {
-    if (Dict.empty()) return;
     if (activeSeq >= (int)Dict.size()) activeSeq= 0;
     int matchCount= 0;
     for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size(); idxRule++) {
@@ -327,12 +324,13 @@ void MarkovProcGene::Animate() {
         }
       }
     }
+
+    activeRul= -1;
     if (matchCount == 0) {
       activeSeq++;
-      return;
+      continue;
     }
 
-    activeRul= 0;
     int matchChosen= rand() % matchCount;
     bool substitutionDone= false;
     for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size() && !substitutionDone; idxRule++) {
@@ -375,6 +373,9 @@ void util_SetColorVoxel(const int iVal, const float iShading) {
   if (iVal == 4) glColor3f(iShading * 0.2f, iShading * 0.5f, iShading * 0.5f);
   if (iVal == 5) glColor3f(iShading * 0.5f, iShading * 0.2f, iShading * 0.5f);
   if (iVal == 6) glColor3f(iShading * 0.5f, iShading * 0.5f, iShading * 0.2f);
+  if (iVal == 7) glColor3f(iShading * 0.2f, iShading * 0.2f, iShading * 0.2f);
+  if (iVal == 8) glColor3f(iShading * 0.5f, iShading * 0.5f, iShading * 0.5f);
+  if (iVal == 9) glColor3f(iShading * 0.8f, iShading * 0.8f, iShading * 0.8f);
 }
 
 void util_DrawBoxPosPos(const float begX, const float begY, const float begZ,
@@ -404,11 +405,15 @@ void MarkovProcGene::Draw() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
+  // Get sizes
+  int maxDim= std::max(std::max(nbX, nbY), nbZ);
+  float voxSize= 1.0 / (float)maxDim;
+
   // Compute the shading directions
   std::vector<std::array<int, 3>> ShaDir;
-  for (int y= -1; y <= 1; y++)
-    for (int z= -1; z <= 1; z++)
-      for (int x= -1; x <= 1; x++)
+  for (int y= -2; y <= 2; y++)
+    for (int z= -2; z <= 2; z++)
+      for (int x= -2; x <= 2; x++)
         if (x != 0 || y != 0 || z != 0)
           ShaDir.push_back(std::array<int, 3>({x, y, z}));
 
@@ -447,9 +452,9 @@ void MarkovProcGene::Draw() {
       for (int z= 0; z < nbZ; z++) {
         FieldVisi[x][y][z]= 0.0f;
         int count= 0;
-        for (int xOff= std::max(x - 2, 0); xOff <= std::min(x + 2, nbX - 1); xOff++) {
-          for (int yOff= std::max(y - 2, 0); yOff <= std::min(y + 2, nbY - 1); yOff++) {
-            for (int zOff= std::max(z - 2, 0); zOff <= std::min(z + 2, nbZ - 1); zOff++) {
+        for (int xOff= std::max(x - 1, 0); xOff <= std::min(x + 1, nbX - 1); xOff++) {
+          for (int yOff= std::max(y - 1, 0); yOff <= std::min(y + 1, nbY - 1); yOff++) {
+            for (int zOff= std::max(z - 1, 0); zOff <= std::min(z + 1, nbZ - 1); zOff++) {
               if (Field[xOff][yOff][zOff] > 0) {
                 FieldVisi[x][y][z]+= FieldVisiOld[xOff][yOff][zOff];
                 count++;
@@ -462,9 +467,6 @@ void MarkovProcGene::Draw() {
     }
   }
 
-  int maxDim= std::max(std::max(nbX, nbY), nbZ);
-  float voxSize= 1.0 / (float)maxDim;
-
   // Draw the voxels
   if (D.displayMode1) {
     glEnable(GL_LIGHTING);
@@ -472,10 +474,11 @@ void MarkovProcGene::Draw() {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
           if (Field[x][y][z] == 0) continue;
+          // util_SetColorVoxel(Field[x][y][z], 0.8f);
           util_SetColorVoxel(Field[x][y][z], FieldVisi[x][y][z]);
-          util_DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)(x + 0) * voxSize,
-                             0.5f - 0.5f * (float)nbY / (float)maxDim + (float)(y + 0) * voxSize,
-                             0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)(z + 0) * voxSize,
+          util_DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
+                             0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
+                             0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
                              voxSize, voxSize, voxSize, true);
         }
       }
@@ -486,7 +489,6 @@ void MarkovProcGene::Draw() {
   // Draw the dictionnary
   if (D.displayMode2) {
     glLineWidth(3.0);
-    glEnable(GL_LIGHTING);
     int offsetZ= 0;
     int currentRul= 0;
     for (int idxSequ= 0; idxSequ < (int)Dict.size(); idxSequ++) {
@@ -501,31 +503,43 @@ void MarkovProcGene::Draw() {
         float begYO= 1.0f + voxSize + (nbYRule + 1) * voxSize;
         float begZO= 0.0f + offsetZ * voxSize;
         if (idxSequ == activeSeq && idxRule == activeRul)
-          glColor3f(1.0f, 1.0f, 1.0f);
+          glColor3f(0.8f, 0.8f, 0.8f);
         else
           glColor3f(0.3f, 0.3f, 0.3f);
         util_DrawBoxPosSiz(begXI, begYI, begZI, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
         util_DrawBoxPosSiz(begXO, begYO, begZO, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
+        glEnable(GL_LIGHTING);
         for (int xR= 0; xR < nbXRule; xR++) {
           for (int yR= 0; yR < nbYRule; yR++) {
             for (int zR= 0; zR < nbZRule; zR++) {
               if (Dict[idxSequ][idxRule][0][xR][yR][zR] != 0) {
-                util_SetColorVoxel(Dict[idxSequ][idxRule][0][xR][yR][zR], 1.0f);
+                util_SetColorVoxel(Dict[idxSequ][idxRule][0][xR][yR][zR], 0.8f);
                 util_DrawBoxPosSiz(begXI + xR * voxSize, begYI + yR * voxSize, begZI + zR * voxSize, voxSize, voxSize, voxSize, true);
               }
               if (Dict[idxSequ][idxRule][1][xR][yR][zR] != 0) {
-                util_SetColorVoxel(Dict[idxSequ][idxRule][1][xR][yR][zR], 1.0f);
+                util_SetColorVoxel(Dict[idxSequ][idxRule][1][xR][yR][zR], 0.8f);
                 util_DrawBoxPosSiz(begXO + xR * voxSize, begYO + yR * voxSize, begZO + zR * voxSize, voxSize, voxSize, voxSize, true);
               }
             }
           }
         }
+        glDisable(GL_LIGHTING);
         offsetZ+= nbZRule + 1;
         currentRul++;
       }
       offsetZ+= 1;
     }
-    glDisable(GL_LIGHTING);
+    glLineWidth(1.0);
+  }
+
+  // Draw the box
+  if (D.displayMode3) {
+    glLineWidth(3.0);
+    glColor3f(0.5f, 0.5f, 0.5f);
+    util_DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim,
+                       0.5f - 0.5f * (float)nbY / (float)maxDim,
+                       0.5f - 0.5f * (float)nbZ / (float)maxDim,
+                       voxSize * nbX, voxSize * nbY, voxSize * nbZ, false);
     glLineWidth(1.0);
   }
 }
