@@ -12,11 +12,16 @@ class MarkovProcGene
   int nbY;
   int nbZ;
 
-  int activeSeq;
+  int activeSet;
   int activeRul;
 
   std::vector<std::vector<std::vector<int>>> Field;
   std::vector<std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>> Dict;
+
+  void FillRuleBox(
+      std::array<std::vector<std::vector<std::vector<int>>>, 2>& ioRule,
+      const int iMinX, const int iMinY, const int iMinZ,
+      const int iMaxX, const int iMaxY, const int iMaxZ, const int iVal);
 
   std::array<std::vector<std::vector<std::vector<int>>>, 2> BuildColorSwap(
       const int iOldColor, const int iNewColor,
