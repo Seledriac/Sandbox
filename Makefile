@@ -5,14 +5,13 @@ INCLUDE_DIRS = -I"freeglut\include"
 LIB_DIRS = -L"freeglut\lib\x64"
 
 FLAGS_BUILD = -m64
-# FLAGS_OPTIMIZATION =
 FLAGS_OPTIMIZATION = -O3
 FLAGS_OPENMP = -fopenmp
 FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
 FLAGS_WARNING = -W -Wall -g
 
 CFLAGS = ${FLAGS_BUILD} ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
-SOURCES = $(wildcard *.cpp) $(wildcard fileio/*.cpp) $(wildcard math/*.cpp) $(wildcard tb/*.cpp) $(wildcard util/*.cpp) $(wildcard Projects/*.cpp)
+SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp) $(wildcard FileIO/*.cpp) $(wildcard Util/*.cpp) $(wildcard Projects/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECS = main.exe
 

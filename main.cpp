@@ -11,9 +11,9 @@
 #include "Data.hpp"
 
 // Project Utilities
-#include "util/Vector.hpp"
+#include "Util/Colormap.hpp"
+#include "Util/Vector.hpp"
 #include "tb/Camera.hpp"
-#include "util/Colormap.hpp"
 
 // Project Sandbox Classes
 #include "Projects/AgentSwarmBoid.hpp"

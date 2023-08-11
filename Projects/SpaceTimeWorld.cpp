@@ -13,10 +13,10 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../fileio/FileInput.hpp"
-#include "../util/Colormap.hpp"
-#include "../util/Field.hpp"
-#include "../util/Vector.hpp"
+#include "../FileIO/FileInput.hpp"
+#include "../Util/Colormap.hpp"
+#include "../Util/Field.hpp"
+#include "../Util/Vector.hpp"
 
 
 std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {

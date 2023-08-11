@@ -12,8 +12,8 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../util/Colormap.hpp"
-#include "../util/Vector.hpp"
+#include "../Util/Colormap.hpp"
+#include "../Util/Vector.hpp"
 
 extern Data D;
 

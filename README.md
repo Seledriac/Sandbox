@@ -3,7 +3,7 @@ Sandbox environment with various projects and experimentations (fractals, physic
 
 ## Code structure
 
-**main.cpp** contains the main program loop, parameter list display, mouse/keyboard interations, creation/destruction of the active project.
+**main.cpp** contains the main program loop, parameter list display, mouse/keyboard interactions, creation/destruction of the active project.
 
 **Data.hpp** contains the parameter list and plot data shared between the UI and each project
 
@@ -24,9 +24,9 @@ Add to path env var
 - C:\mingw64\bin
 - C:\MinGW\msys\1.0\bin
 
-## Build and run sandbox
-- make clean
-- make depend
+## Build and run sandbox from scratch
+- make clean (optional)
+- make depend (optional)
 - make
 - ./main
-- *press any of the alphabet key to make the assotiated project active*
+- *press any of the alphabet key to activate the associated project*

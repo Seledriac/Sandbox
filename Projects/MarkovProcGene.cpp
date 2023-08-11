@@ -13,8 +13,8 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../util/Field.hpp"
-#include "../util/Random.hpp"
+#include "../Util/Field.hpp"
+#include "../Util/Random.hpp"
 
 
 extern Data D;

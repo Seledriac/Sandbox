@@ -11,10 +11,10 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../fileio/FileInput.hpp"
-#include "../util/Colormap.hpp"
-#include "../util/Field.hpp"
-#include "../util/Vector.hpp"
+#include "../FileIO/FileInput.hpp"
+#include "../Util/Colormap.hpp"
+#include "../Util/Field.hpp"
+#include "../Util/Vector.hpp"
 
 
 extern Data D;

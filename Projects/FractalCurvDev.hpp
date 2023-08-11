@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "../util/Vector.hpp"
+#include "../Util/Vector.hpp"
 
 
 class FractalCurvDev

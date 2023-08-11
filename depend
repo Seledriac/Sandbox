@@ -1,6 +1,6 @@
-main.o: main.cpp Data.hpp util/Vector.hpp tb/Camera.hpp tb/TrackBall.hpp \
- tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
- tb/TrackBallQuaternion.hpp util/Colormap.hpp Projects/AgentSwarmBoid.hpp \
+main.o: main.cpp Data.hpp Util/Colormap.hpp Util/Vector.hpp tb/Camera.hpp \
+ tb/TrackBall.hpp tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
+ tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid.hpp \
  Projects/CompuFluidDyna.hpp Projects/FractalCurvDev.hpp \
  Projects/FractalElevMap.hpp Projects/MarkovProcGene.hpp \
  Projects/ParticleSystem.hpp Projects/SpaceTimeWorld.hpp \
