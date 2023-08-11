@@ -5,14 +5,14 @@
 #include <vector>
 
 // Project lib
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 class FractalCurvDev
 {
   private:
-  std::vector<std::vector<Math::Vec3f>> Nodes;
-  std::vector<std::array<Math::Vec3f, 3>> Faces;
+  std::vector<std::vector<Vector::Vec3f>> Nodes;
+  std::vector<std::array<Vector::Vec3f, 3>> Faces;
 
   public:
   bool isActiveProject;

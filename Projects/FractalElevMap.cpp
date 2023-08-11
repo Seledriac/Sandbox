@@ -13,10 +13,10 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
 #include "../util/Field.hpp"
 #include "../util/Random.hpp"
+#include "../util/Vector.hpp"
 
 
 extern Data D;
@@ -87,9 +87,9 @@ void FractalElevMap::Initialize() {
   mapNbY= std::max(2, int(std::round(D.param[testVar1____________].Get())));
 
   // Allocate data
-  mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  mapNor= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
-  mapCol= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
+  mapPos= Field::AllocField2D(mapNbX, mapNbY, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  mapNor= Field::AllocField2D(mapNbX, mapNbY, Vector::Vec3f(0.0f, 0.0f, 1.0f));
+  mapCol= Field::AllocField2D(mapNbX, mapNbY, Vector::Vec3f(0.5f, 0.5f, 0.5f));
 
   // Force refresh
   isRefreshed= false;
@@ -108,8 +108,8 @@ void FractalElevMap::Refresh() {
 
   mapNbIter= std::max(1, int(std::round(D.param[testVar3____________].Get())));
 
-  mapFocus= Math::Vec2d(D.param[testVar4____________].Get(), D.param[testVar5____________].Get());
-  mapConst= Math::Vec2d(D.param[testVar6____________].Get(), D.param[testVar7____________].Get());
+  mapFocus= Vector::Vec2d(D.param[testVar4____________].Get(), D.param[testVar5____________].Get());
+  mapConst= Vector::Vec2d(D.param[testVar6____________].Get(), D.param[testVar7____________].Get());
 
   mapDivThresh= std::max(0.0, double(D.param[testVar8____________].Get()));
 
@@ -121,12 +121,12 @@ void FractalElevMap::Refresh() {
       mapPos[x][y][0]= float(x) / float(mapNbX - 1);
       mapPos[x][y][1]= float(y) / float(mapNbY - 1);
 
-      Math::Vec2d z= mapFocus + Math::Vec2d(2.0 * double(x) / double(mapNbX - 1) - 1.0, 2.0 * double(y) / double(mapNbY - 1) - 1.0) / mapZoom;
+      Vector::Vec2d z= mapFocus + Vector::Vec2d(2.0 * double(x) / double(mapNbX - 1) - 1.0, 2.0 * double(y) / double(mapNbY - 1) - 1.0) / mapZoom;
       int idxIter= 0;
       while (idxIter < mapNbIter && z.normSquared() < mapDivThresh) {
         const double zr= z[0] * z[0] - z[1] * z[1];
         const double zi= 2.0 * z[0] * z[1];
-        z= Math::Vec2d(zr, zi) + mapConst;
+        z= Vector::Vec2d(zr, zi) + mapConst;
         idxIter++;
       }
 
@@ -145,7 +145,7 @@ void FractalElevMap::Refresh() {
 
   // Smooth the positions
   for (int iter= 0; iter < std::max(mapNbX, mapNbY) / 128; iter++) {
-    std::vector<std::vector<Math::Vec3f>> mapPosOld= mapPos;
+    std::vector<std::vector<Vector::Vec3f>> mapPosOld= mapPos;
 #pragma omp parallel for
     for (int x= 0; x < mapNbX; x++) {
       for (int y= 0; y < mapNbY; y++) {
@@ -198,8 +198,8 @@ void FractalElevMap::Draw() {
   glBegin(GL_QUADS);
   for (int x= 0; x < mapNbX - 1; x++) {
     for (int y= 0; y < mapNbY - 1; y++) {
-      Math::Vec3f flatNormal= (mapNor[x][y] + mapNor[x + 1][y] + mapNor[x + 1][y + 1] + mapNor[x][y + 1]).normalized();
-      Math::Vec3f flatColor= (mapCol[x][y] + mapCol[x + 1][y] + mapCol[x + 1][y + 1] + mapCol[x][y + 1]) / 4.0f;
+      Vector::Vec3f flatNormal= (mapNor[x][y] + mapNor[x + 1][y] + mapNor[x + 1][y + 1] + mapNor[x][y + 1]).normalized();
+      Vector::Vec3f flatColor= (mapCol[x][y] + mapCol[x + 1][y] + mapCol[x + 1][y + 1] + mapCol[x][y + 1]) / 4.0f;
       glColor3fv((flatColor / 2.0f).array());
       glNormal3fv(flatNormal.array());
       glVertex3fv(mapPos[x][y].array());

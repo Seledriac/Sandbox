@@ -12,7 +12,7 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 extern Data D;
@@ -83,12 +83,12 @@ void AgentSwarmBoid::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  PosFood= Math::Vec3f(0.5f, 0.5f, 0.6f);
-  PosPredator= Math::Vec3f(0.5f, 0.5f, 0.4f);
-  Math::Vec3f p= Math::Vec3f(0.0f, 0.5f, 0.0f);
-  Math::Vec3f dp= Math::Vec3f(0.5f, 0.0f, 0.5f);
-  Math::Vec3f v= Math::Vec3f(0.0f, 0.0f, 0.0f);
-  Math::Vec3f dv= Math::Vec3f(0.2f, 0.2f, 0.2f);
+  PosFood= Vector::Vec3f(0.5f, 0.5f, 0.6f);
+  PosPredator= Vector::Vec3f(0.5f, 0.5f, 0.4f);
+  Vector::Vec3f p= Vector::Vec3f(0.0f, 0.5f, 0.0f);
+  Vector::Vec3f dp= Vector::Vec3f(0.5f, 0.0f, 0.5f);
+  Vector::Vec3f v= Vector::Vec3f(0.0f, 0.0f, 0.0f);
+  Vector::Vec3f dv= Vector::Vec3f(0.2f, 0.2f, 0.2f);
 
   for (int k= 0; k < NbAgents; k++) {
     Agents[k].p[0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
@@ -115,13 +115,13 @@ void AgentSwarmBoid::Animate() {
   float c= (float)D.param[AS_CoeffCohes_______].Get();
   float d= (float)D.param[AS_CoeffHunger______].Get();
   float e= (float)D.param[AS_CoeffFear________].Get();
-  std::vector<Math::Vec3f> velocityChange(NbAgents);
+  std::vector<Vector::Vec3f> velocityChange(NbAgents);
 
 #pragma omp parallel for
   // Compute the forces
   for (int k0= 0; k0 < NbAgents; k0++) {
     int count= 0;
-    Math::Vec3f sep, ali, coh, aim, run;
+    Vector::Vec3f sep, ali, coh, aim, run;
     for (int k1= 0; k1 < NbAgents; k1++) {
       if ((Agents[k0].p - Agents[k1].p).normSquared() > sizeAgent * sizeAgent) continue;
       if (k0 == k1) continue;
@@ -170,13 +170,13 @@ void AgentSwarmBoid::Draw() {
   glEnd();
 
   for (int k= 0; k < NbAgents; k++) {
-    Math::Vec3f front= Agents[k].v.normalized();
-    Math::Vec3f u(1.0f, 0.0f, 0.0f);
+    Vector::Vec3f front= Agents[k].v.normalized();
+    Vector::Vec3f u(1.0f, 0.0f, 0.0f);
     if (u.dot(front) == 0.0f) u.set(0.0f, 1.0f, 0.0f);
-    Math::Vec3f left= front.cross(u).normalized();
-    Math::Vec3f up= front.cross(left).normalized();
+    Vector::Vec3f left= front.cross(u).normalized();
+    Vector::Vec3f up= front.cross(left).normalized();
 
-    Math::Vec3f p1, p2, p3, p4, p5, p6, p7;
+    Vector::Vec3f p1, p2, p3, p4, p5, p6, p7;
 
     p1= Agents[k].p + sizeAgent * (+0.5f * front + 0.00f * left + 0.0f * up);
     p2= Agents[k].p + sizeAgent * (+0.0f * front - 0.07f * left + 0.1f * up);

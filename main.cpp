@@ -11,7 +11,7 @@
 #include "Data.hpp"
 
 // Project Utilities
-#include "math/Vectors.hpp"
+#include "util/Vector.hpp"
 #include "tb/Camera.hpp"
 #include "util/Colormap.hpp"
 
@@ -168,38 +168,6 @@ void callback_display() {
 
   // Draw the reference frame
   if (D.showAxis) {
-    glBegin(GL_LINES);
-    // // Wireframe box
-    // glColor3f(1.0f, 1.0f, 1.0f);
-
-    // glVertex3f(0.0f, 0.0f, 0.0f);
-    // glVertex3f(1.0f, 0.0f, 0.0f);
-    // glVertex3f(0.0f, 0.0f, 1.0f);
-    // glVertex3f(1.0f, 0.0f, 1.0f);
-    // glVertex3f(0.0f, 1.0f, 0.0f);
-    // glVertex3f(1.0f, 1.0f, 0.0f);
-    // glVertex3f(0.0f, 1.0f, 1.0f);
-    // glVertex3f(1.0f, 1.0f, 1.0f);
-
-    // glVertex3f(0.0f, 0.0f, 0.0f);
-    // glVertex3f(0.0f, 1.0f, 0.0f);
-    // glVertex3f(0.0f, 0.0f, 1.0f);
-    // glVertex3f(0.0f, 1.0f, 1.0f);
-    // glVertex3f(1.0f, 0.0f, 0.0f);
-    // glVertex3f(1.0f, 1.0f, 0.0f);
-    // glVertex3f(1.0f, 0.0f, 1.0f);
-    // glVertex3f(1.0f, 1.0f, 1.0f);
-
-    // glVertex3f(0.0f, 0.0f, 0.0f);
-    // glVertex3f(0.0f, 0.0f, 1.0f);
-    // glVertex3f(0.0f, 1.0f, 0.0f);
-    // glVertex3f(0.0f, 1.0f, 1.0f);
-    // glVertex3f(1.0f, 0.0f, 0.0f);
-    // glVertex3f(1.0f, 0.0f, 1.0f);
-    // glVertex3f(1.0f, 1.0f, 0.0f);
-    // glVertex3f(1.0f, 1.0f, 1.0f);
-    // glEnd();
-
     // XZY Basis
     glLineWidth(3.0f);
     glBegin(GL_LINES);
@@ -214,6 +182,7 @@ void callback_display() {
     glVertex3f(0.0f, 0.0f, 1.0f);
     glEnd();
     glLineWidth(1.0f);
+
     glPointSize(6.0f);
     glBegin(GL_POINTS);
     glColor3f(1.0, 0.0, 0.0);
@@ -263,7 +232,7 @@ void callback_display() {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
       float r, g, b;
-      Colormap::RatioToJetBrightSmooth(float(k0) / float(D.plotData.size() - 1), r, g, b);
+      Colormap::RatioToJetBrightSmooth(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
       glColor3f(r, g, b);
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];

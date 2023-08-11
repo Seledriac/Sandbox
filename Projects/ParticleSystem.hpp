@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 class ParticleSystem
@@ -12,12 +12,12 @@ class ParticleSystem
   private:
   int NbParticles;
 
-  std::vector<Math::Vec3f> PosOld;
-  std::vector<Math::Vec3f> PosCur;
-  std::vector<Math::Vec3f> VelCur;
-  std::vector<Math::Vec3f> AccCur;
-  std::vector<Math::Vec3f> ForCur;
-  std::vector<Math::Vec3f> ColCur;
+  std::vector<Vector::Vec3f> PosOld;
+  std::vector<Vector::Vec3f> PosCur;
+  std::vector<Vector::Vec3f> VelCur;
+  std::vector<Vector::Vec3f> AccCur;
+  std::vector<Vector::Vec3f> ForCur;
+  std::vector<Vector::Vec3f> ColCur;
   std::vector<float> RadCur;
   std::vector<float> MasCur;
   std::vector<float> HotCur;

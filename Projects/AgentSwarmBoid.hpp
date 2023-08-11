@@ -4,13 +4,13 @@
 #include <vector>
 
 // Project lib
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 class Agent
 {
   public:
-  Math::Vec3f p, v, n;
+  Vector::Vec3f p, v, n;
 };
 
 
@@ -19,8 +19,8 @@ class AgentSwarmBoid
   private:
   int NbAgents;
   std::vector<Agent> Agents;
-  Math::Vec3f PosFood;
-  Math::Vec3f PosPredator;
+  Vector::Vec3f PosFood;
+  Vector::Vec3f PosPredator;
 
   public:
   bool isActiveProject;

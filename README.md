@@ -1,5 +1,11 @@
 # Sandbox
-Sandbox project for all sort of stuff implemented from scratch
+Sandbox environment with various projects and experimentations (fractals, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use a generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+
+## Code structure
+**main.cpp** contains the main program loop, parameter list display, mouse/keyboard interations, creation/destruction of the active project.
+**Data.hpp** contains the parameter list and plot data shared between the UI and each project
+**util/** contains header-only utility namespaces for colormaps, random numbers, vectors, fields, ...
+**Projects/** contains all projects currently implemented in the sandbox environment. All projects share the same structure with initialization of they parameter lists, status flags, refresh/animate/draw methods
 
 ## Minimal build env on windows
 Get Win64 gcc compiler and extract at root of C: drive
@@ -19,3 +25,4 @@ Add to path env var
 - make depend
 - make
 - ./main
+- *press any of the alphabet key to make the assotiated project active*

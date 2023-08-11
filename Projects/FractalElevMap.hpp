@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 class FractalElevMap
@@ -15,12 +15,12 @@ class FractalElevMap
   int mapNbIter;
   double mapDivThresh;
   double mapZoom;
-  Math::Vec2d mapFocus;
-  Math::Vec2d mapConst;
+  Vector::Vec2d mapFocus;
+  Vector::Vec2d mapConst;
 
-  std::vector<std::vector<Math::Vec3f>> mapPos;
-  std::vector<std::vector<Math::Vec3f>> mapNor;
-  std::vector<std::vector<Math::Vec3f>> mapCol;
+  std::vector<std::vector<Vector::Vec3f>> mapPos;
+  std::vector<std::vector<Vector::Vec3f>> mapNor;
+  std::vector<std::vector<Vector::Vec3f>> mapCol;
 
   public:
   bool isActiveProject;

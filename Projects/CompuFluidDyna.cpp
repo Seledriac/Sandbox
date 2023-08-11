@@ -12,9 +12,9 @@
 // Project lib
 #include "../Data.hpp"
 #include "../fileio/FileInput.hpp"
-#include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
 #include "../util/Field.hpp"
+#include "../util/Vector.hpp"
 
 
 extern Data D;
@@ -159,11 +159,11 @@ void CompuFluidDyna::Refresh() {
         if (scenarioType == 1) {
           // Add Pac Man positive inlet
           {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(D.param[ObstaclePosX________].Get(), D.param[ObstaclePosY________].Get(), D.param[ObstaclePosZ________].Get());
+            Vector::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
+            Vector::Vec3f posObstacle(D.param[ObstaclePosX________].Get(), D.param[ObstaclePosY________].Get(), D.param[ObstaclePosZ________].Get());
             float refRadius= std::max((float)D.param[ObstacleSize________].Get(), 0.0f);
             if ((posCell - posObstacle).norm() <= refRadius) {
-              Math::Vec3f vecFlow(D.param[CoeffForceX_________].Get(), D.param[CoeffForceY_________].Get(), D.param[CoeffForceZ_________].Get());
+              Vector::Vec3f vecFlow(D.param[CoeffForceX_________].Get(), D.param[CoeffForceY_________].Get(), D.param[CoeffForceZ_________].Get());
               vecFlow.normalize();
               Bound[x][y][z]= 1;
               if ((posCell - posObstacle - vecFlow * 0.5f * refRadius).norm() <= refRadius * 0.8f) {
@@ -178,11 +178,11 @@ void CompuFluidDyna::Refresh() {
 
           // Add Pac Man negative inlet
           {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(1.0f - D.param[ObstaclePosX________].Get(), 1.0f - D.param[ObstaclePosY________].Get(), 1.0f - D.param[ObstaclePosZ________].Get());
+            Vector::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
+            Vector::Vec3f posObstacle(1.0f - D.param[ObstaclePosX________].Get(), 1.0f - D.param[ObstaclePosY________].Get(), 1.0f - D.param[ObstaclePosZ________].Get());
             float refRadius= std::max((float)D.param[ObstacleSize________].Get(), 0.0f);
             if ((posCell - posObstacle).norm() <= refRadius) {
-              Math::Vec3f vecFlow(D.param[CoeffForceX_________].Get(), D.param[CoeffForceY_________].Get(), D.param[CoeffForceZ_________].Get());
+              Vector::Vec3f vecFlow(D.param[CoeffForceX_________].Get(), D.param[CoeffForceY_________].Get(), D.param[CoeffForceZ_________].Get());
               vecFlow.normalize();
               vecFlow= -1.0 * vecFlow;
               Bound[x][y][z]= 1;
@@ -217,8 +217,8 @@ void CompuFluidDyna::Refresh() {
 
         // todo rework vortex shedding BC setup
         if (scenarioType == 3) {
-          Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-          Math::Vec3f posObstacle(D.param[ObstaclePosX________].Get(), D.param[ObstaclePosY________].Get(), D.param[ObstaclePosZ________].Get());
+          Vector::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
+          Vector::Vec3f posObstacle(D.param[ObstaclePosX________].Get(), D.param[ObstaclePosY________].Get(), D.param[ObstaclePosZ________].Get());
           float refRadius= std::max((float)D.param[ObstacleSize________].Get(), 0.0f);
           if ((posCell - posObstacle).norm() <= refRadius) {
             Bound[x][y][z]= 1;
@@ -385,12 +385,12 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          Math::Vec3f vec(VelXCur[x][y][z], VelYCur[x][y][z], VelZCur[x][y][z]);
+          Vector::Vec3f vec(VelXCur[x][y][z], VelYCur[x][y][z], VelZCur[x][y][z]);
           if (vec.normSquared() > 0.0) {
             float r= 0.0f, g= 0.0f, b= 0.0f;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_________].Get(), r, g, b);
             glColor3f(r, g, b);
-            Math::Vec3f pos((float)x, (float)y, (float)z);
+            Vector::Vec3f pos((float)x, (float)y, (float)z);
             glVertex3fv(pos.array());
             glVertex3fv(pos + std::log(vec.norm() + 1.0f) * vec * D.param[ScaleFactor_________].Get());
           }

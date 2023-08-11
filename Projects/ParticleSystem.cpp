@@ -13,8 +13,8 @@
 
 // Project lib
 #include "../Data.hpp"
-#include "../math/Vectors.hpp"
 #include "../util/Colormap.hpp"
+#include "../util/Vector.hpp"
 
 
 extern Data D;
@@ -75,13 +75,13 @@ void ParticleSystem::Initialize() {
   NbParticles= std::max((int)std::round(D.param[PD_NbParticles______].Get()), 1);
 
   // Allocate data
-  PosOld= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  PosCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  VelCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  AccCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  ForCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  ColCur= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  PosOld= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  PosCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  PosCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  VelCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  AccCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  ForCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
+  ColCur= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
   RadCur= std::vector<float>(NbParticles, 0.0f);
   MasCur= std::vector<float>(NbParticles, 0.0f);
   HotCur= std::vector<float>(NbParticles, 0.0f);
@@ -122,7 +122,7 @@ void ParticleSystem::Refresh() {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-          Math::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+          Vector::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
           PosCur[k0]-= val;
           PosCur[k1]+= val;
         }
@@ -144,8 +144,8 @@ void ParticleSystem::Animate() {
   float dt= D.param[PD_TimeStep_________].Get() / float(nbSubstep);
   float velocityDecay= (1.0f - D.param[PD_VelocityDecay____].Get() * dt);
 
-  Math::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].Get());
-  Math::Vec3f buoyancy(0.0f, 0.0f, D.param[PD_ForceBuoyancy____].Get());
+  Vector::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].Get());
+  Vector::Vec3f buoyancy(0.0f, 0.0f, D.param[PD_ForceBuoyancy____].Get());
 
   float conductionFactor= D.param[PD_FactorConduc_____].Get();
 
@@ -212,7 +212,7 @@ void ParticleSystem::Animate() {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-          Math::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+          Vector::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
           PosCur[k0]-= val;
           PosCur[k1]+= val;
         }

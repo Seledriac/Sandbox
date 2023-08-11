@@ -4,9 +4,6 @@
 #include <array>
 #include <vector>
 
-// Project lib
-#include "../math/Vectors.hpp"
-
 
 class MarkovProcGene
 {

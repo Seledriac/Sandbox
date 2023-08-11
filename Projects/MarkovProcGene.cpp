@@ -3,6 +3,7 @@
 
 
 // Standard lib
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -13,6 +14,7 @@
 // Project lib
 #include "../Data.hpp"
 #include "../util/Field.hpp"
+#include "../util/Random.hpp"
 
 
 extern Data D;
@@ -80,6 +82,7 @@ void MarkovProcGene::Refresh() {
   // Reset progress counters
   activeSeq= 0;
   activeRul= 0;
+  D.plotData.clear();
 
   // Get the scenario ID
   int scenario= (int)std::round(D.param[Scenario____________].Get());
@@ -325,13 +328,17 @@ void MarkovProcGene::Animate() {
       }
     }
 
+    D.plotData.resize(1);
+    D.plotData[0].first= "MatchCount";
+    D.plotData[0].second.push_back((double)matchCount);
+
     activeRul= -1;
     if (matchCount == 0) {
       activeSeq++;
       continue;
     }
 
-    int matchChosen= rand() % matchCount;
+    int matchChosen= Random::Val(0, matchCount);
     bool substitutionDone= false;
     for (int idxRule= 0; idxRule < (int)Dict[activeSeq].size() && !substitutionDone; idxRule++) {
       int nbXRule= (int)Dict[activeSeq][idxRule][0].size();
@@ -411,9 +418,9 @@ void MarkovProcGene::Draw() {
 
   // Compute the shading directions
   std::vector<std::array<int, 3>> ShaDir;
-  for (int y= -2; y <= 2; y++)
-    for (int z= -2; z <= 2; z++)
-      for (int x= -2; x <= 2; x++)
+  for (int y= -1; y <= 1; y++)
+    for (int z= -1; z <= 1; z++)
+      for (int x= -1; x <= 1; x++)
         if (x != 0 || y != 0 || z != 0)
           ShaDir.push_back(std::array<int, 3>({x, y, z}));
 

@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../math/Vectors.hpp"
+#include "../util/Vector.hpp"
 
 
 class TerrainErosion
@@ -13,18 +13,18 @@ class TerrainErosion
   int terrainNbX;
   int terrainNbY;
   int terrainNbC;
-  std::vector<std::vector<Math::Vec3f>> terrainPos;
-  std::vector<std::vector<Math::Vec3f>> terrainNor;
-  std::vector<std::vector<Math::Vec3f>> terrainCol;
+  std::vector<std::vector<Vector::Vec3f>> terrainPos;
+  std::vector<std::vector<Vector::Vec3f>> terrainNor;
+  std::vector<std::vector<Vector::Vec3f>> terrainCol;
   std::vector<std::vector<float>> terrainChg;
 
   int dropletNbK;
-  std::vector<Math::Vec3f> dropletPosOld;
-  std::vector<Math::Vec3f> dropletPosCur;
-  std::vector<Math::Vec3f> dropletVelCur;
-  std::vector<Math::Vec3f> dropletAccCur;
-  std::vector<Math::Vec3f> dropletForCur;
-  std::vector<Math::Vec3f> dropletColCur;
+  std::vector<Vector::Vec3f> dropletPosOld;
+  std::vector<Vector::Vec3f> dropletPosCur;
+  std::vector<Vector::Vec3f> dropletVelCur;
+  std::vector<Vector::Vec3f> dropletAccCur;
+  std::vector<Vector::Vec3f> dropletForCur;
+  std::vector<Vector::Vec3f> dropletColCur;
   std::vector<float> dropletMasCur;
   std::vector<float> dropletRadCur;
   std::vector<float> dropletSatCur;

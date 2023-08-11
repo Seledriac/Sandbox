@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace Math {
+namespace Vector {
   class Vec2f
   {
 public:
@@ -81,7 +81,7 @@ private:
     float x[2];
   };
 
-    class Vec2d
+  class Vec2d
   {
 public:
     // Constructors
@@ -336,4 +336,4 @@ private:
     float x[4];
   };
 
-}  // namespace Math
+}  // namespace Vector
