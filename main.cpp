@@ -224,7 +224,7 @@ void callback_display() {
 
   // Draw the 2D plot
   {
-    int plotW= 400;
+    int plotW= 800;
     int plotH= 100;
     int textW= 80;
     int textH= 12;
@@ -232,7 +232,7 @@ void callback_display() {
       if (D.plotData[k0].second.empty()) continue;
       // Set the color
       float r, g, b;
-      Colormap::RatioToJetBrightSmooth(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
+      Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
       glColor3f(r, g, b);
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
@@ -250,7 +250,7 @@ void callback_display() {
       sprintf(str, "%+.2e", valMin);
       draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
       sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
-      draw_text(winW - textW, winH - textH - textH * k0, str);
+      draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
       // Draw the polyline
       glBegin(GL_LINE_STRIP);
       for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
@@ -317,6 +317,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
 
   else if (key >= 'A' && key <= 'Z') project_Constructor(key);
   else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
+
+  // Compute refresh
+  if (D.autoRefresh)
+    project_Initialize();
 
   glutPostRedisplay();
 }
