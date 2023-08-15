@@ -41,9 +41,9 @@ MarkovProcGene::MarkovProcGene() {
 void MarkovProcGene::SetActiveProject() {
   if (!isActiveProject) {
     D.param.push_back(ParamUI("Scenario____________", 8));
-    D.param.push_back(ParamUI("ResolutionX_________", 10));
-    D.param.push_back(ParamUI("ResolutionY_________", 10));
-    D.param.push_back(ParamUI("ResolutionZ_________", 10));
+    D.param.push_back(ParamUI("ResolutionX_________", 11));
+    D.param.push_back(ParamUI("ResolutionY_________", 11));
+    D.param.push_back(ParamUI("ResolutionZ_________", 11));
     D.param.push_back(ParamUI("StepsPerIter________", 1));
   }
 
@@ -105,9 +105,6 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
-    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 2;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
 
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
@@ -116,6 +113,11 @@ void MarkovProcGene::Refresh() {
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 3;
+
+    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 2;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 1;
   }
 
   // Spread
@@ -221,7 +223,7 @@ void MarkovProcGene::Refresh() {
   if (scenario++ == (int)std::round(D.param[Scenario____________].Get())) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 0), Field::AllocField3D(5, 5, 1, 0)}));
-    FillRuleBox(Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1], 0, 0, 0, 4, 4, 0, 2);
+    FillRuleBox(Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1], 0, 0, 0, 4, 4, 0, 2, true, true);
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][2][2][0]= 2;
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][2][2][0]= 1;
 
@@ -306,44 +308,55 @@ void MarkovProcGene::Refresh() {
 
   // Skyscraper
   if (scenario++ == (int)std::round(D.param[Scenario____________].Get())) {
+    // Fill the floor
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 0), Field::AllocField3D(5, 5, 1, 0)}));
-    FillRuleBox(Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1], 0, 0, 0, 4, 4, 0, 8);
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][2][2][0]= 1;
+    tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(6, 6, 1, 0), Field::AllocField3D(6, 6, 1, 0)});
+    FillRuleBox(tmpRule, 0, 0, 0, 5, 5, 0, 1, true, false);
+    tmpRule[0][0][0][0]= 2;
+    tmpRule[0][0][5][0]= 2;
+    tmpRule[0][5][0][0]= 2;
+    tmpRule[0][5][5][0]= 2;
+    FillRuleBox(tmpRule, 0, 0, 0, 5, 5, 0, 3, false, true);
+    tmpRule[1][0][0][0]= 2;
+    tmpRule[1][0][5][0]= 2;
+    tmpRule[1][5][0][0]= 2;
+    tmpRule[1][5][5][0]= 2;
+    Dict[(int)Dict.size() - 1].push_back(BuildColorSwap(3, 3, tmpRule));
+    Dict[(int)Dict.size() - 1].push_back(BuildColorSwap(3, 4, tmpRule));
 
+    // Spread the floor grid
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 5, 0), Field::AllocField3D(1, 1, 5, 0)}));
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 7;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][1]= 7;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][2]= 7;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][3]= 7;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][4]= 2;
-
-    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(3, 3, 3, 0), Field::AllocField3D(3, 3, 3, 0)}));
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][1][1][0]= 2;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][1][1][0]= 2;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][1][0][1]= 3;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][1][1][1]= 3;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][1][2][1]= 3;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][1][2]= 4;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][1][1][2]= 4;
-    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][2][1][2]= 4;
-
-    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
-    tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 3, 1, 0), Field::AllocField3D(1, 3, 1, 0)});
-    tmpRule[0][0][0][0]= 3;
-    tmpRule[1][0][0][0]= 3;
-    tmpRule[1][0][1][0]= 3;
+    tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 6, 1, 0), Field::AllocField3D(1, 6, 1, 0)});
+    FillRuleBox(tmpRule, 0, 0, 0, 0, 5, 0, 1, true, true);
+    tmpRule[0][0][0][0]= 2;
+    tmpRule[1][0][0][0]= 2;
+    tmpRule[1][0][5][0]= 2;
     Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, +3, tmpRule));
     Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, -2, +3, tmpRule));
-    Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+2, +1, +3, BuildColorSwap(3, 4, tmpRule)));
-    Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(-2, +1, +3, BuildColorSwap(3, 4, tmpRule)));
+    Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+2, +1, +3, tmpRule));
+    Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(-2, +1, +3, tmpRule));
+
+    // Seed the floor grid
+    Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
+    Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 1;
+    Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][1][0][0][0]= 2;
+
+
+    // Dict[(int)Dict.size() - 1].push_back(tmpRule);
+    // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+2, +1, +3, BuildColorSwap(3, 4, tmpRule)));
+    // tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 3, 1, 0), Field::AllocField3D(1, 3, 1, 0)});
+    // tmpRule[0][0][0][0]= 3;
+    // tmpRule[1][0][0][0]= 3;
+    // tmpRule[1][0][1][0]= 3;
+    // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, +3, tmpRule));
+    // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, -2, +3, tmpRule));
+    // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+2, +1, +3, BuildColorSwap(3, 4, tmpRule)));
+    // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(-2, +1, +3, BuildColorSwap(3, 4, tmpRule)));
 
     // Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     // tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(3, 2, 1, 0), Field::AllocField3D(3, 2, 1, 0)});
-    // FillRuleBox(tmpRule, 0, 0, 0, 2, 1, 0, 7);
+    // FillRuleBox(tmpRule, 0, 0, 0, 2, 1, 0, 7, true, true);
     // tmpRule[0][1][0][0]= 8;
     // tmpRule[1][1][0][0]= 7;
     // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, +3, tmpRule));
@@ -353,7 +366,7 @@ void MarkovProcGene::Refresh() {
 
     // Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     // tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(2, 2, 1, 0), Field::AllocField3D(2, 2, 1, 0)});
-    // FillRuleBox(tmpRule, 0, 0, 0, 1, 1, 0, 8);
+    // FillRuleBox(tmpRule, 0, 0, 0, 1, 1, 0, 8, true, true);
     // tmpRule[0][0][0][0]= 7;
     // tmpRule[0][0][0][0]= 6;
     // Dict[(int)Dict.size() - 1].push_back(BuildSymmetric(+1, +2, +3, tmpRule));
@@ -363,7 +376,7 @@ void MarkovProcGene::Refresh() {
 
     for (int x= 0; x < nbX; x++)
       for (int y= 0; y < nbY; y++)
-        Field[x][y][0]= 8;
+        Field[x][y][0]= 1;
   }
 }
 
@@ -376,45 +389,51 @@ void MarkovProcGene::Animate() {
   // Iterate over the desired number of substitutions
   if (Dict.empty()) return;
   for (int idxIter= 0; idxIter < (int)std::round(D.param[StepsPerIter________].Get()); idxIter++) {
-    if (activeSet >= (int)Dict.size()) activeSet= 0;
+    activeRul= -1;
+    activeSet= -1;
+    int activeMatchCount= 0;
 
-    // Sweep the field and count the matches for the current ruleset
-    int matchCount= 0;
-    for (int idxRule= 0; idxRule < (int)Dict[activeSet].size(); idxRule++) {
-      int nbXRule= (int)Dict[activeSet][idxRule][0].size();
-      int nbYRule= (int)Dict[activeSet][idxRule][0][0].size();
-      int nbZRule= (int)Dict[activeSet][idxRule][0][0][0].size();
-      for (int xF= 0; xF <= nbX - nbXRule; xF++) {
-        for (int yF= 0; yF <= nbY - nbYRule; yF++) {
-          for (int zF= 0; zF <= nbZ - nbZRule; zF++) {
-            bool isMatch= true;
-            for (int xR= 0; xR < nbXRule && isMatch; xR++)
-              for (int yR= 0; yR < nbYRule && isMatch; yR++)
-                for (int zR= 0; zR < nbZRule && isMatch; zR++)
-                  if (Dict[activeSet][idxRule][0][xR][yR][zR] >= 0)
-                    if (Field[xF + xR][yF + yR][zF + zR] != Dict[activeSet][idxRule][0][xR][yR][zR])
-                      isMatch= false;
-            if (isMatch)
-              matchCount++;
+    for (int idxSet= 0; idxSet < (int)Dict.size(); idxSet++) {
+      int matchCount= 0;
+      for (int idxRule= 0; idxRule < (int)Dict[idxSet].size(); idxRule++) {
+        int nbXRule= (int)Dict[idxSet][idxRule][0].size();
+        int nbYRule= (int)Dict[idxSet][idxRule][0][0].size();
+        int nbZRule= (int)Dict[idxSet][idxRule][0][0][0].size();
+        for (int xF= 0; xF <= nbX - nbXRule; xF++) {
+          for (int yF= 0; yF <= nbY - nbYRule; yF++) {
+            for (int zF= 0; zF <= nbZ - nbZRule; zF++) {
+              bool isMatch= true;
+              for (int xR= 0; xR < nbXRule && isMatch; xR++)
+                for (int yR= 0; yR < nbYRule && isMatch; yR++)
+                  for (int zR= 0; zR < nbZRule && isMatch; zR++)
+                    if (Dict[idxSet][idxRule][0][xR][yR][zR] >= 0)
+                      if (Field[xF + xR][yF + yR][zF + zR] != Dict[idxSet][idxRule][0][xR][yR][zR])
+                        isMatch= false;
+              if (isMatch)
+                matchCount++;
+            }
           }
         }
       }
+      if (activeSet < 0 && matchCount > 0) {
+        activeSet= idxSet;
+        activeMatchCount= matchCount;
+      }
+      D.plotData.resize(Dict.size());
+      D.plotData[idxSet].first= "Set" + std::to_string(idxSet);
+      D.plotData[idxSet].second.push_back((double)matchCount);
     }
 
-    // Plot the count of matches
-    D.plotData.resize(1);
-    D.plotData[0].first= "MatchCount";
-    D.plotData[0].second.push_back((double)matchCount);
-
-    // Skip to next iteration with next ruleset if no match is found
-    activeRul= -1;
-    if (matchCount == 0) {
-      activeSet++;
-      continue;
-    }
+    // // Skip to next iteration with next ruleset if no match is found
+    // activeRul= -1;
+    // if (matchCount == 0) {
+    //   activeSet++;
+    //   continue;
+    // }
+    if (activeSet < 0) continue;
 
     // Choose a random match to substitute according to its rule
-    int matchChosen= Random::Val(0, matchCount);
+    int matchChosen= Random::Val(0, activeMatchCount);
     bool substitutionDone= false;
     for (int idxRule= 0; idxRule < (int)Dict[activeSet].size() && !substitutionDone; idxRule++) {
       int nbXRule= (int)Dict[activeSet][idxRule][0].size();
@@ -431,8 +450,8 @@ void MarkovProcGene::Animate() {
                     if (Field[xF + xR][yF + yR][zF + zR] != Dict[activeSet][idxRule][0][xR][yR][zR])
                       isMatch= false;
             if (isMatch)
-              matchCount--;
-            if (matchCount == matchChosen) {
+              activeMatchCount--;
+            if (activeMatchCount == matchChosen) {
               for (int xR= 0; xR < nbXRule && isMatch; xR++)
                 for (int yR= 0; yR < nbYRule && isMatch; yR++)
                   for (int zR= 0; zR < nbZRule && isMatch; zR++)
@@ -450,6 +469,7 @@ void MarkovProcGene::Animate() {
 
 
 void util_SetColorVoxel(const int iVal, const float iShading) {
+  if (iVal < 0) glColor3f(0.0f, 0.0f, 0.0f);
   if (iVal == 1) glColor3f(iShading * 0.7f, iShading * 0.3f, iShading * 0.3f);
   if (iVal == 2) glColor3f(iShading * 0.3f, iShading * 0.7f, iShading * 0.3f);
   if (iVal == 3) glColor3f(iShading * 0.3f, iShading * 0.3f, iShading * 0.7f);
@@ -633,15 +653,16 @@ void MarkovProcGene::Draw() {
 void MarkovProcGene::FillRuleBox(
     std::array<std::vector<std::vector<std::vector<int>>>, 2>& ioRule,
     const int iMinX, const int iMinY, const int iMinZ,
-    const int iMaxX, const int iMaxY, const int iMaxZ, const int iVal) {
+    const int iMaxX, const int iMaxY, const int iMaxZ,
+    const int iVal, const bool iFillI, const bool iFillO) {
   int nbXRule= (int)ioRule[0].size();
   int nbYRule= (int)ioRule[0][0].size();
   int nbZRule= (int)ioRule[0][0][0].size();
   for (int x= std::max(iMinX, 0); x <= std::min(iMaxX, nbXRule - 1); x++) {
     for (int y= std::max(iMinY, 0); y <= std::min(iMaxY, nbYRule - 1); y++) {
       for (int z= std::max(iMinZ, 0); z <= std::min(iMaxZ, nbZRule - 1); z++) {
-        ioRule[0][x][y][z]= iVal;
-        ioRule[1][x][y][z]= iVal;
+        if (iFillI) ioRule[0][x][y][z]= iVal;
+        if (iFillO) ioRule[1][x][y][z]= iVal;
       }
     }
   }
