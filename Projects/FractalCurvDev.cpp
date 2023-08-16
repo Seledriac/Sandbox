@@ -19,10 +19,10 @@ extern Data D;
 
 enum ParamType
 {
-  MaxDepth____________,
-  testVar1____________,
-  testVar2____________,
-  testVar3____________,
+  MaxDepth____,
+  testVar1____,
+  testVar2____,
+  testVar3____,
 };
 
 
@@ -40,10 +40,10 @@ FractalCurvDev::FractalCurvDev() {
 
 void FractalCurvDev::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("MaxDepth____________", 4.0));
-    D.param.push_back(ParamUI("testVar1____________", 0.005));
-    D.param.push_back(ParamUI("testVar2____________", 1.0));
-    D.param.push_back(ParamUI("testVar3____________", 1.0));
+    D.param.push_back(ParamUI("MaxDepth____", 4.0));
+    D.param.push_back(ParamUI("testVar1____", 0.005));
+    D.param.push_back(ParamUI("testVar2____", 1.0));
+    D.param.push_back(ParamUI("testVar3____", 1.0));
   }
 
   isActiveProject= true;
@@ -56,10 +56,10 @@ void FractalCurvDev::SetActiveProject() {
 void FractalCurvDev::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (D.param[MaxDepth____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar1____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar2____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar3____________].hasChanged()) isInitialized= false;
+  if (D.param[MaxDepth____].hasChanged()) isInitialized= false;
+  if (D.param[testVar1____].hasChanged()) isInitialized= false;
+  if (D.param[testVar2____].hasChanged()) isInitialized= false;
+  if (D.param[testVar3____].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
 
@@ -79,7 +79,7 @@ void FractalCurvDev::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  int maxDepth= std::max((int)std::round(D.param[MaxDepth____________].Get()), 2);
+  int maxDepth= std::max((int)std::round(D.param[MaxDepth____].Get()), 2);
 
   // Initialize the curve at depth 0
 #ifdef KOCH_SNOWFLAKE
@@ -104,7 +104,7 @@ void FractalCurvDev::Refresh() {
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
       Vector::Vec3f posA= Nodes[idxDepth - 1][idxNode];
       Vector::Vec3f posB= Nodes[idxDepth - 1][idxNode + 1];
-      Vector::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____________].Get() / std::pow(D.param[testVar2____________].Get(), double(idxDepth)));
+      Vector::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____].Get() / std::pow(D.param[testVar2____].Get(), double(idxDepth)));
 
 #ifdef KOCH_SNOWFLAKE
       Vector::Vec3f posN0= ZOffset + posA;
@@ -133,7 +133,7 @@ void FractalCurvDev::Refresh() {
       if (idxNode % 2 == 0)
         dir= Vector::Vec3f() - dir;
       Vector::Vec3f posN0= ZOffset + posA;
-      Vector::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____________].Get() * (posB - posA).norm() * dir;
+      Vector::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____].Get() * (posB - posA).norm() * dir;
       Vector::Vec3f posN2= ZOffset + posB;
 
       if (idxNode == 0)

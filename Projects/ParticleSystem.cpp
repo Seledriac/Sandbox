@@ -21,16 +21,16 @@ extern Data D;
 
 enum ParamType
 {
-  PD_Constrain2D______,
-  PD_NbParticles______,
-  PD_TimeStep_________,
-  PD_NbSubStep________,
-  PD_VelocityDecay____,
-  PD_FactorConduc_____,
-  PD_ForceGravity_____,
-  PD_ForceBuoyancy____,
-  PD_HeatInput________,
-  PD_HeatOutput_______,
+  Constrain2D_,
+  NbParticles_,
+  TimeStep____,
+  NbSubStep___,
+  VelDecay____,
+  FactorCondu_,
+  ForceGrav___,
+  ForceBuoy___,
+  HeatInput___,
+  HeatOutput__,
 };
 
 
@@ -45,16 +45,16 @@ ParticleSystem::ParticleSystem() {
 
 void ParticleSystem::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("PD_Constrain2D______", 1));
-    D.param.push_back(ParamUI("PD_NbParticles______", 1000));
-    D.param.push_back(ParamUI("PD_TimeStep_________", 0.05));
-    D.param.push_back(ParamUI("PD_NbSubStep________", 8));
-    D.param.push_back(ParamUI("PD_VelocityDecay____", 0.1));
-    D.param.push_back(ParamUI("PD_FactorConduc_____", 2.0));
-    D.param.push_back(ParamUI("PD_ForceGravity_____", -1.0));
-    D.param.push_back(ParamUI("PD_ForceBuoyancy____", 4.0));
-    D.param.push_back(ParamUI("PD_HeatInput________", 4.0));
-    D.param.push_back(ParamUI("PD_HeatOutput_______", 0.1));
+    D.param.push_back(ParamUI("Constrain2D_", 1));
+    D.param.push_back(ParamUI("NbParticles_", 1000));
+    D.param.push_back(ParamUI("TimeStep____", 0.05));
+    D.param.push_back(ParamUI("NbSubStep___", 8));
+    D.param.push_back(ParamUI("VelDecay____", 0.1));
+    D.param.push_back(ParamUI("FactorCondu_", 2.0));
+    D.param.push_back(ParamUI("ForceGrav___", -1.0));
+    D.param.push_back(ParamUI("ForceBuoy___", 4.0));
+    D.param.push_back(ParamUI("HeatInput___", 4.0));
+    D.param.push_back(ParamUI("HeatOutput__", 0.1));
   }
 
   isActiveProject= true;
@@ -67,12 +67,12 @@ void ParticleSystem::SetActiveProject() {
 void ParticleSystem::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (D.param[PD_NbParticles______].hasChanged()) isInitialized= false;
+  if (D.param[NbParticles_].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
 
   // Get UI parameters
-  NbParticles= std::max((int)std::round(D.param[PD_NbParticles______].Get()), 1);
+  NbParticles= std::max((int)std::round(D.param[NbParticles_].Get()), 1);
 
   // Allocate data
   PosOld= std::vector<Vector::Vec3f>(NbParticles, Vector::Vec3f(0.0f, 0.0f, 0.0f));
@@ -100,7 +100,7 @@ void ParticleSystem::Refresh() {
 
   // Compute radius based on box size and 2D or 3D
   float BaseRadius= 0.6;
-  if (int(std::round(D.param[PD_Constrain2D______].Get())) >= 1)
+  if (int(std::round(D.param[Constrain2D_].Get())) >= 1)
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 2.0f);
   else
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 3.0f);
@@ -108,7 +108,7 @@ void ParticleSystem::Refresh() {
   // Initialize with random particle properties
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
-      if (int(std::round(D.param[PD_Constrain2D______].Get())) >= 1 && dim == 0) continue;
+      if (int(std::round(D.param[Constrain2D_].Get())) >= 1 && dim == 0) continue;
       PosCur[k][dim]= (float(rand()) / float(RAND_MAX)) - 0.5f;
       ColCur[k][dim]= (float(rand()) / float(RAND_MAX));
     }
@@ -118,7 +118,7 @@ void ParticleSystem::Refresh() {
   }
 
   // Apply collision constraint (Gauss Seidel)
-  for (int idxStep= 0; idxStep < int(std::round(D.param[PD_NbSubStep________].Get())); idxStep++) {
+  for (int idxStep= 0; idxStep < int(std::round(D.param[NbSubStep___].Get())); idxStep++) {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
@@ -140,21 +140,21 @@ void ParticleSystem::Animate() {
   if (!isRefreshed) return;
 
   float domainRad= 1.0f;
-  int nbSubstep= int(std::round(D.param[PD_NbSubStep________].Get()));
-  float dt= D.param[PD_TimeStep_________].Get() / float(nbSubstep);
-  float velocityDecay= (1.0f - D.param[PD_VelocityDecay____].Get() * dt);
+  int nbSubstep= int(std::round(D.param[NbSubStep___].Get()));
+  float dt= D.param[TimeStep____].Get() / float(nbSubstep);
+  float velocityDecay= (1.0f - D.param[VelDecay____].Get() * dt);
 
-  Vector::Vec3f gravity(0.0f, 0.0f, D.param[PD_ForceGravity_____].Get());
-  Vector::Vec3f buoyancy(0.0f, 0.0f, D.param[PD_ForceBuoyancy____].Get());
+  Vector::Vec3f gravity(0.0f, 0.0f, D.param[ForceGrav___].Get());
+  Vector::Vec3f buoyancy(0.0f, 0.0f, D.param[ForceBuoy___].Get());
 
-  float conductionFactor= D.param[PD_FactorConduc_____].Get();
+  float conductionFactor= D.param[FactorCondu_].Get();
 
-  float heatAdd= D.param[PD_HeatInput________].Get();
-  float heatRem= D.param[PD_HeatOutput_______].Get();
+  float heatAdd= D.param[HeatInput___].Get();
+  float heatRem= D.param[HeatOutput__].Get();
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
-    if (int(std::round(D.param[PD_Constrain2D______].Get())) >= 1) {
+    if (int(std::round(D.param[Constrain2D_].Get())) >= 1) {
       for (int k0= 0; k0 < NbParticles; k0++) {
         PosCur[k0][0]= 0.0f;
         VelCur[k0][0]= 0.0f;
@@ -200,12 +200,12 @@ void ParticleSystem::Animate() {
 
     // Apply boundary constraint
     for (int k0= 0; k0 < NbParticles; k0++) {
-      // // Square domain
-      // for (int dim= 0; dim < 3; dim++)
-      //   PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
-      // Circular domain
-      if (PosCur[k0].norm() + RadCur[k0] > domainRad)
-        PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
+      // Square domain
+      for (int dim= 0; dim < 3; dim++)
+        PosCur[k0][dim]= std::min(std::max(PosCur[k0][dim], -domainRad), domainRad);
+      // // Circular domain
+      // if (PosCur[k0].norm() + RadCur[k0] > domainRad)
+      //   PosCur[k0]= PosCur[k0].normalized() * (domainRad - RadCur[k0]);
     }
 
     // Apply collision constraint (Gauss Seidel)

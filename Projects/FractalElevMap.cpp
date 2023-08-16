@@ -23,16 +23,16 @@ extern Data D;
 
 enum ParamType
 {
-  testVar0____________,
-  testVar1____________,
-  testVar2____________,
-  testVar3____________,
-  testVar4____________,
-  testVar5____________,
-  testVar6____________,
-  testVar7____________,
-  testVar8____________,
-  testVar9____________,
+  testVar0____,
+  testVar1____,
+  testVar2____,
+  testVar3____,
+  testVar4____,
+  testVar5____,
+  testVar6____,
+  testVar7____,
+  testVar8____,
+  testVar9____,
 };
 
 
@@ -47,16 +47,16 @@ FractalElevMap::FractalElevMap() {
 
 void FractalElevMap::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("testVar0____________", 500.0));
-    D.param.push_back(ParamUI("testVar1____________", 500.0));
-    D.param.push_back(ParamUI("testVar2____________", 0.5));
-    D.param.push_back(ParamUI("testVar3____________", 40.0));
-    D.param.push_back(ParamUI("testVar4____________", 0.365242));
-    D.param.push_back(ParamUI("testVar5____________", 0.534752));
-    D.param.push_back(ParamUI("testVar6____________", -0.8350));
-    D.param.push_back(ParamUI("testVar7____________", -0.2241));
-    D.param.push_back(ParamUI("testVar8____________", 32.0));
-    D.param.push_back(ParamUI("testVar9____________", 1.0));
+    D.param.push_back(ParamUI("testVar0____", 500.0));
+    D.param.push_back(ParamUI("testVar1____", 500.0));
+    D.param.push_back(ParamUI("testVar2____", 0.5));
+    D.param.push_back(ParamUI("testVar3____", 40.0));
+    D.param.push_back(ParamUI("testVar4____", 0.365242));
+    D.param.push_back(ParamUI("testVar5____", 0.534752));
+    D.param.push_back(ParamUI("testVar6____", -0.8350));
+    D.param.push_back(ParamUI("testVar7____", -0.2241));
+    D.param.push_back(ParamUI("testVar8____", 32.0));
+    D.param.push_back(ParamUI("testVar9____", 1.0));
   }
 
   isActiveProject= true;
@@ -69,22 +69,22 @@ void FractalElevMap::SetActiveProject() {
 void FractalElevMap::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (D.param[testVar0____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar1____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar2____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar3____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar4____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar5____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar6____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar7____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar8____________].hasChanged()) isInitialized= false;
-  if (D.param[testVar9____________].hasChanged()) isInitialized= false;
+  if (D.param[testVar0____].hasChanged()) isInitialized= false;
+  if (D.param[testVar1____].hasChanged()) isInitialized= false;
+  if (D.param[testVar2____].hasChanged()) isInitialized= false;
+  if (D.param[testVar3____].hasChanged()) isInitialized= false;
+  if (D.param[testVar4____].hasChanged()) isInitialized= false;
+  if (D.param[testVar5____].hasChanged()) isInitialized= false;
+  if (D.param[testVar6____].hasChanged()) isInitialized= false;
+  if (D.param[testVar7____].hasChanged()) isInitialized= false;
+  if (D.param[testVar8____].hasChanged()) isInitialized= false;
+  if (D.param[testVar9____].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
 
   // Get UI parameters
-  mapNbX= std::max(2, int(std::round(D.param[testVar0____________].Get())));
-  mapNbY= std::max(2, int(std::round(D.param[testVar1____________].Get())));
+  mapNbX= std::max(2, int(std::round(D.param[testVar0____].Get())));
+  mapNbY= std::max(2, int(std::round(D.param[testVar1____].Get())));
 
   // Allocate data
   mapPos= Field::AllocField2D(mapNbX, mapNbY, Vector::Vec3f(0.0f, 0.0f, 0.0f));
@@ -104,14 +104,14 @@ void FractalElevMap::Refresh() {
   isRefreshed= true;
 
 
-  mapZoom= std::max(1.e-6, double(D.param[testVar2____________].Get()));
+  mapZoom= std::max(1.e-6, double(D.param[testVar2____].Get()));
 
-  mapNbIter= std::max(1, int(std::round(D.param[testVar3____________].Get())));
+  mapNbIter= std::max(1, int(std::round(D.param[testVar3____].Get())));
 
-  mapFocus= Vector::Vec2d(D.param[testVar4____________].Get(), D.param[testVar5____________].Get());
-  mapConst= Vector::Vec2d(D.param[testVar6____________].Get(), D.param[testVar7____________].Get());
+  mapFocus= Vector::Vec2d(D.param[testVar4____].Get(), D.param[testVar5____].Get());
+  mapConst= Vector::Vec2d(D.param[testVar6____].Get(), D.param[testVar7____].Get());
 
-  mapDivThresh= std::max(0.0, double(D.param[testVar8____________].Get()));
+  mapDivThresh= std::max(0.0, double(D.param[testVar8____].Get()));
 
 
   // Compute positions
@@ -136,7 +136,7 @@ void FractalElevMap::Refresh() {
       // if (val != 0.0) val= std::log2(std::max(std::log2(val), 1.0));
 
       // mapPos[x][y][2]= float(z.norm());
-      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____________].Get();
+      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____].Get();
       Colormap::RatioToJetSmooth(float(val), mapCol[x][y][0], mapCol[x][y][1], mapCol[x][y][2]);
 
       mapPos[x][y][2]= 0.5f + 0.04f * std::min(std::max(float(val), 0.0f), 1.0f);

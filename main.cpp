@@ -27,11 +27,12 @@
 
 
 // Global variables used for the display
-int winFPS= 60;
 int winW, winH;
-int characHeight= 12;
-int characWidth= 8;
-int characterSpace= 1;
+constexpr int winFPS= 60;
+constexpr int paramNbCharac= 12;
+constexpr int characHeight= 12;
+constexpr int characWidth= 8;
+constexpr int characterSpace= 1;
 Camera *cam;
 
 // Global variables used by the scene
@@ -218,22 +219,25 @@ void callback_display() {
     draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
     if (k == D.idxParamUI) {
       sprintf(str, "_");
-      draw_text((23 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
+      draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
+      draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + characterSpace), str);
     }
   }
 
   // Draw the 2D plot
   {
-    int plotW= 800;
+    int plotW= 600;
     int plotH= 100;
     int textW= 80;
     int textH= 12;
     for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
       if (D.plotData[k0].second.empty()) continue;
+
       // Set the color
       float r, g, b;
       Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
       glColor3f(r, g, b);
+
       // Find the min max range for vertical scaling
       double valMin= D.plotData[k0].second[0];
       double valMax= D.plotData[k0].second[0];
@@ -241,16 +245,24 @@ void callback_display() {
         if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
         if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
       }
+
       // Draw the text for legend and min max values
       char str[50];
       strcpy(str, D.plotData[k0].first.c_str());
       draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
+
       sprintf(str, "%+.2e", valMax);
       draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
+
       sprintf(str, "%+.2e", valMin);
       draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
+
+      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
+      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
+
       sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
       draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
+
       // Draw the polyline
       glBegin(GL_LINE_STRIP);
       for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
@@ -381,7 +393,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.param.empty()) {
-      if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+      if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
         if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
           if (button == 3) {
             if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
@@ -425,10 +437,10 @@ void callback_passive_mouse_motion(int x, int y) {
 
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
-  if (x > 23 * characWidth && x < (23 + 14) * characWidth) {
+  if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
     if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
       D.idxParamUI= (y - 3) / (characHeight + characterSpace);
-      D.idxCursorUI= (x - 23 * characWidth) / characWidth;
+      D.idxCursorUI= (x - (paramNbCharac + 3) * characWidth) / characWidth;
     }
   }
 

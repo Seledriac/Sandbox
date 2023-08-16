@@ -19,14 +19,14 @@ extern Data D;
 
 enum ParamType
 {
-  AS_NbAgents_________,
-  AS_SizeAgent________,
-  AS_TimeStep_________,
-  AS_CoeffSep_________,
-  AS_CoeffAli_________,
-  AS_CoeffCohes_______,
-  AS_CoeffHunger______,
-  AS_CoeffFear________,
+  NbAgents____,
+  SizeAgent___,
+  TimeStep____,
+  CoeffSep____,
+  CoeffAli____,
+  CoeffCohes__,
+  CoeffHunger_,
+  CoeffFear___,
 };
 
 
@@ -41,14 +41,14 @@ AgentSwarmBoid::AgentSwarmBoid() {
 
 void AgentSwarmBoid::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("AS_NbAgents_________", 100));
-    D.param.push_back(ParamUI("AS_SizeAgent________", 0.05));
-    D.param.push_back(ParamUI("AS_TimeStep_________", 0.05));
-    D.param.push_back(ParamUI("AS_CoeffSep_________", 0.75));
-    D.param.push_back(ParamUI("AS_CoeffAli_________", 0.015));
-    D.param.push_back(ParamUI("AS_CoeffCohes_______", 0.45));
-    D.param.push_back(ParamUI("AS_CoeffHunger______", 0.04));
-    D.param.push_back(ParamUI("AS_CoeffFear________", 0.06));
+    D.param.push_back(ParamUI("NbAgents____", 100));
+    D.param.push_back(ParamUI("SizeAgent___", 0.05));
+    D.param.push_back(ParamUI("TimeStep____", 0.05));
+    D.param.push_back(ParamUI("CoeffSep____", 0.75));
+    D.param.push_back(ParamUI("CoeffAli____", 0.015));
+    D.param.push_back(ParamUI("CoeffCohes__", 0.45));
+    D.param.push_back(ParamUI("CoeffHunger_", 0.04));
+    D.param.push_back(ParamUI("CoeffFear___", 0.06));
   }
 
   isActiveProject= true;
@@ -61,12 +61,12 @@ void AgentSwarmBoid::SetActiveProject() {
 void AgentSwarmBoid::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (D.param[AS_NbAgents_________].hasChanged()) isInitialized= false;
+  if (D.param[NbAgents____].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
 
   // Get UI parameters
-  NbAgents= std::max((int)std::round(D.param[AS_NbAgents_________].Get()), 1);
+  NbAgents= std::max((int)std::round(D.param[NbAgents____].Get()), 1);
 
   // Allocate data
   Agents= std::vector<Agent>(NbAgents);
@@ -109,12 +109,12 @@ void AgentSwarmBoid::Animate() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
-  float sizeAgent= (float)D.param[AS_SizeAgent________].Get();
-  float a= (float)D.param[AS_CoeffSep_________].Get();
-  float b= (float)D.param[AS_CoeffAli_________].Get();
-  float c= (float)D.param[AS_CoeffCohes_______].Get();
-  float d= (float)D.param[AS_CoeffHunger______].Get();
-  float e= (float)D.param[AS_CoeffFear________].Get();
+  float sizeAgent= (float)D.param[SizeAgent___].Get();
+  float a= (float)D.param[CoeffSep____].Get();
+  float b= (float)D.param[CoeffAli____].Get();
+  float c= (float)D.param[CoeffCohes__].Get();
+  float d= (float)D.param[CoeffHunger_].Get();
+  float e= (float)D.param[CoeffFear___].Get();
   std::vector<Vector::Vec3f> velocityChange(NbAgents);
 
 #pragma omp parallel for
@@ -148,7 +148,7 @@ void AgentSwarmBoid::Animate() {
     if (l > 0.3f) {
       Agents[k].v= 0.3f * Agents[k].v / l;
     }
-    Agents[k].p= Agents[k].p + Agents[k].v * D.param[AS_TimeStep_________].Get();
+    Agents[k].p= Agents[k].p + Agents[k].v * D.param[TimeStep____].Get();
   }
 }
 
@@ -158,7 +158,7 @@ void AgentSwarmBoid::Draw() {
   if (!isInitialized) return;
   if (!isRefreshed) return;
 
-  float sizeAgent= (float)D.param[AS_SizeAgent________].Get();
+  float sizeAgent= (float)D.param[SizeAgent___].Get();
 
   glBegin(GL_LINES);
   for (int i= 0; i < NbAgents; i++) {

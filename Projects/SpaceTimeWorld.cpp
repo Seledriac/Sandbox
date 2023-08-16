@@ -140,18 +140,18 @@ extern Data D;
 
 enum ParamType
 {
-  GR_WorldNbT_________,
-  GR_WorldNbX_________,
-  GR_WorldNbY_________,
-  GR_WorldNbZ_________,
-  GR_ScreenNbH________,
-  GR_ScreenNbV________,
-  GR_ScreenNbS________,
-  GR_CursorWorldT_____,
-  GR_MassReach________,
-  GR_TimePersist______,
-  GR_FactorCurv_______,
-  GR_FactorDoppler____,
+  WorldNbT____,
+  WorldNbX____,
+  WorldNbY____,
+  WorldNbZ____,
+  ScreenNbH___,
+  ScreenNbV___,
+  ScreenNbS___,
+  CursorWorldT,
+  MassReach___,
+  TimePersist_,
+  FactorCurv__,
+  FactorDoppl_,
 };
 
 
@@ -166,18 +166,18 @@ SpaceTimeWorld::SpaceTimeWorld() {
 
 void SpaceTimeWorld::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("GR_WorldNbT_________", 16));
-    D.param.push_back(ParamUI("GR_WorldNbX_________", 32));
-    D.param.push_back(ParamUI("GR_WorldNbY_________", 32));
-    D.param.push_back(ParamUI("GR_WorldNbZ_________", 32));
-    D.param.push_back(ParamUI("GR_ScreenNbH________", 64));
-    D.param.push_back(ParamUI("GR_ScreenNbV________", 64));
-    D.param.push_back(ParamUI("GR_ScreenNbS________", 64));
-    D.param.push_back(ParamUI("GR_CursorWorldT_____", 8));
-    D.param.push_back(ParamUI("GR_MassReach________", 8));
-    D.param.push_back(ParamUI("GR_TimePersist______", 0.8));
-    D.param.push_back(ParamUI("GR_FactorCurv_______", 1.0));
-    D.param.push_back(ParamUI("GR_FactorDoppler____", 1.0));
+    D.param.push_back(ParamUI("WorldNbT____", 16));
+    D.param.push_back(ParamUI("WorldNbX____", 32));
+    D.param.push_back(ParamUI("WorldNbY____", 32));
+    D.param.push_back(ParamUI("WorldNbZ____", 32));
+    D.param.push_back(ParamUI("ScreenNbH___", 64));
+    D.param.push_back(ParamUI("ScreenNbV___", 64));
+    D.param.push_back(ParamUI("ScreenNbS___", 64));
+    D.param.push_back(ParamUI("CursorWorldT", 8));
+    D.param.push_back(ParamUI("MassReach___", 8));
+    D.param.push_back(ParamUI("TimePersist_", 0.8));
+    D.param.push_back(ParamUI("FactorCurv__", 1.0));
+    D.param.push_back(ParamUI("FactorDoppl_", 1.0));
   }
 
   isActiveProject= true;
@@ -190,30 +190,30 @@ void SpaceTimeWorld::SetActiveProject() {
 void SpaceTimeWorld::Initialize() {
   // Check if need to skip
   if (!isActiveProject) return;
-  if (D.param[GR_WorldNbT_________].hasChanged()) isInitialized= false;
-  if (D.param[GR_WorldNbX_________].hasChanged()) isInitialized= false;
-  if (D.param[GR_WorldNbY_________].hasChanged()) isInitialized= false;
-  if (D.param[GR_WorldNbZ_________].hasChanged()) isInitialized= false;
-  if (D.param[GR_ScreenNbH________].hasChanged()) isInitialized= false;
-  if (D.param[GR_ScreenNbV________].hasChanged()) isInitialized= false;
-  if (D.param[GR_ScreenNbS________].hasChanged()) isInitialized= false;
-  if (D.param[GR_CursorWorldT_____].hasChanged()) isInitialized= false;
-  if (D.param[GR_MassReach________].hasChanged()) isInitialized= false;
-  if (D.param[GR_TimePersist______].hasChanged()) isInitialized= false;
-  if (D.param[GR_FactorCurv_______].hasChanged()) isInitialized= false;
-  if (D.param[GR_FactorDoppler____].hasChanged()) isInitialized= false;
+  if (D.param[WorldNbT____].hasChanged()) isInitialized= false;
+  if (D.param[WorldNbX____].hasChanged()) isInitialized= false;
+  if (D.param[WorldNbY____].hasChanged()) isInitialized= false;
+  if (D.param[WorldNbZ____].hasChanged()) isInitialized= false;
+  if (D.param[ScreenNbH___].hasChanged()) isInitialized= false;
+  if (D.param[ScreenNbV___].hasChanged()) isInitialized= false;
+  if (D.param[ScreenNbS___].hasChanged()) isInitialized= false;
+  if (D.param[CursorWorldT].hasChanged()) isInitialized= false;
+  if (D.param[MassReach___].hasChanged()) isInitialized= false;
+  if (D.param[TimePersist_].hasChanged()) isInitialized= false;
+  if (D.param[FactorCurv__].hasChanged()) isInitialized= false;
+  if (D.param[FactorDoppl_].hasChanged()) isInitialized= false;
   if (isInitialized) return;
   isInitialized= true;
 
   // Get UI parameters
-  worldNbT= std::max(int(std::round(D.param[GR_WorldNbT_________].Get())), 1);
-  worldNbX= std::max(int(std::round(D.param[GR_WorldNbX_________].Get())), 1);
-  worldNbY= std::max(int(std::round(D.param[GR_WorldNbY_________].Get())), 1);
-  worldNbZ= std::max(int(std::round(D.param[GR_WorldNbZ_________].Get())), 1);
+  worldNbT= std::max(int(std::round(D.param[WorldNbT____].Get())), 1);
+  worldNbX= std::max(int(std::round(D.param[WorldNbX____].Get())), 1);
+  worldNbY= std::max(int(std::round(D.param[WorldNbY____].Get())), 1);
+  worldNbZ= std::max(int(std::round(D.param[WorldNbZ____].Get())), 1);
 
-  screenNbH= std::max(int(std::round(D.param[GR_ScreenNbH________].Get())), 1);
-  screenNbV= std::max(int(std::round(D.param[GR_ScreenNbV________].Get())), 1);
-  screenNbS= std::max(int(std::round(D.param[GR_ScreenNbS________].Get())), 1);
+  screenNbH= std::max(int(std::round(D.param[ScreenNbH___].Get())), 1);
+  screenNbV= std::max(int(std::round(D.param[ScreenNbV___].Get())), 1);
+  screenNbS= std::max(int(std::round(D.param[ScreenNbS___].Get())), 1);
 
   // Allocate data
   if (!Field::CheckFieldDimensions(worldSolid, worldNbT, worldNbX, worldNbY, worldNbZ)) worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -317,7 +317,7 @@ void SpaceTimeWorld::Refresh() {
   }
 
   // Precompute a mask for the world flow
-  int maskSize= int(std::floor(D.param[GR_MassReach________].Get()));
+  int maskSize= int(std::floor(D.param[MassReach___].Get()));
   std::vector<std::vector<std::vector<std::vector<Vector::Vec4f>>>> maskVec= Field::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Vector::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
   for (int t= 0; t < maskSize * 2 + 1; t++) {
     for (int x= 0; x < maskSize * 2 + 1; x++) {
@@ -362,10 +362,10 @@ void SpaceTimeWorld::Refresh() {
   //   for (int x= 0; x < worldNbX; x++)
   //     for (int y= 0; y < worldNbY; y++)
   //       for (int z= 0; z < worldNbZ; z++)
-  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[GR_TimePersist______].Get() * worldFlows[t - 1][x][y][z];
+  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[TimePersist_].Get() * worldFlows[t - 1][x][y][z];
 
   // Ensure parameter validity
-  int idxT= std::min(std::max((int)std::floor(D.param[GR_CursorWorldT_____].Get()), 0), worldNbT - 1);
+  int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
 
   // Allocate the screen fields and photon fields
   // Initialize the photon fields
@@ -390,18 +390,18 @@ void SpaceTimeWorld::Refresh() {
         if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) break;
 
         // if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-        //   float velDif= D.param[GR_FactorDoppler____].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
         //   screenColor[h][v]= Vector::Vec3f(0.1, 0.1, 0.1) * (1.0 + velDif);
         //   break;
         // }
 
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / float(screenNbS);
         Vector::Vec4f flow(
-            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[GR_TimePersist______].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[GR_FactorCurv_______].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[GR_FactorCurv_______].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[GR_FactorCurv_______].Get());
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[GR_FactorCurv_______].Get() * flow / float(screenNbS);
+            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[TimePersist_].Get(),
+            worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[FactorCurv__].Get(),
+            worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[FactorCurv__].Get(),
+            worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[FactorCurv__].Get());
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[FactorCurv__].Get() * flow / float(screenNbS);
         screenCount[h][v]++;
 
         int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbX)), 0), worldNbX - 1);
@@ -411,18 +411,18 @@ void SpaceTimeWorld::Refresh() {
         std::vector<std::array<int, 3>> listVox= Bresenham3D(idxX, idxY, idxZ, endX, endY, endZ);
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            // float velDif= D.param[GR_FactorDoppler____].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            // float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
             // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
-            float velDif= D.param[GR_FactorDoppler____].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+            float velDif= D.param[FactorDoppl_].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
             screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
             foundCollision= true;
             break;
           }
         }
         // if (worldSolid[idxT][endX][endY][endZ]) {
-        //   // float velDif= D.param[GR_FactorDoppler____].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   // float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
         //   // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
-        //   float velDif= D.param[GR_FactorDoppler____].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+        //   float velDif= D.param[FactorDoppl_].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
         //   screenColor[h][v]= worldColor[idxT][endX][endY][endZ] * (1.0f + velDif);
         //   foundCollision= true;
         //   break;
@@ -448,7 +448,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the solid voxels
   if (D.displayMode1) {
-    int idxT= std::min(std::max((int)std::floor(D.param[GR_CursorWorldT_____].Get()), 0), worldNbT - 1);
+    int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
     glPushMatrix();
     glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
     glTranslatef(0.5f, 0.5f, 0.5f);
@@ -470,7 +470,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the space time flow field
   if (D.displayMode2) {
-    int idxT= std::min(std::max((int)std::floor(D.param[GR_CursorWorldT_____].Get()), 0), worldNbT - 1);
+    int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
     glBegin(GL_LINES);
     // int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 10000, 1.0 / 3.0);
     // for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
@@ -486,7 +486,7 @@ void SpaceTimeWorld::Draw() {
           glColor3f(r, g, b);
           Vector::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           glVertex3fv(pos.array());
-          glVertex3fv((pos + D.param[GR_FactorCurv_______].Get() * flowVec / float(screenNbS)).array());
+          glVertex3fv((pos + D.param[FactorCurv__].Get() * flowVec / float(screenNbS)).array());
         }
       }
     }
