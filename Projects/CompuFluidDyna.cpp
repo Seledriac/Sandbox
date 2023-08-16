@@ -72,7 +72,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("ObjectPosY__", 0.2));
     D.param.push_back(ParamUI("ObjectPosZ__", 0.5));
     D.param.push_back(ParamUI("ObjectSize__", 0.1));
-    D.param.push_back(ParamUI("ScaleFactor_", 1.0));
+    D.param.push_back(ParamUI("ScaleFactor_", 10.0));
     D.param.push_back(ParamUI("ColorFactor_", 1.0));
     D.param.push_back(ParamUI("ColorThresh_", 0.0));
     D.param.push_back(ParamUI("SolvMode____", 0.0));
@@ -371,45 +371,8 @@ void CompuFluidDyna::Draw() {
     glDisable(GL_LIGHTING);
   }
 
-  // Draw the velocity field in the simulated region
-  if (D.displayMode2) {
-    glPushMatrix();
-    glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbY / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbZ / (float)maxDim);
-    glScalef(voxSize, voxSize, voxSize);
-    constexpr int nbSizes= 3;
-    for (int k= 0; k < nbSizes; k++) {
-      glLineWidth((float)k + 1.0f);
-      glBegin(GL_LINES);
-      for (int x= 0; x < nbX; x++) {
-        for (int y= 0; y < nbY; y++) {
-          for (int z= 0; z < nbZ; z++) {
-            Vector::Vec3f vec(VelXCur[x][y][z], VelYCur[x][y][z], VelZCur[x][y][z]);
-            if (vec.normSquared() > 0.0f) {
-              float r= 0.0f, g= 0.0f, b= 0.0f;
-              Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
-              if (Bound[x][y][z] == 0)
-                glColor3f(r, g, b);
-              else
-                glColor3f(1.0f - r, 1.0f - g, 1.0f - b);
-              Vector::Vec3f pos((float)x, (float)y, (float)z);
-              glVertex3fv(pos.array());
-              // glVertex3fv(pos + vec.normalized() * D.param[ScaleFactor_].Get() * (1.0f - ((float)k / (float)nbSizes)));
-              glVertex3fv(pos + vec.normalized() * D.param[ScaleFactor_].Get() * std::log(vec.norm() + 1.0f) * (1.0f - ((float)k / (float)nbSizes)));
-            }
-          }
-        }
-      }
-      glEnd();
-    }
-    glLineWidth(1.0f);
-    glPopMatrix();
-  }
-
-
   // Draw the scalar field
-  if (D.displayMode3) {
+  if (D.displayMode2) {
     glPointSize(3.0f);
     glPushMatrix();
     glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
@@ -431,6 +394,43 @@ void CompuFluidDyna::Draw() {
     glEnd();
     glPopMatrix();
     glPointSize(1.0f);
+  }
+
+
+  // Draw the velocity field in the simulated region
+  if (D.displayMode3 || D.displayMode4) {
+    glPushMatrix();
+    glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
+                 0.5f + 0.5f * voxSize - 0.5f * (float)nbY / (float)maxDim,
+                 0.5f + 0.5f * voxSize - 0.5f * (float)nbZ / (float)maxDim);
+    glScalef(voxSize, voxSize, voxSize);
+    constexpr int nbSizes= 3;
+    for (int k= 0; k < nbSizes; k++) {
+      glLineWidth((float)k + 1.0f);
+      glBegin(GL_LINES);
+      for (int x= 0; x < nbX; x++) {
+        for (int y= 0; y < nbY; y++) {
+          for (int z= 0; z < nbZ; z++) {
+            if (Bound[x][y][z] == 0 && !D.displayMode3) continue;
+            if (Bound[x][y][z] != 0 && !D.displayMode4) continue;
+            Vector::Vec3f vec(VelXCur[x][y][z], VelYCur[x][y][z], VelZCur[x][y][z]);
+            if (vec.normSquared() > 0.0f) {
+              float r= 0.0f, g= 0.0f, b= 0.0f;
+              Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
+              if (Bound[x][y][z] == 0) glColor3f(r, g, b);
+              if (Bound[x][y][z] != 0) glColor3f(1.0f - r, 1.0f - g, 1.0f - b);
+              Vector::Vec3f pos((float)x, (float)y, (float)z);
+              glVertex3fv(pos.array());
+              // glVertex3fv(pos + vec.normalized() * D.param[ScaleFactor_].Get() * (1.0f - ((float)k / (float)nbSizes)));
+              glVertex3fv(pos + vec.normalized() * D.param[ScaleFactor_].Get() * std::log(vec.norm() + 1.0f) * (1.0f - ((float)k / (float)nbSizes)));
+            }
+          }
+        }
+      }
+      glEnd();
+    }
+    glLineWidth(1.0f);
+    glPopMatrix();
   }
 }
 
@@ -476,6 +476,36 @@ constexpr int Mask[MaskSize][3]=
 
 
 void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField) {
+  //   // Sweep through the field
+  //   std::vector<std::vector<std::vector<float>>> oldField= ioField;
+  // #pragma omp parallel for
+  //   for (int x= 0; x < nbX; x++) {
+  //     for (int y= 0; y < nbY; y++) {
+  //       for (int z= 0; z < nbZ; z++) {
+  //         if (iFieldID > 0 && Bound[x][y][z] > 0) {
+  //           ioField[x][y][z]= 0.0f;
+  //         }
+  //         if ((iFieldID == 0 && Bound[x][y][z] > 0) || (Bound[x][y][z] < 0)) {
+  //           float sum= 0.0f;
+  //           int count= 0;
+  //           // Set BC voxel according to valid neighborhood values and flags
+  //           for (int k= 0; k < MaskSize; k++) {
+  //             // if (iFieldID == 1 && Mask[k][0] == 0) continue;  // todo check if good idea to use these skips. -> probably not
+  //             // if (iFieldID == 2 && Mask[k][1] == 0) continue;
+  //             // if (iFieldID == 3 && Mask[k][2] == 0) continue;
+  //             if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+  //             if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+  //             if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+  //             if (Bound[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] != 0) continue;
+  //             sum+= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+  //             count++;
+  //           }
+  //           ioField[x][y][z]= (count > 0) ? (sum / (float)count) : 0.0f;
+  //         }
+  //       }
+  //     }
+  //   }
+
   // Sweep through the field
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
 #pragma omp parallel for
@@ -486,19 +516,31 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
         if (Bound[x][y][z] == 0) continue;
         float sum= 0.0f;
         int count= 0;
+        if (Bound[x][y][z] > 0 && iFieldID != 0) {
+          ioField[x][y][z]= 0.0f;
+          continue;
+        }
         // Set BC voxel according to valid neighborhood values and flags
         for (int k= 0; k < MaskSize; k++) {
-          if (iFieldID == 1 && Mask[k][0] == 0) continue;  // todo check if good idea to use these skips
-          if (iFieldID == 2 && Mask[k][1] == 0) continue;
-          if (iFieldID == 3 && Mask[k][2] == 0) continue;
+          // if (iFieldID == 1 && Mask[k][0] == 0) continue;  // todo check if good idea to use these skips. -> probably not
+          // if (iFieldID == 2 && Mask[k][1] == 0) continue;
+          // if (iFieldID == 3 && Mask[k][2] == 0) continue;
           if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
           if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
           if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-          if (Bound[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] > 0) continue;
+          if (Bound[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] != 0) continue;
           if (iFieldID != 0 && Bound[x][y][z] > 0)
             sum-= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
           else
             sum+= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+          // if (iFieldID == 1 && Mask[k][0] != 0 && Bound[x][y][z] > 0)
+          //   sum-= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+          // else if (iFieldID == 2 && Mask[k][1] != 0 && Bound[x][y][z] > 0)
+          //   sum-= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+          // else if (iFieldID == 3 && Mask[k][2] != 0 && Bound[x][y][z] > 0)
+          //   sum-= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+          // else
+          //   sum+= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
           count++;
         }
         if (count > 0)
@@ -545,6 +587,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iIter, const
         }
       }
     }
+    // todo consider implementing a conjugate gradient solver instead of gauss seidel
 
     // Reapply BC to maintain consistency
     ApplyBC(iFieldID, ioField);

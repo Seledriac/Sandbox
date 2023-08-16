@@ -1,9 +1,9 @@
 # Sandbox
-Sandbox environment with various projects and experimentations (fractals, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use a generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+Sandbox environment with various personal projects and experimentations (fractals, swarm intelligence, precedural generation, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use a generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
 
 ## Code structure
 
-**main.cpp** contains the main program loop, parameter list display, mouse/keyboard interactions, creation/destruction of the active project.
+**main.cpp** contains the main program loop, parameter list display, mouse/keyboard interactions, creation/destruction of the active project
 
 **Data.hpp** contains the parameter list and plot data shared between the UI and each project
 
@@ -30,3 +30,5 @@ Add to path env var
 - make
 - ./main
 - *press any of the alphabet key to activate the associated project*
+- *use mouse clics to rotate, pan and zoom with the arcball*
+- *use KB arrows and mouse wheel to change parameter values*
