@@ -10,7 +10,7 @@
 class Agent
 {
   public:
-  Vector::Vec3f p, v, n;
+  Math::Vec3f p, v, n;
 };
 
 
@@ -19,8 +19,8 @@ class AgentSwarmBoid
   private:
   int NbAgents;
   std::vector<Agent> Agents;
-  Vector::Vec3f PosFood;
-  Vector::Vec3f PosPredator;
+  Math::Vec3f PosFood;
+  Math::Vec3f PosPredator;
 
   public:
   bool isActiveProject;

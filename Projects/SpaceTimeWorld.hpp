@@ -17,16 +17,16 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldSolid;
   std::vector<std::vector<std::vector<std::vector<bool>>>> worldIsFix;
   std::vector<std::vector<std::vector<std::vector<float>>>> worldMasss;
-  std::vector<std::vector<std::vector<std::vector<Vector::Vec3f>>>> worldColor;
-  std::vector<std::vector<std::vector<std::vector<Vector::Vec4f>>>> worldFlows;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec3f>>>> worldColor;
+  std::vector<std::vector<std::vector<std::vector<Math::Vec4f>>>> worldFlows;
 
   int screenNbH;
   int screenNbV;
   int screenNbS;
-  std::vector<std::vector<Vector::Vec3f>> screenColor;
+  std::vector<std::vector<Math::Vec3f>> screenColor;
   std::vector<std::vector<int>> screenCount;
-  std::vector<std::vector<std::vector<Vector::Vec4f>>> photonPos;
-  std::vector<std::vector<std::vector<Vector::Vec4f>>> photonVel;
+  std::vector<std::vector<std::vector<Math::Vec4f>>> photonPos;
+  std::vector<std::vector<std::vector<Math::Vec4f>>> photonVel;
 
   public:
   bool isActiveProject;

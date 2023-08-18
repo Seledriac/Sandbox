@@ -86,7 +86,19 @@
     "numbers": "cpp",
     "semaphore": "cpp",
     "stop_token": "cpp",
-    "cfenv": "cpp"
+    "cfenv": "cpp",
+    "charconv": "cpp",
+    "condition_variable": "cpp",
+    "forward_list": "cpp",
+    "optional": "cpp",
+    "iomanip": "cpp",
+    "mutex": "cpp",
+    "format": "cpp",
+    "locale": "cpp",
+    "xlocbuf": "cpp",
+    "xlocmes": "cpp",
+    "xlocmon": "cpp",
+    "xloctime": "cpp"
   },
   "cmake.configureOnOpen": true
 }

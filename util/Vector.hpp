@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace Vector {
+namespace Math {
   class Vec2f
   {
 public:
@@ -33,6 +33,9 @@ public:
     }
     inline Vec2f abs() {
       return Vec2f(std::abs(x[0]), std::abs(x[1]));
+    }
+    inline float sum() {
+      return x[0] + x[1];
     }
     inline float max() const { return std::max(x[0], x[1]); }
     inline float min() const { return std::min(x[0], x[1]); }
@@ -109,6 +112,9 @@ public:
     }
     inline Vec2d abs() {
       return Vec2d(std::abs(x[0]), std::abs(x[1]));
+    }
+    inline double sum() {
+      return x[0] + x[1];
     }
     inline double max() const { return std::max(x[0], x[1]); }
     inline double min() const { return std::min(x[0], x[1]); }
@@ -194,6 +200,9 @@ public:
     inline Vec3f abs() {
       return Vec3f(std::abs(x[0]), std::abs(x[1]), std::abs(x[2]));
     }
+    inline float sum() {
+      return x[0] + x[1] + x[2];
+    }
     inline float max() const { return std::max(std::max(x[0], x[1]), x[2]); }
     inline float min() const { return std::min(std::min(x[0], x[1]), x[2]); }
 
@@ -278,6 +287,9 @@ public:
     }
     inline Vec4f abs() {
       return Vec4f(std::abs(x[0]), std::abs(x[1]), std::abs(x[2]), std::abs(x[3]));
+    }
+    inline float sum() {
+      return x[0] + x[1] + x[2] + x[3];
     }
     inline float max() const { return std::max(std::max(std::max(x[0], x[1]), x[2]), x[3]); }
     inline float min() const { return std::min(std::min(std::min(x[0], x[1]), x[2]), x[3]); }
