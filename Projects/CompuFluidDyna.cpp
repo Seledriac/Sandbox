@@ -56,7 +56,7 @@ CompuFluidDyna::CompuFluidDyna() {
 
 void CompuFluidDyna::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("Scenario____", 3));
+    D.param.push_back(ParamUI("Scenario____", 4));
     D.param.push_back(ParamUI("ResolutionX_", 1));
     D.param.push_back(ParamUI("ResolutionY_", 100));
     D.param.push_back(ParamUI("ResolutionZ_", 100));
@@ -293,6 +293,32 @@ void CompuFluidDyna::Refresh() {
             }
           }
         }
+
+        // Cavity lid shear benchmark
+        if (scenarioType == 4) {
+          if (y == 0 || y == nbY - 1 || z == 0 || z == nbZ - 1) {
+            Solid[x][y][z]= true;
+          }
+          else if (y == 1 || y == nbY - 2 || z == 1) {
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= 0;
+            VelYForced[x][y][z]= 0;
+            VelZForced[x][y][z]= 0;
+          }
+          else if (z == nbZ - 2) {
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
+            VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
+            VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
+          }
+          else if (y == nbY / 2 && z > nbZ / 2) {
+            SmoBC[x][y][z]= true;
+            if (z % 8 < 4)
+              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
+            else
+              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
+          }
+        }
       }
     }
   }
@@ -333,32 +359,45 @@ void CompuFluidDyna::Animate() {
   GaussSeidelSolve(0, maxIter, timestep, true, coeffDiffu, Smoke);
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
 
+  // // Plot field info
+  // float totVelX= 0.0f;
+  // float totVelY= 0.0f;
+  // float totVelZ= 0.0f;
+  // float totSmok= 0.0f;
+  // for (int x= 0; x < nbX; x++) {
+  //   for (int y= 0; y < nbY; y++) {
+  //     for (int z= 0; z < nbZ; z++) {
+  //       if (!Solid[x][y][z]) {
+  //         totVelX+= VelX[x][y][z];
+  //         totVelY+= VelY[x][y][z];
+  //         totVelZ+= VelZ[x][y][z];
+  //         totSmok+= Smoke[x][y][z];
+  //       }
+  //     }
+  //   }
+  // }
+  // D.plotData.resize(4);
+  // D.plotData[0].first= "TotVelX";
+  // D.plotData[1].first= "TotVelY";
+  // D.plotData[2].first= "TotVelZ";
+  // D.plotData[3].first= "TotSmok";
+  // D.plotData[0].second.push_back((double)totVelX);
+  // D.plotData[1].second.push_back((double)totVelY);
+  // D.plotData[2].second.push_back((double)totVelZ);
+  // D.plotData[3].second.push_back((double)totSmok);
+
   // Plot field info
-  float totVelX= 0.0f;
-  float totVelY= 0.0f;
-  float totVelZ= 0.0f;
-  float totSmok= 0.0f;
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        if (!Solid[x][y][z]) {
-          totVelX+= VelX[x][y][z];
-          totVelY+= VelY[x][y][z];
-          totVelZ+= VelZ[x][y][z];
-          totSmok+= Smoke[x][y][z];
-        }
-      }
-    }
-  }
-  D.plotData.resize(4);
-  D.plotData[0].first= "TotVelX";
-  D.plotData[1].first= "TotVelY";
-  D.plotData[2].first= "TotVelZ";
-  D.plotData[3].first= "TotSmok";
-  D.plotData[0].second.push_back((double)totVelX);
-  D.plotData[1].second.push_back((double)totVelY);
-  D.plotData[2].second.push_back((double)totVelZ);
-  D.plotData[3].second.push_back((double)totSmok);
+  D.plotData.resize(2);
+  D.plotData[0].first= "Vert Yax";
+  D.plotData[1].first= "Hori Zax";
+  D.plotData[0].second.clear();
+  D.plotData[1].second.clear();
+  for (int y= 0; y < nbY; y++)
+    if (!Solid[nbX / 2][y][nbZ / 2])
+      D.plotData[0].second.push_back((double)VelZ[nbX / 2][y][nbZ / 2]);
+  for (int z= 0; z < nbZ; z++)
+    if (!Solid[nbX / 2][nbY / 2][z])
+      D.plotData[1].second.push_back((double)VelY[nbX / 2][nbY / 2][z]);
 }
 
 

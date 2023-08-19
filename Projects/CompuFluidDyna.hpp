@@ -33,25 +33,7 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> VelY;
   std::vector<std::vector<std::vector<float>>> VelZ;
 
-
-  // // Handles boundary conditions on velocity field
-  // // Bound > 0  Block velocities
-  // // Bound == 0 Simulate veolcities
-  // // Bound < 0  Freely absorb velocities
-  // std::vector<std::vector<std::vector<int>>> Bound;
-
-  // // Flag if a voxel has a forced velocity, negative values flip the sign of velocity
-  // std::vector<std::vector<std::vector<int>>> Force;
-
-  // // Flag if a voxel has a forced smoke value, negative values flip the sign of smoke value
-  // std::vector<std::vector<std::vector<int>>> Sourc;
-
-  // std::vector<std::vector<std::vector<float>>> SmokCur;
-  // std::vector<std::vector<std::vector<float>>> VelXCur;
-  // std::vector<std::vector<std::vector<float>>> VelYCur;
-  // std::vector<std::vector<std::vector<float>>> VelZCur;
-
-
+  // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
   void GaussSeidelSolve(const int iFieldID, const int iIter, const float iTimeStep,
                         const bool iDiffuMode, const float iDiffuCoeff,
