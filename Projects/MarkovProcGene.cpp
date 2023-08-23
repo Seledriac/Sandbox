@@ -14,6 +14,7 @@
 // Project lib
 #include "../Data.hpp"
 #include "../FileIO/FileInput.hpp"
+#include "../Util/Draw.hpp"
 #include "../Util/Field.hpp"
 #include "../Util/Random.hpp"
 
@@ -627,30 +628,6 @@ void util_SetColorVoxel(const int iVal, const float iShading) {
 }
 
 
-void util_DrawBoxPosPos(const float begX, const float begY, const float begZ,
-                        const float endX, const float endY, const float endZ, bool const isSolid) {
-  glPushMatrix();
-  glTranslatef(begX, begY, begZ);
-  glScalef(endX - begX, endY - begY, endZ - begZ);
-  glTranslatef(0.5f, 0.5f, 0.5f);
-  if (isSolid) glutSolidCube(1.0);
-  else glutWireCube(1.0);
-  glPopMatrix();
-}
-
-
-void util_DrawBoxPosSiz(const float begX, const float begY, const float begZ,
-                        const float sizX, const float sizY, const float sizZ, bool const isSolid) {
-  glPushMatrix();
-  glTranslatef(begX, begY, begZ);
-  glScalef(sizX, sizY, sizZ);
-  glTranslatef(0.5f, 0.5f, 0.5f);
-  if (isSolid) glutSolidCube(1.0);
-  else glutWireCube(1.0);
-  glPopMatrix();
-}
-
-
 void MarkovProcGene::Draw() {
   if (!isActiveProject) return;
   CheckInit();
@@ -728,10 +705,10 @@ void MarkovProcGene::Draw() {
         for (int z= 0; z < nbZ; z++) {
           if (Field[x][y][z] > 0) {
             util_SetColorVoxel(Field[x][y][z], 1.0f - (float)D.param[ShadeCoeff__].Get() * (1.0f - FieldVisi[x][y][z]));
-            util_DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
-                               0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
-                               0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
-                               voxSize, voxSize, voxSize, true);
+            Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
+                                0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
+                                0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
+                                voxSize, voxSize, voxSize, true);
           }
         }
       }
@@ -761,19 +738,19 @@ void MarkovProcGene::Draw() {
           glColor3f(0.8f, 0.8f, 0.8f);
         else
           glColor3f(0.3f, 0.3f, 0.3f);
-        util_DrawBoxPosSiz(begXI, begYI, begZI, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
-        util_DrawBoxPosSiz(begXO, begYO, begZO, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
+        Draw::DrawBoxPosSiz(begXI, begYI, begZI, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
+        Draw::DrawBoxPosSiz(begXO, begYO, begZO, nbXRule * voxSize, nbYRule * voxSize, nbZRule * voxSize, false);
         glEnable(GL_LIGHTING);
         for (int xR= 0; xR < nbXRule; xR++) {
           for (int yR= 0; yR < nbYRule; yR++) {
             for (int zR= 0; zR < nbZRule; zR++) {
               if (Dict[idxSet][idxRule][0][xR][yR][zR] != 0) {
                 util_SetColorVoxel(Dict[idxSet][idxRule][0][xR][yR][zR], 0.8f);
-                util_DrawBoxPosSiz(begXI + xR * voxSize, begYI + yR * voxSize, begZI + zR * voxSize, voxSize, voxSize, voxSize, true);
+                Draw::DrawBoxPosSiz(begXI + xR * voxSize, begYI + yR * voxSize, begZI + zR * voxSize, voxSize, voxSize, voxSize, true);
               }
               if (Dict[idxSet][idxRule][1][xR][yR][zR] != 0) {
                 util_SetColorVoxel(Dict[idxSet][idxRule][1][xR][yR][zR], 0.8f);
-                util_DrawBoxPosSiz(begXO + xR * voxSize, begYO + yR * voxSize, begZO + zR * voxSize, voxSize, voxSize, voxSize, true);
+                Draw::DrawBoxPosSiz(begXO + xR * voxSize, begYO + yR * voxSize, begZO + zR * voxSize, voxSize, voxSize, voxSize, true);
               }
             }
           }
@@ -792,10 +769,10 @@ void MarkovProcGene::Draw() {
   if (D.displayMode3) {
     glLineWidth(3.0);
     glColor3f(0.5f, 0.5f, 0.5f);
-    util_DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim,
-                       0.5f - 0.5f * (float)nbY / (float)maxDim,
-                       0.5f - 0.5f * (float)nbZ / (float)maxDim,
-                       voxSize * nbX, voxSize * nbY, voxSize * nbZ, false);
+    Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim,
+                        0.5f - 0.5f * (float)nbY / (float)maxDim,
+                        0.5f - 0.5f * (float)nbZ / (float)maxDim,
+                        voxSize * nbX, voxSize * nbY, voxSize * nbZ, false);
     glLineWidth(1.0);
   }
 }
