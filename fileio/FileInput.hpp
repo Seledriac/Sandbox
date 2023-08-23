@@ -63,7 +63,7 @@ class FileInput
 
   static void LoadImageBMPFile(
       std::string const iFullpath,
-      std::vector<std::vector<std::array<float, 3>>>& oImage,
+      std::vector<std::vector<std::array<float, 4>>>& oImageRGBA,
       bool const iVerbose);
 
   static void LoadVectorFieldTXTFile(

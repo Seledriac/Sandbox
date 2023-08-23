@@ -11,7 +11,8 @@ namespace Random {
   }
 
   inline int Val(int const iMin, int const iMax) {
-    return iMin + rand() % (iMax - iMin);
+    if (iMax <= iMin) return iMin;
+    return iMin + rand() % (iMax - iMin + 1);
   }
 
 }  // namespace Random

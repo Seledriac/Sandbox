@@ -13,9 +13,6 @@ class CompuFluidDyna
   int nbY;
   int nbZ;
 
-  // Loaded bitmap scenario
-  std::vector<std::vector<std::array<float, 3>>> LoadedImage;
-
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
   std::vector<std::vector<std::vector<bool>>> Passi;

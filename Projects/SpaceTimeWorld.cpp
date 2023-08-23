@@ -239,9 +239,9 @@ void SpaceTimeWorld::Refresh() {
   isRefreshed= true;
 
   // Load the BMP image for the background
-  static std::vector<std::vector<std::array<float, 3>>> loadedImage;
-  if (loadedImage.empty())
-    FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", loadedImage, false);
+  static std::vector<std::vector<std::array<float, 4>>> imageRGBA;
+  if (imageRGBA.empty())
+    FileInput::LoadImageBMPFile("Resources/Background_AlbertArt.bmp", imageRGBA, false);
 
   // Add the background
   for (int t= 0; t < worldNbT; t++) {
@@ -276,10 +276,10 @@ void SpaceTimeWorld::Refresh() {
 
           // Add image background layer
           if (x == 0) {
-            int imgY= y * int(loadedImage.size()) / worldNbY;
-            int imgZ= z * int(loadedImage[0].size()) / worldNbZ;
+            int imgY= y * int(imageRGBA.size()) / worldNbY;
+            int imgZ= z * int(imageRGBA[0].size()) / worldNbZ;
             worldSolid[t][x][y][z]= true;
-            worldColor[t][x][y][z].set(loadedImage[imgY][imgZ][0], loadedImage[imgY][imgZ][1], loadedImage[imgY][imgZ][2]);
+            worldColor[t][x][y][z].set(imageRGBA[imgY][imgZ][0], imageRGBA[imgY][imgZ][1], imageRGBA[imgY][imgZ][2]);
           }
         }
       }

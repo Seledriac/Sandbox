@@ -40,6 +40,8 @@ class MarkovProcGene
   MarkovProcGene();
 
   void SetActiveProject();
+  void CheckInit();
+  void CheckRefresh();
   void Initialize();
   void Refresh();
   void Animate();

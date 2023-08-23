@@ -1,6 +1,9 @@
 #include "FileInput.hpp"
 
 // Standard lib
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 
@@ -386,42 +389,49 @@ void FileInput::LoadScalarFieldTXTFile(
 
 void FileInput::LoadImageBMPFile(
     std::string const iFullpath,
-    std::vector<std::vector<std::array<float, 3>>>& oImage,
+    std::vector<std::vector<std::array<float, 4>>>& oImageRGBA,
     bool const iVerbose) {
-  std::ifstream inputFile;
-  inputFile.open(iFullpath, std::ios::binary);
-  if (!inputFile.is_open()) {
+  // Open the file
+  FILE* inputFile= fopen(iFullpath.c_str(), "rb");
+  if (!inputFile) {
     printf("[ERROR] Unable to open the file\n\n");
     throw 0;
   }
 
-  static constexpr size_t HEADER_SIZE= 54;
-  std::array<char, HEADER_SIZE> header;
-  inputFile.read(header.data(), header.size());
-  int fileSize= *reinterpret_cast<uint32_t*>(&header[2]);
-  int dataOffset= *reinterpret_cast<uint32_t*>(&header[10]);
-  int width= *reinterpret_cast<uint32_t*>(&header[18]);
-  int height= *reinterpret_cast<uint32_t*>(&header[22]);
-  int depth= *reinterpret_cast<uint16_t*>(&header[28]);
-
+  // Read header
+  unsigned char info[54]= {0};
+  fread(info, sizeof(unsigned char), 54, inputFile);
+  int offset= info[10] + (info[11] << 8);  // Data offset
+  int width= info[18] + (info[19] << 8);   // Width
+  int height= info[22] + (info[23] << 8);  // Height
+  int depth= info[28] + (info[29] << 8);   // Bit depth
   if (iVerbose) {
-    std::cout << "fileSize: " << fileSize << std::endl;
-    std::cout << "dataOffset: " << dataOffset << std::endl;
+    std::cout << "dataOffset: " << offset << std::endl;
     std::cout << "width: " << width << std::endl;
     std::cout << "height: " << height << std::endl;
     std::cout << "depth: " << depth << "-bit" << std::endl;
   }
 
-  oImage= std::vector<std::vector<std::array<float, 3>>>(width, std::vector<std::array<float, 3>>(height));
-  for (int y= 0; y < height; y++) {
-    for (int x= 0; x < width; x++) {
-      for (int k= 0; k < 3; k++) {
-        unsigned char c;
-        inputFile.read((char*)&c, 1);
-        oImage[x][y][2 - k]= float(c) / 255.0f;
-      }
+  fseek(inputFile, offset, SEEK_SET);  // Seek to pixel offset.
+  oImageRGBA= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height));
+  int row_padded= width * 4;
+  if (iVerbose) {
+    std::cout << "row_padded: " << row_padded << std::endl;
+    std::cout << "width_padded: " << row_padded / 4 << std::endl;
+  }
+  auto data= new unsigned char[row_padded];
+  for (int h= 0; h < height; h++) {
+    fread(data, sizeof(unsigned char), row_padded, inputFile);
+    for (int w= 0; w < width; w++) {
+      oImageRGBA[w][h][0]= (float)data[w * 4 + 2] / 255.0f;  // Get R
+      oImageRGBA[w][h][1]= (float)data[w * 4 + 1] / 255.0f;  // Get G
+      oImageRGBA[w][h][2]= (float)data[w * 4 + 0] / 255.0f;  // Get B
+      oImageRGBA[w][h][3]= (float)data[w * 4 + 3] / 255.0f;  // Get A
     }
   }
+  delete[] data;
+
+  fclose(inputFile);
 }
 
 

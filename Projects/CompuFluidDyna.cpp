@@ -145,9 +145,10 @@ void CompuFluidDyna::Refresh() {
 
   // Get scenario ID and optionnally load bitmap file
   int scenarioType= (int)std::round(D.param[Scenario____].Get());
-  if (scenarioType == 0 && LoadedImage.empty())
-    FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", LoadedImage, false);
-  // FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", LoadedImage, false);
+  static std::vector<std::vector<std::array<float, 4>>> imageRGBA;
+  if (scenarioType == 0 && imageRGBA.empty())
+    FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", imageRGBA, false);
+  // FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
 
   // Set scenario values
   for (int x= 0; x < nbX; x++) {
@@ -166,9 +167,9 @@ void CompuFluidDyna::Refresh() {
         // Scenario from loaded BMP file
         if (scenarioType == 0) {
           // Get pixel colors
-          int idxPixelW= std::min(std::max(((int)LoadedImage.size() - 1) * y / nbY, 0), (int)LoadedImage.size() - 1);
-          int idxPixelH= std::min(std::max(((int)LoadedImage[0].size() - 1) * z / nbZ, 0), (int)LoadedImage[0].size() - 1);
-          std::array<float, 3> color= LoadedImage[idxPixelW][idxPixelH];
+          int idxPixelW= std::min(std::max(((int)imageRGBA.size() - 1) * y / nbY, 0), (int)imageRGBA.size() - 1);
+          int idxPixelH= std::min(std::max(((int)imageRGBA[0].size() - 1) * z / nbZ, 0), (int)imageRGBA[0].size() - 1);
+          std::array<float, 3> color= {imageRGBA[idxPixelW][idxPixelH][0], imageRGBA[idxPixelW][idxPixelH][1], imageRGBA[idxPixelW][idxPixelH][2]};
           // Set flags from pixel colors
           if (color[0] < 0.1f) Solid[x][y][z]= true;
           if (color[0] > 0.9f) Passi[x][y][z]= true;

@@ -30,8 +30,8 @@
 int winW, winH;
 constexpr int winFPS= 60;
 constexpr int paramNbCharac= 12;
-constexpr int characHeight= 12;
-constexpr int characWidth= 8;
+constexpr int characHeight= 14;
+constexpr int characWidth= 10;
 constexpr int characterSpace= 1;
 Camera *cam;
 
@@ -209,6 +209,7 @@ void callback_display() {
   glLoadIdentity();
 
   // Draw the parameter list
+  glLineWidth(2.0f);
   for (int k= 0; k < int(D.param.size()); k++) {
     if (k == D.idxParamUI)
       glColor3f(0.8f, 0.4f, 0.4f);
@@ -223,63 +224,66 @@ void callback_display() {
       draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + characterSpace), str);
     }
   }
+  glLineWidth(1.0f);
 
   // Draw the 2D plot
-  {
-    int plotW= 600;
-    int plotH= 100;
-    int textW= 80;
-    int textH= 12;
-    for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
-      if (D.plotData[k0].second.empty()) continue;
+  glLineWidth(2.0f);
+  const int plotW= 600;
+  const int plotH= 100;
+  const int textW= 9 * characWidth;
+  const int textH= characHeight;
+  for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
+    if (D.plotData[k0].second.empty()) continue;
 
-      // Set the color
-      float r, g, b;
-      Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
-      glColor3f(r, g, b);
+    // Set the color
+    float r, g, b;
+    Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
+    glColor3f(r, g, b);
 
-      // Find the min max range for vertical scaling
-      double valMin= D.plotData[k0].second[0];
-      double valMax= D.plotData[k0].second[0];
-      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-        if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
-        if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
-      }
-
-      // Draw the text for legend and min max values
-      char str[50];
-      strcpy(str, D.plotData[k0].first.c_str());
-      draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
-
-      sprintf(str, "%+.2e", valMax);
-      draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
-
-      sprintf(str, "%+.2e", valMin);
-      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
-
-      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
-      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
-
-      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
-      draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
-
-      // Draw the polyline
-      glBegin(GL_LINE_STRIP);
-      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-        double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
-        glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
-      }
-      glEnd();
+    // Find the min max range for vertical scaling
+    double valMin= D.plotData[k0].second[0];
+    double valMax= D.plotData[k0].second[0];
+    for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+      if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
+      if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
     }
+
+    // Draw the text for legend and min max values
+    char str[50];
+    strcpy(str, D.plotData[k0].first.c_str());
+    draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
+
+    sprintf(str, "%+.2e", valMax);
+    draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
+
+    sprintf(str, "%+.2e", valMin);
+    draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
+
+    sprintf(str, "%+.2e", D.plotData[k0].second[0]);
+    draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
+
+    sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
+    draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
+
+    // Draw the polyline
+    glBegin(GL_LINE_STRIP);
+    for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+      double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+      glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
+    }
+    glEnd();
   }
+  glLineWidth(1.0f);
 
   // Draw the frame time
+  glLineWidth(2.0f);
   {
     glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
     sprintf(str, "%.3f s", elapsed_time());
     draw_text(0, 2, str);
   }
+  glLineWidth(1.0f);
 
   // Commit the draw
   glutSwapBuffers();
