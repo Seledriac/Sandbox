@@ -55,6 +55,7 @@ enum ParamType
 CompuFluidDyna::CompuFluidDyna() {
   D.param.clear();
   D.plotData.clear();
+  D.scatData.clear();
   isActiveProject= false;
   isInitialized= false;
   isRefreshed= false;
@@ -187,6 +188,7 @@ void CompuFluidDyna::Refresh() {
         // Scenario from loaded BMP file
         if (scenarioType == 0) {
           // Get pixel colors
+          // TODO improve localization of pixels to better avoid assymetries
           int idxPixelW= std::min(std::max(((int)imageRGBA.size() - 1) * y / nbY, 0), (int)imageRGBA.size() - 1);
           int idxPixelH= std::min(std::max(((int)imageRGBA[0].size() - 1) * z / nbZ, 0), (int)imageRGBA[0].size() - 1);
           std::array<float, 3> color= {imageRGBA[idxPixelW][idxPixelH][0], imageRGBA[idxPixelW][idxPixelH][1], imageRGBA[idxPixelW][idxPixelH][2]};
@@ -271,7 +273,7 @@ void CompuFluidDyna::Refresh() {
             VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
             VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
           }
-          else if (y > 19 * nbY / 20) {
+          else if (y >= nbY - 3) {
             Passi[x][y][z]= true;
           }
           else {
@@ -307,7 +309,7 @@ void CompuFluidDyna::Refresh() {
           // Add smoke source for visualization
           else if (y == nbY / 2 && z > nbZ / 2) {
             SmoBC[x][y][z]= true;
-            if (z % 8 < 4)
+            if (z % 16 < 8)
               SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
             else
               SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
@@ -351,8 +353,8 @@ void CompuFluidDyna::Animate() {
   // Get simulation parameters
   const int maxIter= std::max((int)std::round(D.param[SolvGSIter__].Get()), 0);
   const float timestep= D.param[TimeStep____].Get();
-  const float coeffDiffu= D.param[CoeffDiffu__].Get();
-  const float coeffVisco= D.param[CoeffVisco__].Get();
+  const float coeffDiffu= std::max(D.param[CoeffDiffu__].Get(), 0.0);
+  const float coeffVisco= std::max(D.param[CoeffVisco__].Get(), 0.0);
 
   // Simulate velocity step
   ApplyBC(1, VelX);
@@ -374,6 +376,68 @@ void CompuFluidDyna::Animate() {
   ApplyBC(0, Smoke);
   GaussSeidelSolve(0, maxIter, timestep, true, coeffDiffu, Smoke);
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
+
+  // Plot field info
+  float totVelX= 0.0f;
+  float totVelY= 0.0f;
+  float totVelZ= 0.0f;
+  float totSmok= 0.0f;
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        if (!Solid[x][y][z]) {
+          totVelX+= VelX[x][y][z];
+          totVelY+= VelY[x][y][z];
+          totVelZ+= VelZ[x][y][z];
+          totSmok+= Smoke[x][y][z];
+        }
+      }
+    }
+  }
+  D.plotData.resize(4);
+  if (D.plotData[0].second.size() < 1000) {
+    D.plotData[0].first= "TotVelX";
+    D.plotData[1].first= "TotVelY";
+    D.plotData[2].first= "TotVelZ";
+    D.plotData[3].first= "TotSmok";
+    D.plotData[0].second.push_back((double)totVelX);
+    D.plotData[1].second.push_back((double)totVelY);
+    D.plotData[2].second.push_back((double)totVelZ);
+    D.plotData[3].second.push_back((double)totSmok);
+  }
+
+  D.scatData.resize(2);
+  D.scatData[0].first= "Vert Yax";
+  D.scatData[1].first= "Hori Zax";
+  D.scatData[0].second.clear();
+  D.scatData[1].second.clear();
+  if (nbZ > 1) {
+    int z= std::min(std::max((int)std::round((float)nbZ * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
+    for (int y= 0; y < nbY; y++)
+      D.scatData[0].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+  }
+  if (nbY > 1) {
+    int y= std::min(std::max((int)std::round((float)nbY * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
+    for (int z= 0; z < nbZ; z++)
+      D.scatData[1].second.push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+  }
+
+  // Add hard coded lid driven cavity flow benchmark for visual comparison
+  if ((int)std::round(D.param[Scenario____].Get()) == 3) {
+    D.scatData.resize(4);
+    D.scatData[2].first= "Vert Yax";
+    D.scatData[3].first= "Hori Zax";
+    D.scatData[2].second.clear();
+    D.scatData[3].second.clear();
+    std::vector<double> rawData0X({0, 0.0625, 0.0703, 0.0781, 0.0983, 0.1563, 0.2266, 0.2344, 0.5, 0.8047, 0.8594, 0.9063, 0.9453, 0.9531, 0.9609, 0.9688, 1});                            // coord along horiz slice
+    std::vector<double> rawData0Y({0, 0.1836, 0.19713, 0.20920, 0.22965, 0.28124, 0.30203, 0.30174, 0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, 0});    // verti vel along horiz slice
+    std::vector<double> rawData1X({0, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, 0.02135, 0.16256, 0.29093, 0.55892, 0.61756, 0.68439, 0.75837, 1});  // horiz vel on verti slice
+    std::vector<double> rawData1Y({0, 0.0547, 0.0625, 0.0703, 0.1016, 0.1719, 0.2813, 0.4531, 0.5, 0.6172, 0.7344, 0.8516, 0.9531, 0.9609, 0.9688, 0.9766, 1});                            // coord along verti slice
+    for (int k= 0; k < (int)rawData0X.size(); k++) {
+      D.scatData[2].second.push_back(std::array<double, 2>({rawData0X[k], rawData0Y[k] + 0.5f}));
+      D.scatData[3].second.push_back(std::array<double, 2>({rawData1X[k] + 0.5f, rawData1Y[k]}));
+    }
+  }
 }
 
 
@@ -383,73 +447,6 @@ void CompuFluidDyna::Draw() {
   if (!isInitialized) Initialize();
   CheckRefresh();
   if (!isRefreshed) Refresh();
-
-  // // Plot field info
-  // float totVelX= 0.0f;
-  // float totVelY= 0.0f;
-  // float totVelZ= 0.0f;
-  // float totSmok= 0.0f;
-  // for (int x= 0; x < nbX; x++) {
-  //   for (int y= 0; y < nbY; y++) {
-  //     for (int z= 0; z < nbZ; z++) {
-  //       if (!Solid[x][y][z]) {
-  //         totVelX+= VelX[x][y][z];
-  //         totVelY+= VelY[x][y][z];
-  //         totVelZ+= VelZ[x][y][z];
-  //         totSmok+= Smoke[x][y][z];
-  //       }
-  //     }
-  //   }
-  // }
-  // D.plotData.resize(4);
-  // D.plotData[0].first= "TotVelX";
-  // D.plotData[1].first= "TotVelY";
-  // D.plotData[2].first= "TotVelZ";
-  // D.plotData[3].first= "TotSmok";
-  // D.plotData[0].second.push_back((double)totVelX);
-  // D.plotData[1].second.push_back((double)totVelY);
-  // D.plotData[2].second.push_back((double)totVelZ);
-  // D.plotData[3].second.push_back((double)totSmok);
-
-  // Plot field info
-  D.plotData.resize(2);
-  D.plotData[0].first= "Vert Yax";
-  D.plotData[1].first= "Hori Zax";
-  for (int k= 0; k < (int)D.plotData.size(); k++)
-    D.plotData[k].second.clear();
-  if (nbZ > 1) {
-    for (int y= 0; y < nbY; y++) {
-      int z= std::min(std::max((int)std::round((float)nbZ * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
-      D.plotData[0].second.push_back((double)VelZ[nbX / 2][y][z]);
-    }
-  }
-  if (nbY > 1) {
-    int y= std::min(std::max((int)std::round((float)nbY * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
-    for (int z= 0; z < nbZ; z++) {
-      D.plotData[1].second.push_back((double)VelY[nbX / 2][y][z]);
-    }
-  }
-
-  // // Plot field info
-  // D.plotData.resize(6);
-  // D.plotData[0].first= "Vert Yax";
-  // D.plotData[3].first= "Hori Zax";
-  // for (int k= 0; k < (int)D.plotData.size(); k++)
-  //   D.plotData[k].second.clear();
-  // if (nbZ > 1) {
-  //   for (int y= 0; y < nbY; y++) {
-  //     if (!Solid[nbX / 2][y][1]) D.plotData[0].second.push_back((double)VelZ[nbX / 2][y][1]);
-  //     if (!Solid[nbX / 2][y][nbZ / 2]) D.plotData[1].second.push_back((double)VelZ[nbX / 2][y][nbZ / 2]);
-  //     if (!Solid[nbX / 2][y][nbZ - 2]) D.plotData[2].second.push_back((double)VelZ[nbX / 2][y][nbZ - 2]);
-  //   }
-  // }
-  // if (nbY > 1) {
-  //   for (int z= 0; z < nbZ; z++) {
-  //     if (!Solid[nbX / 2][1][z]) D.plotData[3].second.push_back((double)VelY[nbX / 2][1][z]);
-  //     if (!Solid[nbX / 2][nbY / 2][z]) D.plotData[4].second.push_back((double)VelY[nbX / 2][nbY / 2][z]);
-  //     if (!Solid[nbX / 2][nbY - 2][z]) D.plotData[5].second.push_back((double)VelY[nbX / 2][nbY - 2][z]);
-  //   }
-  // }
 
   const int maxDim= std::max(std::max(nbX, nbY), nbZ);
   const float voxSize= 1.0f / (float)maxDim;
@@ -507,15 +504,18 @@ void CompuFluidDyna::Draw() {
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by pressure
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 1) {
+            if (std::abs(2.0f * Press[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToBlueToRed(0.5f + 2.0f * Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by smoke
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 2) {
+            if (std::abs(0.5f * Smoke[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToGreenToRed(0.5f + 0.5f * Smoke[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by velocity magnitude
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 3) {
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
+            if (vec.norm() < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
           }
           glColor3f(r, g, b);
@@ -622,7 +622,7 @@ constexpr int Mask[MaskSize][3]=
 //      {+1, +1, +1}};
 
 void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Copy previous field for reference
+  // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
   // Sweep through the field
 #pragma omp parallel for
@@ -635,7 +635,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
           if (SmoBC[x][y][z]) {
             ioField[x][y][z]= SmoForced[x][y][z];
           }
-          // Continuity on solid voxel neighboring at least one non-solid voxel
+          // Continuity/average on solid voxel neighboring at least one non-solid voxel
           else if (Solid[x][y][z]) {
             int count= 0;
             ioField[x][y][z]= 0.0f;
@@ -657,7 +657,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
           if (Solid[x][y][z]) {
             ioField[x][y][z]= 0.0f;
           }
-          // Continuity on passive voxel neighboring at least one non-solid voxel
+          // Continuity/average on passive voxel neighboring at least one non-solid voxel
           if (Passi[x][y][z]) {
             int count= 0;
             ioField[x][y][z]= 0.0f;
@@ -687,7 +687,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
         }
         // Work on pressure field
         else if (iFieldID == 4) {
-          // Continuity on solid voxel neighboring at least one non-solid voxel
+          // Continuity/average on solid voxel neighboring at least one non-solid voxel
           if (Solid[x][y][z]) {
             int count= 0;
             ioField[x][y][z]= 0.0f;
@@ -702,6 +702,8 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
             if (count > 0)
               ioField[x][y][z]/= (float)count;
           }
+          if (Passi[x][y][z])
+            ioField[x][y][z]= 0.0f;
         }
       }
     }
@@ -715,15 +717,21 @@ void CompuFluidDyna::GaussSeidelSolve(
     std::vector<std::vector<std::vector<float>>>& ioField) {
   // Skip if non changing field
   if (iDiffuMode && iDiffuCoeff == 0.0f) return;
+  // Precompute scaled diffusion value
   const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
-  // Solve
+  // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
+  // Solve with Gauss Seidel scheme
+  // TODO consider implementing a conjugate gradient solver instead of gauss seidel
   for (int idxIter= 0; idxIter < iIter; idxIter++) {
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
+          // Ignore solid or fixed values
           if (Solid[x][y][z]) continue;
-          // Get count and sum of valid neighbors in current field for Gauss Seidel propagation
+          if (iFieldID == 0 && SmoBC[x][y][z]) continue;
+          if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+          // Get count and sum of valid neighbors
           int count= 0;
           float sum= 0.0f;
           for (int k= 0; k < MaskSize; k++) {
@@ -734,22 +742,18 @@ void CompuFluidDyna::GaussSeidelSolve(
             sum+= ioField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
             count++;
           }
-
           // Set new value according to coefficients and flags
           const float prevVal= ioField[x][y][z];
           if (iDiffuMode)
             ioField[x][y][z]= (oldField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
           else if (count > 0)
             ioField[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
-
           // Apply overrelaxation trick
           float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
           ioField[x][y][z]= prevVal + coeffOverrelax * (ioField[x][y][z] - prevVal);
         }
       }
     }
-    // todo consider implementing a conjugate gradient solver instead of gauss seidel
-
     // Reapply BC to maintain consistency
     ApplyBC(iFieldID, ioField);
   }
@@ -802,21 +806,25 @@ void CompuFluidDyna::AdvectField(
     const std::vector<std::vector<std::vector<float>>>& iVelY,
     const std::vector<std::vector<std::vector<float>>>& iVelZ,
     std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Sweep through the field
+  // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
+  // Sweep through field and apply semi Lagrangian advection
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        if (!Solid[x][y][z]) {
-          // Find source position for active voxel
-          float posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelX[x][y][z];
-          float posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelY[x][y][z];
-          float posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelZ[x][y][z];
-          // Trilinear interpolation
-          ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
-          // todo check validity of spatial localization
-        }
+        // Ignore solid or fixed values
+        if (Solid[x][y][z]) continue;
+        if (iFieldID == 0 && SmoBC[x][y][z]) continue;
+        if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+        // Find source position for active voxel
+        float posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelX[x][y][z];
+        float posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelY[x][y][z];
+        float posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelZ[x][y][z];
+        // Trilinear interpolation
+        ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
+        // TODO consider changing advection behavior when getting values from solid/passive/... voxels
+        // TODO no ideal solution: cut in half source distance as long as source voxel is invalid
       }
     }
   }
@@ -841,8 +849,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
           if (x - 1 >= 0 && x + 1 < nbX) Press[x][y][z]+= ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z];
           if (y - 1 >= 0 && y + 1 < nbY) Press[x][y][z]+= ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z];
           if (z - 1 >= 0 && z + 1 < nbZ) Press[x][y][z]+= ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1];
-          // todo check if need to handle asymmetric neighbors
-          // todo mirror velocity for voxel outside ?
+          // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
           Press[x][y][z]= -0.5f * Press[x][y][z] / maxDim;
         }
       }
@@ -861,7 +868,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         if (!Solid[x][y][z] && !Passi[x][y][z]) {
-          // todo check if need to handle asymmetric neighbors
+          // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
           if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * maxDim * (Press[x + 1][y][z] - Press[x - 1][y][z]);
           if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * maxDim * (Press[x][y + 1][z] - Press[x][y - 1][z]);
           if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * maxDim * (Press[x][y][z + 1] - Press[x][y][z - 1]);

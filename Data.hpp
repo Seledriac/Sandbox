@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
 
 class ParamUI
 {
@@ -60,4 +61,5 @@ class Data
   std::vector<ParamUI> param;
 
   std::vector<std::pair<std::string, std::vector<double>>> plotData;
+  std::vector<std::pair<std::string, std::vector<std::array<double, 2>>>> scatData;
 };

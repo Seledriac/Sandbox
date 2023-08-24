@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <limits>
 
 // GLUT lib
 #include <GL/freeglut.h>
@@ -33,6 +34,12 @@ constexpr int paramNbCharac= 12;
 constexpr int characHeight= 14;
 constexpr int characWidth= 10;
 constexpr int characterSpace= 1;
+constexpr int plotW= 600;
+constexpr int plotH= 100;
+constexpr int scatW= 250;
+constexpr int scatH= 250;
+constexpr int textW= 9 * characWidth;
+constexpr int textH= characHeight;
 Camera *cam;
 
 // Global variables used by the scene
@@ -209,81 +216,143 @@ void callback_display() {
   glLoadIdentity();
 
   // Draw the parameter list
-  glLineWidth(2.0f);
-  for (int k= 0; k < int(D.param.size()); k++) {
-    if (k == D.idxParamUI)
-      glColor3f(0.8f, 0.4f, 0.4f);
-    else
-      glColor3f(0.8f, 0.8f, 0.8f);
-    char str[50];
-    sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].Get());
-    draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
-    if (k == D.idxParamUI) {
-      sprintf(str, "_");
-      draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
-      draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + characterSpace), str);
+  {
+    glLineWidth(2.0f);
+    for (int k= 0; k < int(D.param.size()); k++) {
+      if (k == D.idxParamUI)
+        glColor3f(0.8f, 0.4f, 0.4f);
+      else
+        glColor3f(0.8f, 0.8f, 0.8f);
+      char str[50];
+      sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].Get());
+      draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
+      if (k == D.idxParamUI) {
+        sprintf(str, "_");
+        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
+        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + characterSpace), str);
+      }
     }
+    glLineWidth(1.0f);
   }
-  glLineWidth(1.0f);
 
   // Draw the 2D plot
-  glLineWidth(2.0f);
-  const int plotW= 600;
-  const int plotH= 100;
-  const int textW= 9 * characWidth;
-  const int textH= characHeight;
-  for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
-    if (D.plotData[k0].second.empty()) continue;
+  if (!D.plotData.empty()) {
+    glLineWidth(2.0f);
 
-    // Set the color
-    float r, g, b;
-    Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
-    glColor3f(r, g, b);
+    for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
+      if (D.plotData[k0].second.empty()) continue;
 
-    // Find the min max range for vertical scaling
-    double valMin= D.plotData[k0].second[0];
-    double valMax= D.plotData[k0].second[0];
-    for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-      if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
-      if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
+      // Set the color
+      float r, g, b;
+      Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.plotData.size() - 1, 1), r, g, b);
+      glColor3f(r, g, b);
+
+      // Find the min max range for vertical scaling
+      double valMin= D.plotData[k0].second[0];
+      double valMax= D.plotData[k0].second[0];
+      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+        if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
+        if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
+      }
+
+      // Draw the text for legend and min max values
+      char str[50];
+      strcpy(str, D.plotData[k0].first.c_str());
+      draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
+
+      sprintf(str, "%+.2e", valMax);
+      draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
+
+      sprintf(str, "%+.2e", valMin);
+      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
+
+      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
+      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
+
+      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
+      draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
+
+      // Draw the polyline
+      glBegin(GL_LINE_STRIP);
+      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+        double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+        glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
+      }
+      glEnd();
     }
-
-    // Draw the text for legend and min max values
-    char str[50];
-    strcpy(str, D.plotData[k0].first.c_str());
-    draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
-
-    sprintf(str, "%+.2e", valMax);
-    draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
-
-    sprintf(str, "%+.2e", valMin);
-    draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
-
-    sprintf(str, "%+.2e", D.plotData[k0].second[0]);
-    draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
-
-    sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
-    draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
-
-    // Draw the polyline
-    glBegin(GL_LINE_STRIP);
-    for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-      double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
-      glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
-    }
-    glEnd();
+    glLineWidth(1.0f);
   }
-  glLineWidth(1.0f);
+
+  // Draw the 2D scatter
+  if (!D.scatData.empty()) {
+    glLineWidth(2.0f);
+    glBegin(GL_LINE_STRIP);
+    glColor3f(0.7f, 0.7f, 0.7f);
+    glVertex3i(textW, scatH + 3 * textH, 0);
+    glVertex3i(textW, 3 * textH, 0);
+    glVertex3i(textW + scatW, 3 * textH, 0);
+    glEnd();
+
+    // Find the min max range for scaling
+    double valMinX= std::numeric_limits<double>::max();
+    double valMinY= std::numeric_limits<double>::max();
+    double valMaxX= std::numeric_limits<double>::lowest();
+    double valMaxY= std::numeric_limits<double>::lowest();
+    for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
+      for (int k1= 0; k1 < int(D.scatData[k0].second.size()); k1++) {
+        if (valMinX > D.scatData[k0].second[k1][0]) valMinX= D.scatData[k0].second[k1][0];
+        if (valMinY > D.scatData[k0].second[k1][1]) valMinY= D.scatData[k0].second[k1][1];
+        if (valMaxX < D.scatData[k0].second[k1][0]) valMaxX= D.scatData[k0].second[k1][0];
+        if (valMaxY < D.scatData[k0].second[k1][1]) valMaxY= D.scatData[k0].second[k1][1];
+      }
+    }
+
+    // Draw min max values
+    char str[50];
+    sprintf(str, "%+.2e", valMinX);
+    draw_text(textW, 2 * textH, str);
+    sprintf(str, "%+.2e", valMaxX);
+    draw_text(textW + scatW - textW, 2 * textH, str);
+    sprintf(str, "%+.2e", valMinY);
+    draw_text(0, 3 * textH, str);
+    sprintf(str, "%+.2e", valMaxY);
+    draw_text(0, 3 * textH + scatH - textH, str);
+
+    glPointSize(4.0f);
+    for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
+      if (D.scatData[k0].second.empty()) continue;
+
+      // Set the color
+      float r, g, b;
+      Colormap::RatioToRainbow(float(k0) / (float)std::max((int)D.scatData.size() - 1, 1), r, g, b);
+      glColor3f(r, g, b);
+
+      // Draw the text for legend
+      strcpy(str, D.scatData[k0].first.c_str());
+      draw_text(0, scatH - k0 * textH, str);
+
+      // Draw the polyline
+      glBegin(GL_POINTS);
+      for (int k1= 0; k1 < int(D.scatData[k0].second.size()); k1++) {
+        double relPosX= (D.scatData[k0].second[k1][0] - valMinX) / (valMaxX - valMinX);
+        double relPosY= (D.scatData[k0].second[k1][1] - valMinY) / (valMaxY - valMinY);
+        glVertex3i(textW + (int)std::round((double)scatW * relPosX), 3 * textH + (int)std::round((double)scatH * relPosY), 0);
+      }
+      glEnd();
+    }
+    glPointSize(1.0f);
+    glLineWidth(1.0f);
+  }
 
   // Draw the frame time
-  glLineWidth(2.0f);
   {
+    glLineWidth(2.0f);
     glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
     sprintf(str, "%.3f s", elapsed_time());
     draw_text(0, 2, str);
+    glLineWidth(1.0f);
   }
-  glLineWidth(1.0f);
 
   // Commit the draw
   glutSwapBuffers();
@@ -329,7 +398,10 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '7') D.displayMode7= !D.displayMode7;
   else if (key == '8') D.displayMode8= !D.displayMode8;
   else if (key == '9') D.showAxis= !D.showAxis;
-  else if (key == '0') D.plotData.clear();
+  else if (key == '0') {
+    D.plotData.clear();
+    D.scatData.clear();
+  }
 
   else if (key >= 'A' && key <= 'Z') project_Constructor(key);
   else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
