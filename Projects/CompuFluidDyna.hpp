@@ -32,7 +32,7 @@ class CompuFluidDyna
 
   // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
-  void GaussSeidelSolve(const int iFieldID, const int iIter, const float iTimeStep,
+  void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                         const bool iDiffuMode, const float iDiffuCoeff,
                         std::vector<std::vector<std::vector<float>>>& ioField);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
@@ -42,7 +42,7 @@ class CompuFluidDyna
                    const std::vector<std::vector<std::vector<float>>>& iVelY,
                    const std::vector<std::vector<std::vector<float>>>& iVelZ,
                    std::vector<std::vector<std::vector<float>>>& ioField);
-  void ProjectField(const int iIter, const float iTimeStep,
+  void ProjectField(const int iMaxIter, const float iTimeStep,
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
                     std::vector<std::vector<std::vector<float>>>& ioVelZ);

@@ -347,7 +347,10 @@ void callback_display() {
   // Draw the frame time
   {
     glLineWidth(2.0f);
-    glColor3f(0.8f, 0.8f, 0.8f);
+    if (D.playAnimation)
+      glColor3f(0.6f, 1.0f, 0.6f);
+    else
+      glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
     sprintf(str, "%.3f s", elapsed_time());
     draw_text(0, 2, str);

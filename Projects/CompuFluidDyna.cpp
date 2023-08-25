@@ -71,7 +71,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("ResolutionZ_", 100));
     D.param.push_back(ParamUI("TimeStep____", 0.02));
     D.param.push_back(ParamUI("SolvGSIter__", 20));
-    D.param.push_back(ParamUI("SolvGSCoeff_", 1.5));
+    D.param.push_back(ParamUI("SolvGSCoeff_", 1.9));
     D.param.push_back(ParamUI("CoeffDiffu__", 0.0));
     D.param.push_back(ParamUI("CoeffVisco__", 0.0));
     D.param.push_back(ParamUI("CoeffForceX_", 0.0));
@@ -85,7 +85,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("ScaleFactor_", 5.0));
     D.param.push_back(ParamUI("ColorFactor_", 1.0));
     D.param.push_back(ParamUI("ColorThresh_", 0.0));
-    D.param.push_back(ParamUI("ColorMode___", 2));
+    D.param.push_back(ParamUI("ColorMode___", 1));
     D.param.push_back(ParamUI("SlicePlotX__", 0.5));
     D.param.push_back(ParamUI("SlicePlotY__", 0.5));
     D.param.push_back(ParamUI("SlicePlotZ__", 0.5));
@@ -188,9 +188,10 @@ void CompuFluidDyna::Refresh() {
         // Scenario from loaded BMP file
         if (scenarioType == 0) {
           // Get pixel colors
-          // TODO improve localization of pixels to better avoid assymetries
-          int idxPixelW= std::min(std::max(((int)imageRGBA.size() - 1) * y / nbY, 0), (int)imageRGBA.size() - 1);
-          int idxPixelH= std::min(std::max(((int)imageRGBA[0].size() - 1) * z / nbZ, 0), (int)imageRGBA[0].size() - 1);
+          float posW= (float)(imageRGBA.size() - 1) * ((float)y + 0.5f) / (float)nbY;
+          float posH= (float)(imageRGBA[0].size() - 1) * ((float)z + 0.5f) / (float)nbZ;
+          int idxPixelW= std::min(std::max((int)std::round(posW), 0), (int)imageRGBA.size() - 1);
+          int idxPixelH= std::min(std::max((int)std::round(posH), 0), (int)imageRGBA[0].size() - 1);
           std::array<float, 3> color= {imageRGBA[idxPixelW][idxPixelH][0], imageRGBA[idxPixelW][idxPixelH][1], imageRGBA[idxPixelW][idxPixelH][2]};
           // Set flags from pixel colors
           if (color[0] < 0.1f) Solid[x][y][z]= true;
@@ -256,24 +257,21 @@ void CompuFluidDyna::Refresh() {
 
         // Circular obstacle in corridor showing vortex shedding
         if (scenarioType == 2) {
-          if (y == 0 || y == nbY - 1 || z == 0 || z == nbZ - 1) {
+          if (z == 0 || z == nbZ - 1) {
             Solid[x][y][z]= true;
           }
-          else if (y < nbY / 20) {
-            Passi[x][y][z]= true;
-            SmoBC[x][y][z]= true;
-            if (z < nbZ / 2)
-              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
-            else
-              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
-          }
-          else if (y < nbY / 10) {
+          else if (y <= 1) {
             VelBC[x][y][z]= true;
             VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
             VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
             VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
+            SmoBC[x][y][z]= true;
+            if (std::max(z, nbZ - 1 - z) % 16 < 8)
+              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
+            else
+              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
           }
-          else if (y >= nbY - 3) {
+          else if (y >= nbY - 2) {
             Passi[x][y][z]= true;
           }
           else {
@@ -314,28 +312,6 @@ void CompuFluidDyna::Refresh() {
             else
               SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
           }
-        }
-
-        // Ensure consistent boundary conditions
-        if (Solid[x][y][z]) {
-          Passi[x][y][z]= false;
-          VelBC[x][y][z]= true;
-          SmoBC[x][y][z]= true;
-          VelXForced[x][y][z]= 0.0f;
-          VelYForced[x][y][z]= 0.0f;
-          VelZForced[x][y][z]= 0.0f;
-          SmoForced[x][y][z]= 0.0f;
-        }
-        if (Passi[x][y][z]) {
-          VelBC[x][y][z]= false;
-        }
-        if (VelBC[x][y][z]) {
-          VelX[x][y][z]= VelXForced[x][y][z];
-          VelY[x][y][z]= VelYForced[x][y][z];
-          VelZ[x][y][z]= VelZForced[x][y][z];
-        }
-        if (SmoBC[x][y][z]) {
-          Smoke[x][y][z]= SmoForced[x][y][z];
         }
       }
     }
@@ -412,12 +388,12 @@ void CompuFluidDyna::Animate() {
   D.scatData[0].second.clear();
   D.scatData[1].second.clear();
   if (nbZ > 1) {
-    int z= std::min(std::max((int)std::round((float)nbZ * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
+    int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
     for (int y= 0; y < nbY; y++)
       D.scatData[0].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
   }
   if (nbY > 1) {
-    int y= std::min(std::max((int)std::round((float)nbY * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
+    int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
     for (int z= 0; z < nbZ; z++)
       D.scatData[1].second.push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
   }
@@ -505,7 +481,7 @@ void CompuFluidDyna::Draw() {
           // Color by pressure
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 1) {
             if (std::abs(2.0f * Press[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 2.0f * Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by smoke
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 2) {
@@ -591,36 +567,6 @@ constexpr int Mask[MaskSize][3]=
      {+0, +0, +1},
      {+0, +0, -1}};
 
-// constexpr int MaskSize= 27;
-// constexpr int Mask[MaskSize][3]=
-//     {{-1, -1, -1},
-//      {-1, -1, +0},
-//      {-1, -1, +1},
-//      {-1, +0, -1},
-//      {-1, +0, +0},
-//      {-1, +0, +1},
-//      {-1, +1, -1},
-//      {-1, +1, +0},
-//      {-1, +1, +1},
-//      {+0, -1, -1},
-//      {+0, -1, +0},
-//      {+0, -1, +1},
-//      {+0, +0, -1},
-//      {+0, +0, +0},
-//      {+0, +0, +1},
-//      {+0, +1, -1},
-//      {+0, +1, +0},
-//      {+0, +1, +1},
-//      {+1, -1, -1},
-//      {+1, -1, +0},
-//      {+1, -1, +1},
-//      {+1, +0, -1},
-//      {+1, +0, +0},
-//      {+1, +0, +1},
-//      {+1, +1, -1},
-//      {+1, +1, +0},
-//      {+1, +1, +1}};
-
 void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField) {
   // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
@@ -678,12 +624,6 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
             if (iFieldID == 2) ioField[x][y][z]= VelYForced[x][y][z];
             if (iFieldID == 3) ioField[x][y][z]= VelZForced[x][y][z];
           }
-          // // Redirected value on surface voxel
-          // else if (Surfa[x][y][z]) {
-          //   if (iFieldID == 1 && ioField[x][y][z] * SurfaXNormal[x][y][z] < 0.0f) ioField[x][y][z]= 0.0f;
-          //   if (iFieldID == 2 && ioField[x][y][z] * SurfaYNormal[x][y][z] < 0.0f) ioField[x][y][z]= 0.0f;
-          //   if (iFieldID == 3 && ioField[x][y][z] * SurfaZNormal[x][y][z] < 0.0f) ioField[x][y][z]= 0.0f;
-          // }
         }
         // Work on pressure field
         else if (iFieldID == 4) {
@@ -702,6 +642,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
             if (count > 0)
               ioField[x][y][z]/= (float)count;
           }
+          // Zero value on passive voxel
           if (Passi[x][y][z])
             ioField[x][y][z]= 0.0f;
         }
@@ -712,50 +653,96 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
 
 
 void CompuFluidDyna::GaussSeidelSolve(
-    const int iFieldID, const int iIter, const float iTimeStep,
+    const int iFieldID, const int iMaxIter, const float iTimeStep,
     const bool iDiffuMode, const float iDiffuCoeff,
     std::vector<std::vector<std::vector<float>>>& ioField) {
   // Skip if non changing field
   if (iDiffuMode && iDiffuCoeff == 0.0f) return;
-  // Precompute scaled diffusion value
+  // Get parameters
   const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
+  float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
   // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
-  // Solve with Gauss Seidel scheme
-  // TODO consider implementing a conjugate gradient solver instead of gauss seidel
-  for (int idxIter= 0; idxIter < iIter; idxIter++) {
-    for (int x= 0; x < nbX; x++) {
-      for (int y= 0; y < nbY; y++) {
-        for (int z= 0; z < nbZ; z++) {
-          // Ignore solid or fixed values
-          if (Solid[x][y][z]) continue;
-          if (iFieldID == 0 && SmoBC[x][y][z]) continue;
-          if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
-          // Get count and sum of valid neighbors
-          int count= 0;
-          float sum= 0.0f;
-          for (int k= 0; k < MaskSize; k++) {
-            if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-            if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-            if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-            if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
-            sum+= ioField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-            count++;
+  // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
+  for (int k= 0; k < iMaxIter; k++) {
+    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
+    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
+#pragma omp parallel sections
+    {
+#pragma omp section
+      {
+        // Forward pass
+        for (int x= 0; x < nbX; x++) {
+          for (int y= 0; y < nbY; y++) {
+            for (int z= 0; z < nbZ; z++) {
+              // Ignore solid or fixed values
+              if (Solid[x][y][z]) continue;
+              if (iFieldID == 0 && SmoBC[x][y][z]) continue;
+              if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+              // Get count and sum of valid neighbors
+              int count= 0;
+              float sum= 0.0f;
+              for (int k= 0; k < MaskSize; k++) {
+                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+                if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
+                sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                count++;
+              }
+              // Set new value according to coefficients and flags
+              const float prevVal= FieldA[x][y][z];
+              if (iDiffuMode)
+                FieldA[x][y][z]= (oldField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+              else if (count > 0)
+                FieldA[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
+              // Apply overrelaxation trick
+              FieldA[x][y][z]= prevVal + coeffOverrelax * (FieldA[x][y][z] - prevVal);
+            }
           }
-          // Set new value according to coefficients and flags
-          const float prevVal= ioField[x][y][z];
-          if (iDiffuMode)
-            ioField[x][y][z]= (oldField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-          else if (count > 0)
-            ioField[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
-          // Apply overrelaxation trick
-          float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
-          ioField[x][y][z]= prevVal + coeffOverrelax * (ioField[x][y][z] - prevVal);
         }
       }
+#pragma omp section
+      {
+        // Backward pass
+        for (int x= nbX - 1; x >= 0; x--) {
+          for (int y= nbY - 1; y >= 0; y--) {
+            for (int z= nbZ - 1; z >= 0; z--) {
+              // Ignore solid or fixed values
+              if (Solid[x][y][z]) continue;
+              if (iFieldID == 0 && SmoBC[x][y][z]) continue;
+              if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+              // Get count and sum of valid neighbors
+              int count= 0;
+              float sum= 0.0f;
+              for (int k= 0; k < MaskSize; k++) {
+                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
+                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
+                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
+                if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
+                sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                count++;
+              }
+              // Set new value according to coefficients and flags
+              const float prevVal= FieldB[x][y][z];
+              if (iDiffuMode)
+                FieldB[x][y][z]= (oldField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+              else if (count > 0)
+                FieldB[x][y][z]= (oldField[x][y][z] + sum) / (float)count;
+              // Apply overrelaxation trick
+              FieldB[x][y][z]= prevVal + coeffOverrelax * (FieldB[x][y][z] - prevVal);
+            }
+          }
+        }
+      }
+      // Recombine forward and backward passes
+      for (int x= 0; x < nbX; x++)
+        for (int y= 0; y < nbY; y++)
+          for (int z= 0; z < nbZ; z++)
+            ioField[x][y][z]= 0.5 * (FieldA[x][y][z] + FieldB[x][y][z]);
+      // Reapply BC to maintain consistency
+      ApplyBC(iFieldID, ioField);
     }
-    // Reapply BC to maintain consistency
-    ApplyBC(iFieldID, ioField);
   }
 }
 
@@ -786,15 +773,15 @@ float CompuFluidDyna::TrilinearInterpolation(
   const float v110= iFieldRef[x1][y1][z0];
   const float v111= iFieldRef[x1][y1][z1];
 
-  float val= 0.0f;
-  val+= v000 * (xWeight0 * yWeight0 * zWeight0);
-  val+= v001 * (xWeight0 * yWeight0 * zWeight1);
-  val+= v010 * (xWeight0 * yWeight1 * zWeight0);
-  val+= v011 * (xWeight0 * yWeight1 * zWeight1);
-  val+= v100 * (xWeight1 * yWeight0 * zWeight0);
-  val+= v101 * (xWeight1 * yWeight0 * zWeight1);
-  val+= v110 * (xWeight1 * yWeight1 * zWeight0);
-  val+= v111 * (xWeight1 * yWeight1 * zWeight1);
+  float val=
+      v000 * (xWeight0 * yWeight0 * zWeight0) +
+      v001 * (xWeight0 * yWeight0 * zWeight1) +
+      v010 * (xWeight0 * yWeight1 * zWeight0) +
+      v011 * (xWeight0 * yWeight1 * zWeight1) +
+      v100 * (xWeight1 * yWeight0 * zWeight0) +
+      v101 * (xWeight1 * yWeight0 * zWeight1) +
+      v110 * (xWeight1 * yWeight1 * zWeight0) +
+      v111 * (xWeight1 * yWeight1 * zWeight1);
 
   return val;
 }
@@ -817,14 +804,21 @@ void CompuFluidDyna::AdvectField(
         if (Solid[x][y][z]) continue;
         if (iFieldID == 0 && SmoBC[x][y][z]) continue;
         if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
-        // Find source position for active voxel
-        float posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelX[x][y][z];
-        float posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelY[x][y][z];
-        float posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * iVelZ[x][y][z];
+        // Find valid source position for active voxel
+        float posX, posY, posZ;
+        float distRatio= 1.0f;
+        for (int idxSubstep= 0; idxSubstep < 10; idxSubstep++) {
+          posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelX[x][y][z];
+          posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelY[x][y][z];
+          posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelZ[x][y][z];
+          int idxX= std::min(std::max((int)std::round(posX), 0), nbX - 1);
+          int idxY= std::min(std::max((int)std::round(posY), 0), nbY - 1);
+          int idxZ= std::min(std::max((int)std::round(posZ), 0), nbZ - 1);
+          if (Solid[idxX][idxY][idxZ]) distRatio*= 3.0f / 4.0f;
+          else break;
+        }
         // Trilinear interpolation
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
-        // TODO consider changing advection behavior when getting values from solid/passive/... voxels
-        // TODO no ideal solution: cut in half source distance as long as source voxel is invalid
       }
     }
   }
