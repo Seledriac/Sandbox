@@ -354,18 +354,20 @@ void CompuFluidDyna::Animate() {
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
 
   // Plot field info
-  D.plotData.resize(5);
+  D.plotData.resize(6);
   if (D.plotData[0].second.size() < 1000) {
     D.plotData[0].first= "TotVelX";
     D.plotData[1].first= "TotVelY";
     D.plotData[2].first= "TotVelZ";
-    D.plotData[3].first= "TotVel";
-    D.plotData[4].first= "TotSmok";
+    D.plotData[3].first= "TotVelMag";
+    D.plotData[4].first= "TotSmoke";
+    D.plotData[5].first= "TotPress";
     D.plotData[0].second.push_back(0.0f);
     D.plotData[1].second.push_back(0.0f);
     D.plotData[2].second.push_back(0.0f);
     D.plotData[3].second.push_back(0.0f);
     D.plotData[4].second.push_back(0.0f);
+    D.plotData[5].second.push_back(0.0f);
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
@@ -375,6 +377,7 @@ void CompuFluidDyna::Animate() {
             D.plotData[2].second[D.plotData[2].second.size() - 1]+= VelZ[x][y][z];
             D.plotData[3].second[D.plotData[3].second.size() - 1]+= std::sqrt(std::pow(VelX[x][y][z], 2.0f) + std::pow(VelY[x][y][z], 2.0f) + std::pow(VelZ[x][y][z], 2.0f));
             D.plotData[4].second[D.plotData[4].second.size() - 1]+= Smoke[x][y][z];
+            D.plotData[5].second[D.plotData[4].second.size() - 1]+= Press[x][y][z];
           }
         }
       }
@@ -659,7 +662,7 @@ void CompuFluidDyna::GaussSeidelSolve(
   if (iDiffuMode && iDiffuCoeff == 0.0f) return;
   // Get parameters
   const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
-  float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
+  const float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
   // Copy previous field values for reference
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
@@ -738,7 +741,7 @@ void CompuFluidDyna::GaussSeidelSolve(
       for (int x= 0; x < nbX; x++)
         for (int y= 0; y < nbY; y++)
           for (int z= 0; z < nbZ; z++)
-            ioField[x][y][z]= 0.5 * (FieldA[x][y][z] + FieldB[x][y][z]);
+            ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
       // Reapply BC to maintain consistency
       ApplyBC(iFieldID, ioField);
     }
@@ -830,8 +833,6 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelX,
                                   std::vector<std::vector<std::vector<float>>>& ioVelY,
                                   std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  const float maxDim= (float)std::min(std::min(nbX, nbY), nbZ);
-
   // Compute divergence
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
@@ -843,7 +844,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
           if (y - 1 >= 0 && y + 1 < nbY) Press[x][y][z]+= ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z];
           if (z - 1 >= 0 && z + 1 < nbZ) Press[x][y][z]+= ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1];
           // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
-          Press[x][y][z]= -0.5f * Press[x][y][z] / maxDim;
+          Press[x][y][z]= -0.5f * Press[x][y][z];
         }
       }
     }
@@ -862,9 +863,9 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
       for (int z= 0; z < nbZ; z++) {
         if (!Solid[x][y][z] && !Passi[x][y][z]) {
           // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
-          if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * maxDim * (Press[x + 1][y][z] - Press[x - 1][y][z]);
-          if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * maxDim * (Press[x][y + 1][z] - Press[x][y - 1][z]);
-          if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * maxDim * (Press[x][y][z + 1] - Press[x][y][z - 1]);
+          if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * (Press[x + 1][y][z] - Press[x - 1][y][z]);
+          if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * (Press[x][y + 1][z] - Press[x][y - 1][z]);
+          if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * (Press[x][y][z + 1] - Press[x][y][z - 1]);
         }
       }
     }
