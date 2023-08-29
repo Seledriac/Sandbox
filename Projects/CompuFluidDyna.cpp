@@ -354,32 +354,31 @@ void CompuFluidDyna::Animate() {
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
 
   // Plot field info
-  float totVelX= 0.0f;
-  float totVelY= 0.0f;
-  float totVelZ= 0.0f;
-  float totSmok= 0.0f;
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        if (!Solid[x][y][z]) {
-          totVelX+= VelX[x][y][z];
-          totVelY+= VelY[x][y][z];
-          totVelZ+= VelZ[x][y][z];
-          totSmok+= Smoke[x][y][z];
-        }
-      }
-    }
-  }
-  D.plotData.resize(4);
+  D.plotData.resize(5);
   if (D.plotData[0].second.size() < 1000) {
     D.plotData[0].first= "TotVelX";
     D.plotData[1].first= "TotVelY";
     D.plotData[2].first= "TotVelZ";
-    D.plotData[3].first= "TotSmok";
-    D.plotData[0].second.push_back((double)totVelX);
-    D.plotData[1].second.push_back((double)totVelY);
-    D.plotData[2].second.push_back((double)totVelZ);
-    D.plotData[3].second.push_back((double)totSmok);
+    D.plotData[3].first= "TotVel";
+    D.plotData[4].first= "TotSmok";
+    D.plotData[0].second.push_back(0.0f);
+    D.plotData[1].second.push_back(0.0f);
+    D.plotData[2].second.push_back(0.0f);
+    D.plotData[3].second.push_back(0.0f);
+    D.plotData[4].second.push_back(0.0f);
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          if (!Solid[x][y][z]) {
+            D.plotData[0].second[D.plotData[0].second.size() - 1]+= VelX[x][y][z];
+            D.plotData[1].second[D.plotData[1].second.size() - 1]+= VelY[x][y][z];
+            D.plotData[2].second[D.plotData[2].second.size() - 1]+= VelZ[x][y][z];
+            D.plotData[3].second[D.plotData[3].second.size() - 1]+= std::sqrt(std::pow(VelX[x][y][z], 2.0f) + std::pow(VelY[x][y][z], 2.0f) + std::pow(VelZ[x][y][z], 2.0f));
+            D.plotData[4].second[D.plotData[4].second.size() - 1]+= Smoke[x][y][z];
+          }
+        }
+      }
+    }
   }
 
   D.scatData.resize(2);
