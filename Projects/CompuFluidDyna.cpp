@@ -13,7 +13,6 @@
 #include "../Data.hpp"
 #include "../FileIO/FileInput.hpp"
 #include "../Util/Colormap.hpp"
-#include "../Util/Draw.hpp"
 #include "../Util/Field.hpp"
 #include "../Util/Random.hpp"
 #include "../Util/Timer.hpp"
@@ -130,6 +129,10 @@ void CompuFluidDyna::Initialize() {
   nbX= std::max((int)std::round(D.param[ResolutionX_].Get()), 1);
   nbY= std::max((int)std::round(D.param[ResolutionY_].Get()), 1);
   nbZ= std::max((int)std::round(D.param[ResolutionZ_].Get()), 1);
+  maxDim= std::max(std::max(nbX, nbY), nbZ);
+  voxSize= 1.0f / (float)maxDim;
+  boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
+  boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
 
   // Allocate data
   Solid= Field::AllocField3D(nbX, nbY, nbZ, false);
@@ -188,11 +191,11 @@ void CompuFluidDyna::Refresh() {
         // Scenario from loaded BMP file
         if (scenarioType == 0) {
           // Get pixel colors
-          float posW= (float)(imageRGBA.size() - 1) * ((float)y + 0.5f) / (float)nbY;
-          float posH= (float)(imageRGBA[0].size() - 1) * ((float)z + 0.5f) / (float)nbZ;
-          int idxPixelW= std::min(std::max((int)std::round(posW), 0), (int)imageRGBA.size() - 1);
-          int idxPixelH= std::min(std::max((int)std::round(posH), 0), (int)imageRGBA[0].size() - 1);
-          std::array<float, 3> color= {imageRGBA[idxPixelW][idxPixelH][0], imageRGBA[idxPixelW][idxPixelH][1], imageRGBA[idxPixelW][idxPixelH][2]};
+          const float posW= (float)(imageRGBA.size() - 1) * ((float)y + 0.5f) / (float)nbY;
+          const float posH= (float)(imageRGBA[0].size() - 1) * ((float)z + 0.5f) / (float)nbZ;
+          const int idxPixelW= std::min(std::max((int)std::round(posW), 0), (int)imageRGBA.size() - 1);
+          const int idxPixelH= std::min(std::max((int)std::round(posH), 0), (int)imageRGBA[0].size() - 1);
+          const std::array<float, 3> color= {imageRGBA[idxPixelW][idxPixelH][0], imageRGBA[idxPixelW][idxPixelH][1], imageRGBA[idxPixelW][idxPixelH][2]};
           // Set flags from pixel colors
           if (color[0] < 0.1f) Solid[x][y][z]= true;
           if (color[0] > 0.9f) Passi[x][y][z]= true;
@@ -228,7 +231,7 @@ void CompuFluidDyna::Refresh() {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
             if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
-            float refRadius= std::max((float)D.param[ObjectSize__].Get(), 0.0f);
+            const float refRadius= std::max((float)D.param[ObjectSize__].Get(), 0.0f);
             if ((posCell - posObstacle).norm() <= refRadius) {
               Math::Vec3f vecFlow(D.param[CoeffForceX_].Get(), D.param[CoeffForceY_].Get(), D.param[CoeffForceZ_].Get());
               vecFlow.normalize();
@@ -275,7 +278,6 @@ void CompuFluidDyna::Refresh() {
             Passi[x][y][z]= true;
           }
           else {
-            const int maxDim= std::max(std::max(nbX, nbY), nbZ);
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
             float refRadius= std::max((float)D.param[ObjectSize__].Get(), 0.0f);
@@ -426,17 +428,12 @@ void CompuFluidDyna::Draw() {
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
-  const int maxDim= std::max(std::max(nbX, nbY), nbZ);
-  const float voxSize= 1.0f / (float)maxDim;
-
   // Draw the voxels
   if (D.displayMode1) {
     glEnable(GL_LIGHTING);
     // Set the scene transformation
     glPushMatrix();
-    glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbY / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbZ / (float)maxDim);
+    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     // Sweep the field
     for (int x= 0; x < nbX; x++) {
@@ -466,15 +463,12 @@ void CompuFluidDyna::Draw() {
   // Draw the scalar fields
   if (D.displayMode2) {
     // Set the scene transformation
-    if (nbX > 1 && nbY > 1 && nbZ > 1) {
-      glPointSize(3.0f);
-      glPushMatrix();
-      glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
-                   0.5f + 0.5f * voxSize - 0.5f * (float)nbY / (float)maxDim,
-                   0.5f + 0.5f * voxSize - 0.5f * (float)nbZ / (float)maxDim);
-      glScalef(voxSize, voxSize, voxSize);
-      glBegin(GL_POINTS);
-    }
+    glPushMatrix();
+    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+    glScalef(voxSize, voxSize, voxSize);
+    if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
+    if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
+    if (nbZ == 1) glScalef(1.0f, 1.0f, 0.1f);
     // Sweep the field
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
@@ -497,30 +491,15 @@ void CompuFluidDyna::Draw() {
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
           }
           glColor3f(r, g, b);
-          if (nbX == 1)
-            Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
-                                0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
-                                0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
-                                0.1f * voxSize, voxSize, voxSize, true);
-          else if (nbY == 1)
-            Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
-                                0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
-                                0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
-                                voxSize, 0.1f * voxSize, voxSize, true);
-          else if (nbZ == 1)
-            Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
-                                0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
-                                0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
-                                voxSize, voxSize, 0.1f * voxSize, true);
-          else glVertex3f((float)x, (float)y, (float)z);
+          glPushMatrix();
+          glTranslatef((float)x, (float)y, (float)z);
+          if (nbX > 1 && nbY > 1 && nbZ > 1) glutWireCube(1.0);
+          else glutSolidCube(1.0);
+          glPopMatrix();
         }
       }
     }
-    if (nbX > 1 && nbY > 1 && nbZ > 1) {
-      glEnd();
-      glPopMatrix();
-      glPointSize(1.0f);
-    }
+    glPopMatrix();
   }
 
   // Draw the vector fields
@@ -528,9 +507,7 @@ void CompuFluidDyna::Draw() {
     constexpr int nbSizes= 3;
     // Set the scene transformation
     glPushMatrix();
-    glTranslatef(0.5f + 0.5f * voxSize - 0.5f * (float)nbX / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbY / (float)maxDim,
-                 0.5f + 0.5f * voxSize - 0.5f * (float)nbZ / (float)maxDim);
+    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     // Sweep the field
     for (int k= 0; k < nbSizes; k++) {
@@ -810,9 +787,9 @@ void CompuFluidDyna::AdvectField(
         float posX, posY, posZ;
         float distRatio= 1.0f;
         for (int idxSubstep= 0; idxSubstep < 10; idxSubstep++) {
-          posX= (float)x - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelX[x][y][z];
-          posY= (float)y - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelY[x][y][z];
-          posZ= (float)z - iTimeStep * (float)std::max(std::max(nbX, nbY), nbZ) * distRatio * iVelZ[x][y][z];
+          posX= (float)x - iTimeStep * (float)maxDim * distRatio * iVelX[x][y][z];
+          posY= (float)y - iTimeStep * (float)maxDim * distRatio * iVelY[x][y][z];
+          posZ= (float)z - iTimeStep * (float)maxDim * distRatio * iVelZ[x][y][z];
           int idxX= std::min(std::max((int)std::round(posX), 0), nbX - 1);
           int idxY= std::min(std::max((int)std::round(posY), 0), nbY - 1);
           int idxZ= std::min(std::max((int)std::round(posZ), 0), nbZ - 1);

@@ -12,6 +12,10 @@ class CompuFluidDyna
   int nbX;
   int nbY;
   int nbZ;
+  int maxDim;
+  float voxSize;
+  std::array<double, 3> boxMin;
+  std::array<double, 3> boxMax;
 
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
