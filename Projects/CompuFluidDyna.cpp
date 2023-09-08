@@ -164,7 +164,7 @@ void CompuFluidDyna::Refresh() {
   // Get scenario ID and optionnally load bitmap file
   const int scenarioType= (int)std::round(D.param[Scenario____].Get());
   const int inputFile= (int)std::round(D.param[InputFile___].Get());
-  static std::vector<std::vector<std::array<float, 4>>> imageRGBA;
+  std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (scenarioType == 0) {
     if (inputFile == 0)
       FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", imageRGBA, false);
@@ -203,57 +203,31 @@ void CompuFluidDyna::Refresh() {
           if (std::abs(color[2] - 0.5f) > 0.1f) SmoBC[x][y][z]= true;
           // Set forced values for velocity and smoke
           if (VelBC[x][y][z]) {
-            if (color[1] > 0.5f) {
-              VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
-              VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
-              VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
-            }
-            else {
-              VelXForced[x][y][z]= -D.param[CoeffForceX_].Get();
-              VelYForced[x][y][z]= -D.param[CoeffForceY_].Get();
-              VelZForced[x][y][z]= -D.param[CoeffForceZ_].Get();
-            }
+            VelXForced[x][y][z]= (color[1] > 0.5f) ? (D.param[CoeffForceX_].Get()) : (-D.param[CoeffForceX_].Get());
+            VelYForced[x][y][z]= (color[1] > 0.5f) ? (D.param[CoeffForceY_].Get()) : (-D.param[CoeffForceY_].Get());
+            VelZForced[x][y][z]= (color[1] > 0.5f) ? (D.param[CoeffForceZ_].Get()) : (-D.param[CoeffForceZ_].Get());
           }
           if (SmoBC[x][y][z]) {
-            if (color[2] > 0.5f)
-              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
-            else
-              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
+            SmoForced[x][y][z]= (color[2] > 0.5f) ? (D.param[CoeffSmoke__].Get()) : (-D.param[CoeffSmoke__].Get());
           }
         }
 
         // Double facing inlets
         if (scenarioType == 1) {
-          if (y == 0 || y == nbY - 1 || z == 0 || z == nbZ - 1) {
-            Solid[x][y][z]= true;
+          if (y <= 1 || y >= nbY - 2 || z <= 1 || z >= nbZ - 2) {
+            Passi[x][y][z]= true;
           }
           for (int k= 0; k < 2; k++) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
             if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
-            const float refRadius= std::max((float)D.param[ObjectSize__].Get(), 0.0f);
-            if ((posCell - posObstacle).norm() <= refRadius) {
-              Math::Vec3f vecFlow(D.param[CoeffForceX_].Get(), D.param[CoeffForceY_].Get(), D.param[CoeffForceZ_].Get());
-              vecFlow.normalize();
-              if (k == 1) vecFlow= -1.0 * vecFlow;
-              Solid[x][y][z]= true;
-              if ((posCell - posObstacle - vecFlow * 0.5f * refRadius).norm() <= refRadius * 0.8f) {
-                Solid[x][y][z]= false;
-                if ((posCell - posObstacle - vecFlow * 0.5f * refRadius).norm() <= refRadius * 0.4f) {
-                  VelBC[x][y][z]= true;
-                  VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
-                  VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
-                  VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
-                  SmoBC[x][y][z]= true;
-                  SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
-                  if (k == 1) {
-                    VelXForced[x][y][z]= -VelXForced[x][y][z];
-                    VelYForced[x][y][z]= -VelYForced[x][y][z];
-                    VelZForced[x][y][z]= -VelZForced[x][y][z];
-                    SmoForced[x][y][z]= -SmoForced[x][y][z];
-                  }
-                }
-              }
+            if ((posCell - posObstacle).norm() <= std::max((float)D.param[ObjectSize__].Get(), 0.0f)) {
+              VelBC[x][y][z]= true;
+              SmoBC[x][y][z]= true;
+              VelXForced[x][y][z]= (k == 1) ? (-D.param[CoeffForceX_].Get()) : (D.param[CoeffForceX_].Get());
+              VelYForced[x][y][z]= (k == 1) ? (-D.param[CoeffForceY_].Get()) : (D.param[CoeffForceY_].Get());
+              VelZForced[x][y][z]= (k == 1) ? (-D.param[CoeffForceZ_].Get()) : (D.param[CoeffForceZ_].Get());
+              SmoForced[x][y][z]= (k == 1) ? (-D.param[CoeffSmoke__].Get()) : (D.param[CoeffSmoke__].Get());
             }
           }
         }
@@ -265,14 +239,11 @@ void CompuFluidDyna::Refresh() {
           }
           else if (y <= 1) {
             VelBC[x][y][z]= true;
+            SmoBC[x][y][z]= true;
             VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
             VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
             VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
-            SmoBC[x][y][z]= true;
-            if (std::max(z, nbZ - 1 - z) % 16 < 8)
-              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
-            else
-              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
+            SmoForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.param[CoeffSmoke__].Get()) : (-D.param[CoeffSmoke__].Get());
           }
           else if (y >= nbY - 2) {
             Passi[x][y][z]= true;
@@ -280,12 +251,11 @@ void CompuFluidDyna::Refresh() {
           else {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
             Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
-            float refRadius= std::max((float)D.param[ObjectSize__].Get(), 0.0f);
             Math::Vec3f dist= (posCell - posObstacle);
             dist[0]*= (float)nbX / (float)maxDim;
             dist[1]*= (float)nbY / (float)maxDim;
             dist[2]*= (float)nbZ / (float)maxDim;
-            if (dist.norm() <= refRadius)
+            if (dist.norm() <= std::max((float)D.param[ObjectSize__].Get(), 0.0f))
               Solid[x][y][z]= true;
           }
         }
@@ -309,10 +279,7 @@ void CompuFluidDyna::Refresh() {
           // Add smoke source for visualization
           else if (y == nbY / 2 && z > nbZ / 2) {
             SmoBC[x][y][z]= true;
-            if (z % 16 < 8)
-              SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
-            else
-              SmoForced[x][y][z]= -D.param[CoeffSmoke__].Get();
+            SmoForced[x][y][z]= (z % 16 < 8) ? (D.param[CoeffSmoke__].Get()) : (-D.param[CoeffSmoke__].Get());
           }
         }
       }
@@ -392,12 +359,12 @@ void CompuFluidDyna::Animate() {
   D.scatData[0].second.clear();
   D.scatData[1].second.clear();
   if (nbZ > 1) {
-    int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
+    const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
     for (int y= 0; y < nbY; y++)
       D.scatData[0].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
   }
   if (nbY > 1) {
-    int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
+    const int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
     for (int z= 0; z < nbZ; z++)
       D.scatData[1].second.push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
   }
@@ -409,10 +376,10 @@ void CompuFluidDyna::Animate() {
     D.scatData[3].first= "Hori Zax";
     D.scatData[2].second.clear();
     D.scatData[3].second.clear();
-    std::vector<double> rawData0X({0, 0.0625, 0.0703, 0.0781, 0.0983, 0.1563, 0.2266, 0.2344, 0.5, 0.8047, 0.8594, 0.9063, 0.9453, 0.9531, 0.9609, 0.9688, 1});                            // coord along horiz slice
-    std::vector<double> rawData0Y({0, 0.1836, 0.19713, 0.20920, 0.22965, 0.28124, 0.30203, 0.30174, 0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, 0});    // verti vel along horiz slice
-    std::vector<double> rawData1X({0, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, 0.02135, 0.16256, 0.29093, 0.55892, 0.61756, 0.68439, 0.75837, 1});  // horiz vel on verti slice
-    std::vector<double> rawData1Y({0, 0.0547, 0.0625, 0.0703, 0.1016, 0.1719, 0.2813, 0.4531, 0.5, 0.6172, 0.7344, 0.8516, 0.9531, 0.9609, 0.9688, 0.9766, 1});                            // coord along verti slice
+    const std::vector<double> rawData0X({0, 0.0625, 0.0703, 0.0781, 0.0983, 0.1563, 0.2266, 0.2344, 0.5, 0.8047, 0.8594, 0.9063, 0.9453, 0.9531, 0.9609, 0.9688, 1});                            // coord along horiz slice
+    const std::vector<double> rawData0Y({0, 0.1836, 0.19713, 0.20920, 0.22965, 0.28124, 0.30203, 0.30174, 0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, 0});    // verti vel along horiz slice
+    const std::vector<double> rawData1X({0, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, 0.02135, 0.16256, 0.29093, 0.55892, 0.61756, 0.68439, 0.75837, 1});  // horiz vel on verti slice
+    const std::vector<double> rawData1Y({0, 0.0547, 0.0625, 0.0703, 0.1016, 0.1719, 0.2813, 0.4531, 0.5, 0.6172, 0.7344, 0.8516, 0.9531, 0.9609, 0.9688, 0.9766, 1});                            // coord along verti slice
     for (int k= 0; k < (int)rawData0X.size(); k++) {
       D.scatData[2].second.push_back(std::array<double, 2>({rawData0X[k], rawData0Y[k] + 0.5f}));
       D.scatData[3].second.push_back(std::array<double, 2>({rawData1X[k] + 0.5f, rawData1Y[k]}));
@@ -622,8 +589,9 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
               ioField[x][y][z]/= (float)count;
           }
           // Zero value on passive voxel
-          if (Passi[x][y][z])
+          if (Passi[x][y][z]) {
             ioField[x][y][z]= 0.0f;
+          }
         }
       }
     }
@@ -790,9 +758,9 @@ void CompuFluidDyna::AdvectField(
           posX= (float)x - iTimeStep * (float)maxDim * distRatio * iVelX[x][y][z];
           posY= (float)y - iTimeStep * (float)maxDim * distRatio * iVelY[x][y][z];
           posZ= (float)z - iTimeStep * (float)maxDim * distRatio * iVelZ[x][y][z];
-          int idxX= std::min(std::max((int)std::round(posX), 0), nbX - 1);
-          int idxY= std::min(std::max((int)std::round(posY), 0), nbY - 1);
-          int idxZ= std::min(std::max((int)std::round(posZ), 0), nbZ - 1);
+          const int idxX= std::min(std::max((int)std::round(posX), 0), nbX - 1);
+          const int idxY= std::min(std::max((int)std::round(posY), 0), nbY - 1);
+          const int idxZ= std::min(std::max((int)std::round(posZ), 0), nbZ - 1);
           if (Solid[idxX][idxY][idxZ]) distRatio*= 3.0f / 4.0f;
           else break;
         }
