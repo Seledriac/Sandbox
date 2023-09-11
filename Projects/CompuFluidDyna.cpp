@@ -624,8 +624,8 @@ void CompuFluidDyna::GaussSeidelSolve(
             for (int z= 0; z < nbZ; z++) {
               // Ignore solid or fixed values
               if (Solid[x][y][z]) continue;
-              if (iFieldID == 0 && SmoBC[x][y][z]) continue;
-              if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+              if (SmoBC[x][y][z] && iFieldID == 0) continue;
+              if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
               // Get count and sum of valid neighbors
               int count= 0;
               float sum= 0.0f;
@@ -657,8 +657,8 @@ void CompuFluidDyna::GaussSeidelSolve(
             for (int z= nbZ - 1; z >= 0; z--) {
               // Ignore solid or fixed values
               if (Solid[x][y][z]) continue;
-              if (iFieldID == 0 && SmoBC[x][y][z]) continue;
-              if ((iFieldID == 1 || iFieldID == 2 || iFieldID == 3) && VelBC[x][y][z]) continue;
+              if (SmoBC[x][y][z] && iFieldID == 0) continue;
+              if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
               // Get count and sum of valid neighbors
               int count= 0;
               float sum= 0.0f;
@@ -788,7 +788,6 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
           if (x - 1 >= 0 && x + 1 < nbX) Press[x][y][z]+= ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z];
           if (y - 1 >= 0 && y + 1 < nbY) Press[x][y][z]+= ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z];
           if (z - 1 >= 0 && z + 1 < nbZ) Press[x][y][z]+= ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1];
-          // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
           Press[x][y][z]= -0.5f * Press[x][y][z];
         }
       }
@@ -806,8 +805,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        if (!Solid[x][y][z] && !Passi[x][y][z]) {
-          // TODO check if need to handle asymmetric neighbors. Copy value for voxel outside ?
+        if (!Solid[x][y][z] && !VelBC[x][y][z]) {
           if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * (Press[x + 1][y][z] - Press[x - 1][y][z]);
           if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * (Press[x][y + 1][z] - Press[x][y - 1][z]);
           if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * (Press[x][y][z + 1] - Press[x][y][z - 1]);
