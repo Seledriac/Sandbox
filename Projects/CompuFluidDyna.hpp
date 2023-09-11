@@ -28,6 +28,7 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> SmoForced;
 
   // Fields for scenario run
+  std::vector<std::vector<std::vector<float>>> Vorti;
   std::vector<std::vector<std::vector<float>>> Press;
   std::vector<std::vector<std::vector<float>>> Smoke;
   std::vector<std::vector<std::vector<float>>> VelX;

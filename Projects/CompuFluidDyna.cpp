@@ -144,6 +144,7 @@ void CompuFluidDyna::Initialize() {
   VelZForced= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   SmoForced= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 
+  Vorti= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   Press= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   Smoke= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   VelX= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -323,7 +324,7 @@ void CompuFluidDyna::Animate() {
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
 
   // Plot field info
-  D.plotData.resize(6);
+  D.plotData.resize(7);
   if (D.plotData[0].second.size() < 1000) {
     D.plotData[0].first= "TotVelX";
     D.plotData[1].first= "TotVelY";
@@ -331,12 +332,14 @@ void CompuFluidDyna::Animate() {
     D.plotData[3].first= "TotVelMag";
     D.plotData[4].first= "TotSmoke";
     D.plotData[5].first= "TotPress";
+    D.plotData[6].first= "TotVorti";
     D.plotData[0].second.push_back(0.0f);
     D.plotData[1].second.push_back(0.0f);
     D.plotData[2].second.push_back(0.0f);
     D.plotData[3].second.push_back(0.0f);
     D.plotData[4].second.push_back(0.0f);
     D.plotData[5].second.push_back(0.0f);
+    D.plotData[6].second.push_back(0.0f);
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
@@ -346,7 +349,8 @@ void CompuFluidDyna::Animate() {
             D.plotData[2].second[D.plotData[2].second.size() - 1]+= VelZ[x][y][z];
             D.plotData[3].second[D.plotData[3].second.size() - 1]+= std::sqrt(std::pow(VelX[x][y][z], 2.0f) + std::pow(VelY[x][y][z], 2.0f) + std::pow(VelZ[x][y][z], 2.0f));
             D.plotData[4].second[D.plotData[4].second.size() - 1]+= Smoke[x][y][z];
-            D.plotData[5].second[D.plotData[4].second.size() - 1]+= Press[x][y][z];
+            D.plotData[5].second[D.plotData[5].second.size() - 1]+= Press[x][y][z];
+            D.plotData[6].second[D.plotData[6].second.size() - 1]+= Vorti[x][y][z];
           }
         }
       }
@@ -354,8 +358,8 @@ void CompuFluidDyna::Animate() {
   }
 
   D.scatData.resize(2);
-  D.scatData[0].first= "Vert Yax";
-  D.scatData[1].first= "Hori Zax";
+  D.scatData[0].first= "Simu VY";
+  D.scatData[1].first= "Simu HZ";
   D.scatData[0].second.clear();
   D.scatData[1].second.clear();
   if (nbZ > 1) {
@@ -372,17 +376,71 @@ void CompuFluidDyna::Animate() {
   // Add hard coded lid driven cavity flow benchmark for visual comparison
   if ((int)std::round(D.param[Scenario____].Get()) == 3) {
     D.scatData.resize(4);
-    D.scatData[2].first= "Vert Yax";
-    D.scatData[3].first= "Hori Zax";
+    D.scatData[2].first= "Ghia VY";
+    D.scatData[3].first= "Ghia HZ";
     D.scatData[2].second.clear();
     D.scatData[3].second.clear();
-    const std::vector<double> rawData0X({0, 0.0625, 0.0703, 0.0781, 0.0983, 0.1563, 0.2266, 0.2344, 0.5, 0.8047, 0.8594, 0.9063, 0.9453, 0.9531, 0.9609, 0.9688, 1});                            // coord along horiz slice
-    const std::vector<double> rawData0Y({0, 0.1836, 0.19713, 0.20920, 0.22965, 0.28124, 0.30203, 0.30174, 0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, 0});    // verti vel along horiz slice
-    const std::vector<double> rawData1X({0, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, 0.02135, 0.16256, 0.29093, 0.55892, 0.61756, 0.68439, 0.75837, 1});  // horiz vel on verti slice
-    const std::vector<double> rawData1Y({0, 0.0547, 0.0625, 0.0703, 0.1016, 0.1719, 0.2813, 0.4531, 0.5, 0.6172, 0.7344, 0.8516, 0.9531, 0.9609, 0.9688, 0.9766, 1});                            // coord along verti slice
+    const std::vector<double> rawData0X({+0.00000, +0.06250, +0.07030, +0.07810, +0.09380, +0.15630, +0.22660, +0.23440, +0.50000, +0.80470, +0.85940, +0.90630, +0.94530, +0.95310, +0.96090, +0.96880, +1.00000});  // coord along horiz slice
+
+    // const std::vector<double> rawData0Y({+0.00000, +0.09233, +0.10091, +0.10890, +0.12317, +0.16077, +0.17507, +0.17527, +0.05454, -0.24533, -0.22445, -0.16914, -0.10313, -0.08864, -0.07391, -0.05906, +0.00000});  // Re 100   verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.18360, +0.19713, +0.20920, +0.22965, +0.28124, +0.30203, +0.30174, +0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, +0.00000});  // Re 400   verti vel along horiz slice
+    const std::vector<double> rawData0Y({+0.00000, +0.27485, +0.29012, +0.30353, +0.32627, +0.37095, +0.33075, +0.32235, +0.02526, -0.31966, -0.42665, -0.51500, -0.39188, -0.33714, -0.27669, -0.21388, +0.00000});  // Re 1000  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.39560, +0.40917, +0.41906, +0.42768, +0.37119, +0.29030, +0.28188, +0.00999, -0.31184, -0.37401, -0.44307, -0.54053, -0.52357, -0.47425, -0.39017, +0.00000});  // Re 3200  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.42447, +0.43329, +0.43648, +0.42951, +0.35368, +0.28066, +0.27280, +0.00945, -0.30018, -0.36214, -0.41442, -0.52876, -0.55408, -0.55069, -0.49774, +0.00000});  // Re 5000  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.43979, +0.44030, +0.43564, +0.41824, +0.35060, +0.28117, +0.27348, +0.00824, -0.30448, -0.36213, -0.41050, -0.48590, -0.52347, -0.55216, -0.53858, +0.00000});  // Re 7500  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.43983, +0.43733, +0.43124, +0.41487, +0.35070, +0.28003, +0.27224, +0.00831, -0.30719, -0.36737, -0.41496, -0.45863, -0.49099, -0.52987, -0.54302, +0.00000});  // Re 10000 verti vel along horiz slice
+
+    // const std::vector<double> rawData1X({+0.00000, -0.03717, -0.04192, -0.04775, -0.06434, -0.10150, -0.15662, -0.21090, -0.20581, -0.13641, +0.00332, +0.23151, +0.68717, +0.73722, +0.78871, +0.84123, +1.00000});  // Re 100   horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, +0.02135, +0.16256, +0.29093, +0.55892, +0.61756, +0.68439, +0.75837, +1.00000});  // Re 400   horiz vel on verti slice
+    const std::vector<double> rawData1X({+0.00000, -0.18109, -0.20196, -0.22220, -0.29730, -0.38289, -0.27805, -0.10648, -0.06080, +0.05702, +0.18719, +0.33304, +0.46604, +0.51117, +0.57492, +0.65928, +1.00000});  // Re 1000  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.32407, -0.35344, -0.37827, -0.41933, -0.34323, -0.24427, -0.86636, -0.04272, +0.07156, +0.19791, +0.34682, +0.46101, +0.46547, +0.48296, +0.53236, +1.00000});  // Re 3200  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.41165, -0.42901, -0.43643, -0.40435, -0.33050, -0.22855, -0.07404, -0.03039, +0.08183, +0.20087, +0.33556, +0.46036, +0.45992, +0.46120, +0.48223, +1.00000});  // Re 5000  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.43154, -0.43590, -0.43025, -0.38324, -0.32393, -0.23176, -0.07503, -0.03800, +0.08342, +0.20591, +0.34228, +0.47167, +0.47323, +0.47048, +0.47244, +1.00000});  // Re 7500  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.42735, -0.42537, -0.41657, -0.38000, -0.32709, -0.23186, -0.07540, +0.03111, +0.08344, +0.20673, +0.34635, +0.47804, +0.48070, +0.47783, +0.47221, +1.00000});  // Re 10000 horiz vel on verti slice
+
+    const std::vector<double> rawData1Y({+0.00000, +0.05470, +0.06250, +0.07030, +0.10160, +0.17190, +0.28130, +0.45310, +0.50000, +0.61720, +0.73440, +0.85160, +0.95310, +0.96090, +0.96880, +0.97660, +1.00000});  // coord along verti slice
+
     for (int k= 0; k < (int)rawData0X.size(); k++) {
       D.scatData[2].second.push_back(std::array<double, 2>({rawData0X[k], rawData0Y[k] + 0.5f}));
       D.scatData[3].second.push_back(std::array<double, 2>({rawData1X[k] + 0.5f, rawData1Y[k]}));
+    }
+  }
+
+  if ((int)std::round(D.param[Scenario____].Get()) == 3) {
+    D.scatData.resize(6);
+    D.scatData[4].first= "Ertu VY";
+    D.scatData[5].first= "Ertu HZ";
+    D.scatData[4].second.clear();
+    D.scatData[5].second.clear();
+    const std::vector<double> rawData0X({+0.00000, +0.01500, +0.03000, +0.04500, +0.06000, +0.07500, +0.09000, +0.10500, +0.12000, +0.13500, +0.15000, +0.50000, +0.85000, +0.86500, +0.88000, +0.89500, +0.91000, +0.92500, +0.94000, +0.95500, +0.97000, +0.98500, +1.00000});  // coord along horiz slice
+
+    const std::vector<double> rawData0Y({+0.00000, +0.10190, +0.17920, +0.23490, +0.27460, +0.30410, +0.32730, +0.34600, +0.36050, +0.37050, +0.37560, +0.02580, -0.40280, -0.44070, -0.48030, -0.51320, -0.52630, -0.50520, -0.44170, -0.34000, -0.21730, -0.09730, +0.00000});  // Re 1000  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.16070, +0.26330, +0.32380, +0.36490, +0.39500, +0.41420, +0.42170, +0.41870, +0.40780, +0.39180, +0.01600, -0.36710, -0.38430, -0.40420, -0.43210, -0.47410, -0.52680, -0.56030, -0.51920, -0.37250, -0.16750, +0.00000});  // Re 2500  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.21600, +0.32630, +0.38680, +0.42580, +0.44260, +0.44030, +0.42600, +0.40700, +0.38780, +0.36990, +0.01170, -0.36240, -0.38060, -0.39820, -0.41470, -0.43180, -0.45950, -0.51390, -0.57000, -0.50190, -0.24410, +0.00000});  // Re 5000  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.25090, +0.36080, +0.42100, +0.44940, +0.44950, +0.43370, +0.41370, +0.39500, +0.37790, +0.36160, +0.00990, -0.35740, -0.37550, -0.39380, -0.41180, -0.42830, -0.44430, -0.47480, -0.54340, -0.55500, -0.29910, +0.00000});  // Re 7500  verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.27560, +0.38440, +0.44090, +0.45660, +0.44490, +0.42470, +0.40560, +0.38850, +0.37220, +0.35620, +0.00880, -0.35380, -0.37150, -0.38950, -0.40780, -0.42560, -0.44110, -0.45920, -0.51240, -0.57120, -0.34190, +0.00000});  // Re 10000 verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.29400, +0.40180, +0.45220, +0.45630, +0.43830, +0.41800, +0.40040, +0.38400, +0.36780, +0.35190, +0.00800, -0.35080, -0.36820, -0.38590, -0.40400, -0.42210, -0.43880, -0.45340, -0.48990, -0.56940, -0.37620, +0.00000});  // Re 12500 verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.30830, +0.41520, +0.45800, +0.45290, +0.43230, +0.41320, +0.39640, +0.38010, +0.36410, +0.34830, +0.00740, -0.34810, -0.36540, -0.38280, -0.40050, -0.41860, -0.43610, -0.45050, -0.47540, -0.55930, -0.40410, +0.00000});  // Re 15000 verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.31970, +0.42540, +0.46020, +0.44840, +0.42730, +0.40930, +0.39290, +0.37670, +0.36080, +0.34520, +0.00690, -0.34570, -0.36270, -0.38000, -0.39750, -0.41530, -0.43310, -0.44820, -0.46640, -0.54600, -0.42690, +0.00000});  // Re 17500 verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.32900, +0.43320, +0.46010, +0.44380, +0.42320, +0.40600, +0.38970, +0.37360, +0.35790, +0.34230, +0.00650, -0.34340, -0.36030, -0.37740, -0.39460, -0.41220, -0.43000, -0.44590, -0.46050, -0.53210, -0.44570, +0.00000});  // Re 20000 verti vel along horiz slice
+    // const std::vector<double> rawData0Y({+0.00000, +0.33230, +0.43570, +0.45960, +0.44200, +0.42180, +0.40480, +0.38850, +0.37250, +0.35670, +0.34130, +0.00630, -0.34250, -0.35930, -0.37640, -0.39360, -0.41100, -0.42870, -0.44490, -0.45880, -0.52660, -0.45220, +0.00000});  // Re 21000 verti vel along horiz slice
+
+    const std::vector<double> rawData1X({+0.00000, -0.07570, -0.13920, -0.19510, -0.24720, -0.29600, -0.33810, -0.36900, -0.38540, -0.38690, -0.37560, -0.06200, +0.38380, +0.39130, +0.39930, +0.41010, +0.42760, +0.45820, +0.51020, +0.59170, +0.70650, +0.84860, +1.00000});  // Re 1000  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.15170, -0.25470, -0.33720, -0.39790, -0.42500, -0.42000, -0.39650, -0.36880, -0.34390, -0.32280, -0.04030, +0.41410, +0.42560, +0.43530, +0.44240, +0.44700, +0.45060, +0.46070, +0.49710, +0.59240, +0.77040, +1.00000});  // Re 2500  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.22230, -0.34800, -0.42720, -0.44190, -0.41680, -0.38760, -0.36520, -0.34670, -0.32850, -0.31000, -0.03190, +0.41550, +0.43070, +0.44520, +0.45820, +0.46830, +0.47380, +0.47390, +0.47490, +0.51590, +0.68660, +1.00000});  // Re 5000  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.26330, -0.39800, -0.44910, -0.42840, -0.39780, -0.37660, -0.35870, -0.34060, -0.32220, -0.30380, -0.02870, +0.41230, +0.42750, +0.44310, +0.45850, +0.47230, +0.48240, +0.48600, +0.48170, +0.49070, +0.63000, +1.00000});  // Re 7500  horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.29070, -0.42590, -0.44690, -0.41420, -0.38990, -0.37210, -0.35430, -0.33610, -0.31790, -0.29980, -0.02680, +0.40950, +0.42430, +0.43980, +0.45560, +0.47110, +0.48430, +0.49170, +0.48910, +0.48370, +0.58910, +1.00000});  // Re 10000 horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.31130, -0.44070, -0.43800, -0.40540, -0.38590, -0.36850, -0.35060, -0.33260, -0.31460, -0.29670, -0.02560, +0.40700, +0.42160, +0.43660, +0.45230, +0.46840, +0.48330, +0.49370, +0.49410, +0.48330, +0.55870, +1.00000});  // Re 12500 horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.32780, -0.44740, -0.42860, -0.40010, -0.38270, -0.36520, -0.34740, -0.32970, -0.31190, -0.29420, -0.02470, +0.40470, +0.41900, +0.43380, +0.44920, +0.46530, +0.48110, +0.49370, +0.49690, +0.48500, +0.53580, +1.00000});  // Re 15000 horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.34120, -0.44900, -0.42060, -0.39650, -0.37970, -0.36220, -0.34460, -0.32710, -0.30960, -0.29200, -0.02400, +0.40240, +0.41660, +0.43120, +0.44630, +0.46220, +0.47840, +0.49250, +0.49820, +0.48710, +0.51830, +1.00000});  // Re 17500 horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.35230, -0.44750, -0.41430, -0.39360, -0.37690, -0.35950, -0.34220, -0.32480, -0.30740, -0.28990, -0.02340, +0.40010, +0.41420, +0.42870, +0.44360, +0.45920, +0.47540, +0.49060, +0.49850, +0.48890, +0.50480, +1.00000});  // Re 20000 horiz vel on verti slice
+    // const std::vector<double> rawData1X({+0.00000, -0.35620, -0.44630, -0.41210, -0.39250, -0.37580, -0.35850, -0.34120, -0.32390, -0.30660, -0.28920, -0.02320, +0.39920, +0.41320, +0.42770, +0.44250, +0.45800, +0.47420, +0.48970, +0.49830, +0.48950, +0.50030, +1.00000});  // Re 21000 horiz vel on verti slice
+
+    const std::vector<double> rawData1Y({+0.00000, +0.02000, +0.04000, +0.06000, +0.08000, +0.10000, +0.12000, +0.14000, +0.16000, +0.18000, +0.20000, +0.50000, +0.90000, +0.91000, +0.92000, +0.93000, +0.94000, +0.95000, +0.96000, +0.97000, +0.98000, +0.99000, +1.00000});  // coord along verti slice
+
+    for (int k= 0; k < (int)rawData0X.size(); k++) {
+      D.scatData[4].second.push_back(std::array<double, 2>({rawData0X[k], rawData0Y[k] + 0.5f}));
+      D.scatData[5].second.push_back(std::array<double, 2>({rawData1X[k] + 0.5f, rawData1Y[k]}));
     }
   }
 }
@@ -442,20 +500,25 @@ void CompuFluidDyna::Draw() {
         for (int z= 0; z < nbZ; z++) {
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by pressure
-          if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 1) {
-            if (std::abs(2.0f * Press[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToBlueToRed(0.5f + Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if ((int)std::round(D.param[ColorMode___].Get()) == 1) {
+            if (std::abs(Press[x][y][z]) < D.param[ColorThresh_].Get()) continue;
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by smoke
-          if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 2) {
-            if (std::abs(0.5f * Smoke[x][y][z]) < D.param[ColorThresh_].Get()) continue;
+          if ((int)std::round(D.param[ColorMode___].Get()) == 2) {
+            if (std::abs(Smoke[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToGreenToRed(0.5f + 0.5f * Smoke[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by velocity magnitude
-          if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 3) {
+          if ((int)std::round(D.param[ColorMode___].Get()) == 3) {
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.norm() < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
+          }
+          // Color by vorticity
+          if ((int)std::round(D.param[ColorMode___].Get()) == 4) {
+            if (std::abs(Vorti[x][y][z]) < D.param[ColorThresh_].Get()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + Vorti[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           glColor3f(r, g, b);
           glPushMatrix();
@@ -818,6 +881,24 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   ApplyBC(1, ioVelX);
   ApplyBC(2, ioVelY);
   ApplyBC(3, ioVelZ);
+
+  // Compute vorticity based on velocities
+#pragma omp parallel for
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        Vorti[x][y][z]= 0.0f;
+        if (!Solid[x][y][z]) {
+          if (x - 1 >= 0 && x + 1 < nbX) Vorti[x][y][z]+= ioVelY[x + 1][y][z] - ioVelY[x - 1][y][z];
+          if (x - 1 >= 0 && x + 1 < nbX) Vorti[x][y][z]+= ioVelZ[x + 1][y][z] - ioVelZ[x - 1][y][z];
+          if (y - 1 >= 0 && y + 1 < nbY) Vorti[x][y][z]+= ioVelX[x][y + 1][z] - ioVelX[x][y - 1][z];
+          if (y - 1 >= 0 && y + 1 < nbY) Vorti[x][y][z]+= ioVelZ[x][y + 1][z] - ioVelZ[x][y - 1][z];
+          if (z - 1 >= 0 && z + 1 < nbZ) Vorti[x][y][z]+= ioVelX[x][y][z + 1] - ioVelX[x][y][z - 1];
+          if (z - 1 >= 0 && z + 1 < nbZ) Vorti[x][y][z]+= ioVelY[x][y][z + 1] - ioVelY[x][y][z - 1];
+        }
+      }
+    }
+  }
 }
 
 
