@@ -63,8 +63,8 @@ CompuFluidDyna::CompuFluidDyna() {
 
 void CompuFluidDyna::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("Scenario____", 2));
-    D.param.push_back(ParamUI("InputFile___", 1));
+    D.param.push_back(ParamUI("Scenario____", 0));
+    D.param.push_back(ParamUI("InputFile___", 2));
     D.param.push_back(ParamUI("ResolutionX_", 1));
     D.param.push_back(ParamUI("ResolutionY_", 100));
     D.param.push_back(ParamUI("ResolutionZ_", 100));
@@ -74,7 +74,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("CoeffDiffu__", 0.0));
     D.param.push_back(ParamUI("CoeffVisco__", 0.0));
     D.param.push_back(ParamUI("CoeffForceX_", 0.0));
-    D.param.push_back(ParamUI("CoeffForceY_", 1.0));
+    D.param.push_back(ParamUI("CoeffForceY_", 0.6));
     D.param.push_back(ParamUI("CoeffForceZ_", 0.0));
     D.param.push_back(ParamUI("CoeffSmoke__", 1.0));
     D.param.push_back(ParamUI("ObjectPosX__", 0.5));
@@ -171,7 +171,7 @@ void CompuFluidDyna::Refresh() {
     else if (inputFile == 1)
       FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
     else
-      FileInput::LoadImageBMPFile("Resources/CFD_Maze.bmp", imageRGBA, false);
+      FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
   }
 
   // Set scenario values
@@ -444,7 +444,7 @@ void CompuFluidDyna::Draw() {
           // Color by pressure
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 1) {
             if (std::abs(2.0f * Press[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+            Colormap::RatioToBlueToRed(0.5f + Press[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
           // Color by smoke
           if (std::min(std::max((int)std::round(D.param[ColorMode___].Get()), 1), 3) == 2) {
