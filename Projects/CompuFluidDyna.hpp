@@ -51,6 +51,10 @@ class CompuFluidDyna
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
                     std::vector<std::vector<std::vector<float>>>& ioVelZ);
+  void VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
+                            std::vector<std::vector<std::vector<float>>>& ioVelX,
+                            std::vector<std::vector<std::vector<float>>>& ioVelY,
+                            std::vector<std::vector<std::vector<float>>>& ioVelZ);
 
   public:
   bool isActiveProject;
