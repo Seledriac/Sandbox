@@ -30,15 +30,37 @@ class CompuFluidDyna
   // Fields for scenario run
   std::vector<std::vector<std::vector<float>>> Vorti;
   std::vector<std::vector<std::vector<float>>> Press;
+  std::vector<std::vector<std::vector<float>>> Diver;
   std::vector<std::vector<std::vector<float>>> Smoke;
   std::vector<std::vector<std::vector<float>>> VelX;
   std::vector<std::vector<std::vector<float>>> VelY;
   std::vector<std::vector<std::vector<float>>> VelZ;
+  std::vector<std::vector<std::vector<float>>> CurX;
+  std::vector<std::vector<std::vector<float>>> CurY;
+  std::vector<std::vector<std::vector<float>>> CurZ;
 
   // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
+  float ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                             const std::vector<std::vector<std::vector<float>>>& iFieldB);
+  void ImplicitFieldAdd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                        const std::vector<std::vector<std::vector<float>>>& iFieldB,
+                        std::vector<std::vector<std::vector<float>>>& oField);
+  void ImplicitFieldSub(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                        const std::vector<std::vector<std::vector<float>>>& iFieldB,
+                        std::vector<std::vector<std::vector<float>>>& oField);
+  void ImplicitFieldScale(const std::vector<std::vector<std::vector<float>>>& iField,
+                          const float iVal,
+                          std::vector<std::vector<std::vector<float>>>& oField);
+  void ImplicitFieldLaplacianMatMult(const std::vector<std::vector<std::vector<float>>>& iField,
+                                     std::vector<std::vector<std::vector<float>>>& oField);
+  void ConjugateGradientSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
+                              const bool iDiffuMode, const float iDiffuCoeff,
+                              const std::vector<std::vector<std::vector<float>>>& iField,
+                              std::vector<std::vector<std::vector<float>>>& ioField);
   void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                         const bool iDiffuMode, const float iDiffuCoeff,
+                        const std::vector<std::vector<std::vector<float>>>& iField,
                         std::vector<std::vector<std::vector<float>>>& ioField);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                const std::vector<std::vector<std::vector<float>>>& iFieldRef);
