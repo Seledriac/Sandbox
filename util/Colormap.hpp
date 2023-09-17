@@ -17,34 +17,26 @@ namespace Colormap {
   }
 
 
-  inline void RatioBanded(const float &iRatio, float &oR, float &oG, float &oB) {
+  inline void RatioBands5(const float &iRatio, float &oR, float &oG, float &oB) {
+    if (std::isnan(iRatio)) throw;
+    const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
+    oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
+    oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
+    oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
+  }
+  inline void RatioBands10(const float &iRatio, float &oR, float &oG, float &oB) {
     if (std::isnan(iRatio)) throw;
     const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
     oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
     oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
     oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
   }
-
-  inline void RatioLinR(const float &iRatio, float &oR, float &oG, float &oB) {
+  inline void RatioBands20(const float &iRatio, float &oR, float &oG, float &oB) {
     if (std::isnan(iRatio)) throw;
     const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-    oR= 0.3f + ratio * 0.7f;
-    oG= 0.0f + ratio * 0.7f;
-    oB= 0.0f + ratio * 0.7f;
-  }
-  inline void RatioLinG(const float &iRatio, float &oR, float &oG, float &oB) {
-    if (std::isnan(iRatio)) throw;
-    const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-    oR= 0.0f + ratio * 0.7f;
-    oG= 0.3f + ratio * 0.7f;
-    oB= 0.0f + ratio * 0.7f;
-  }
-  inline void RatioLinB(const float &iRatio, float &oR, float &oG, float &oB) {
-    if (std::isnan(iRatio)) throw;
-    const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-    oR= 0.0f + ratio * 0.7f;
-    oG= 0.0f + ratio * 0.7f;
-    oB= 0.3f + ratio * 0.7f;
+    oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
+    oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
+    oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
   }
 
 

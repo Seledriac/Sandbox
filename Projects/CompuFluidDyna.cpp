@@ -110,8 +110,8 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("SolvCGPress_", 0.5));
     D.param.push_back(ParamUI("SolvCGVisco_", 0.5));
     D.param.push_back(ParamUI("SolvCGSmoke_", 0.5));
-    D.param.push_back(ParamUI("SolvCGTol___", -1.e-3));
-    D.param.push_back(ParamUI("Verbose_____", 0.0));
+    D.param.push_back(ParamUI("SolvCGTol___", 1.e-3));
+    D.param.push_back(ParamUI("Verbose_____", 1.0));
   }
 
   isActiveProject= true;
@@ -403,6 +403,9 @@ void CompuFluidDyna::Animate() {
   ApplyBC(2, VelY);
   ApplyBC(3, VelZ);
   VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
+  ApplyBC(1, VelX);
+  ApplyBC(2, VelY);
+  ApplyBC(3, VelZ);
   std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
   std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
   std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
@@ -710,47 +713,47 @@ void CompuFluidDyna::Draw() {
   }
 
 
-  // Testing colormaps
-  if (D.displayMode4) {
-    // Set the scene transformation
-    glPushMatrix();
-    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
-    glScalef(voxSize, voxSize, voxSize);
-    if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
-    if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
-    if (nbZ == 1) glScalef(1.0f, 1.0f, 0.1f);
-    // Sweep the field
-    for (int x= 0; x < nbX; x++) {
-      for (int y= 0; y < nbY; y++) {
-        for (int z= 0; z < nbZ; z++) {
-          float r= 0.0f, g= 0.0f, b= 0.0f;
-          if (z / 5 == 0) Colormap::RatioLinR((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 1) Colormap::RatioLinG((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 2) Colormap::RatioLinB((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 3) Colormap::RatioToBlackBody((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 4) Colormap::RatioToBlueToRed((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 5) Colormap::RatioToGrayscale((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 6) Colormap::RatioToGreenToRed((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 7) Colormap::RatioToJet((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 8) Colormap::RatioToJetBright((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 9) Colormap::RatioToJetBrightSmooth((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 10) Colormap::RatioToPlasma((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 11) Colormap::RatioToRainbow((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 12) Colormap::RatioToRedGreenBlueRed((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 13) Colormap::RatioToTurbo((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 14) Colormap::RatioToViridis((float)y / (float)(nbY - 1), r, g, b);
-          if (z / 5 == 15) Colormap::RatioBanded((float)y / (float)(nbY - 1), r, g, b);
-          glColor3f(r, g, b);
-          glPushMatrix();
-          glTranslatef((float)x, (float)y, (float)z);
-          if (nbX > 1 && nbY > 1 && nbZ > 1) glutWireCube(1.0);
-          else glutSolidCube(1.0);
-          glPopMatrix();
-        }
-      }
-    }
-    glPopMatrix();
-  }
+  // // Testing colormaps
+  // if (D.displayMode4) {
+  //   // Set the scene transformation
+  //   glPushMatrix();
+  //   glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+  //   glScalef(voxSize, voxSize, voxSize);
+  //   if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
+  //   if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
+  //   if (nbZ == 1) glScalef(1.0f, 1.0f, 0.1f);
+  //   // Sweep the field
+  //   for (int x= 0; x < nbX; x++) {
+  //     for (int y= 0; y < nbY; y++) {
+  //       for (int z= 0; z < nbZ; z++) {
+  //         float r= 0.0f, g= 0.0f, b= 0.0f;
+  //         if (z / 5 == 3) Colormap::RatioToBlackBody((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 4) Colormap::RatioToBlueToRed((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 5) Colormap::RatioToGrayscale((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 6) Colormap::RatioToGreenToRed((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 7) Colormap::RatioToJet((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 8) Colormap::RatioToJetBright((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 9) Colormap::RatioToJetBrightSmooth((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 10) Colormap::RatioToJetSmooth((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 11) Colormap::RatioToPlasma((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 12) Colormap::RatioToRainbow((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 13) Colormap::RatioToRedGreenBlueRed((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 14) Colormap::RatioToTurbo((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 15) Colormap::RatioToViridis((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 16) Colormap::RatioBands5((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 17) Colormap::RatioBands10((float)y / (float)(nbY - 1), r, g, b);
+  //         if (z / 5 == 18) Colormap::RatioBands20((float)y / (float)(nbY - 1), r, g, b);
+  //         glColor3f(r, g, b);
+  //         glPushMatrix();
+  //         glTranslatef((float)x, (float)y, (float)z);
+  //         if (nbX > 1 && nbY > 1 && nbZ > 1) glutWireCube(1.0);
+  //         else glutSolidCube(1.0);
+  //         glPopMatrix();
+  //       }
+  //     }
+  //   }
+  //   glPopMatrix();
+  // }
 }
 
 
@@ -888,6 +891,24 @@ float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::ve
   return val;
 }
 
+float CompuFluidDyna::ImplicitFieldDotProd(const int iFieldID,
+                                           const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                                           const std::vector<std::vector<std::vector<float>>>& iFieldB) {
+  float val= 0.0f;
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        if (Solid[x][y][z]) continue;
+        if (Passi[x][y][z]) continue;
+        if (SmoBC[x][y][z] && iFieldID == 0) continue;
+        if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
+        val+= iFieldA[x][y][z] * iFieldB[x][y][z];
+      }
+    }
+  }
+  return val;
+}
+
 void CompuFluidDyna::ImplicitFieldLaplacianMatMult(
     const int iFieldID, const float iTimeStep,
     const bool iDiffuMode, const float iDiffuCoeff,
@@ -904,9 +925,9 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(
       for (int z= 0; z < nbZ; z++) {
         // Ignore solid or fixed values
         if (Solid[x][y][z]) continue;
-        // if (Passi[x][y][z]) continue;
-        // if (SmoBC[x][y][z] && iFieldID == 0) continue;
-        // if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
+        if (Passi[x][y][z]) continue;
+        if (SmoBC[x][y][z] && iFieldID == 0) continue;
+        if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
         // Get count and sum of valid neighbors
         int count= 0;
         float sum= 0.0f;
@@ -952,52 +973,52 @@ void CompuFluidDyna::ConjugateGradientSolve(
   std::vector<std::vector<std::vector<float>>> tField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 
   // Initialize values
-  ApplyBC(iFieldID, ioField);
+  const float normRHS= ImplicitFieldDotProd(iFieldID, iField, iField);
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
   ApplyBC(iFieldID, tField);
   ImplicitFieldSub(iField, tField, rField);
   pField= rField;
-  float errNew= ImplicitFieldDotProd(rField, rField);
+  float errNew= ImplicitFieldDotProd(iFieldID, rField, rField);
   // float errBeg= errNew;
   float errOld= 0.0f;
   // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
-  if (D.param[Verbose_____].Get() > 0.0f) printf("CG ");
-  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+  if (D.param[Verbose_____].Get() > 0.0f) printf("CG [%.4f] ", normRHS);
+  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew / normRHS);
 
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew > (float)D.param[SolvCGTol___].Get()) {
-      ApplyBC(iFieldID, pField);
-      ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, pField, qField);
-      ApplyBC(iFieldID, qField);
-      float denom= ImplicitFieldDotProd(pField, qField);
-      if (denom == 0.0) {
-        if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero ImplicitFieldDotProd(pField, qField)");
-        break;
-      }
-      float alpha= errNew / denom;
-      ImplicitFieldScale(pField, alpha, tField);
-      ImplicitFieldAdd(ioField, tField, ioField);
-      ApplyBC(iFieldID, ioField);
-
-      errOld= errNew;
-      // ImplicitFieldScale(qField, alpha, tField); // Approximate recalculation of residual
-      // ImplicitFieldSub(rField, tField, rField);  // Approximate recalculation of residual
-      ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);  // Accurate recalculation of residual
-      ApplyBC(iFieldID, tField);                                                                     // Accurate recalculation of residual
-      ImplicitFieldSub(iField, tField, rField);                                                      // Accurate recalculation of residual
-
-      errNew= ImplicitFieldDotProd(rField, rField);
-      // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
-      if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
-      if (errOld == 0.0) {
-        if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero errOld");
-        break;
-      }
-      float beta= errNew / errOld;
-      ImplicitFieldScale(pField, beta, tField);
-      ImplicitFieldAdd(rField, tField, pField);
+    if (errNew / normRHS < (float)D.param[SolvCGTol___].Get()) break;
+    ApplyBC(iFieldID, pField);
+    ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, pField, qField);
+    ApplyBC(iFieldID, qField);
+    float denom= ImplicitFieldDotProd(iFieldID, pField, qField);
+    if (denom == 0.0) {
+      if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero ImplicitFieldDotProd(pField, qField)");
+      break;
     }
+    float alpha= errNew / denom;
+    ImplicitFieldScale(pField, alpha, tField);
+    ImplicitFieldAdd(ioField, tField, ioField);
+    ApplyBC(iFieldID, ioField);
+
+    errOld= errNew;
+    ImplicitFieldScale(qField, alpha, tField);  // Approximate recalculation of residual
+    ApplyBC(iFieldID, tField);                  // Approximate recalculation of residual
+    ImplicitFieldSub(rField, tField, rField);   // Approximate recalculation of residual
+    // ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);  // Accurate recalculation of residual
+    // ApplyBC(iFieldID, tField);                                                                     // Accurate recalculation of residual
+    // ImplicitFieldSub(iField, tField, rField);                                                      // Accurate recalculation of residual
+
+    errNew= ImplicitFieldDotProd(iFieldID, rField, rField);
+    // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
+    if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew / normRHS);
+    if (errOld == 0.0) {
+      if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero errOld");
+      break;
+    }
+    float beta= errNew / errOld;
+    ImplicitFieldScale(pField, beta, tField);
+    ImplicitFieldAdd(rField, tField, pField);
   }
   oResid= rField;
   if (D.param[Verbose_____].Get() > 0.0f) printf("\n");
@@ -1022,18 +1043,19 @@ void CompuFluidDyna::GaussSeidelSolve(
 
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> tField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  const float normRHS= ImplicitFieldDotProd(iFieldID, iField, iField);
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
   ApplyBC(iFieldID, tField);
   ImplicitFieldSub(iField, tField, rField);
-  float errNew= ImplicitFieldDotProd(rField, rField);
+  float errNew= ImplicitFieldDotProd(iFieldID, rField, rField);
   // float errBeg= errNew;
   // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
-  if (D.param[Verbose_____].Get() > 0.0f) printf("GS ");
-  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+  if (D.param[Verbose_____].Get() > 0.0f) printf("GS [%.4f] ", normRHS);
+  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew / normRHS);
 
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew < (float)D.param[SolvCGTol___].Get()) break;
+    if (errNew / normRHS < (float)D.param[SolvCGTol___].Get()) break;
     std::vector<std::vector<std::vector<float>>> FieldA= ioField;
     std::vector<std::vector<std::vector<float>>> FieldB= ioField;
 #pragma omp parallel sections
@@ -1117,9 +1139,9 @@ void CompuFluidDyna::GaussSeidelSolve(
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
     ApplyBC(iFieldID, tField);
     ImplicitFieldSub(iField, tField, rField);
-    errNew= ImplicitFieldDotProd(rField, rField);
+    errNew= ImplicitFieldDotProd(iFieldID, rField, rField);
     // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
-    if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+    if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew / normRHS);
   }
   oResid= rField;
   if (D.param[Verbose_____].Get() > 0.0f) printf("\n");
@@ -1187,9 +1209,9 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
         if (x - 1 >= 0 && x + 1 < nbX) PressGradX*= 0.5f;
         if (y - 1 >= 0 && y + 1 < nbY) PressGradY*= 0.5f;
         if (z - 1 >= 0 && z + 1 < nbZ) PressGradZ*= 0.5f;
-        // PressGradX/= (float)maxDim;
-        // PressGradY/= (float)maxDim;
-        // PressGradZ/= (float)maxDim;
+        // PressGradX*= (float)maxDim;
+        // PressGradY*= (float)maxDim;
+        // PressGradZ*= (float)maxDim;
 
         ioVelX[x][y][z]-= PressGradX;
         ioVelY[x][y][z]-= PressGradY;

@@ -47,6 +47,9 @@ class CompuFluidDyna
 
   // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
+  float ImplicitFieldDotProd(const int iFieldID,
+                             const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                             const std::vector<std::vector<std::vector<float>>>& iFieldB);
   float ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                              const std::vector<std::vector<std::vector<float>>>& iFieldB);
   void ImplicitFieldAdd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
@@ -83,7 +86,7 @@ class CompuFluidDyna
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
                     std::vector<std::vector<std::vector<float>>>& ioVelZ,
-    std::vector<std::vector<std::vector<float>>>& oResid);
+                    std::vector<std::vector<std::vector<float>>>& oResid);
   void VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
