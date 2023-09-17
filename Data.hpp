@@ -1,9 +1,9 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <utility>
 #include <vector>
-#include <array>
 
 class ParamUI
 {
@@ -42,6 +42,7 @@ class Data
 {
   public:
   bool playAnimation= false;
+  bool stepAnimation= false;
   bool autoRefresh= true;
 
   bool showAxis= false;

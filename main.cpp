@@ -349,6 +349,8 @@ void callback_display() {
     glLineWidth(2.0f);
     if (D.playAnimation)
       glColor3f(0.6f, 1.0f, 0.6f);
+    else if (D.stepAnimation)
+      glColor3f(0.6f, 0.6f, 1.0f);
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
@@ -365,9 +367,10 @@ void callback_display() {
 // Timer program interruption callback
 void callback_timer(int v) {
   // Compute animations
-  if (D.playAnimation) {
+  if (D.playAnimation || D.stepAnimation) {
     project_Animate();
     glutPostRedisplay();
+    D.stepAnimation= false;
   }
 
   glutTimerFunc(1000 / winFPS, callback_timer, v);
@@ -389,6 +392,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
 
   if (key == 27) exit(EXIT_SUCCESS);
   else if (key == ' ') D.playAnimation= !D.playAnimation;
+  else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\n') D.autoRefresh= !D.autoRefresh;
   else if (key == '\b') D.param[D.idxParamUI].Set(0.0);
 
@@ -594,7 +598,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(200, 100);
+  glutInitWindowPosition(400, 50);
   glutCreateWindow("Display");
 
   // World initialization

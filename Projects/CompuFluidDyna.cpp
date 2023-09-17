@@ -61,12 +61,11 @@ enum ParamType
   SlicePlotX__,
   SlicePlotY__,
   SlicePlotZ__,
-  TestVal0____,
-  TestVal1____,
-  TestVal2____,
-  TestVal3____,
-  TestVal4____,
-  TestVal5____,
+  SolvCGPress_,
+  SolvCGVisco_,
+  SolvCGSmoke_,
+  SolvCGTol___,
+  Verbose_____,
 };
 
 
@@ -82,16 +81,16 @@ CompuFluidDyna::CompuFluidDyna() {
 
 void CompuFluidDyna::SetActiveProject() {
   if (!isActiveProject) {
-    D.param.push_back(ParamUI("Scenario____", 2));
+    D.param.push_back(ParamUI("Scenario____", 5));
     D.param.push_back(ParamUI("InputFile___", 2));
     D.param.push_back(ParamUI("ResolutionX_", 1));
     D.param.push_back(ParamUI("ResolutionY_", 100));
     D.param.push_back(ParamUI("ResolutionZ_", 100));
     D.param.push_back(ParamUI("TimeStep____", 0.02));
     D.param.push_back(ParamUI("SolvGSIter__", 20));
-    D.param.push_back(ParamUI("SolvGSCoeff_", 1.9));
-    D.param.push_back(ParamUI("CoeffDiffu__", 0.0));
-    D.param.push_back(ParamUI("CoeffVisco__", 0.0));
+    D.param.push_back(ParamUI("SolvGSCoeff_", 1.0));
+    D.param.push_back(ParamUI("CoeffDiffu__", 0.01));
+    D.param.push_back(ParamUI("CoeffVisco__", 0.01));
     D.param.push_back(ParamUI("CoeffVorti__", 0.0));
     D.param.push_back(ParamUI("CoeffForceX_", 0.0));
     D.param.push_back(ParamUI("CoeffForceY_", 1.0));
@@ -104,16 +103,15 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("ScaleFactor_", 5.0));
     D.param.push_back(ParamUI("ColorFactor_", 1.0));
     D.param.push_back(ParamUI("ColorThresh_", 0.0));
-    D.param.push_back(ParamUI("ColorMode___", 1));
+    D.param.push_back(ParamUI("ColorMode___", 11));
     D.param.push_back(ParamUI("SlicePlotX__", 0.5));
     D.param.push_back(ParamUI("SlicePlotY__", 0.5));
     D.param.push_back(ParamUI("SlicePlotZ__", 0.5));
-    D.param.push_back(ParamUI("TestVal0____", 0.0));
-    D.param.push_back(ParamUI("TestVal1____", 0.5));
-    D.param.push_back(ParamUI("TestVal2____", 0.5));
-    D.param.push_back(ParamUI("TestVal3____", 0.0));
-    D.param.push_back(ParamUI("TestVal4____", 0.5));
-    D.param.push_back(ParamUI("TestVal5____", 0.5));
+    D.param.push_back(ParamUI("SolvCGPress_", 0.5));
+    D.param.push_back(ParamUI("SolvCGVisco_", 0.5));
+    D.param.push_back(ParamUI("SolvCGSmoke_", 0.5));
+    D.param.push_back(ParamUI("SolvCGTol___", -1.e-3));
+    D.param.push_back(ParamUI("Verbose_____", 0.0));
   }
 
   isActiveProject= true;
@@ -170,6 +168,12 @@ void CompuFluidDyna::Initialize() {
   VelZForced= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   SmoForced= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 
+  Dumm0= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Dumm1= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Dumm2= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Dumm3= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Dumm4= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Dumm5= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   Vorti= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   Press= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   Diver= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -348,6 +352,30 @@ void CompuFluidDyna::Refresh() {
             Passi[x][y][z]= true;
           }
         }
+        // No inlets or outlets but initial velocity field
+        if (scenarioType == 5) {
+          if ((nbX > 1 && (x == 0 || x == nbX - 1)) ||
+              (nbY > 1 && (y == 0 || y == nbY - 1)) ||
+              (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
+            Solid[x][y][z]= true;
+          }
+          else if (((nbX == 1) != (std::min(x, nbX - 1 - x) > nbX / 4)) &&
+                   ((nbY == 1) != (std::min(y, nbY - 1 - y) > nbY / 4)) &&
+                   ((nbZ == 1) != (std::min(z, nbZ - 1 - z) > nbZ / 4))) {
+            VelX[x][y][z]= D.param[CoeffForceX_].Get();
+            VelY[x][y][z]= D.param[CoeffForceY_].Get();
+            VelZ[x][y][z]= D.param[CoeffForceZ_].Get();
+            Smoke[x][y][z]= (std::min(z, nbZ - 1 - z) < 3 * nbZ / 7) ? -D.param[CoeffSmoke__].Get() : D.param[CoeffSmoke__].Get();
+
+            // VelBC[x][y][z]= true;
+            // VelXForced[x][y][z]= D.param[CoeffForceX_].Get();
+            // VelYForced[x][y][z]= D.param[CoeffForceY_].Get();
+            // VelZForced[x][y][z]= D.param[CoeffForceZ_].Get();
+
+            // SmoBC[x][y][z]= true;
+            // SmoForced[x][y][z]= D.param[CoeffSmoke__].Get();
+          }
+        }
       }
     }
   }
@@ -360,6 +388,8 @@ void CompuFluidDyna::Animate() {
   if (!isInitialized) Initialize();
   CheckRefresh();
   if (!isRefreshed) Refresh();
+
+  if (D.param[Verbose_____].Get() > 0.0f) printf("\n");
 
   // Get simulation parameters
   const int maxIter= std::max((int)std::round(D.param[SolvGSIter__].Get()), 0);
@@ -376,22 +406,34 @@ void CompuFluidDyna::Animate() {
   std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
   std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
   std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
-  GaussSeidelSolve(1, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-  GaussSeidelSolve(2, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-  GaussSeidelSolve(3, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
-  ProjectField(maxIter, timestep, VelX, VelY, VelZ);
+  if (D.param[SolvCGVisco_].Get() < 0.0) {
+    GaussSeidelSolve(1, maxIter, timestep, true, coeffVisco, oldVelX, VelX, Dumm0);
+    GaussSeidelSolve(2, maxIter, timestep, true, coeffVisco, oldVelY, VelY, Dumm1);
+    GaussSeidelSolve(3, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ, Dumm2);
+  }
+  else {
+    ConjugateGradientSolve(1, maxIter, timestep, true, coeffVisco, oldVelX, VelX, Dumm0);
+    ConjugateGradientSolve(2, maxIter, timestep, true, coeffVisco, oldVelY, VelY, Dumm1);
+    ConjugateGradientSolve(3, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ, Dumm2);
+  }
+  ProjectField(maxIter, timestep, VelX, VelY, VelZ, Dumm3);
   oldVelX= VelX;
   oldVelY= VelY;
   oldVelZ= VelZ;
   AdvectField(1, timestep, oldVelX, oldVelY, oldVelZ, VelX);
   AdvectField(2, timestep, oldVelX, oldVelY, oldVelZ, VelY);
   AdvectField(3, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
-  ProjectField(maxIter, timestep, VelX, VelY, VelZ);
+  ProjectField(maxIter, timestep, VelX, VelY, VelZ, Dumm4);
 
   // Simulate smoke step
   ApplyBC(0, Smoke);
   std::vector<std::vector<std::vector<float>>> oldSmoke= Smoke;
-  GaussSeidelSolve(0, maxIter, timestep, true, coeffDiffu, oldSmoke, Smoke);
+  if (D.param[SolvCGSmoke_].Get() < 0.0) {
+    GaussSeidelSolve(0, maxIter, timestep, true, coeffDiffu, oldSmoke, Smoke, Dumm5);
+  }
+  else {
+    ConjugateGradientSolve(0, maxIter, timestep, true, coeffDiffu, oldSmoke, Smoke, Dumm5);
+  }
   AdvectField(0, timestep, VelX, VelY, VelZ, Smoke);
 
   // Plot field info
@@ -610,6 +652,18 @@ void CompuFluidDyna::Draw() {
             if (std::abs(CurZ[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurZ[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
+          // Color by Dummy values
+          if ((int)std::round(D.param[ColorMode___].Get()) >= 10 && (int)std::round(D.param[ColorMode___].Get()) <= 15) {
+            float val= 0.0f;
+            if ((int)std::round(D.param[ColorMode___].Get()) == 10) val= Dumm0[x][y][z];
+            if ((int)std::round(D.param[ColorMode___].Get()) == 11) val= Dumm1[x][y][z];
+            if ((int)std::round(D.param[ColorMode___].Get()) == 12) val= Dumm2[x][y][z];
+            if ((int)std::round(D.param[ColorMode___].Get()) == 13) val= Dumm3[x][y][z];
+            if ((int)std::round(D.param[ColorMode___].Get()) == 14) val= Dumm4[x][y][z];
+            if ((int)std::round(D.param[ColorMode___].Get()) == 15) val= Dumm5[x][y][z];
+            if (std::abs(val) < D.param[ColorThresh_].Get()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_].Get(), r, g, b);
+          }
           glColor3f(r, g, b);
           glPushMatrix();
           glTranslatef((float)x, (float)y, (float)z);
@@ -702,26 +756,6 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
           if (Solid[x][y][z]) {
             ioField[x][y][z]= 0.0f;
           }
-          // // Negative continuity/average on solid voxel neighboring at least one non-solid voxel
-          // if (Solid[x][y][z]) {
-          //   int count= 0;
-          //   ioField[x][y][z]= 0.0f;
-          //   for (int k= 0; k < MaskSize; k++) {
-          //     if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-          //     if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-          //     if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-          //     if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
-          //     if (Mask[k][iFieldID - 1] != 0) {
-          //       // if ((float)Mask[k][iFieldID - 1] * oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]] < 0.0f)
-          //       ioField[x][y][z]-= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-          //     }
-          //     else
-          //       ioField[x][y][z]+= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
-          //     count++;
-          //   }
-          //   if (count > 0)
-          //     ioField[x][y][z]/= (float)count;
-          // }
           // Continuity/average on passive voxel neighboring at least one non-solid non-passive voxel
           if (Passi[x][y][z]) {
             int count= 0;
@@ -756,6 +790,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
               if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
               if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
               if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
+              if (Passi[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
               ioField[x][y][z]+= oldField[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
               count++;
             }
@@ -811,14 +846,22 @@ float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::ve
 }
 
 void CompuFluidDyna::ImplicitFieldLaplacianMatMult(
+    const int iFieldID, const float iTimeStep,
+    const bool iDiffuMode, const float iDiffuCoeff,
     const std::vector<std::vector<std::vector<float>>>& iField,
     std::vector<std::vector<std::vector<float>>>& oField) {
+  // Init parameters
+  const float elemSize= 1.0f / (float)maxDim;
+  const float diffuVal= iDiffuCoeff * iTimeStep / (elemSize * elemSize);
+  // if (diffuVal == 0.0f) return;
+  // Sweep through the field
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         // Ignore solid or fixed values
         if (Solid[x][y][z]) continue;
+        // if (Passi[x][y][z]) continue;
         // if (SmoBC[x][y][z] && iFieldID == 0) continue;
         // if (VelBC[x][y][z] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
         // Get count and sum of valid neighbors
@@ -830,10 +873,17 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(
           const int zOff= z + Mask[k][2];
           if (xOff < 0 || xOff >= nbX || yOff < 0 || yOff >= nbY || zOff < 0 || zOff >= nbZ) continue;
           if (Solid[xOff][yOff][zOff]) continue;
+          // if (Passi[xOff][yOff][zOff]) continue;
+          // if (SmoBC[xOff][yOff][zOff] && iFieldID == 0) continue;
+          // if (VelBC[xOff][yOff][zOff] && (iFieldID == 1 || iFieldID == 2 || iFieldID == 3)) continue;
           sum+= iField[xOff][yOff][zOff];
           count++;
         }
-        oField[x][y][z]= sum - (float)count * iField[x][y][z];
+        // Apply linear expression
+        if (iDiffuMode)
+          oField[x][y][z]= iField[x][y][z] + diffuVal * ((float)count * iField[x][y][z] - sum);
+        else
+          oField[x][y][z]= sum - (float)count * iField[x][y][z];
       }
     }
   }
@@ -844,10 +894,14 @@ void CompuFluidDyna::ConjugateGradientSolve(
     const int iFieldID, const int iMaxIter, const float iTimeStep,
     const bool iDiffuMode, const float iDiffuCoeff,
     const std::vector<std::vector<std::vector<float>>>& iField,
-    std::vector<std::vector<std::vector<float>>>& ioField) {
-  (void)iTimeStep;
-  (void)iDiffuMode;
-  (void)iDiffuCoeff;
+    std::vector<std::vector<std::vector<float>>>& ioField,
+    std::vector<std::vector<std::vector<float>>>& oResid) {
+  // // Skip if non changing field
+  // if (iDiffuMode && iDiffuCoeff == 0.0f) return;
+  // if (iFieldID == 1 && nbX == 1) return;
+  // if (iFieldID == 2 && nbY == 1) return;
+  // if (iFieldID == 3 && nbZ == 1) return;
+
   // Allocate fields
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> pField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -855,45 +909,55 @@ void CompuFluidDyna::ConjugateGradientSolve(
   std::vector<std::vector<std::vector<float>>> tField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 
   // Initialize values
-  ImplicitFieldLaplacianMatMult(ioField, tField);
+  ApplyBC(iFieldID, ioField);
+  ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
+  ApplyBC(iFieldID, tField);
   ImplicitFieldSub(iField, tField, rField);
   pField= rField;
   float errNew= ImplicitFieldDotProd(rField, rField);
-  float errBeg= errNew;
-  float errOld= 0.0;
+  // float errBeg= errNew;
+  float errOld= 0.0f;
+  // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
+  if (D.param[Verbose_____].Get() > 0.0f) printf("CG ");
+  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
 
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew < D.param[TestVal3____].Get() * errBeg) {
-      printf("converged early %f < %f * %f at iter %d\n", errNew, D.param[TestVal3____].Get(), errBeg, k);
-      break;
-    }
-    ImplicitFieldLaplacianMatMult(pField, qField);
-    float denom= ImplicitFieldDotProd(pField, qField);
-    if (denom == 0.0) {
-      printf("div by zero ImplicitFieldDotProd(pField, qField)\n");
-      break;
-    }
-    float alpha= errNew / denom;
-    ImplicitFieldScale(pField, alpha, tField);
-    ImplicitFieldAdd(ioField, tField, ioField);
+    if (errNew > (float)D.param[SolvCGTol___].Get()) {
+      ApplyBC(iFieldID, pField);
+      ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, pField, qField);
+      ApplyBC(iFieldID, qField);
+      float denom= ImplicitFieldDotProd(pField, qField);
+      if (denom == 0.0) {
+        if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero ImplicitFieldDotProd(pField, qField)");
+        break;
+      }
+      float alpha= errNew / denom;
+      ImplicitFieldScale(pField, alpha, tField);
+      ImplicitFieldAdd(ioField, tField, ioField);
+      ApplyBC(iFieldID, ioField);
 
-    ImplicitFieldScale(qField, alpha, tField);
-    ImplicitFieldSub(rField, tField, rField);
+      errOld= errNew;
+      // ImplicitFieldScale(qField, alpha, tField); // Approximate recalculation of residual
+      // ImplicitFieldSub(rField, tField, rField);  // Approximate recalculation of residual
+      ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);  // Accurate recalculation of residual
+      ApplyBC(iFieldID, tField);                                                                     // Accurate recalculation of residual
+      ImplicitFieldSub(iField, tField, rField);                                                      // Accurate recalculation of residual
 
-    errOld= errNew;
-    errNew= ImplicitFieldDotProd(rField, rField);
-    if (errOld == 0.0) {
-      printf("div by zero errOld\n");
-      break;
+      errNew= ImplicitFieldDotProd(rField, rField);
+      // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
+      if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+      if (errOld == 0.0) {
+        if (D.param[Verbose_____].Get() > 0.0f) printf("div by zero errOld");
+        break;
+      }
+      float beta= errNew / errOld;
+      ImplicitFieldScale(pField, beta, tField);
+      ImplicitFieldAdd(rField, tField, pField);
     }
-    float beta= errNew / errOld;
-    ImplicitFieldScale(pField, beta, tField);
-    ImplicitFieldAdd(rField, tField, pField);
-
-    // Reapply BC to maintain consistency
-    ApplyBC(iFieldID, ioField);
   }
+  oResid= rField;
+  if (D.param[Verbose_____].Get() > 0.0f) printf("\n");
 }
 
 
@@ -901,14 +965,32 @@ void CompuFluidDyna::GaussSeidelSolve(
     const int iFieldID, const int iMaxIter, const float iTimeStep,
     const bool iDiffuMode, const float iDiffuCoeff,
     const std::vector<std::vector<std::vector<float>>>& iField,
-    std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Skip if non changing field
-  if (iDiffuMode && iDiffuCoeff == 0.0f) return;
+    std::vector<std::vector<std::vector<float>>>& ioField,
+    std::vector<std::vector<std::vector<float>>>& oResid) {
+  // // Skip if non changing field
+  // if (iDiffuMode && iDiffuCoeff == 0.0f) return;
+  // if (iFieldID == 1 && nbX == 1) return;
+  // if (iFieldID == 2 && nbY == 1) return;
+  // if (iFieldID == 3 && nbZ == 1) return;
+
   // Get parameters
   const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
   const float coeffOverrelax= std::min(std::max((float)D.param[SolvGSCoeff_].Get(), 0.0f), 1.99f);
+
+  std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> tField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
+  ApplyBC(iFieldID, tField);
+  ImplicitFieldSub(iField, tField, rField);
+  float errNew= ImplicitFieldDotProd(rField, rField);
+  // float errBeg= errNew;
+  // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
+  if (D.param[Verbose_____].Get() > 0.0f) printf("GS ");
+  if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   for (int k= 0; k < iMaxIter; k++) {
+    if (errNew < (float)D.param[SolvCGTol___].Get()) break;
     std::vector<std::vector<std::vector<float>>> FieldA= ioField;
     std::vector<std::vector<std::vector<float>>> FieldB= ioField;
 #pragma omp parallel sections
@@ -927,11 +1009,12 @@ void CompuFluidDyna::GaussSeidelSolve(
               int count= 0;
               float sum= 0.0f;
               for (int k= 0; k < MaskSize; k++) {
-                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-                if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
-                sum+= FieldA[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                const int xOff= x + Mask[k][0];
+                const int yOff= y + Mask[k][1];
+                const int zOff= z + Mask[k][2];
+                if (xOff < 0 || xOff >= nbX || yOff < 0 || yOff >= nbY || zOff < 0 || zOff >= nbZ) continue;
+                if (Solid[xOff][yOff][zOff]) continue;
+                sum+= FieldA[xOff][yOff][zOff];
                 count++;
               }
               // Set new value according to coefficients and flags
@@ -960,11 +1043,12 @@ void CompuFluidDyna::GaussSeidelSolve(
               int count= 0;
               float sum= 0.0f;
               for (int k= 0; k < MaskSize; k++) {
-                if (x + Mask[k][0] < 0 || x + Mask[k][0] >= nbX) continue;
-                if (y + Mask[k][1] < 0 || y + Mask[k][1] >= nbY) continue;
-                if (z + Mask[k][2] < 0 || z + Mask[k][2] >= nbZ) continue;
-                if (Solid[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]]) continue;
-                sum+= FieldB[x + Mask[k][0]][y + Mask[k][1]][z + Mask[k][2]];
+                const int xOff= x + Mask[k][0];
+                const int yOff= y + Mask[k][1];
+                const int zOff= z + Mask[k][2];
+                if (xOff < 0 || xOff >= nbX || yOff < 0 || yOff >= nbY || zOff < 0 || zOff >= nbZ) continue;
+                if (Solid[xOff][yOff][zOff]) continue;
+                sum+= FieldB[xOff][yOff][zOff];
                 count++;
               }
               // Set new value according to coefficients and flags
@@ -984,10 +1068,100 @@ void CompuFluidDyna::GaussSeidelSolve(
         for (int y= 0; y < nbY; y++)
           for (int z= 0; z < nbZ; z++)
             ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
-      // Reapply BC to maintain consistency
-      ApplyBC(iFieldID, ioField);
+    }
+    // Reapply BC to maintain consistency
+    ApplyBC(iFieldID, ioField);
+    ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, ioField, tField);
+    ApplyBC(iFieldID, tField);
+    ImplicitFieldSub(iField, tField, rField);
+    errNew= ImplicitFieldDotProd(rField, rField);
+    // if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", (errBeg != 0.0f) ? (errNew / errBeg) : (0.0f));
+    if (D.param[Verbose_____].Get() > 0.0f) printf("%.4f ", errNew);
+  }
+  oResid= rField;
+  if (D.param[Verbose_____].Get() > 0.0f) printf("\n");
+}
+
+
+void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
+                                  std::vector<std::vector<std::vector<float>>>& ioVelX,
+                                  std::vector<std::vector<std::vector<float>>>& ioVelY,
+                                  std::vector<std::vector<std::vector<float>>>& ioVelZ,
+                                  std::vector<std::vector<std::vector<float>>>& oResid) {
+  // Compute divergence
+#pragma omp parallel for
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        Diver[x][y][z]= 0.0f;
+        if (Solid[x][y][z] || Passi[x][y][z]) continue;
+        float DiverX= 0.0f, DiverY= 0.0f, DiverZ= 0.0f;
+        if (x - 1 >= 0) DiverX+= (ioVelX[x][y][z] - ioVelX[x - 1][y][z]);
+        if (y - 1 >= 0) DiverY+= (ioVelY[x][y][z] - ioVelY[x][y - 1][z]);
+        if (z - 1 >= 0) DiverZ+= (ioVelZ[x][y][z] - ioVelZ[x][y][z - 1]);
+        if (x + 1 < nbX) DiverX+= (ioVelX[x + 1][y][z] - ioVelX[x][y][z]);
+        if (y + 1 < nbY) DiverY+= (ioVelY[x][y + 1][z] - ioVelY[x][y][z]);
+        if (z + 1 < nbZ) DiverZ+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z]);
+        if (x - 1 >= 0 && x + 1 < nbX) DiverX*= 0.5f;
+        if (y - 1 >= 0 && y + 1 < nbY) DiverY*= 0.5f;
+        if (z - 1 >= 0 && z + 1 < nbZ) DiverZ*= 0.5f;
+        Diver[x][y][z]= DiverX + DiverY + DiverZ;
+        // if (x - 1 >= 0 && x + 1 < nbX) Diver[x][y][z]+= 0.5f * (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]);
+        // if (y - 1 >= 0 && y + 1 < nbY) Diver[x][y][z]+= 0.5f * (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]);
+        // if (z - 1 >= 0 && z + 1 < nbZ) Diver[x][y][z]+= 0.5f * (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]);
+        // Diver[x][y][z]/= (float)maxDim;
+      }
     }
   }
+
+  // Reapply BC to maintain consistency
+  ApplyBC(4, Diver);
+
+  Press= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+
+  // Solve for pressure
+  if (D.param[SolvCGPress_].Get() < 0.0)
+    GaussSeidelSolve(5, iIter, iTimeStep, false, 0.0f, Diver, Press, oResid);
+  else
+    ConjugateGradientSolve(5, iIter, iTimeStep, false, 0.0f, Diver, Press, oResid);
+
+    // // Reapply BC to maintain consistency
+    // ApplyBC(5, Press);
+
+    // Update velocities based on neighboring pressures
+#pragma omp parallel for
+  for (int x= 0; x < nbX; x++) {
+    for (int y= 0; y < nbY; y++) {
+      for (int z= 0; z < nbZ; z++) {
+        if (Solid[x][y][z] || VelBC[x][y][z]) continue;
+        float PressGradX= 0.0f, PressGradY= 0.0f, PressGradZ= 0.0f;
+        if (x - 1 >= 0) PressGradX+= (Press[x][y][z] - Press[x - 1][y][z]);
+        if (y - 1 >= 0) PressGradY+= (Press[x][y][z] - Press[x][y - 1][z]);
+        if (z - 1 >= 0) PressGradZ+= (Press[x][y][z] - Press[x][y][z - 1]);
+        if (x + 1 < nbX) PressGradX+= (Press[x + 1][y][z] - Press[x][y][z]);
+        if (y + 1 < nbY) PressGradY+= (Press[x][y + 1][z] - Press[x][y][z]);
+        if (z + 1 < nbZ) PressGradZ+= (Press[x][y][z + 1] - Press[x][y][z]);
+        if (x - 1 >= 0 && x + 1 < nbX) PressGradX*= 0.5f;
+        if (y - 1 >= 0 && y + 1 < nbY) PressGradY*= 0.5f;
+        if (z - 1 >= 0 && z + 1 < nbZ) PressGradZ*= 0.5f;
+        // PressGradX/= (float)maxDim;
+        // PressGradY/= (float)maxDim;
+        // PressGradZ/= (float)maxDim;
+
+        ioVelX[x][y][z]-= PressGradX;
+        ioVelY[x][y][z]-= PressGradY;
+        ioVelZ[x][y][z]-= PressGradZ;
+        // if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * /*(float)maxDim * */ (Press[x + 1][y][z] - Press[x - 1][y][z]);
+        // if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * /*(float)maxDim * */ (Press[x][y + 1][z] - Press[x][y - 1][z]);
+        // if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * /*(float)maxDim * */ (Press[x][y][z + 1] - Press[x][y][z - 1]);
+      }
+    }
+  }
+
+  // Reapply BC to maintain consistency
+  ApplyBC(1, ioVelX);
+  ApplyBC(2, ioVelY);
+  ApplyBC(3, ioVelZ);
 }
 
 
@@ -1068,58 +1242,6 @@ void CompuFluidDyna::AdvectField(
   }
   // Reapply BC to maintain consistency
   ApplyBC(iFieldID, ioField);
-}
-
-
-void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
-                                  std::vector<std::vector<std::vector<float>>>& ioVelX,
-                                  std::vector<std::vector<std::vector<float>>>& ioVelY,
-                                  std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  // Compute divergence
-#pragma omp parallel for
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        Diver[x][y][z]= 0.0f;
-        if (Solid[x][y][z] || Passi[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) Diver[x][y][z]+= 0.5f * (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]);
-        if (y - 1 >= 0 && y + 1 < nbY) Diver[x][y][z]+= 0.5f * (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]);
-        if (z - 1 >= 0 && z + 1 < nbZ) Diver[x][y][z]+= 0.5f * (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]);
-      }
-    }
-  }
-
-  // // Reapply BC to maintain consistency
-  // ApplyBC(4, Diver);
-
-  Press= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-
-  // Solve for pressure
-  if (D.param[TestVal2____].Get() < 0.0)
-    GaussSeidelSolve(5, iIter, iTimeStep, false, 0.0f, Diver, Press);
-  else
-    ConjugateGradientSolve(5, iIter, iTimeStep, false, 0.0f, Diver, Press);
-
-  // Reapply BC to maintain consistency
-  ApplyBC(5, Press);
-
-  // Update velocities based on neighboring pressures
-#pragma omp parallel for
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]+= 0.5f * (Press[x - 1][y][z] - Press[x + 1][y][z]);
-        if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]+= 0.5f * (Press[x][y - 1][z] - Press[x][y + 1][z]);
-        if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]+= 0.5f * (Press[x][y][z - 1] - Press[x][y][z + 1]);
-      }
-    }
-  }
-
-  // Reapply BC to maintain consistency
-  ApplyBC(1, ioVelX);
-  ApplyBC(2, ioVelY);
-  ApplyBC(3, ioVelZ);
 }
 
 

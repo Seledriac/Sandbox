@@ -28,6 +28,12 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> SmoForced;
 
   // Fields for scenario run
+  std::vector<std::vector<std::vector<float>>> Dumm0;
+  std::vector<std::vector<std::vector<float>>> Dumm1;
+  std::vector<std::vector<std::vector<float>>> Dumm2;
+  std::vector<std::vector<std::vector<float>>> Dumm3;
+  std::vector<std::vector<std::vector<float>>> Dumm4;
+  std::vector<std::vector<std::vector<float>>> Dumm5;
   std::vector<std::vector<std::vector<float>>> Vorti;
   std::vector<std::vector<std::vector<float>>> Press;
   std::vector<std::vector<std::vector<float>>> Diver;
@@ -52,16 +58,20 @@ class CompuFluidDyna
   void ImplicitFieldScale(const std::vector<std::vector<std::vector<float>>>& iField,
                           const float iVal,
                           std::vector<std::vector<std::vector<float>>>& oField);
-  void ImplicitFieldLaplacianMatMult(const std::vector<std::vector<std::vector<float>>>& iField,
+  void ImplicitFieldLaplacianMatMult(const int iFieldID, const float iTimeStep,
+                                     const bool iDiffuMode, const float iDiffuCoeff,
+                                     const std::vector<std::vector<std::vector<float>>>& iField,
                                      std::vector<std::vector<std::vector<float>>>& oField);
   void ConjugateGradientSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
-                              std::vector<std::vector<std::vector<float>>>& ioField);
+                              std::vector<std::vector<std::vector<float>>>& ioField,
+                              std::vector<std::vector<std::vector<float>>>& oResid);
   void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                         const bool iDiffuMode, const float iDiffuCoeff,
                         const std::vector<std::vector<std::vector<float>>>& iField,
-                        std::vector<std::vector<std::vector<float>>>& ioField);
+                        std::vector<std::vector<std::vector<float>>>& ioField,
+                        std::vector<std::vector<std::vector<float>>>& oResid);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                const std::vector<std::vector<std::vector<float>>>& iFieldRef);
   void AdvectField(const int iFieldID, const float iTimeStep,
@@ -72,7 +82,8 @@ class CompuFluidDyna
   void ProjectField(const int iMaxIter, const float iTimeStep,
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
-                    std::vector<std::vector<std::vector<float>>>& ioVelZ);
+                    std::vector<std::vector<std::vector<float>>>& ioVelZ,
+    std::vector<std::vector<std::vector<float>>>& oResid);
   void VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
