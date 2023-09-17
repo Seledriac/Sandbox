@@ -708,6 +708,49 @@ void CompuFluidDyna::Draw() {
     glLineWidth(1.0f);
     glPopMatrix();
   }
+
+
+  // Testing colormaps
+  if (D.displayMode4) {
+    // Set the scene transformation
+    glPushMatrix();
+    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+    glScalef(voxSize, voxSize, voxSize);
+    if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
+    if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
+    if (nbZ == 1) glScalef(1.0f, 1.0f, 0.1f);
+    // Sweep the field
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          float r= 0.0f, g= 0.0f, b= 0.0f;
+          if (z / 5 == 0) Colormap::RatioLinR((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 1) Colormap::RatioLinG((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 2) Colormap::RatioLinB((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 3) Colormap::RatioToBlackBody((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 4) Colormap::RatioToBlueToRed((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 5) Colormap::RatioToGrayscale((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 6) Colormap::RatioToGreenToRed((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 7) Colormap::RatioToJet((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 8) Colormap::RatioToJetBright((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 9) Colormap::RatioToJetBrightSmooth((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 10) Colormap::RatioToPlasma((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 11) Colormap::RatioToRainbow((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 12) Colormap::RatioToRedGreenBlueRed((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 13) Colormap::RatioToTurbo((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 14) Colormap::RatioToViridis((float)y / (float)(nbY - 1), r, g, b);
+          if (z / 5 == 15) Colormap::RatioBanded((float)y / (float)(nbY - 1), r, g, b);
+          glColor3f(r, g, b);
+          glPushMatrix();
+          glTranslatef((float)x, (float)y, (float)z);
+          if (nbX > 1 && nbY > 1 && nbZ > 1) glutWireCube(1.0);
+          else glutSolidCube(1.0);
+          glPopMatrix();
+        }
+      }
+    }
+    glPopMatrix();
+  }
 }
 
 
