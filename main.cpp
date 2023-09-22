@@ -33,7 +33,7 @@ constexpr int winFPS= 60;
 constexpr int paramNbCharac= 12;
 constexpr int characHeight= 14;
 constexpr int characWidth= 10;
-constexpr int characterSpace= 1;
+constexpr int margin= 1;
 constexpr int plotW= 600;
 constexpr int plotH= 100;
 constexpr int scatW= 250;
@@ -225,11 +225,11 @@ void callback_display() {
         glColor3f(0.8f, 0.8f, 0.8f);
       char str[50];
       sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].Get());
-      draw_text(0, winH - (k + 1) * (characHeight + characterSpace), str);
+      draw_text(0, winH - (k + 1) * (characHeight + margin), str);
       if (k == D.idxParamUI) {
         sprintf(str, "_");
-        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + characterSpace), str);
-        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + characterSpace), str);
+        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + margin), str);
+        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + margin), str);
       }
     }
     glLineWidth(1.0f);
@@ -238,7 +238,7 @@ void callback_display() {
   // Draw the 2D plot
   if (!D.plotData.empty()) {
     glLineWidth(2.0f);
-
+    glPointSize(4.0f);
     for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
       if (D.plotData[k0].second.empty()) continue;
 
@@ -258,29 +258,40 @@ void callback_display() {
       // Draw the text for legend and min max values
       char str[50];
       strcpy(str, D.plotData[k0].first.c_str());
-      draw_text(winW - textW - plotW + k0 * textW, winH - textH, str);
+      draw_text(winW - plotW - 3 * textW, winH - textH - textH * k0 - textH - margin, str);
 
-      sprintf(str, "%+.2e", valMax);
-      draw_text(winW - textW - plotW + k0 * textW, winH - 2 * textH, str);
+      // sprintf(str, "%+.2e", valMax);
+      sprintf(str, "%+.2e", std::pow(10.0, valMax));
+      draw_text(winW - textW - plotW + k0 * textW, winH - textH - margin, str);
 
-      sprintf(str, "%+.2e", valMin);
-      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 3 * textH, str);
+      // sprintf(str, "%+.2e", valMin);
+      sprintf(str, "%+.2e", std::pow(10.0, valMin));
+      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 2 * textH - 2 * margin, str);
 
-      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
-      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - 2 * textH, str);
+      // sprintf(str, "%+.2e", D.plotData[k0].second[0]);
+      sprintf(str, "%+.2e", std::pow(10.0, D.plotData[k0].second[0]));
+      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - textH - margin, str);
 
-      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
-      draw_text(winW - textW, winH - textH - textH * k0 - 2 * textH, str);
+      // sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
+      sprintf(str, "%+.2e", std::pow(10.0, D.plotData[k0].second[D.plotData[k0].second.size() - 1]));
+      draw_text(winW - textW, winH - textH - textH * k0 - textH - margin, str);
 
-      // Draw the polyline
-      glBegin(GL_LINE_STRIP);
-      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-        double valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
-        glVertex3i(winW - plotW - textW + plotW * k1 / D.plotData[k0].second.size(), winH - plotH - 2 * textH + plotH * valScaled, 0);
+      // Draw the plot curves and markers
+      if (int(D.plotData[k0].second.size()) > 1) {
+        for (int mode= 0; mode < 2; mode++) {
+          if (mode == 0) glBegin(GL_LINE_STRIP);
+          if (mode == 1) glBegin(GL_POINTS);
+          for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+            double valScaled= valMin;
+            if (valMax - valMin != 0.0) valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+            glVertex3i(winW - plotW - textW + plotW * k1 / std::max((int)D.plotData[k0].second.size() - 1, 1), winH - plotH - textH - 2 * margin + plotH * valScaled, 0);
+          }
+          glEnd();
+        }
       }
-      glEnd();
     }
     glLineWidth(1.0f);
+    glPointSize(1.0f);
   }
 
   // Draw the 2D scatter
@@ -349,8 +360,6 @@ void callback_display() {
     glLineWidth(2.0f);
     if (D.playAnimation)
       glColor3f(0.6f, 1.0f, 0.6f);
-    else if (D.stepAnimation)
-      glColor3f(0.6f, 0.6f, 1.0f);
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     char str[50];
@@ -477,7 +486,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.param.empty()) {
       if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-        if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
+        if ((y - 3) > margin && (y - 3) < int(D.param.size()) * (characHeight + margin)) {
           if (button == 3) {
             if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
             if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
@@ -521,8 +530,8 @@ void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
   if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-    if ((y - 3) > characterSpace && (y - 3) < int(D.param.size()) * (characHeight + characterSpace)) {
-      D.idxParamUI= (y - 3) / (characHeight + characterSpace);
+    if ((y - 3) > margin && (y - 3) < int(D.param.size()) * (characHeight + margin)) {
+      D.idxParamUI= (y - 3) / (characHeight + margin);
       D.idxCursorUI= (x - (paramNbCharac + 3) * characWidth) / characWidth;
     }
   }
@@ -587,7 +596,7 @@ void init_scene() {
 
   // Initialize camera and arcball positions
   cam= new Camera;
-  cam->setEye(2.0f, 2.5f, 1.5f);
+  cam->setEye(2.5f, 0.5f, 0.5f);
   cam->setCenter(0.5f, 0.5f, 0.5f);
 }
 
@@ -598,7 +607,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(400, 50);
+  glutInitWindowPosition(2400, 50);
   glutCreateWindow("Display");
 
   // World initialization

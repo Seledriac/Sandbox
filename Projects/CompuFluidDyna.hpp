@@ -8,6 +8,15 @@
 class CompuFluidDyna
 {
   private:
+  enum FieldID
+  {
+    IDSmok,
+    IDVelX,
+    IDVelY,
+    IDVelZ,
+    IDPres,
+  };
+
   // Problem dimensions
   int nbX;
   int nbY;
@@ -19,25 +28,25 @@ class CompuFluidDyna
 
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
-  std::vector<std::vector<std::vector<bool>>> Passi;
   std::vector<std::vector<std::vector<bool>>> VelBC;
+  std::vector<std::vector<std::vector<bool>>> PreBC;
   std::vector<std::vector<std::vector<bool>>> SmoBC;
   std::vector<std::vector<std::vector<float>>> VelXForced;
   std::vector<std::vector<std::vector<float>>> VelYForced;
   std::vector<std::vector<std::vector<float>>> VelZForced;
-  std::vector<std::vector<std::vector<float>>> SmoForced;
+  std::vector<std::vector<std::vector<float>>> PresForced;
+  std::vector<std::vector<std::vector<float>>> SmokForced;
 
   // Fields for scenario run
-  std::vector<std::vector<std::vector<float>>> Dumm0;
-  std::vector<std::vector<std::vector<float>>> Dumm1;
-  std::vector<std::vector<std::vector<float>>> Dumm2;
-  std::vector<std::vector<std::vector<float>>> Dumm3;
-  std::vector<std::vector<std::vector<float>>> Dumm4;
-  std::vector<std::vector<std::vector<float>>> Dumm5;
-  std::vector<std::vector<std::vector<float>>> Vorti;
-  std::vector<std::vector<std::vector<float>>> Press;
-  std::vector<std::vector<std::vector<float>>> Diver;
-  std::vector<std::vector<std::vector<float>>> Smoke;
+  std::vector<std::vector<std::vector<float>>> Dum0;
+  std::vector<std::vector<std::vector<float>>> Dum1;
+  std::vector<std::vector<std::vector<float>>> Dum2;
+  std::vector<std::vector<std::vector<float>>> Dum3;
+  std::vector<std::vector<std::vector<float>>> Dum4;
+  std::vector<std::vector<std::vector<float>>> Vort;
+  std::vector<std::vector<std::vector<float>>> Pres;
+  std::vector<std::vector<std::vector<float>>> Dive;
+  std::vector<std::vector<std::vector<float>>> Smok;
   std::vector<std::vector<std::vector<float>>> VelX;
   std::vector<std::vector<std::vector<float>>> VelY;
   std::vector<std::vector<std::vector<float>>> VelZ;
@@ -47,34 +56,29 @@ class CompuFluidDyna
 
   // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
-  float ImplicitFieldDotProd(const int iFieldID,
-                             const std::vector<std::vector<std::vector<float>>>& iFieldA,
-                             const std::vector<std::vector<std::vector<float>>>& iFieldB);
-  float ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
-                             const std::vector<std::vector<std::vector<float>>>& iFieldB);
   void ImplicitFieldAdd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                         const std::vector<std::vector<std::vector<float>>>& iFieldB,
                         std::vector<std::vector<std::vector<float>>>& oField);
   void ImplicitFieldSub(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                         const std::vector<std::vector<std::vector<float>>>& iFieldB,
                         std::vector<std::vector<std::vector<float>>>& oField);
-  void ImplicitFieldScale(const std::vector<std::vector<std::vector<float>>>& iField,
-                          const float iVal,
+  void ImplicitFieldScale(const float iVal,
+                          const std::vector<std::vector<std::vector<float>>>& iField,
                           std::vector<std::vector<std::vector<float>>>& oField);
+  float ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                             const std::vector<std::vector<std::vector<float>>>& iFieldB);
   void ImplicitFieldLaplacianMatMult(const int iFieldID, const float iTimeStep,
-                                     const bool iDiffuMode, const float iDiffuCoeff,
+                                     const bool iDiffuMode, const float iDiffuCoeff, const bool iPrecondMode,
                                      const std::vector<std::vector<std::vector<float>>>& iField,
                                      std::vector<std::vector<std::vector<float>>>& oField);
   void ConjugateGradientSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
-                              std::vector<std::vector<std::vector<float>>>& ioField,
-                              std::vector<std::vector<std::vector<float>>>& oResid);
+                              std::vector<std::vector<std::vector<float>>>& ioField);
   void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                         const bool iDiffuMode, const float iDiffuCoeff,
                         const std::vector<std::vector<std::vector<float>>>& iField,
-                        std::vector<std::vector<std::vector<float>>>& ioField,
-                        std::vector<std::vector<std::vector<float>>>& oResid);
+                        std::vector<std::vector<std::vector<float>>>& ioField);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                const std::vector<std::vector<std::vector<float>>>& iFieldRef);
   void AdvectField(const int iFieldID, const float iTimeStep,
@@ -85,8 +89,7 @@ class CompuFluidDyna
   void ProjectField(const int iMaxIter, const float iTimeStep,
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
-                    std::vector<std::vector<std::vector<float>>>& ioVelZ,
-                    std::vector<std::vector<std::vector<float>>>& oResid);
+                    std::vector<std::vector<std::vector<float>>>& ioVelZ);
   void VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
