@@ -147,6 +147,7 @@ void CompuFluidDyna::CheckRefresh() {
   if (D.param[CoeffVelX___].hasChanged()) isRefreshed= false;
   if (D.param[CoeffVelY___].hasChanged()) isRefreshed= false;
   if (D.param[CoeffVelZ___].hasChanged()) isRefreshed= false;
+  if (D.param[CoeffPres___].hasChanged()) isRefreshed= false;
   if (D.param[CoeffSmok___].hasChanged()) isRefreshed= false;
   if (D.param[ObjectPosX__].hasChanged()) isRefreshed= false;
   if (D.param[ObjectPosY__].hasChanged()) isRefreshed= false;
@@ -309,10 +310,10 @@ void CompuFluidDyna::Refresh() {
           }
           else if (y == 0) {
             VelBC[x][y][z]= true;
-            SmoBC[x][y][z]= true;
             VelXForced[x][y][z]= D.param[CoeffVelX___].Get();
             VelYForced[x][y][z]= D.param[CoeffVelY___].Get();
             VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
+            SmoBC[x][y][z]= true;
             SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
           }
           else {
@@ -406,6 +407,32 @@ void CompuFluidDyna::Refresh() {
             VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
             SmoBC[x][y][z]= true;
             SmokForced[x][y][z]= (std::min(z, nbZ - 1 - z) < 4 * (nbZ - 1) / 9) ? -D.param[CoeffSmok___].Get() : D.param[CoeffSmok___].Get();
+          }
+        }
+
+        // Poiseuille/Couette flow in tube with pressure gradient
+        if (scenarioType == 6) {
+          if ((nbX > 1 && (x == 0 || x == nbX - 1)) ||
+              (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
+            Solid[x][y][z]= true;
+          }
+          else if (nbZ > 1 && (z == 1 || z == nbZ - 2)) {
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelX___].Get() : D.param[CoeffVelX___].Get();
+            VelYForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelY___].Get() : D.param[CoeffVelY___].Get();
+            VelZForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelZ___].Get() : D.param[CoeffVelZ___].Get();
+          }
+          else if (y == 0) {
+            PreBC[x][y][z]= true;
+            PresForced[x][y][z]= D.param[CoeffPres___].Get();
+          }
+          else if (y == nbY - 1) {
+            PreBC[x][y][z]= true;
+            PresForced[x][y][z]= -D.param[CoeffPres___].Get();
+          }
+          else if (std::max(y, nbY - 1 - y) == nbY / 2) {
+            SmoBC[x][y][z]= true;
+            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
           }
         }
       }
@@ -510,20 +537,26 @@ void CompuFluidDyna::Animate() {
   // }
 
   // Draw the scatter data
-  D.scatData.resize(2);
-  D.scatData[0].first= "Simu VY";
-  D.scatData[1].first= "Simu HZ";
-  D.scatData[0].second.clear();
-  D.scatData[1].second.clear();
+  D.scatData.resize(4);
+  D.scatData[0].first= "Horiz VZ";
+  D.scatData[1].first= "Verti VY";
+  D.scatData[2].first= "Horiz P";
+  D.scatData[3].first= "Verti P";
+  for (int k= 0; k < (int)D.scatData.size(); k++)
+    D.scatData[k].second.clear();
   if (nbZ > 1) {
     const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
-    for (int y= 0; y < nbY; y++)
+    for (int y= 0; y < nbY; y++) {
       D.scatData[0].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+      D.scatData[2].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+    }
   }
   if (nbY > 1) {
     const int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
-    for (int z= 0; z < nbZ; z++)
+    for (int z= 0; z < nbZ; z++) {
       D.scatData[1].second.push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      D.scatData[3].second.push_back(std::array<double, 2>({Pres[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+    }
   }
 
   // Add hard coded lid driven cavity flow benchmark for visual comparison
@@ -855,6 +888,7 @@ void CompuFluidDyna::ImplicitFieldAdd(const std::vector<std::vector<std::vector<
         oField[x][y][z]= iFieldA[x][y][z] + iFieldB[x][y][z];
 }
 
+
 void CompuFluidDyna::ImplicitFieldSub(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                                       const std::vector<std::vector<std::vector<float>>>& iFieldB,
                                       std::vector<std::vector<std::vector<float>>>& oField) {
@@ -864,6 +898,7 @@ void CompuFluidDyna::ImplicitFieldSub(const std::vector<std::vector<std::vector<
         oField[x][y][z]= iFieldA[x][y][z] - iFieldB[x][y][z];
 }
 
+
 void CompuFluidDyna::ImplicitFieldScale(const float iVal,
                                         const std::vector<std::vector<std::vector<float>>>& iField,
                                         std::vector<std::vector<std::vector<float>>>& oField) {
@@ -872,6 +907,7 @@ void CompuFluidDyna::ImplicitFieldScale(const float iVal,
       for (int z= 0; z < nbZ; z++)
         oField[x][y][z]= iField[x][y][z] * iVal;
 }
+
 
 float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                                            const std::vector<std::vector<std::vector<float>>>& iFieldB) {
