@@ -109,7 +109,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("CoeffVelX___", 0.0));
     D.param.push_back(ParamUI("CoeffVelY___", 1.0));
     D.param.push_back(ParamUI("CoeffVelZ___", 0.0));
-    D.param.push_back(ParamUI("CoeffPres___", 0.0));
+    D.param.push_back(ParamUI("CoeffPres___", 0.02));
     D.param.push_back(ParamUI("CoeffSmok___", 1.0));
     D.param.push_back(ParamUI("ObjectPosX__", 0.5));
     D.param.push_back(ParamUI("ObjectPosY__", 0.25));
@@ -281,7 +281,7 @@ void CompuFluidDyna::Refresh() {
               (nbY > 1 && (y == 0 || y == nbY - 1)) ||
               (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= 0.0f;
           }
           for (int k= 0; k < 2; k++) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
@@ -306,7 +306,7 @@ void CompuFluidDyna::Refresh() {
           }
           else if (y == nbY - 1) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= 0.0f;
           }
           else if (y == 0) {
             VelBC[x][y][z]= true;
@@ -381,7 +381,7 @@ void CompuFluidDyna::Refresh() {
           }
           else if (y == nbY - 1) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= 0.0f;
           }
         }
 
@@ -396,7 +396,7 @@ void CompuFluidDyna::Refresh() {
                    (nbY > 1 && (y == 1 || y == nbY - 2)) ||
                    (nbZ > 1 && (z == 1 || z == nbZ - 2))) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= 0.0f;
           }
           else if (((nbX == 1) != (std::min(x, nbX - 1 - x) > nbX / 3)) &&
                    ((nbY == 1) != (std::min(y, nbY - 1 - y) > nbY / 3)) &&
@@ -422,13 +422,9 @@ void CompuFluidDyna::Refresh() {
             VelYForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelY___].Get() : D.param[CoeffVelY___].Get();
             VelZForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelZ___].Get() : D.param[CoeffVelZ___].Get();
           }
-          else if (y == 0) {
+          else if (nbY > 1 && (y == 0 || y == nbY - 1)) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= D.param[CoeffPres___].Get();
-          }
-          else if (y == nbY - 1) {
-            PreBC[x][y][z]= true;
-            PresForced[x][y][z]= -D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= (y > nbY / 2) ? -D.param[CoeffPres___].Get() : D.param[CoeffPres___].Get();
           }
           else if (std::max(y, nbY - 1 - y) == nbY / 2) {
             SmoBC[x][y][z]= true;
