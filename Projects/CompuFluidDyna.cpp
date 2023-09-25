@@ -19,17 +19,6 @@
 #include "../Util/Vector.hpp"
 
 
-// Reference linear solvers and particularily PCG
-// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
-// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
-// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
-// https://github.com/awesson/stable-fluids/tree/master
-// https://en.wikipedia.org/wiki/Conjugate_gradient_method
-
-// Reference for vorticity confinement implem
-// https://github.com/awesson/stable-fluids/tree/master
-// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
-
 // Reference for "stable fluid" method
 // http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
 // http://www.dgp.toronto.edu/people/stam/reality/Research/zip/CDROM_GDC03.zip
@@ -42,6 +31,20 @@
 
 // Reference for fluid flow photographs, scenarios and qualitative comparison
 // http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
+
+// Reference for vorticity confinement implem
+// https://github.com/awesson/stable-fluids/tree/master
+// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
+
+// Reference linear solvers and particularily PCG
+// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
+// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
+// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
+// https://github.com/awesson/stable-fluids/tree/master
+// https://en.wikipedia.org/wiki/Conjugate_gradient_method
+
+
+// TODO introduce real value permeability/porosity/bounceback for continous optim ?
 
 extern Data D;
 
@@ -497,6 +500,8 @@ void CompuFluidDyna::Animate() {
 
   // Projection step
   ProjectField(maxIter, timestep, VelX, VelY, VelZ);
+
+  // TODO test heuristic optimization of solid regions
 
   // // Draw the plot data
   // D.plotData.resize(7);
@@ -1344,7 +1349,7 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
         if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
 
-        // todo try backtracing MacCormack
+        // TODO try backtracing MacCormack
         // https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
         // https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
         // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
@@ -1378,6 +1383,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
         CurZ[x][y][z]= 0.0f;
         Vort[x][y][z]= 0.0f;
         if (Solid[x][y][z]) continue;
+        // TODO rework vorticity to skip solid voxels and handle asymmetries
         float dy_dx= 0.0f, dz_dx= 0.0f, dx_dy= 0.0f, dz_dy= 0.0f, dx_dz= 0.0f, dy_dz= 0.0f;
         if (x - 1 >= 0 && x + 1 < nbX) dy_dx= 0.5f * (ioVelY[x + 1][y][z] - ioVelY[x - 1][y][z]);
         if (x - 1 >= 0 && x + 1 < nbX) dz_dx= 0.5f * (ioVelZ[x + 1][y][z] - ioVelZ[x - 1][y][z]);

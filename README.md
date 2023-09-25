@@ -1,5 +1,5 @@
 # Sandbox
-Sandbox environment with various personal projects and experimentations (fractals, swarm intelligence, precedural generation, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use a generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+Sandbox environment with various personal projects and experimentations (fractals, swarm intelligence, precedural generation, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
 
 ## Code structure
 
@@ -7,9 +7,15 @@ Sandbox environment with various personal projects and experimentations (fractal
 
 **Data.hpp** contains the parameter list and plot data shared between the UI and each project
 
+**Projects/** contains all projects currently implemented in the sandbox environment. All projects share the same structure with initialization of they parameter lists, status flags, refresh/animate/draw methods
+
 **util/** contains header-only utility namespaces for colormaps, random numbers, vectors, fields, ...
 
-**Projects/** contains all projects currently implemented in the sandbox environment. All projects share the same structure with initialization of they parameter lists, status flags, refresh/animate/draw methods
+**tb/** contains the necessary linear algebra and operators for camera handling with the arcball
+
+**FileIO/** contains functions for file input/output
+
+**Resources/** contains various files to be used by projects
 
 ## Minimal build env on windows
 Get Win64 gcc compiler and extract at root of C: drive
@@ -29,6 +35,8 @@ Add to path env var
 - make depend (optional)
 - make
 - ./main
-- *press any of the alphabet key to activate the associated project*
-- *use mouse clics to rotate, pan and zoom with the arcball*
-- *use KB arrows and mouse wheel to change parameter values*
+- *press alphabet key to activate the associated project, no documentation, see project_SetActiveProject()*
+- *use mouse clics to rotate, pan and zoom with the arcball to move in the 3D scene*
+- *use KB arrows, modifier keys, or mouse wheel to change parameter values in the active project, see callback_keyboard_special() and callback_mouse_click()*
+- *use spacebar to run animation/simulation if the active project supports it*
+- *use number keys to toggle various displays in the active project*

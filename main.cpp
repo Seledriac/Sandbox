@@ -255,6 +255,8 @@ void callback_display() {
         if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
       }
 
+      // TODO introduce flag for log display
+
       // Draw the text for legend and min max values
       char str[50];
       strcpy(str, D.plotData[k0].first.c_str());
@@ -524,9 +526,6 @@ void callback_mouse_motion(int x, int y) {
 
 // Mouse motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
-  // (void)x;  // Disable warning unused variable
-  // (void)y;  // Disable warning unused variable
-
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
   if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
