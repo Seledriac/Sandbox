@@ -1241,19 +1241,10 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         Dive[x][y][z]= 0.0f;
-        if (Solid[x][y][z]) continue;
-        if (PreBC[x][y][z]) continue;
-        float DiverX= 0.0f, DiverY= 0.0f, DiverZ= 0.0f;
-        if (x - 1 >= 0) DiverX+= (ioVelX[x][y][z] - ioVelX[x - 1][y][z]);
-        if (y - 1 >= 0) DiverY+= (ioVelY[x][y][z] - ioVelY[x][y - 1][z]);
-        if (z - 1 >= 0) DiverZ+= (ioVelZ[x][y][z] - ioVelZ[x][y][z - 1]);
-        if (x + 1 < nbX) DiverX+= (ioVelX[x + 1][y][z] - ioVelX[x][y][z]);
-        if (y + 1 < nbY) DiverY+= (ioVelY[x][y + 1][z] - ioVelY[x][y][z]);
-        if (z + 1 < nbZ) DiverZ+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z]);
-        if (x - 1 >= 0 && x + 1 < nbX) DiverX*= 0.5f;
-        if (y - 1 >= 0 && y + 1 < nbY) DiverY*= 0.5f;
-        if (z - 1 >= 0 && z + 1 < nbZ) DiverZ*= 0.5f;
-        Dive[x][y][z]= (DiverX + DiverY + DiverZ) * voxSize;
+        if (Solid[x][y][z] || PreBC[x][y][z]) continue;
+        if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= 0.5f * (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) * voxSize;
+        if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= 0.5f * (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) * voxSize;
+        if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= 0.5f * (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) * voxSize;
       }
     }
   }
@@ -1273,19 +1264,9 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        float PressGradX= 0.0f, PressGradY= 0.0f, PressGradZ= 0.0f;
-        if (x - 1 >= 0) PressGradX+= (Pres[x][y][z] - Pres[x - 1][y][z]);
-        if (y - 1 >= 0) PressGradY+= (Pres[x][y][z] - Pres[x][y - 1][z]);
-        if (z - 1 >= 0) PressGradZ+= (Pres[x][y][z] - Pres[x][y][z - 1]);
-        if (x + 1 < nbX) PressGradX+= (Pres[x + 1][y][z] - Pres[x][y][z]);
-        if (y + 1 < nbY) PressGradY+= (Pres[x][y + 1][z] - Pres[x][y][z]);
-        if (z + 1 < nbZ) PressGradZ+= (Pres[x][y][z + 1] - Pres[x][y][z]);
-        if (x - 1 >= 0 && x + 1 < nbX) PressGradX*= 0.5f;
-        if (y - 1 >= 0 && y + 1 < nbY) PressGradY*= 0.5f;
-        if (z - 1 >= 0 && z + 1 < nbZ) PressGradZ*= 0.5f;
-        ioVelX[x][y][z]-= PressGradX / voxSize;
-        ioVelY[x][y][z]-= PressGradY / voxSize;
-        ioVelZ[x][y][z]-= PressGradZ / voxSize;
+        if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / voxSize;
+        if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / voxSize;
+        if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / voxSize;
       }
     }
   }
@@ -1332,9 +1313,8 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
                                  const std::vector<std::vector<std::vector<float>>>& iVelY,
                                  const std::vector<std::vector<std::vector<float>>>& iVelZ,
                                  std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Copy previous field values for reference
+  // Sweep through field and apply semi Lagrangian advection
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
-// Sweep through field and apply semi Lagrangian advection
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
@@ -1345,19 +1325,18 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-        if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
 
-        // TODO try backtracing MacCormack
+        // TODO try MacCormack to get 2nd order accuracy
         // https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
         // https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
         // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 
-        // Find valid source position for current voxel
+        // Find source position of current voxel via backtracing
         float posX= (float)x - iTimeStep * (float)maxDim * iVelX[x][y][z];
         float posY= (float)y - iTimeStep * (float)maxDim * iVelY[x][y][z];
         float posZ= (float)z - iTimeStep * (float)maxDim * iVelZ[x][y][z];
 
-        // Trilinear interpolation
+        // Trilinear interpolation at source position
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
       }
     }
@@ -1371,17 +1350,18 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
                                           std::vector<std::vector<std::vector<float>>>& ioVelX,
                                           std::vector<std::vector<std::vector<float>>>& ioVelY,
                                           std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  // Compute curls and vorticity
+  // Reset fields
+  CurX= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  CurY= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  CurZ= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  Vort= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+
+  // Compute curl and vorticity
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
-        CurX[x][y][z]= 0.0f;
-        CurY[x][y][z]= 0.0f;
-        CurZ[x][y][z]= 0.0f;
-        Vort[x][y][z]= 0.0f;
         if (Solid[x][y][z]) continue;
-        // TODO rework vorticity to skip solid voxels and handle asymmetries
         float dy_dx= 0.0f, dz_dx= 0.0f, dx_dy= 0.0f, dz_dy= 0.0f, dx_dz= 0.0f, dy_dz= 0.0f;
         if (x - 1 >= 0 && x + 1 < nbX) dy_dx= 0.5f * (ioVelY[x + 1][y][z] - ioVelY[x - 1][y][z]);
         if (x - 1 >= 0 && x + 1 < nbX) dz_dx= 0.5f * (ioVelZ[x + 1][y][z] - ioVelZ[x - 1][y][z]);
@@ -1398,45 +1378,34 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
   }
 
   // Amplify non-zero vorticity
+  if (iVortiCoeff > 0.0f) {
 #pragma omp parallel for
-  for (int x= 0; x < nbX; x++) {
-    for (int y= 0; y < nbY; y++) {
-      for (int z= 0; z < nbZ; z++) {
-        if (iVortiCoeff == 0.0f) continue;
-        if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        float dVort_dx= 0.0f;
-        float dVort_dy= 0.0f;
-        float dVort_dz= 0.0f;
-        // if (x + 1 < nbX && Solid[x + 1][y][z]) dVort_dx+= 0.5f * std::sqrt(CurX[x + 1][y][z] * CurX[x + 1][y][z] + CurY[x + 1][y][z] * CurY[x + 1][y][z] + CurZ[x + 1][y][z] * CurZ[x + 1][y][z]);
-        // if (x - 1 >= 0 && Solid[x - 1][y][z]) dVort_dx+= 0.5f * -std::sqrt(CurX[x - 1][y][z] * CurX[x - 1][y][z] + CurY[x - 1][y][z] * CurY[x - 1][y][z] + CurZ[x - 1][y][z] * CurZ[x - 1][y][z]);
-        // if (y + 1 < nbY && Solid[x][y + 1][z]) dVort_dy+= 0.5f * std::sqrt(CurX[x][y + 1][z] * CurX[x][y + 1][z] + CurY[x][y + 1][z] * CurY[x][y + 1][z] + CurZ[x][y + 1][z] * CurZ[x][y + 1][z]);
-        // if (y - 1 >= 0 && Solid[x][y - 1][z]) dVort_dy+= 0.5f * -std::sqrt(CurX[x][y - 1][z] * CurX[x][y - 1][z] + CurY[x][y - 1][z] * CurY[x][y - 1][z] + CurZ[x][y - 1][z] * CurZ[x][y - 1][z]);
-        // if (z + 1 < nbZ && Solid[x][y][z + 1]) dVort_dz+= 0.5f * std::sqrt(CurX[x][y][z + 1] * CurX[x][y][z + 1] + CurY[x][y][z + 1] * CurY[x][y][z + 1] + CurZ[x][y][z + 1] * CurZ[x][y][z + 1]);
-        // if (z - 1 >= 0 && Solid[x][y][z - 1]) dVort_dz+= 0.5f * -std::sqrt(CurX[x][y][z - 1] * CurX[x][y][z - 1] + CurY[x][y][z - 1] * CurY[x][y][z - 1] + CurZ[x][y][z - 1] * CurZ[x][y][z - 1]);
-        if (x - 1 >= 0 && x + 1 < nbX)
-          dVort_dx= 0.5f * (std::sqrt(CurX[x + 1][y][z] * CurX[x + 1][y][z] + CurY[x + 1][y][z] * CurY[x + 1][y][z] + CurZ[x + 1][y][z] * CurZ[x + 1][y][z]) -
-                            std::sqrt(CurX[x - 1][y][z] * CurX[x - 1][y][z] + CurY[x - 1][y][z] * CurY[x - 1][y][z] + CurZ[x - 1][y][z] * CurZ[x - 1][y][z]));
-        if (y - 1 >= 0 && y + 1 < nbY)
-          dVort_dy= 0.5f * (std::sqrt(CurX[x][y + 1][z] * CurX[x][y + 1][z] + CurY[x][y + 1][z] * CurY[x][y + 1][z] + CurZ[x][y + 1][z] * CurZ[x][y + 1][z]) -
-                            std::sqrt(CurX[x][y - 1][z] * CurX[x][y - 1][z] + CurY[x][y - 1][z] * CurY[x][y - 1][z] + CurZ[x][y - 1][z] * CurZ[x][y - 1][z]));
-        if (z - 1 >= 0 && z + 1 < nbZ)
-          dVort_dz= 0.5f * (std::sqrt(CurX[x][y][z + 1] * CurX[x][y][z + 1] + CurY[x][y][z + 1] * CurY[x][y][z + 1] + CurZ[x][y][z + 1] * CurZ[x][y][z + 1]) -
-                            std::sqrt(CurX[x][y][z - 1] * CurX[x][y][z - 1] + CurY[x][y][z - 1] * CurY[x][y][z - 1] + CurZ[x][y][z - 1] * CurZ[x][y][z - 1]));
-        const float dVortNorm= std::sqrt(dVort_dx * dVort_dx + dVort_dy * dVort_dy + dVort_dz * dVort_dz);
-        if (iVortiCoeff != 0.0f && dVortNorm != 0.0f) {
-          dVort_dx= iVortiCoeff * dVort_dx / dVortNorm;
-          dVort_dy= iVortiCoeff * dVort_dy / dVortNorm;
-          dVort_dz= iVortiCoeff * dVort_dz / dVortNorm;
-          ioVelX[x][y][z]+= iTimeStep * (dVort_dy * CurZ[x][y][z] - dVort_dz * CurY[x][y][z]);
-          ioVelY[x][y][z]+= iTimeStep * (dVort_dz * CurX[x][y][z] - dVort_dx * CurZ[x][y][z]);
-          ioVelZ[x][y][z]+= iTimeStep * (dVort_dx * CurY[x][y][z] - dVort_dy * CurX[x][y][z]);
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          if (Solid[x][y][z] || VelBC[x][y][z]) continue;
+          float dVort_dx= 0.0f;
+          float dVort_dy= 0.0f;
+          float dVort_dz= 0.0f;
+          if (x - 1 >= 0 && x + 1 < nbX) dVort_dx= 0.5f * (Vort[x + 1][y][z] - Vort[x - 1][y][z]);
+          if (y - 1 >= 0 && y + 1 < nbY) dVort_dy= 0.5f * (Vort[x][y + 1][z] - Vort[x][y - 1][z]);
+          if (z - 1 >= 0 && z + 1 < nbZ) dVort_dz= 0.5f * (Vort[x][y][z + 1] - Vort[x][y][z - 1]);
+          const float dVortNorm= std::sqrt(dVort_dx * dVort_dx + dVort_dy * dVort_dy + dVort_dz * dVort_dz);
+          if (dVortNorm > 0.0f) {
+            dVort_dx= iVortiCoeff * dVort_dx / dVortNorm;
+            dVort_dy= iVortiCoeff * dVort_dy / dVortNorm;
+            dVort_dz= iVortiCoeff * dVort_dz / dVortNorm;
+            ioVelX[x][y][z]+= iTimeStep * (dVort_dy * CurZ[x][y][z] - dVort_dz * CurY[x][y][z]);
+            ioVelY[x][y][z]+= iTimeStep * (dVort_dz * CurX[x][y][z] - dVort_dx * CurZ[x][y][z]);
+            ioVelZ[x][y][z]+= iTimeStep * (dVort_dx * CurY[x][y][z] - dVort_dy * CurX[x][y][z]);
+          }
         }
       }
     }
-  }
 
-  // Reapply BC to maintain consistency
-  ApplyBC(FieldID::IDVelX, ioVelX);
-  ApplyBC(FieldID::IDVelY, ioVelY);
-  ApplyBC(FieldID::IDVelZ, ioVelZ);
+    // Reapply BC to maintain consistency
+    ApplyBC(FieldID::IDVelX, ioVelX);
+    ApplyBC(FieldID::IDVelY, ioVelY);
+    ApplyBC(FieldID::IDVelZ, ioVelZ);
+  }
 }
