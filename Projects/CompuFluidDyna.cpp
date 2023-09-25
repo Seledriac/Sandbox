@@ -27,6 +27,7 @@
 // https://fr.wikipedia.org/wiki/Stable-Fluids
 // http://www.dgp.utoronto.ca/~stam/reality/Talks/FluidsTalk/FluidsTalkNotes.pdf
 // https://www.youtube.com/watch?v=qsYE1wMEMPA
+// https://www.youtube.com/watch?v=iKAVRgIrUOU
 // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 
 // Reference for fluid flow photographs, scenarios and qualitative comparison
@@ -700,17 +701,17 @@ void CompuFluidDyna::Draw() {
             if (std::abs(Vort[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(2.0f * Vort[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
-          // Color by Curl in X
+          // Color by curl in X
           if ((int)std::round(D.param[ColorMode___].Get()) == 5) {
             if (std::abs(CurX[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurX[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
-          // Color by Curl in Y
+          // Color by curl in Y
           if ((int)std::round(D.param[ColorMode___].Get()) == 6) {
             if (std::abs(CurY[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurY[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
           }
-          // Color by Curl in Z
+          // Color by curl in Z
           if ((int)std::round(D.param[ColorMode___].Get()) == 7) {
             if (std::abs(CurZ[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurZ[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
@@ -720,7 +721,7 @@ void CompuFluidDyna::Draw() {
             if (std::abs(Dive[x][y][z]) < D.param[ColorThresh_].Get()) continue;
             Colormap::RatioToBlueToRed(0.5f + 0.5f * (Dive[x][y][z] / voxSize) * D.param[ColorFactor_].Get(), r, g, b);
           }
-          // Color by Dumy values
+          // Color by dummy values
           if ((int)std::round(D.param[ColorMode___].Get()) >= 10 && (int)std::round(D.param[ColorMode___].Get()) <= 14) {
             float val= 0.0f;
             if ((int)std::round(D.param[ColorMode___].Get()) == 10) val= Dum0[x][y][z];
@@ -1013,7 +1014,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   float errTmp= ImplicitFieldDotProd(rField, rField);
   if (D.param[Verbose_____].Get() > 0.0) printf("CG [%.3e] ", normRHS);
   if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? std::log10(errTmp / normRHS) : (-INFINITY));
+  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
 
   // d = M^-1 r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
@@ -1053,8 +1054,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     // Error plot
     errTmp= ImplicitFieldDotProd(rField, rField);
     if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? std::log10(errTmp / normRHS) : (-INFINITY));
-    // D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
 
     // s = M^-1 r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
@@ -1123,8 +1123,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   float errBeg= errNew;
   if (D.param[Verbose_____].Get() > 0.0) printf("GS [%.3e] ", normRHS);
   if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? std::log10(errNew / normRHS) : (-INFINITY));
-  // D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
 
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   for (int k= 0; k < iMaxIter; k++) {
@@ -1221,8 +1220,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     ImplicitFieldSub(iField, t0Field, rField);
     errNew= ImplicitFieldDotProd(rField, rField);
     if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? std::log10(errNew / normRHS) : (-INFINITY));
-    // D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
   }
   if (iFieldID == FieldID::IDSmok) Dum0= rField;
   if (iFieldID == FieldID::IDVelX) Dum1= rField;

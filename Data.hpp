@@ -45,8 +45,6 @@ class Data
   bool stepAnimation= false;
   bool autoRefresh= true;
 
-  bool showAxis= false;
-
   bool displayMode1= true;
   bool displayMode2= true;
   bool displayMode3= true;
@@ -55,12 +53,13 @@ class Data
   bool displayMode6= true;
   bool displayMode7= true;
   bool displayMode8= true;
+  bool showAxis= false;
 
   int idxParamUI= 0;
   int idxCursorUI= 0;
-
   std::vector<ParamUI> param;
 
+  bool plotLogScale= true;
   std::vector<std::pair<std::string, std::vector<double>>> plotData;
   std::vector<std::pair<std::string, std::vector<std::array<double, 2>>>> scatData;
 };

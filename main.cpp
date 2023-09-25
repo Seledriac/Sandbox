@@ -248,44 +248,37 @@ void callback_display() {
       glColor3f(r, g, b);
 
       // Find the min max range for vertical scaling
-      double valMin= D.plotData[k0].second[0];
-      double valMax= D.plotData[k0].second[0];
+      double valMin= std::numeric_limits<double>::max();
+      double valMax= std::numeric_limits<double>::lowest();
       for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
         if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
         if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
       }
 
-      // TODO introduce flag for log display
-
       // Draw the text for legend and min max values
       char str[50];
       strcpy(str, D.plotData[k0].first.c_str());
       draw_text(winW - plotW - 3 * textW, winH - textH - textH * k0 - textH - margin, str);
-
-      // sprintf(str, "%+.2e", valMax);
-      sprintf(str, "%+.2e", std::pow(10.0, valMax));
+      sprintf(str, "%+.2e", valMax);
       draw_text(winW - textW - plotW + k0 * textW, winH - textH - margin, str);
-
-      // sprintf(str, "%+.2e", valMin);
-      sprintf(str, "%+.2e", std::pow(10.0, valMin));
+      sprintf(str, "%+.2e", valMin);
       draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 2 * textH - 2 * margin, str);
-
-      // sprintf(str, "%+.2e", D.plotData[k0].second[0]);
-      sprintf(str, "%+.2e", std::pow(10.0, D.plotData[k0].second[0]));
+      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
       draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - textH - margin, str);
-
-      // sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
-      sprintf(str, "%+.2e", std::pow(10.0, D.plotData[k0].second[D.plotData[k0].second.size() - 1]));
+      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
       draw_text(winW - textW, winH - textH - textH * k0 - textH - margin, str);
 
       // Draw the plot curves and markers
-      if (int(D.plotData[k0].second.size()) > 1) {
+      if (int(D.plotData[k0].second.size()) >= 2) {
         for (int mode= 0; mode < 2; mode++) {
           if (mode == 0) glBegin(GL_LINE_STRIP);
           if (mode == 1) glBegin(GL_POINTS);
           for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-            double valScaled= valMin;
-            if (valMax - valMin != 0.0) valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+            double valScaled= (D.plotLogScale) ? -INFINITY : valMin;
+            if (valMax - valMin != 0.0) {
+              if (D.plotLogScale) valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
+              else valScaled= (std::log10(D.plotData[k0].second[k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
+            }
             glVertex3i(winW - plotW - textW + plotW * k1 / std::max((int)D.plotData[k0].second.size() - 1, 1), winH - plotH - textH - 2 * margin + plotH * valScaled, 0);
           }
           glEnd();
@@ -420,6 +413,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.plotData.clear();
     D.scatData.clear();
   }
+  else if (key == '-') D.plotLogScale= !D.plotLogScale;
 
   else if (key >= 'A' && key <= 'Z') project_Constructor(key);
   else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
