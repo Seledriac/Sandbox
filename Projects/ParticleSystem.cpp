@@ -17,8 +17,10 @@
 #include "../Util/Vector.hpp"
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   Constrain2D_,
@@ -34,17 +36,19 @@ enum ParamType
 };
 
 
+// Constructor
 ParticleSystem::ParticleSystem() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void ParticleSystem::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("Constrain2D_", 1));
     D.param.push_back(ParamUI("NbParticles_", 1000));
     D.param.push_back(ParamUI("TimeStep____", 0.05));
@@ -57,19 +61,35 @@ void ParticleSystem::SetActiveProject() {
     D.param.push_back(ParamUI("HeatOutput__", 0.1));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void ParticleSystem::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[NbParticles_].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
+// Check if parameter changes should trigger an allocation
+void ParticleSystem::CheckAlloc() {
+  if (D.param[NbParticles_].hasChanged()) isAllocated= false;
+}
+
+
+// Check if parameter changes should trigger a refresh
+void ParticleSystem::CheckRefresh() {
+}
+
+
+// Allocate the project data
+void ParticleSystem::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   NbParticles= std::max((int)std::round(D.param[NbParticles_].Get()), 1);
@@ -85,16 +105,15 @@ void ParticleSystem::Initialize() {
   RadCur= std::vector<float>(NbParticles, 0.0f);
   MasCur= std::vector<float>(NbParticles, 0.0f);
   HotCur= std::vector<float>(NbParticles, 0.0f);
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
 }
 
 
+// Refresh the project
 void ParticleSystem::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
 
@@ -134,10 +153,13 @@ void ParticleSystem::Refresh() {
 }
 
 
+// Animate the project
 void ParticleSystem::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 
   float domainRad= 1.0f;
   int nbSubstep= int(std::round(D.param[NbSubStep___].Get()));
@@ -237,9 +259,10 @@ void ParticleSystem::Animate() {
 }
 
 
+// Draw the project
 void ParticleSystem::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   for (int k= 0; k < NbParticles; k++) {

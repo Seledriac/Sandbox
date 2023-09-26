@@ -7,30 +7,27 @@
 #include "../Util/Vector.hpp"
 
 
-class Agent
-{
-  public:
-  Math::Vec3f p, v, n;
-};
-
-
 class AgentSwarmBoid
 {
   private:
   int NbAgents;
-  std::vector<Agent> Agents;
+  std::vector<Math::Vec3f> Pos;
+  std::vector<Math::Vec3f> Vel;
+  std::vector<Math::Vec3f> Nor;
   Math::Vec3f PosFood;
   Math::Vec3f PosPredator;
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   AgentSwarmBoid();
 
   void SetActiveProject();
-  void Initialize();
+  void CheckAlloc();
+  void CheckRefresh();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();

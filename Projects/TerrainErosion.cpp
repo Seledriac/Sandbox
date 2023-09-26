@@ -19,8 +19,10 @@
 #include "../Util/Vector.hpp"
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   TerrainNbX__,
@@ -36,17 +38,19 @@ enum ParamType
 };
 
 
+// Constructor
 TerrainErosion::TerrainErosion() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void TerrainErosion::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("TerrainNbX__", 128));
     D.param.push_back(ParamUI("TerrainNbY__", 128));
     D.param.push_back(ParamUI("TerrainNbCut", 256));
@@ -59,27 +63,42 @@ void TerrainErosion::SetActiveProject() {
     D.param.push_back(ParamUI("CliffThresh_", 0.80));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void TerrainErosion::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[TerrainNbX__].hasChanged()) isInitialized= false;
-  if (D.param[TerrainNbY__].hasChanged()) isInitialized= false;
-  if (D.param[TerrainNbCut].hasChanged()) isInitialized= false;
-  if (D.param[DropletNbK__].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
+// Check if parameter changes should trigger an allocation
+void TerrainErosion::CheckAlloc() {
+  if (D.param[TerrainNbX__].hasChanged()) isAllocated= false;
+  if (D.param[TerrainNbY__].hasChanged()) isAllocated= false;
+  if (D.param[DropletNbK__].hasChanged()) isAllocated= false;
+}
+
+
+// Check if parameter changes should trigger a refresh
+void TerrainErosion::CheckRefresh() {
+  if (D.param[TerrainNbCut].hasChanged()) isRefreshed= false;
+}
+
+
+// Allocate the project data
+void TerrainErosion::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   terrainNbX= std::max(2, int(std::round(D.param[TerrainNbX__].Get())));
   terrainNbY= std::max(2, int(std::round(D.param[TerrainNbY__].Get())));
-  terrainNbC= std::max(0, int(std::round(D.param[TerrainNbCut].Get())));
   dropletNbK= std::max(1, int(std::round(D.param[DropletNbK__].Get())));
 
   // Allocate data
@@ -98,18 +117,20 @@ void TerrainErosion::Initialize() {
   dropletRadCur= std::vector<float>(dropletNbK, 0.0f);
   dropletSatCur= std::vector<float>(dropletNbK, 0.0f);
   dropletIsDead= std::vector<bool>(dropletNbK, true);
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
 }
 
 
+// Refresh the project
 void TerrainErosion::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
+
+  // Get UI parameters
+  terrainNbC= std::max(0, int(std::round(D.param[TerrainNbCut].Get())));
 
   // Precompute cut planes
   srand(0);
@@ -190,10 +211,13 @@ void TerrainErosion::Refresh() {
 }
 
 
+// Animate the project
 void TerrainErosion::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 
   float dt= D.param[SimuTimestep].Get();
   float velocityDecay= std::min(std::max(D.param[VelDecay____].Get(), 0.0), 1.0);
@@ -354,9 +378,10 @@ void TerrainErosion::Animate() {
 }
 
 
+// Draw the project
 void TerrainErosion::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   // Set the terrain colors

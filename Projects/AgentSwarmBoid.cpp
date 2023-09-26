@@ -15,8 +15,10 @@
 #include "../Util/Vector.hpp"
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   NbAgents____,
@@ -30,17 +32,19 @@ enum ParamType
 };
 
 
+// Constructor
 AgentSwarmBoid::AgentSwarmBoid() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void AgentSwarmBoid::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("NbAgents____", 100));
     D.param.push_back(ParamUI("SizeAgent___", 0.05));
     D.param.push_back(ParamUI("TimeStep____", 0.05));
@@ -51,35 +55,52 @@ void AgentSwarmBoid::SetActiveProject() {
     D.param.push_back(ParamUI("CoeffFear___", 0.06));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void AgentSwarmBoid::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[NbAgents____].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
+// Check if parameter changes should trigger an allocation
+void AgentSwarmBoid::CheckAlloc() {
+  if (D.param[NbAgents____].hasChanged()) isAllocated= false;
+}
+
+
+// Check if parameter changes should trigger a refresh
+void AgentSwarmBoid::CheckRefresh() {
+}
+
+
+// Allocate the project data
+void AgentSwarmBoid::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   NbAgents= std::max((int)std::round(D.param[NbAgents____].Get()), 1);
 
   // Allocate data
-  Agents= std::vector<Agent>(NbAgents);
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
+  Pos= std::vector<Math::Vec3f>(NbAgents);
+  Vel= std::vector<Math::Vec3f>(NbAgents);
+  Nor= std::vector<Math::Vec3f>(NbAgents);
 }
 
 
+// Refresh the project
 void AgentSwarmBoid::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
 
@@ -91,23 +112,26 @@ void AgentSwarmBoid::Refresh() {
   Math::Vec3f dv= Math::Vec3f(0.2f, 0.2f, 0.2f);
 
   for (int k= 0; k < NbAgents; k++) {
-    Agents[k].p[0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
-    Agents[k].p[1]= 2.0f * dp[1] * (float)rand() / (float)RAND_MAX - dp[1] + p[1];
-    Agents[k].p[2]= 2.0f * dp[2] * (float)rand() / (float)RAND_MAX - dp[2] + p[2];
-    Agents[k].v[0]= 2.0f * dv[0] * (float)rand() / (float)RAND_MAX - dv[0] + v[0];
-    Agents[k].v[1]= 2.0f * dv[1] * (float)rand() / (float)RAND_MAX - dv[1] + v[1];
-    Agents[k].v[2]= 2.0f * dv[2] * (float)rand() / (float)RAND_MAX - dv[2] + v[2];
-    Agents[k].n[0]= 0.0f;
-    Agents[k].n[1]= 1.0f;
-    Agents[k].n[2]= 0.0f;
+    Pos[k][0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
+    Pos[k][1]= 2.0f * dp[1] * (float)rand() / (float)RAND_MAX - dp[1] + p[1];
+    Pos[k][2]= 2.0f * dp[2] * (float)rand() / (float)RAND_MAX - dp[2] + p[2];
+    Vel[k][0]= 2.0f * dv[0] * (float)rand() / (float)RAND_MAX - dv[0] + v[0];
+    Vel[k][1]= 2.0f * dv[1] * (float)rand() / (float)RAND_MAX - dv[1] + v[1];
+    Vel[k][2]= 2.0f * dv[2] * (float)rand() / (float)RAND_MAX - dv[2] + v[2];
+    Nor[k][0]= 0.0f;
+    Nor[k][1]= 1.0f;
+    Nor[k][2]= 0.0f;
   }
 }
 
 
+// Animate the project
 void AgentSwarmBoid::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 
   float sizeAgent= (float)D.param[SizeAgent___].Get();
   float a= (float)D.param[CoeffSep____].Get();
@@ -123,54 +147,55 @@ void AgentSwarmBoid::Animate() {
     int count= 0;
     Math::Vec3f sep, ali, coh, aim, run;
     for (int k1= 0; k1 < NbAgents; k1++) {
-      if ((Agents[k0].p - Agents[k1].p).normSquared() > sizeAgent * sizeAgent) continue;
+      if ((Pos[k0] - Pos[k1]).normSquared() > sizeAgent * sizeAgent) continue;
       if (k0 == k1) continue;
-      ali= ali + Agents[k1].v;
-      coh= coh + Agents[k1].p;
+      ali= ali + Vel[k1];
+      coh= coh + Pos[k1];
       count++;
     }
     if (count > 0) {
-      sep= Agents[k0].p - coh / count;
+      sep= Pos[k0] - coh / count;
       ali= ali / count;
-      coh= coh / count - Agents[k0].p;
+      coh= coh / count - Pos[k0];
     }
-    aim= PosFood - Agents[k0].p;
-    if ((Agents[k0].p - PosPredator).normSquared() < (5.0f * sizeAgent) * (5.0f * sizeAgent))
-      run= Agents[k0].p - PosPredator;
+    aim= PosFood - Pos[k0];
+    if ((Pos[k0] - PosPredator).normSquared() < (5.0f * sizeAgent) * (5.0f * sizeAgent))
+      run= Pos[k0] - PosPredator;
 
     velocityChange[k0]= a * sep + b * ali + c * coh + d * aim + e * run;
   }
 
   // Apply the forces
   for (int k= 0; k < NbAgents; k++) {
-    Agents[k].v+= velocityChange[k];
-    float l= Agents[k].v.norm();
+    Vel[k]+= velocityChange[k];
+    float l= Vel[k].norm();
     if (l > 0.3f) {
-      Agents[k].v= 0.3f * Agents[k].v / l;
+      Vel[k]= 0.3f * Vel[k] / l;
     }
-    Agents[k].p= Agents[k].p + Agents[k].v * D.param[TimeStep____].Get();
+    Pos[k]= Pos[k] + Vel[k] * D.param[TimeStep____].Get();
   }
 }
 
 
+// Draw the project
 void AgentSwarmBoid::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   float sizeAgent= (float)D.param[SizeAgent___].Get();
 
   glBegin(GL_LINES);
-  for (int i= 0; i < NbAgents; i++) {
+  for (int k= 0; k < NbAgents; k++) {
     glColor3f(0.0f, 0.0f, 1.0f);
-    glVertex3fv(Agents[i].p.array());
+    glVertex3fv(Pos[k].array());
     glColor3f(1.0f, 0.0f, 0.0f);
-    glVertex3fv((Agents[i].p + Agents[i].v).array());
+    glVertex3fv((Pos[k] + Vel[k]).array());
   }
   glEnd();
 
   for (int k= 0; k < NbAgents; k++) {
-    Math::Vec3f front= Agents[k].v.normalized();
+    Math::Vec3f front= Vel[k].normalized();
     Math::Vec3f u(1.0f, 0.0f, 0.0f);
     if (u.dot(front) == 0.0f) u.set(0.0f, 1.0f, 0.0f);
     Math::Vec3f left= front.cross(u).normalized();
@@ -178,13 +203,13 @@ void AgentSwarmBoid::Draw() {
 
     Math::Vec3f p1, p2, p3, p4, p5, p6, p7;
 
-    p1= Agents[k].p + sizeAgent * (+0.5f * front + 0.00f * left + 0.0f * up);
-    p2= Agents[k].p + sizeAgent * (+0.0f * front - 0.07f * left + 0.1f * up);
-    p3= Agents[k].p + sizeAgent * (+0.0f * front + 0.07f * left + 0.1f * up);
-    p4= Agents[k].p + sizeAgent * (+0.0f * front + 0.00f * left - 0.1f * up);
-    p5= Agents[k].p + sizeAgent * (-0.4f * front + 0.00f * left + 0.0f * up);
-    p6= Agents[k].p + sizeAgent * (-0.6f * front + 0.00f * left - 0.2f * up);
-    p7= Agents[k].p + sizeAgent * (-0.6f * front + 0.00f * left + 0.2f * up);
+    p1= Pos[k] + sizeAgent * (+0.5f * front + 0.00f * left + 0.0f * up);
+    p2= Pos[k] + sizeAgent * (+0.0f * front - 0.07f * left + 0.1f * up);
+    p3= Pos[k] + sizeAgent * (+0.0f * front + 0.07f * left + 0.1f * up);
+    p4= Pos[k] + sizeAgent * (+0.0f * front + 0.00f * left - 0.1f * up);
+    p5= Pos[k] + sizeAgent * (-0.4f * front + 0.00f * left + 0.0f * up);
+    p6= Pos[k] + sizeAgent * (-0.6f * front + 0.00f * left - 0.2f * up);
+    p7= Pos[k] + sizeAgent * (-0.6f * front + 0.00f * left + 0.2f * up);
 
     glBegin(GL_TRIANGLES);
     glColor3f(1.0f, 0.0f, 1.0f);

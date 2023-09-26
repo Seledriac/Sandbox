@@ -1,4 +1,3 @@
-
 #include "CompuFluidDyna.hpp"
 
 
@@ -14,8 +13,6 @@
 #include "../FileIO/FileInput.hpp"
 #include "../Util/Colormap.hpp"
 #include "../Util/Field.hpp"
-#include "../Util/Random.hpp"
-#include "../Util/Timer.hpp"
 #include "../Util/Vector.hpp"
 
 
@@ -47,8 +44,11 @@
 
 // TODO introduce real value permeability/porosity/bounceback for continous optim ?
 
+
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   Scenario____,
@@ -85,18 +85,21 @@ enum ParamType
   Verbose_____,
 };
 
+
+// Constructor
 CompuFluidDyna::CompuFluidDyna() {
   D.param.clear();
   D.plotData.clear();
   D.scatData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void CompuFluidDyna::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("Scenario____", 2));
     D.param.push_back(ParamUI("InputFile___", 2));
     D.param.push_back(ParamUI("ResolutionX_", 1));
@@ -131,22 +134,26 @@ void CompuFluidDyna::SetActiveProject() {
     D.param.push_back(ParamUI("Verbose_____", -0.5));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void CompuFluidDyna::CheckInit() {
-  if (D.param[Scenario____].hasChanged()) isInitialized= false;
-  if (D.param[InputFile___].hasChanged()) isInitialized= false;
-  if (D.param[ResolutionX_].hasChanged()) isInitialized= false;
-  if (D.param[ResolutionY_].hasChanged()) isInitialized= false;
-  if (D.param[ResolutionZ_].hasChanged()) isInitialized= false;
+// Check if parameter changes should trigger an allocation
+void CompuFluidDyna::CheckAlloc() {
+  if (D.param[ResolutionX_].hasChanged()) isAllocated= false;
+  if (D.param[ResolutionY_].hasChanged()) isAllocated= false;
+  if (D.param[ResolutionZ_].hasChanged()) isAllocated= false;
 }
 
 
+// Check if parameter changes should trigger a refresh
 void CompuFluidDyna::CheckRefresh() {
   if (D.param[CoeffVelX___].hasChanged()) isRefreshed= false;
   if (D.param[CoeffVelY___].hasChanged()) isRefreshed= false;
@@ -160,21 +167,21 @@ void CompuFluidDyna::CheckRefresh() {
 }
 
 
-void CompuFluidDyna::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  CheckInit();
-  if (isInitialized) return;
-  isInitialized= true;
+// Allocate the project data
+void CompuFluidDyna::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   nbX= std::max((int)std::round(D.param[ResolutionX_].Get()), 1);
   nbY= std::max((int)std::round(D.param[ResolutionY_].Get()), 1);
   nbZ= std::max((int)std::round(D.param[ResolutionZ_].Get()), 1);
-  maxDim= std::max(std::max(nbX, nbY), nbZ);
-  voxSize= 1.0f / (float)maxDim;
-  boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
-  boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
+  voxSize= 1.0f / (float)std::max(std::max(nbX, nbY), nbZ);
+  D.boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
+  D.boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
 
   // Allocate data
   Solid= Field::AllocField3D(nbX, nbY, nbZ, false);
@@ -202,14 +209,14 @@ void CompuFluidDyna::Initialize() {
   CurX= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   CurY= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   CurZ= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
 }
 
 
+// Refresh the project
 void CompuFluidDyna::Refresh() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
   CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
@@ -449,10 +456,11 @@ void CompuFluidDyna::Refresh() {
 }
 
 
+// Animate the project
 void CompuFluidDyna::Animate() {
-  if (!isActiveProject) return;
-  CheckInit();
-  if (!isInitialized) Initialize();
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
@@ -625,12 +633,11 @@ void CompuFluidDyna::Animate() {
 }
 
 
+// Draw the project
 void CompuFluidDyna::Draw() {
-  if (!isActiveProject) return;
-  CheckInit();
-  if (!isInitialized) Initialize();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!isActivProj) return;
+  if (!isAllocated) return;
+  if (!isRefreshed) return;
 
   // Draw the voxels
   if (D.displayMode1) {
@@ -638,7 +645,7 @@ void CompuFluidDyna::Draw() {
     glLineWidth(2.0f);
     // Set the scene transformation
     glPushMatrix();
-    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+    glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     // Sweep the field
     for (int x= 0; x < nbX; x++) {
@@ -670,7 +677,7 @@ void CompuFluidDyna::Draw() {
   if (D.displayMode2) {
     // Set the scene transformation
     glPushMatrix();
-    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+    glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
     if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
@@ -752,7 +759,7 @@ void CompuFluidDyna::Draw() {
     if (nbX == 1) glTranslatef(voxSize, 0.0f, 0.0f);
     if (nbY == 1) glTranslatef(0.0f, voxSize, 0.0f);
     if (nbZ == 1) glTranslatef(0.0f, 0.0f, voxSize);
-    glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+    glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     // Sweep the field
     for (int k= 0; k < nbLineWidths; k++) {
@@ -784,7 +791,7 @@ void CompuFluidDyna::Draw() {
   // if (D.displayMode5) {
   //   // Set the scene transformation
   //   glPushMatrix();
-  //   glTranslatef(boxMin[0] + 0.5f * voxSize, boxMin[1] + 0.5f * voxSize, boxMin[2] + 0.5f * voxSize);
+  //   glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
   //   glScalef(voxSize, voxSize, voxSize);
   //   if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
   //   if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
@@ -1332,9 +1339,9 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 
         // Find source position of current voxel via backtracing
-        float posX= (float)x - iTimeStep * (float)maxDim * iVelX[x][y][z];
-        float posY= (float)y - iTimeStep * (float)maxDim * iVelY[x][y][z];
-        float posZ= (float)z - iTimeStep * (float)maxDim * iVelZ[x][y][z];
+        float posX= (float)x - iTimeStep * iVelX[x][y][z] / voxSize;
+        float posY= (float)y - iTimeStep * iVelY[x][y][z] / voxSize;
+        float posZ= (float)z - iTimeStep * iVelZ[x][y][z] / voxSize;
 
         // Trilinear interpolation at source position
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);

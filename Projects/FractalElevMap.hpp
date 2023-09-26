@@ -23,16 +23,17 @@ class FractalElevMap
   std::vector<std::vector<Math::Vec3f>> mapCol;
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   FractalElevMap();
 
   void SetActiveProject();
-  void Initialize();
+  void CheckAlloc();
+  void CheckRefresh();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();
-
 };

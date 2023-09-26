@@ -15,14 +15,16 @@ class FractalCurvDev
   std::vector<std::array<Math::Vec3f, 3>> Faces;
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   FractalCurvDev();
 
   void SetActiveProject();
-  void Initialize();
+  void CheckAlloc();
+  void CheckRefresh();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();

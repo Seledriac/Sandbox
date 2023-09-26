@@ -29,14 +29,16 @@ class SpaceTimeWorld
   std::vector<std::vector<std::vector<Math::Vec4f>>> photonVel;
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   SpaceTimeWorld();
 
   void SetActiveProject();
-  void Initialize();
+  void CheckAlloc();
+  void CheckRefresh();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();

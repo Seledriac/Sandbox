@@ -53,7 +53,10 @@ class Data
   bool displayMode6= true;
   bool displayMode7= true;
   bool displayMode8= true;
-  bool showAxis= false;
+  bool showAxis= true;
+
+  std::array<double, 3> boxMin= {0.0, 0.0, 0.0};
+  std::array<double, 3> boxMax= {1.0, 1.0, 1.0};
 
   int idxParamUI= 0;
   int idxCursorUI= 0;

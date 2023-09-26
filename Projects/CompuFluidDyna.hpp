@@ -21,10 +21,7 @@ class CompuFluidDyna
   int nbX;
   int nbY;
   int nbZ;
-  int maxDim;
   float voxSize;
-  std::array<double, 3> boxMin;
-  std::array<double, 3> boxMax;
 
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
@@ -96,16 +93,16 @@ class CompuFluidDyna
                             std::vector<std::vector<std::vector<float>>>& ioVelZ);
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   CompuFluidDyna();
 
   void SetActiveProject();
-  void CheckInit();
+  void CheckAlloc();
   void CheckRefresh();
-  void Initialize();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();

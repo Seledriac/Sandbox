@@ -31,14 +31,16 @@ class TerrainErosion
   std::vector<bool> dropletIsDead;
 
   public:
-  bool isActiveProject;
-  bool isInitialized;
+  bool isActivProj;
+  bool isAllocated;
   bool isRefreshed;
 
   TerrainErosion();
 
   void SetActiveProject();
-  void Initialize();
+  void CheckAlloc();
+  void CheckRefresh();
+  void Allocate();
   void Refresh();
   void Animate();
   void Draw();

@@ -136,8 +136,10 @@ class Shape
 };
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   WorldNbT____,
@@ -155,17 +157,19 @@ enum ParamType
 };
 
 
+// Constructor
 SpaceTimeWorld::SpaceTimeWorld() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void SpaceTimeWorld::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("WorldNbT____", 16));
     D.param.push_back(ParamUI("WorldNbX____", 32));
     D.param.push_back(ParamUI("WorldNbY____", 32));
@@ -180,30 +184,46 @@ void SpaceTimeWorld::SetActiveProject() {
     D.param.push_back(ParamUI("FactorDoppl_", 1.0));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void SpaceTimeWorld::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[WorldNbT____].hasChanged()) isInitialized= false;
-  if (D.param[WorldNbX____].hasChanged()) isInitialized= false;
-  if (D.param[WorldNbY____].hasChanged()) isInitialized= false;
-  if (D.param[WorldNbZ____].hasChanged()) isInitialized= false;
-  if (D.param[ScreenNbH___].hasChanged()) isInitialized= false;
-  if (D.param[ScreenNbV___].hasChanged()) isInitialized= false;
-  if (D.param[ScreenNbS___].hasChanged()) isInitialized= false;
-  if (D.param[CursorWorldT].hasChanged()) isInitialized= false;
-  if (D.param[MassReach___].hasChanged()) isInitialized= false;
-  if (D.param[TimePersist_].hasChanged()) isInitialized= false;
-  if (D.param[FactorCurv__].hasChanged()) isInitialized= false;
-  if (D.param[FactorDoppl_].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
+// Check if parameter changes should trigger an allocation
+void SpaceTimeWorld::CheckAlloc() {
+  if (D.param[WorldNbT____].hasChanged()) isAllocated= false;
+  if (D.param[WorldNbX____].hasChanged()) isAllocated= false;
+  if (D.param[WorldNbY____].hasChanged()) isAllocated= false;
+  if (D.param[WorldNbZ____].hasChanged()) isAllocated= false;
+  if (D.param[ScreenNbH___].hasChanged()) isAllocated= false;
+  if (D.param[ScreenNbV___].hasChanged()) isAllocated= false;
+  if (D.param[ScreenNbS___].hasChanged()) isAllocated= false;
+}
+
+
+// Check if parameter changes should trigger a refresh
+void SpaceTimeWorld::CheckRefresh() {
+  if (D.param[CursorWorldT].hasChanged()) isRefreshed= false;
+  if (D.param[MassReach___].hasChanged()) isRefreshed= false;
+  if (D.param[TimePersist_].hasChanged()) isRefreshed= false;
+  if (D.param[FactorCurv__].hasChanged()) isRefreshed= false;
+  if (D.param[FactorDoppl_].hasChanged()) isRefreshed= false;
+}
+
+
+// Allocate the project data
+void SpaceTimeWorld::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   worldNbT= std::max(int(std::round(D.param[WorldNbT____].Get())), 1);
@@ -225,16 +245,15 @@ void SpaceTimeWorld::Initialize() {
   if (!Field::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
   if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
   if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
 }
 
 
+// Refresh the project
 void SpaceTimeWorld::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
 
@@ -434,16 +453,20 @@ void SpaceTimeWorld::Refresh() {
 }
 
 
+// Animate the project
 void SpaceTimeWorld::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 }
 
 
+// Draw the project
 void SpaceTimeWorld::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   // Draw the solid voxels

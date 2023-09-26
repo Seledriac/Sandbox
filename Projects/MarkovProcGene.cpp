@@ -1,4 +1,3 @@
-
 #include "MarkovProcGene.hpp"
 
 
@@ -19,8 +18,10 @@
 #include "../Util/Random.hpp"
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   Scenario____,
@@ -35,17 +36,19 @@ enum ParamType
 };
 
 
+// Constructor
 MarkovProcGene::MarkovProcGene() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void MarkovProcGene::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("Scenario____", 0));
     D.param.push_back(ParamUI("ResolutionX_", 1));
     D.param.push_back(ParamUI("ResolutionY_", 21));
@@ -57,17 +60,23 @@ void MarkovProcGene::SetActiveProject() {
     D.param.push_back(ParamUI("ShadeCoeff__", 1));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void MarkovProcGene::CheckInit() {
+// Check if parameter changes should trigger an allocation
+void MarkovProcGene::CheckAlloc() {
 }
 
 
+// Check if parameter changes should trigger a refresh
 void MarkovProcGene::CheckRefresh() {
   if (D.param[Scenario____].hasChanged()) isRefreshed= false;
   if (D.param[ResolutionX_].hasChanged()) isRefreshed= false;
@@ -79,20 +88,21 @@ void MarkovProcGene::CheckRefresh() {
 }
 
 
-void MarkovProcGene::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  CheckInit();
-  if (isInitialized) return;
-  isInitialized= true;
-
-  // Force refresh
+// Allocate the project data
+void MarkovProcGene::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
   isRefreshed= false;
-  Refresh();
+  isAllocated= true;
 }
 
 
+// Refresh the project
 void MarkovProcGene::Refresh() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
   CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
@@ -532,10 +542,11 @@ void MarkovProcGene::Refresh() {
 }
 
 
+// Animate the project
 void MarkovProcGene::Animate() {
-  if (!isActiveProject) return;
-  CheckInit();
-  if (!isInitialized) Initialize();
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
@@ -628,12 +639,11 @@ void util_SetColorVoxel(const int iVal, const float iShading) {
 }
 
 
+// Draw the project
 void MarkovProcGene::Draw() {
-  if (!isActiveProject) return;
-  CheckInit();
-  if (!isInitialized) Initialize();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!isActivProj) return;
+  if (!isAllocated) return;
+  if (!isRefreshed) return;
 
   // Get sizes
   int maxDim= std::max(std::max(nbX, nbY), nbZ);
@@ -778,11 +788,10 @@ void MarkovProcGene::Draw() {
 }
 
 
-void MarkovProcGene::FillRuleBox(
-    std::array<std::vector<std::vector<std::vector<int>>>, 2>& ioRule,
-    const int iMinX, const int iMinY, const int iMinZ,
-    const int iMaxX, const int iMaxY, const int iMaxZ,
-    const int iVal, const bool iFillI, const bool iFillO) {
+void MarkovProcGene::FillRuleBox(std::array<std::vector<std::vector<std::vector<int>>>, 2>& ioRule,
+                                 const int iMinX, const int iMinY, const int iMinZ,
+                                 const int iMaxX, const int iMaxY, const int iMaxZ,
+                                 const int iVal, const bool iFillI, const bool iFillO) {
   int nbXRule= (int)ioRule[0].size();
   int nbYRule= (int)ioRule[0][0].size();
   int nbZRule= (int)ioRule[0][0][0].size();
@@ -797,9 +806,8 @@ void MarkovProcGene::FillRuleBox(
 }
 
 
-std::array<std::vector<std::vector<std::vector<int>>>, 2> MarkovProcGene::BuildSymmetric(
-    const int iDim1, const int iDim2, const int iDim3,
-    const std::array<std::vector<std::vector<std::vector<int>>>, 2>& iRule) {
+std::array<std::vector<std::vector<std::vector<int>>>, 2> MarkovProcGene::BuildSymmetric(const int iDim1, const int iDim2, const int iDim3,
+                                                                                         const std::array<std::vector<std::vector<std::vector<int>>>, 2>& iRule) {
   if (iRule[0].empty()) throw;
   if (iRule[0][0].empty()) throw;
   if (iRule[0][0][0].empty()) throw;
@@ -837,9 +845,8 @@ std::array<std::vector<std::vector<std::vector<int>>>, 2> MarkovProcGene::BuildS
 }
 
 
-std::array<std::vector<std::vector<std::vector<int>>>, 2> MarkovProcGene::BuildColorSwap(
-    const int iOldColor, const int iNewColor,
-    const std::array<std::vector<std::vector<std::vector<int>>>, 2>& iRule) {
+std::array<std::vector<std::vector<std::vector<int>>>, 2> MarkovProcGene::BuildColorSwap(const int iOldColor, const int iNewColor,
+                                                                                         const std::array<std::vector<std::vector<std::vector<int>>>, 2>& iRule) {
   if (iRule[0].empty()) throw;
   if (iRule[0][0].empty()) throw;
   if (iRule[0][0][0].empty()) throw;

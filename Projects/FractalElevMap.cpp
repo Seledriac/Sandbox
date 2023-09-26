@@ -19,8 +19,10 @@
 #include "../Util/Vector.hpp"
 
 
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   testVar0____,
@@ -32,21 +34,22 @@ enum ParamType
   testVar6____,
   testVar7____,
   testVar8____,
-  testVar9____,
 };
 
 
+// Constructor
 FractalElevMap::FractalElevMap() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void FractalElevMap::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("testVar0____", 500.0));
     D.param.push_back(ParamUI("testVar1____", 500.0));
     D.param.push_back(ParamUI("testVar2____", 0.5));
@@ -56,31 +59,45 @@ void FractalElevMap::SetActiveProject() {
     D.param.push_back(ParamUI("testVar6____", -0.8350));
     D.param.push_back(ParamUI("testVar7____", -0.2241));
     D.param.push_back(ParamUI("testVar8____", 32.0));
-    D.param.push_back(ParamUI("testVar9____", 1.0));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
+  Allocate();
+  Refresh();
 }
 
 
-void FractalElevMap::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[testVar0____].hasChanged()) isInitialized= false;
-  if (D.param[testVar1____].hasChanged()) isInitialized= false;
-  if (D.param[testVar2____].hasChanged()) isInitialized= false;
-  if (D.param[testVar3____].hasChanged()) isInitialized= false;
-  if (D.param[testVar4____].hasChanged()) isInitialized= false;
-  if (D.param[testVar5____].hasChanged()) isInitialized= false;
-  if (D.param[testVar6____].hasChanged()) isInitialized= false;
-  if (D.param[testVar7____].hasChanged()) isInitialized= false;
-  if (D.param[testVar8____].hasChanged()) isInitialized= false;
-  if (D.param[testVar9____].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
+// Check if parameter changes should trigger an allocation
+void FractalElevMap::CheckAlloc() {
+  if (D.param[testVar0____].hasChanged()) isAllocated= false;
+  if (D.param[testVar1____].hasChanged()) isAllocated= false;
+}
+
+
+// Check if parameter changes should trigger a refresh
+void FractalElevMap::CheckRefresh() {
+  if (D.param[testVar2____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar4____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar5____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar6____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar7____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar8____].hasChanged()) isRefreshed= false;
+}
+
+
+// Allocate the project data
+void FractalElevMap::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
 
   // Get UI parameters
   mapNbX= std::max(2, int(std::round(D.param[testVar0____].Get())));
@@ -90,19 +107,17 @@ void FractalElevMap::Initialize() {
   mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
   mapNor= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 1.0f));
   mapCol= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.5f, 0.5f, 0.5f));
-
-  // Force refresh
-  isRefreshed= false;
-  Refresh();
 }
 
 
+// Refresh the project
 void FractalElevMap::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
-
 
   mapZoom= std::max(1.e-6, double(D.param[testVar2____].Get()));
 
@@ -181,16 +196,20 @@ void FractalElevMap::Refresh() {
 }
 
 
+// Animate the project
 void FractalElevMap::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 }
 
 
+// Draw the project
 void FractalElevMap::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   // Draw the map

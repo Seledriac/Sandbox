@@ -15,8 +15,11 @@
 #include "../Util/Colormap.hpp"
 #include "../Util/Vector.hpp"
 
+
+// Link to shared sandbox data
 extern Data D;
 
+// List of UI parameters for this project
 enum ParamType
 {
   MaxDepth____,
@@ -29,57 +32,73 @@ enum ParamType
 #define KOCH_SNOWFLAKE
 // #define DRAGON_CURVE
 
+
+// Constructor
 FractalCurvDev::FractalCurvDev() {
   D.param.clear();
   D.plotData.clear();
-  isActiveProject= false;
-  isInitialized= false;
+  isActivProj= false;
+  isAllocated= false;
   isRefreshed= false;
 }
 
 
+// Initialize Project UI parameters
 void FractalCurvDev::SetActiveProject() {
-  if (!isActiveProject) {
+  if (!isActivProj) {
     D.param.push_back(ParamUI("MaxDepth____", 4.0));
     D.param.push_back(ParamUI("testVar1____", 0.005));
     D.param.push_back(ParamUI("testVar2____", 1.0));
     D.param.push_back(ParamUI("testVar3____", 1.0));
   }
 
-  isActiveProject= true;
-  isInitialized= false;
+  D.boxMin= {0.0, 0.0, 0.0};
+  D.boxMax= {1.0, 1.0, 1.0};
+
+  isActivProj= true;
+  isAllocated= false;
   isRefreshed= false;
-  Initialize();
-}
-
-
-void FractalCurvDev::Initialize() {
-  // Check if need to skip
-  if (!isActiveProject) return;
-  if (D.param[MaxDepth____].hasChanged()) isInitialized= false;
-  if (D.param[testVar1____].hasChanged()) isInitialized= false;
-  if (D.param[testVar2____].hasChanged()) isInitialized= false;
-  if (D.param[testVar3____].hasChanged()) isInitialized= false;
-  if (isInitialized) return;
-  isInitialized= true;
-
-  // Allocate data
-  Faces.clear();
-  Nodes.clear();
-
-  // Force refresh
-  isRefreshed= false;
+  Allocate();
   Refresh();
 }
 
 
+// Check if parameter changes should trigger an allocation
+void FractalCurvDev::CheckAlloc() {
+}
+
+
+// Check if parameter changes should trigger a refresh
+void FractalCurvDev::CheckRefresh() {
+  if (D.param[MaxDepth____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar1____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar2____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar3____].hasChanged()) isRefreshed= false;
+}
+
+
+// Allocate the project data
+void FractalCurvDev::Allocate() {
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (isAllocated) return;
+  isRefreshed= false;
+  isAllocated= true;
+}
+
+
+// Refresh the project
 void FractalCurvDev::Refresh() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
 
   int maxDepth= std::max((int)std::round(D.param[MaxDepth____].Get()), 2);
+  Faces.clear();
+  Nodes.clear();
 
   // Initialize the curve at depth 0
 #ifdef KOCH_SNOWFLAKE
@@ -172,16 +191,20 @@ void FractalCurvDev::Refresh() {
 }
 
 
+// Animate the project
 void FractalCurvDev::Animate() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
-  if (!isRefreshed) return;
+  if (!isActivProj) return;
+  CheckAlloc();
+  if (!isAllocated) Allocate();
+  CheckRefresh();
+  if (!isRefreshed) Refresh();
 }
 
 
+// Draw the project
 void FractalCurvDev::Draw() {
-  if (!isActiveProject) return;
-  if (!isInitialized) return;
+  if (!isActivProj) return;
+  if (!isAllocated) return;
   if (!isRefreshed) return;
 
   // Draw vertices

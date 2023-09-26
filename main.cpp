@@ -1,4 +1,3 @@
-
 // Standard lib
 #include <cstdio>
 #include <cstdlib>
@@ -70,14 +69,14 @@ void project_Constructor(unsigned char key) {
 
 
 void project_SetActiveProject(unsigned char key) {
-  if (key != 'a' && myAgentSwarmBoid.isActiveProject) myAgentSwarmBoid= AgentSwarmBoid();
-  if (key != 'c' && myCompuFluidDyna.isActiveProject) myCompuFluidDyna= CompuFluidDyna();
-  if (key != 'f' && myFractalCurvDev.isActiveProject) myFractalCurvDev= FractalCurvDev();
-  if (key != 'h' && myFractalElevMap.isActiveProject) myFractalElevMap= FractalElevMap();
-  if (key != 'm' && myMarkovProcGene.isActiveProject) myMarkovProcGene= MarkovProcGene();
-  if (key != 'p' && myParticleSystem.isActiveProject) myParticleSystem= ParticleSystem();
-  if (key != 'r' && mySpaceTimeWorld.isActiveProject) mySpaceTimeWorld= SpaceTimeWorld();
-  if (key != 'e' && myTerrainErosion.isActiveProject) myTerrainErosion= TerrainErosion();
+  if (key != 'a' && myAgentSwarmBoid.isActivProj) myAgentSwarmBoid= AgentSwarmBoid();
+  if (key != 'c' && myCompuFluidDyna.isActivProj) myCompuFluidDyna= CompuFluidDyna();
+  if (key != 'f' && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
+  if (key != 'h' && myFractalElevMap.isActivProj) myFractalElevMap= FractalElevMap();
+  if (key != 'm' && myMarkovProcGene.isActivProj) myMarkovProcGene= MarkovProcGene();
+  if (key != 'p' && myParticleSystem.isActivProj) myParticleSystem= ParticleSystem();
+  if (key != 'r' && mySpaceTimeWorld.isActivProj) mySpaceTimeWorld= SpaceTimeWorld();
+  if (key != 'e' && myTerrainErosion.isActivProj) myTerrainErosion= TerrainErosion();
 
   if (key == 'a') myAgentSwarmBoid.SetActiveProject();
   if (key == 'c') myCompuFluidDyna.SetActiveProject();
@@ -90,15 +89,15 @@ void project_SetActiveProject(unsigned char key) {
 }
 
 
-void project_Initialize() {
-  myAgentSwarmBoid.Initialize();
-  myCompuFluidDyna.Initialize();
-  myFractalCurvDev.Initialize();
-  myFractalElevMap.Initialize();
-  myMarkovProcGene.Initialize();
-  myParticleSystem.Initialize();
-  mySpaceTimeWorld.Initialize();
-  myTerrainErosion.Initialize();
+void project_Refresh() {
+  myAgentSwarmBoid.Refresh();
+  myCompuFluidDyna.Refresh();
+  myFractalCurvDev.Refresh();
+  myFractalElevMap.Refresh();
+  myMarkovProcGene.Refresh();
+  myParticleSystem.Refresh();
+  mySpaceTimeWorld.Refresh();
+  myTerrainErosion.Refresh();
 }
 
 
@@ -174,9 +173,9 @@ void callback_display() {
   cam->setWindowSize(float(winW), float(winH));
   glMultMatrixf(cam->getViewMatrix());
 
-  // Draw the reference frame
+  // Draw the reference frame and box
   if (D.showAxis) {
-    // XZY Basis
+    // XZY basis lines
     glLineWidth(3.0f);
     glBegin(GL_LINES);
     glColor3f(1.0, 0.0, 0.0);
@@ -191,6 +190,7 @@ void callback_display() {
     glEnd();
     glLineWidth(1.0f);
 
+    // XZY basis ends
     glPointSize(6.0f);
     glBegin(GL_POINTS);
     glColor3f(1.0, 0.0, 0.0);
@@ -201,6 +201,17 @@ void callback_display() {
     glVertex3f(0.0f, 0.0f, 1.0f);
     glEnd();
     glPointSize(1.0f);
+
+    // Bounding box
+    glLineWidth(2.0);
+    glColor3f(0.5f, 0.5f, 0.5f);
+    glPushMatrix();
+    glTranslatef((float)D.boxMin[0], (float)D.boxMin[1], (float)D.boxMin[2]);
+    glScalef((float)D.boxMax[0] - (float)D.boxMin[0], (float)D.boxMax[1] - (float)D.boxMin[1], (float)D.boxMax[2] - (float)D.boxMin[2]);
+    glTranslatef(0.5f, 0.5f, 0.5f);
+    glutWireCube(1.0);
+    glPopMatrix();
+    glLineWidth(1.0);
   }
 
   // Draw stuff in the scene
@@ -420,7 +431,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
 
   // Compute refresh
   if (D.autoRefresh)
-    project_Initialize();
+    project_Refresh();
 
   glutPostRedisplay();
 }
@@ -459,10 +470,9 @@ void callback_keyboard_special(int key, int x, int y) {
     if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + 1.0);
   }
 
-
   // Compute refresh
   if (D.autoRefresh)
-    project_Initialize();
+    project_Refresh();
 
   glutPostRedisplay();
 }
@@ -500,7 +510,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
 
           // Compute refresh
           if (D.autoRefresh)
-            project_Initialize();
+            project_Refresh();
         }
       }
     }
