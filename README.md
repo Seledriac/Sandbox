@@ -1,5 +1,15 @@
 # Sandbox
-Sandbox environment with various personal projects and experimentations (fractals, swarm intelligence, precedural generation, physics simulations, computational geometry, structural optimization...) implemented from scratch. All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+Sandbox environment with various personal projects and experimentations implemented from scratch (physics simulations, fractals, swarm intelligence, precedural generation, computational geometry, curved space-time rendering, ...). All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+
+![Screenshot](docs/Anim_CFD.gif)
+![Screenshot](docs/Anim_MarkovVoxProcGen.gif)
+![Screenshot](docs/Anim_FraclElevMapZoom.gif)
+![Screenshot](docs/Anim_FractCurvDev.gif)
+
+![Screenshot](docs/Anim_ParticleCollisionConvectionSystem.gif)
+![Screenshot](docs/Anim_ReynoldsBoids.gif)
+![Screenshot](docs/Anim_AlbertSpaceTimeCurvature.gif)
+![Screenshot](docs/Anim_TerrainErosion.gif)
 
 ## Code structure
 
@@ -40,3 +50,4 @@ Add to path env var
 - *use KB arrows, modifier keys, or mouse wheel to change parameter values in the active project, see callback_keyboard_special() and callback_mouse_click()*
 - *use spacebar to run animation/simulation if the active project supports it*
 - *use number keys to toggle various displays in the active project*
+
