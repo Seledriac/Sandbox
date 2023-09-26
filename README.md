@@ -2,14 +2,13 @@
 Sandbox environment with various personal projects and experimentations implemented from scratch (physics simulations, fractals, swarm intelligence, precedural generation, computational geometry, curved space-time rendering, ...). All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
 
 ![Screenshot](docs/Anim_CFD.gif)
-![Screenshot](docs/Anim_MarkovVoxProcGen.gif)
+![Screenshot](docs/Anim_MarkovVoxProcGen.gif)\
 ![Screenshot](docs/Anim_FraclElevMapZoom.gif)
-![Screenshot](docs/Anim_FractCurvDev.gif)
-
+![Screenshot](docs/Anim_FractCurvDev.gif)\
 ![Screenshot](docs/Anim_ParticleCollisionConvectionSystem.gif)
-![Screenshot](docs/Anim_ReynoldsBoids.gif)
+![Screenshot](docs/Anim_ReynoldsBoids.gif)\
 ![Screenshot](docs/Anim_AlbertSpaceTimeCurvature.gif)
-![Screenshot](docs/Anim_TerrainErosion.gif)
+![Screenshot](docs/Anim_TerrainErosion.gif)\
 
 ## Code structure
 
