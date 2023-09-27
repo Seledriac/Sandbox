@@ -14,6 +14,7 @@
 // Project lib
 #include "../Data.hpp"
 #include "../Util/Colormap.hpp"
+#include "../Util/Random.hpp"
 #include "../Util/Vector.hpp"
 
 
@@ -128,12 +129,12 @@ void ParticleSystem::Refresh() {
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
       if (int(std::round(D.param[Constrain2D_].Get())) >= 1 && dim == 0) continue;
-      PosCur[k][dim]= (float(rand()) / float(RAND_MAX)) - 0.5f;
-      ColCur[k][dim]= (float(rand()) / float(RAND_MAX));
+      PosCur[k][dim]= Random::Val(-0.5f, 0.5f);
+      ColCur[k][dim]= Random::Val(0.0f, 1.0f);
     }
     RadCur[k]= BaseRadius;
     MasCur[k]= 1.0f;
-    HotCur[k]= (float(rand()) / float(RAND_MAX));
+    HotCur[k]= Random::Val(0.0f, 1.0f);
   }
 
   // Apply collision constraint (Gauss Seidel)

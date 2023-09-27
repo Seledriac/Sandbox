@@ -2,9 +2,6 @@
 
 
 // Standard lib
-#include <cmath>
-#include <cstdio>
-#include <ctime>
 #include <vector>
 
 // GLUT lib
@@ -12,6 +9,7 @@
 
 // Project lib
 #include "../Data.hpp"
+#include "../Util/Random.hpp"
 #include "../Util/Vector.hpp"
 
 
@@ -29,6 +27,12 @@ enum ParamType
   CoeffCohes__,
   CoeffHunger_,
   CoeffFear___,
+  PosFoodX____,
+  PosFoodY____,
+  PosFoodZ____,
+  PosPredX____,
+  PosPredY____,
+  PosPredZ____,
 };
 
 
@@ -45,14 +49,20 @@ AgentSwarmBoid::AgentSwarmBoid() {
 // Initialize Project UI parameters
 void AgentSwarmBoid::SetActiveProject() {
   if (!isActivProj) {
-    D.param.push_back(ParamUI("NbAgents____", 100));
+    D.param.push_back(ParamUI("NbAgents____", 200));
     D.param.push_back(ParamUI("SizeAgent___", 0.05));
     D.param.push_back(ParamUI("TimeStep____", 0.05));
     D.param.push_back(ParamUI("CoeffSep____", 0.75));
     D.param.push_back(ParamUI("CoeffAli____", 0.015));
     D.param.push_back(ParamUI("CoeffCohes__", 0.45));
     D.param.push_back(ParamUI("CoeffHunger_", 0.04));
-    D.param.push_back(ParamUI("CoeffFear___", 0.06));
+    D.param.push_back(ParamUI("CoeffFear___", 0.1));
+    D.param.push_back(ParamUI("PosFoodX____", 0.5));
+    D.param.push_back(ParamUI("PosFoodY____", 0.5));
+    D.param.push_back(ParamUI("PosFoodZ____", 0.6));
+    D.param.push_back(ParamUI("PosPredX____", 0.5));
+    D.param.push_back(ParamUI("PosPredY____", 0.5));
+    D.param.push_back(ParamUI("PosPredZ____", 0.4));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -104,23 +114,10 @@ void AgentSwarmBoid::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  PosFood= Math::Vec3f(0.5f, 0.5f, 0.6f);
-  PosPredator= Math::Vec3f(0.5f, 0.5f, 0.4f);
-  Math::Vec3f p= Math::Vec3f(0.0f, 0.5f, 0.0f);
-  Math::Vec3f dp= Math::Vec3f(0.5f, 0.0f, 0.5f);
-  Math::Vec3f v= Math::Vec3f(0.0f, 0.0f, 0.0f);
-  Math::Vec3f dv= Math::Vec3f(0.2f, 0.2f, 0.2f);
-
   for (int k= 0; k < NbAgents; k++) {
-    Pos[k][0]= 2.0f * dp[0] * (float)rand() / (float)RAND_MAX - dp[0] + p[0];
-    Pos[k][1]= 2.0f * dp[1] * (float)rand() / (float)RAND_MAX - dp[1] + p[1];
-    Pos[k][2]= 2.0f * dp[2] * (float)rand() / (float)RAND_MAX - dp[2] + p[2];
-    Vel[k][0]= 2.0f * dv[0] * (float)rand() / (float)RAND_MAX - dv[0] + v[0];
-    Vel[k][1]= 2.0f * dv[1] * (float)rand() / (float)RAND_MAX - dv[1] + v[1];
-    Vel[k][2]= 2.0f * dv[2] * (float)rand() / (float)RAND_MAX - dv[2] + v[2];
-    Nor[k][0]= 0.0f;
-    Nor[k][1]= 1.0f;
-    Nor[k][2]= 0.0f;
+    Pos[k].set(Random::Val(0.0f, 1.0f), Random::Val(0.0f, 1.0f), Random::Val(0.0f, 1.0f));
+    Vel[k].set(Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f));
+    Nor[k].set(0.0f, 1.0f, 0.0f);
   }
 }
 
@@ -141,6 +138,9 @@ void AgentSwarmBoid::Animate() {
   float e= (float)D.param[CoeffFear___].Get();
   std::vector<Math::Vec3f> velocityChange(NbAgents);
 
+  PosFood.set((float)D.param[PosFoodX____].Get(), (float)D.param[PosFoodY____].Get(), (float)D.param[PosFoodZ____].Get());
+  PosPred.set((float)D.param[PosPredX____].Get(), (float)D.param[PosPredY____].Get(), (float)D.param[PosPredZ____].Get());
+
 #pragma omp parallel for
   // Compute the forces
   for (int k0= 0; k0 < NbAgents; k0++) {
@@ -159,8 +159,8 @@ void AgentSwarmBoid::Animate() {
       coh= coh / count - Pos[k0];
     }
     aim= PosFood - Pos[k0];
-    if ((Pos[k0] - PosPredator).normSquared() < (5.0f * sizeAgent) * (5.0f * sizeAgent))
-      run= Pos[k0] - PosPredator;
+    if ((Pos[k0] - PosPred).normSquared() < (5.0f * sizeAgent) * (5.0f * sizeAgent))
+      run= Pos[k0] - PosPred;
 
     velocityChange[k0]= a * sep + b * ali + c * coh + d * aim + e * run;
   }
@@ -203,13 +203,13 @@ void AgentSwarmBoid::Draw() {
 
     Math::Vec3f p1, p2, p3, p4, p5, p6, p7;
 
-    p1= Pos[k] + sizeAgent * (+0.5f * front + 0.00f * left + 0.0f * up);
-    p2= Pos[k] + sizeAgent * (+0.0f * front - 0.07f * left + 0.1f * up);
-    p3= Pos[k] + sizeAgent * (+0.0f * front + 0.07f * left + 0.1f * up);
-    p4= Pos[k] + sizeAgent * (+0.0f * front + 0.00f * left - 0.1f * up);
-    p5= Pos[k] + sizeAgent * (-0.4f * front + 0.00f * left + 0.0f * up);
-    p6= Pos[k] + sizeAgent * (-0.6f * front + 0.00f * left - 0.2f * up);
-    p7= Pos[k] + sizeAgent * (-0.6f * front + 0.00f * left + 0.2f * up);
+    p1= Pos[k] + sizeAgent * 2.0f * (+0.5f * front + 0.00f * left + 0.0f * up);
+    p2= Pos[k] + sizeAgent * 2.0f * (+0.0f * front - 0.07f * left + 0.1f * up);
+    p3= Pos[k] + sizeAgent * 2.0f * (+0.0f * front + 0.07f * left + 0.1f * up);
+    p4= Pos[k] + sizeAgent * 2.0f * (+0.0f * front + 0.00f * left - 0.1f * up);
+    p5= Pos[k] + sizeAgent * 2.0f * (-0.4f * front + 0.00f * left + 0.0f * up);
+    p6= Pos[k] + sizeAgent * 2.0f * (-0.6f * front + 0.00f * left - 0.2f * up);
+    p7= Pos[k] + sizeAgent * 2.0f * (-0.6f * front + 0.00f * left + 0.2f * up);
 
     glBegin(GL_TRIANGLES);
     glColor3f(1.0f, 0.0f, 1.0f);
@@ -262,7 +262,7 @@ void AgentSwarmBoid::Draw() {
   glColor3f(0.0f, 0.8f, 0.0f);
   glVertex3fv(PosFood.array());
   glColor3f(1.0f, 0.0f, 0.0f);
-  glVertex3fv(PosPredator.array());
+  glVertex3fv(PosPred.array());
   glEnd();
   glPointSize(1);
 }

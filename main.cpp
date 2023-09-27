@@ -594,7 +594,7 @@ void init_GL() {
 
 // Scene initialization
 void init_scene() {
-  // Initialize pseudo random number generator to be used with float(rand())/float(RAND_MAX)
+  // Initialize pseudo random number generator
   srand(time(0));
 
   // Initialize camera and arcball positions

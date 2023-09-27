@@ -132,8 +132,10 @@ void TerrainErosion::Refresh() {
   // Get UI parameters
   terrainNbC= std::max(0, int(std::round(D.param[TerrainNbCut].Get())));
 
-  // Precompute cut planes
+  // Reset random seed to always generate same terrain
   srand(0);
+
+  // Precompute cut planes
   std::vector<Math::Vec2f> cutPiv(terrainNbC);
   std::vector<Math::Vec2f> cutVec(terrainNbC);
   for (int iter= 0; iter < terrainNbC; iter++) {

@@ -15,7 +15,7 @@ class AgentSwarmBoid
   std::vector<Math::Vec3f> Vel;
   std::vector<Math::Vec3f> Nor;
   Math::Vec3f PosFood;
-  Math::Vec3f PosPredator;
+  Math::Vec3f PosPred;
 
   public:
   bool isActivProj;

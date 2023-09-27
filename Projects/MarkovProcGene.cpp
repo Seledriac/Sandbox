@@ -507,7 +507,7 @@ void MarkovProcGene::Refresh() {
     for (int x= 0; x < nbX; x++)
       for (int y= 0; y < nbY; y++)
         for (int z= 0; z < nbZ; z++)
-          if (Random::Val(0, 3) == 1)
+          if (Random::Val(0, 3) == 0)
             Field[x][y][z]= 8;
   }
 

@@ -18,8 +18,8 @@
 // Fluid simulation code based on the "Stable Fluid" method popularized by Jos Stam in 1999
 // - Eulerian voxel grid
 // - Linear solve in implicit diffusion step for viscosity and smoke spread/mixing
-// - Linear solve in implicit pressure computation to enforce mass conservation
-// - Semi Lagrangian backtracing for velocity advection
+// - Linear solve in implicit pressure computation and projection to enforce mass conservation
+// - Semi Lagrangian backtracing for velocity and smoke advection
 //
 // This implementation has various improvements over standard Stable Fluids implementations
 // - Handles both 2D and 3D
@@ -27,7 +27,7 @@
 // - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
 // - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and Venturi benchmarks
 
-// Reference for "stable fluid" method
+// References for "stable fluid" method
 // http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
 // http://www.dgp.toronto.edu/people/stam/reality/Research/zip/CDROM_GDC03.zip
 // https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf
@@ -38,22 +38,19 @@
 // https://www.youtube.com/watch?v=iKAVRgIrUOU
 // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 
-// Reference for fluid flow photographs, scenarios and qualitative comparison
+// References for fluid flow photographs, scenarios and visual comparison
 // http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
 
-// Reference for vorticity confinement implem
+// References for vorticity confinement implem
 // https://github.com/awesson/stable-fluids/tree/master
 // https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
 
-// Reference linear solvers and particularily PCG
+// References for linear solvers and particularily PCG
 // https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
 // https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
 // https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
 // https://github.com/awesson/stable-fluids/tree/master
 // https://en.wikipedia.org/wiki/Conjugate_gradient_method
-
-
-// TODO introduce real value permeability/porosity/bounceback for continous optim ?
 
 
 // Link to shared sandbox data
