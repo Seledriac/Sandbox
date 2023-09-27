@@ -2,7 +2,6 @@
 
 #include <array>
 #include <string>
-#include <utility>
 #include <vector>
 
 class ParamUI
@@ -63,6 +62,9 @@ class Data
   std::vector<ParamUI> param;
 
   bool plotLogScale= true;
-  std::vector<std::pair<std::string, std::vector<double>>> plotData;
-  std::vector<std::pair<std::string, std::vector<std::array<double, 2>>>> scatData;
+  std::vector<std::string> plotLegend;
+  std::vector<std::vector<double>> plotData;
+
+  std::vector<std::string> scatLegend;
+  std::vector<std::vector<std::array<double, 2>>> scatData;
 };

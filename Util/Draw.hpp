@@ -1,8 +1,7 @@
 #pragma once
 
-
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 
 namespace Draw {

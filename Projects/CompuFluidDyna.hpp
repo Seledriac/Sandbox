@@ -4,6 +4,42 @@
 #include <vector>
 
 
+// Fluid simulation code based on the "Stable Fluid" method popularized by Jos Stam in 1999
+// - Eulerian voxel grid
+// - Linear solve in implicit diffusion step for viscosity and smoke spread/mixing
+// - Linear solve in implicit pressure computation and projection to enforce mass conservation
+// - Semi Lagrangian backtracing for velocity and smoke advection
+//
+// Improvements over standard Stable Fluids implementations
+// - Handles both 2D and 3D
+// - Handles arbitrary boundary conditions and obstacles in the simulation domain
+// - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
+// - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and venturi benchmarks
+//
+// References for "stable fluid" method
+// http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
+// http://www.dgp.toronto.edu/people/stam/reality/Research/zip/CDROM_GDC03.zip
+// https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf
+// https://www.dgp.toronto.edu/public_user/stam/reality/Research/pub.html
+// https://fr.wikipedia.org/wiki/Stable-Fluids
+// http://www.dgp.utoronto.ca/~stam/reality/Talks/FluidsTalk/FluidsTalkNotes.pdf
+// https://www.youtube.com/watch?v=qsYE1wMEMPA
+// https://www.youtube.com/watch?v=iKAVRgIrUOU
+// https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
+//
+// References for fluid flow photographs, scenarios and visual comparison
+// http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
+//
+// References for vorticity confinement implem
+// https://github.com/awesson/stable-fluids/tree/master
+// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
+//
+// References for linear solvers and particularily PCG
+// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
+// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
+// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
+// https://github.com/awesson/stable-fluids/tree/master
+// https://en.wikipedia.org/wiki/Conjugate_gradient_method
 class CompuFluidDyna
 {
   private:

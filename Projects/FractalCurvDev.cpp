@@ -4,11 +4,10 @@
 // Standard lib
 #include <cmath>
 #include <cstdio>
-#include <fstream>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -26,6 +25,7 @@ enum ParamType
   testVar1____,
   testVar2____,
   testVar3____,
+  WriteFile___,
 };
 
 
@@ -35,8 +35,6 @@ enum ParamType
 
 // Constructor
 FractalCurvDev::FractalCurvDev() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -46,10 +44,12 @@ FractalCurvDev::FractalCurvDev() {
 // Initialize Project UI parameters
 void FractalCurvDev::SetActiveProject() {
   if (!isActivProj) {
-    D.param.push_back(ParamUI("MaxDepth____", 4.0));
-    D.param.push_back(ParamUI("testVar1____", 0.005));
-    D.param.push_back(ParamUI("testVar2____", 1.0));
+    D.param.clear();
+    D.param.push_back(ParamUI("MaxDepth____", 5.0));
+    D.param.push_back(ParamUI("testVar1____", 0.2));
+    D.param.push_back(ParamUI("testVar2____", 1.5));
     D.param.push_back(ParamUI("testVar3____", 1.0));
+    D.param.push_back(ParamUI("WriteFile___", 0.0));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -70,10 +70,10 @@ void FractalCurvDev::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void FractalCurvDev::CheckRefresh() {
-  if (D.param[MaxDepth____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar1____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar2____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.param[MaxDepth____].hasChanged() ||
+      D.param[testVar1____].hasChanged() ||
+      D.param[testVar2____].hasChanged() ||
+      D.param[testVar3____].hasChanged()) isRefreshed= false;
 }
 
 
@@ -169,25 +169,27 @@ void FractalCurvDev::Refresh() {
     }
   }
 
-  // // Save OBJ file of developed surface
-  // std::string iFullpath= "D:/3DModelsUnsorted/test.obj";
-  // printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
-  // FILE* outputFile= nullptr;
-  // outputFile= fopen(iFullpath.c_str(), "w");
-  // if (outputFile == nullptr) {
-  //   printf("[ERROR] Unable to create the file\n\n");
-  //   throw 0;
-  // }
-  // for (unsigned int k= 0; k < Faces.size(); k++) {
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
-  //   fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
-  // }
-  // for (unsigned int k= 0; k < Faces.size(); k++) {
-  //   fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
-  // }
-  // fclose(outputFile);
-  // printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
+  // Save OBJ file of developed surface
+  if ((int)std::round(D.param[WriteFile___].Get()) > 0) {
+    std::string iFullpath= "Outputs/test.obj";
+    printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
+    FILE* outputFile= nullptr;
+    outputFile= fopen(iFullpath.c_str(), "w");
+    if (outputFile == nullptr) {
+      printf("[ERROR] Unable to create the file\n\n");
+      throw 0;
+    }
+    for (unsigned int k= 0; k < Faces.size(); k++) {
+      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
+      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
+      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
+    }
+    for (unsigned int k= 0; k < Faces.size(); k++) {
+      fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
+    }
+    fclose(outputFile);
+    printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
+  }
 }
 
 

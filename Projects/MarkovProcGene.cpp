@@ -4,11 +4,10 @@
 // Standard lib
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -38,8 +37,6 @@ enum ParamType
 
 // Constructor
 MarkovProcGene::MarkovProcGene() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -49,6 +46,7 @@ MarkovProcGene::MarkovProcGene() {
 // Initialize Project UI parameters
 void MarkovProcGene::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("Scenario____", 0));
     D.param.push_back(ParamUI("ResolutionX_", 1));
     D.param.push_back(ParamUI("ResolutionY_", 21));
@@ -78,13 +76,13 @@ void MarkovProcGene::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void MarkovProcGene::CheckRefresh() {
-  if (D.param[Scenario____].hasChanged()) isRefreshed= false;
-  if (D.param[ResolutionX_].hasChanged()) isRefreshed= false;
-  if (D.param[ResolutionY_].hasChanged()) isRefreshed= false;
-  if (D.param[ResolutionZ_].hasChanged()) isRefreshed= false;
-  if (D.param[RuleSizeX___].hasChanged()) isRefreshed= false;
-  if (D.param[RuleSizeY___].hasChanged()) isRefreshed= false;
-  if (D.param[RuleSizeZ___].hasChanged()) isRefreshed= false;
+  if (D.param[Scenario____].hasChanged() ||
+      D.param[ResolutionX_].hasChanged() ||
+      D.param[ResolutionY_].hasChanged() ||
+      D.param[ResolutionZ_].hasChanged() ||
+      D.param[RuleSizeX___].hasChanged() ||
+      D.param[RuleSizeY___].hasChanged() ||
+      D.param[RuleSizeZ___].hasChanged()) isRefreshed= false;
 }
 
 
@@ -583,9 +581,10 @@ void MarkovProcGene::Animate() {
         activeSet= idxSet;
         activeMatchCount= matchCount;
       }
+      D.plotLegend.resize(Dict.size());
+      D.plotLegend[idxSet]= "Set" + std::to_string(idxSet);
       D.plotData.resize(Dict.size());
-      D.plotData[idxSet].first= "Set" + std::to_string(idxSet);
-      D.plotData[idxSet].second.push_back((double)matchCount);
+      D.plotData[idxSet].push_back((double)matchCount);
     }
 
     if (activeSet < 0) continue;

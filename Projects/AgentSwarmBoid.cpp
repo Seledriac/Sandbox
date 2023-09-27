@@ -5,7 +5,7 @@
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -38,8 +38,6 @@ enum ParamType
 
 // Constructor
 AgentSwarmBoid::AgentSwarmBoid() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -49,6 +47,7 @@ AgentSwarmBoid::AgentSwarmBoid() {
 // Initialize Project UI parameters
 void AgentSwarmBoid::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("NbAgents____", 200));
     D.param.push_back(ParamUI("SizeAgent___", 0.05));
     D.param.push_back(ParamUI("TimeStep____", 0.05));
@@ -119,6 +118,8 @@ void AgentSwarmBoid::Refresh() {
     Vel[k].set(Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f));
     Nor[k].set(0.0f, 1.0f, 0.0f);
   }
+  PosFood.set((float)D.param[PosFoodX____].Get(), (float)D.param[PosFoodY____].Get(), (float)D.param[PosFoodZ____].Get());
+  PosPred.set((float)D.param[PosPredX____].Get(), (float)D.param[PosPredY____].Get(), (float)D.param[PosPredZ____].Get());
 }
 
 

@@ -7,6 +7,13 @@
 #include "../Util/Vector.hpp"
 
 
+// Particle system simulation with a Position-Based Dynamics (PBD) approach
+// - Particle positions are iteratively updated with explicit time integration
+// - Collision constraints are resolved by correcting positions of particles with a Gauss Seidel relaxation
+//
+// Reference
+// https://www.youtube.com/watch?v=jrociOAYqxA
+// https://www.youtube.com/watch?v=lS_qeBy3aQI
 class ParticleSystem
 {
   private:

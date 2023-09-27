@@ -2,14 +2,11 @@
 
 
 // Standard lib
-#include <array>
 #include <cmath>
-#include <cstdio>
-#include <ctime>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -39,8 +36,6 @@ enum ParamType
 
 // Constructor
 ParticleSystem::ParticleSystem() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -50,6 +45,7 @@ ParticleSystem::ParticleSystem() {
 // Initialize Project UI parameters
 void ParticleSystem::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("Constrain2D_", 1));
     D.param.push_back(ParamUI("NbParticles_", 1000));
     D.param.push_back(ParamUI("TimeStep____", 0.05));

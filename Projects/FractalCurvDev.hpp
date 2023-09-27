@@ -8,6 +8,14 @@
 #include "../Util/Vector.hpp"
 
 
+// Generate 3D surfaces from fractal curves
+// - Extrude fractals in the out-of-plane rirection to create surfaces
+// - Progressively increase fractal depth along the extrusion direction
+// - Written to generate 3D printable math shapes
+//
+// Example for reference
+// https://naml.us/paper/fractal/
+// https://naml.us/paper/irving_segerman2012_fractal.pdf
 class FractalCurvDev
 {
   private:

@@ -1,11 +1,10 @@
 // Standard lib
-#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <limits>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "freeglut/include/GL/freeglut.h"
 
 // Project Data
 #include "Data.hpp"
@@ -54,21 +53,12 @@ SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
 
 
-void project_Constructor(unsigned char key) {
-  (void)key;  // Disable warning unused variable
-
-  myAgentSwarmBoid= AgentSwarmBoid();
-  myCompuFluidDyna= CompuFluidDyna();
-  myFractalCurvDev= FractalCurvDev();
-  myFractalElevMap= FractalElevMap();
-  myMarkovProcGene= MarkovProcGene();
-  myParticleSystem= ParticleSystem();
-  mySpaceTimeWorld= SpaceTimeWorld();
-  myTerrainErosion= TerrainErosion();
-}
-
-
 void project_SetActiveProject(unsigned char key) {
+  D.plotLegend.clear();
+  D.scatLegend.clear();
+  D.plotData.clear();
+  D.scatData.clear();
+
   if (key != 'a' && myAgentSwarmBoid.isActivProj) myAgentSwarmBoid= AgentSwarmBoid();
   if (key != 'c' && myCompuFluidDyna.isActivProj) myCompuFluidDyna= CompuFluidDyna();
   if (key != 'f' && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
@@ -203,7 +193,6 @@ void callback_display() {
     glPointSize(1.0f);
 
     // Bounding box
-    glLineWidth(2.0);
     glColor3f(0.5f, 0.5f, 0.5f);
     glPushMatrix();
     glTranslatef((float)D.boxMin[0], (float)D.boxMin[1], (float)D.boxMin[2]);
@@ -211,7 +200,6 @@ void callback_display() {
     glTranslatef(0.5f, 0.5f, 0.5f);
     glutWireCube(1.0);
     glPopMatrix();
-    glLineWidth(1.0);
   }
 
   // Draw stuff in the scene
@@ -251,7 +239,7 @@ void callback_display() {
     glLineWidth(2.0f);
     glPointSize(4.0f);
     for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
-      if (D.plotData[k0].second.empty()) continue;
+      if (D.plotData[k0].empty()) continue;
 
       // Set the color
       float r, g, b;
@@ -261,36 +249,39 @@ void callback_display() {
       // Find the min max range for vertical scaling
       double valMin= std::numeric_limits<double>::max();
       double valMax= std::numeric_limits<double>::lowest();
-      for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
-        if (valMin > D.plotData[k0].second[k1]) valMin= D.plotData[k0].second[k1];
-        if (valMax < D.plotData[k0].second[k1]) valMax= D.plotData[k0].second[k1];
+      for (int k1= 0; k1 < int(D.plotData[k0].size()); k1++) {
+        if (valMin > D.plotData[k0][k1]) valMin= D.plotData[k0][k1];
+        if (valMax < D.plotData[k0][k1]) valMax= D.plotData[k0][k1];
       }
 
       // Draw the text for legend and min max values
       char str[50];
-      strcpy(str, D.plotData[k0].first.c_str());
+      if (D.plotLegend.size() == D.plotData.size())
+        strcpy(str, D.plotLegend[k0].c_str());
+      else
+        strcpy(str, "<name>");
       draw_text(winW - plotW - 3 * textW, winH - textH - textH * k0 - textH - margin, str);
       sprintf(str, "%+.2e", valMax);
       draw_text(winW - textW - plotW + k0 * textW, winH - textH - margin, str);
       sprintf(str, "%+.2e", valMin);
       draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 2 * textH - 2 * margin, str);
-      sprintf(str, "%+.2e", D.plotData[k0].second[0]);
+      sprintf(str, "%+.2e", D.plotData[k0][0]);
       draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - textH - margin, str);
-      sprintf(str, "%+.2e", D.plotData[k0].second[D.plotData[k0].second.size() - 1]);
+      sprintf(str, "%+.2e", D.plotData[k0][D.plotData[k0].size() - 1]);
       draw_text(winW - textW, winH - textH - textH * k0 - textH - margin, str);
 
       // Draw the plot curves and markers
-      if (int(D.plotData[k0].second.size()) >= 2) {
+      if (int(D.plotData[k0].size()) >= 2) {
         for (int mode= 0; mode < 2; mode++) {
           if (mode == 0) glBegin(GL_LINE_STRIP);
           if (mode == 1) glBegin(GL_POINTS);
-          for (int k1= 0; k1 < int(D.plotData[k0].second.size()); k1++) {
+          for (int k1= 0; k1 < int(D.plotData[k0].size()); k1++) {
             double valScaled= (D.plotLogScale) ? -INFINITY : valMin;
             if (valMax - valMin != 0.0) {
-              if (D.plotLogScale) valScaled= (D.plotData[k0].second[k1] - valMin) / (valMax - valMin);
-              else valScaled= (std::log10(D.plotData[k0].second[k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
+              if (D.plotLogScale) valScaled= (D.plotData[k0][k1] - valMin) / (valMax - valMin);
+              else valScaled= (std::log10(D.plotData[k0][k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
             }
-            glVertex3i(winW - plotW - textW + plotW * k1 / std::max((int)D.plotData[k0].second.size() - 1, 1), winH - plotH - textH - 2 * margin + plotH * valScaled, 0);
+            glVertex3i(winW - plotW - textW + plotW * k1 / std::max((int)D.plotData[k0].size() - 1, 1), winH - plotH - textH - 2 * margin + plotH * valScaled, 0);
           }
           glEnd();
         }
@@ -316,11 +307,11 @@ void callback_display() {
     double valMaxX= std::numeric_limits<double>::lowest();
     double valMaxY= std::numeric_limits<double>::lowest();
     for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
-      for (int k1= 0; k1 < int(D.scatData[k0].second.size()); k1++) {
-        if (valMinX > D.scatData[k0].second[k1][0]) valMinX= D.scatData[k0].second[k1][0];
-        if (valMinY > D.scatData[k0].second[k1][1]) valMinY= D.scatData[k0].second[k1][1];
-        if (valMaxX < D.scatData[k0].second[k1][0]) valMaxX= D.scatData[k0].second[k1][0];
-        if (valMaxY < D.scatData[k0].second[k1][1]) valMaxY= D.scatData[k0].second[k1][1];
+      for (int k1= 0; k1 < int(D.scatData[k0].size()); k1++) {
+        if (valMinX > D.scatData[k0][k1][0]) valMinX= D.scatData[k0][k1][0];
+        if (valMinY > D.scatData[k0][k1][1]) valMinY= D.scatData[k0][k1][1];
+        if (valMaxX < D.scatData[k0][k1][0]) valMaxX= D.scatData[k0][k1][0];
+        if (valMaxY < D.scatData[k0][k1][1]) valMaxY= D.scatData[k0][k1][1];
       }
     }
 
@@ -337,7 +328,7 @@ void callback_display() {
 
     glPointSize(4.0f);
     for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
-      if (D.scatData[k0].second.empty()) continue;
+      if (D.scatData[k0].empty()) continue;
 
       // Set the color
       float r, g, b;
@@ -345,14 +336,17 @@ void callback_display() {
       glColor3f(r, g, b);
 
       // Draw the text for legend
-      strcpy(str, D.scatData[k0].first.c_str());
+      if (D.scatLegend.size() == D.scatData.size())
+        strcpy(str, D.scatLegend[k0].c_str());
+      else
+        strcpy(str, "<name>");
       draw_text(0, scatH - k0 * textH, str);
 
       // Draw the polyline
       glBegin(GL_POINTS);
-      for (int k1= 0; k1 < int(D.scatData[k0].second.size()); k1++) {
-        double relPosX= (D.scatData[k0].second[k1][0] - valMinX) / (valMaxX - valMinX);
-        double relPosY= (D.scatData[k0].second[k1][1] - valMinY) / (valMaxY - valMinY);
+      for (int k1= 0; k1 < int(D.scatData[k0].size()); k1++) {
+        double relPosX= (D.scatData[k0][k1][0] - valMinX) / (valMaxX - valMinX);
+        double relPosY= (D.scatData[k0][k1][1] - valMinY) / (valMaxY - valMinY);
         glVertex3i(textW + (int)std::round((double)scatW * relPosX), 3 * textH + (int)std::round((double)scatH * relPosY), 0);
       }
       glEnd();
@@ -364,13 +358,25 @@ void callback_display() {
   // Draw the frame time
   {
     glLineWidth(2.0f);
-    if (D.playAnimation)
-      glColor3f(0.6f, 1.0f, 0.6f);
+    glColor3f(0.8f, 0.8f, 0.8f);
+    char str[50];
+
+    sprintf(str, "%.3fs", elapsed_time());
+    draw_text(0, 2, str);
+
+    if (D.autoRefresh)
+      glColor3f(1.0f, 0.6f, 0.6f);
     else
       glColor3f(0.8f, 0.8f, 0.8f);
-    char str[50];
-    sprintf(str, "%.3f s", elapsed_time());
-    draw_text(0, 2, str);
+    sprintf(str, "R");
+    draw_text(0, 2 + characHeight, str);
+
+    if (D.playAnimation)
+      glColor3f(1.0f, 0.6f, 0.6f);
+    else
+      glColor3f(0.8f, 0.8f, 0.8f);
+    sprintf(str, "P");
+    draw_text(characWidth, 2 + characHeight, str);
     glLineWidth(1.0f);
   }
 
@@ -408,7 +414,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   if (key == 27) exit(EXIT_SUCCESS);
   else if (key == ' ') D.playAnimation= !D.playAnimation;
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
-  else if (key == '\n') D.autoRefresh= !D.autoRefresh;
+  else if (key == '\r') D.autoRefresh= !D.autoRefresh;
   else if (key == '\b') D.param[D.idxParamUI].Set(0.0);
 
   else if (key == '1') D.displayMode1= !D.displayMode1;
@@ -426,7 +432,6 @@ void callback_keyboard(unsigned char key, int x, int y) {
   }
   else if (key == '-') D.plotLogScale= !D.plotLogScale;
 
-  else if (key >= 'A' && key <= 'Z') project_Constructor(key);
   else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
 
   // Compute refresh

@@ -7,6 +7,14 @@
 #include "../Util/Vector.hpp"
 
 
+// Terrain generation and erosion simulation 
+// - Representation as height map
+// - Initial terrain created with iterative random cut planes
+// - Particles dropped and collide with the terrain using Position Based Dynamics scheme
+// - Erosion and sedimentation handled by heuristic rules
+//
+// Reference
+// https://www.youtube.com/watch?v=eaXk97ujbPQ
 class TerrainErosion
 {
   private:

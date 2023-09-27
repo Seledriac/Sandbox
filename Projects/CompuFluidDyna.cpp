@@ -6,7 +6,7 @@
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -14,43 +14,6 @@
 #include "../Util/Colormap.hpp"
 #include "../Util/Field.hpp"
 #include "../Util/Vector.hpp"
-
-// Fluid simulation code based on the "Stable Fluid" method popularized by Jos Stam in 1999
-// - Eulerian voxel grid
-// - Linear solve in implicit diffusion step for viscosity and smoke spread/mixing
-// - Linear solve in implicit pressure computation and projection to enforce mass conservation
-// - Semi Lagrangian backtracing for velocity and smoke advection
-//
-// This implementation has various improvements over standard Stable Fluids implementations
-// - Handles both 2D and 3D
-// - Handles arbitrary boundary conditions and obstacles in the simulation domain
-// - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
-// - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and Venturi benchmarks
-
-// References for "stable fluid" method
-// http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
-// http://www.dgp.toronto.edu/people/stam/reality/Research/zip/CDROM_GDC03.zip
-// https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf
-// https://www.dgp.toronto.edu/public_user/stam/reality/Research/pub.html
-// https://fr.wikipedia.org/wiki/Stable-Fluids
-// http://www.dgp.utoronto.ca/~stam/reality/Talks/FluidsTalk/FluidsTalkNotes.pdf
-// https://www.youtube.com/watch?v=qsYE1wMEMPA
-// https://www.youtube.com/watch?v=iKAVRgIrUOU
-// https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
-
-// References for fluid flow photographs, scenarios and visual comparison
-// http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
-
-// References for vorticity confinement implem
-// https://github.com/awesson/stable-fluids/tree/master
-// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
-
-// References for linear solvers and particularily PCG
-// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
-// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
-// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
-// https://github.com/awesson/stable-fluids/tree/master
-// https://en.wikipedia.org/wiki/Conjugate_gradient_method
 
 
 // Link to shared sandbox data
@@ -96,9 +59,6 @@ enum ParamType
 
 // Constructor
 CompuFluidDyna::CompuFluidDyna() {
-  D.param.clear();
-  D.plotData.clear();
-  D.scatData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -108,6 +68,7 @@ CompuFluidDyna::CompuFluidDyna() {
 // Initialize Project UI parameters
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("Scenario____", 2));
     D.param.push_back(ParamUI("InputFile___", 2));
     D.param.push_back(ParamUI("ResolutionX_", 1));
@@ -155,23 +116,25 @@ void CompuFluidDyna::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void CompuFluidDyna::CheckAlloc() {
-  if (D.param[ResolutionX_].hasChanged()) isAllocated= false;
-  if (D.param[ResolutionY_].hasChanged()) isAllocated= false;
-  if (D.param[ResolutionZ_].hasChanged()) isAllocated= false;
+  if (D.param[Scenario____].hasChanged() ||
+      D.param[InputFile___].hasChanged() ||
+      D.param[ResolutionX_].hasChanged() ||
+      D.param[ResolutionY_].hasChanged() ||
+      D.param[ResolutionZ_].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void CompuFluidDyna::CheckRefresh() {
-  if (D.param[CoeffVelX___].hasChanged()) isRefreshed= false;
-  if (D.param[CoeffVelY___].hasChanged()) isRefreshed= false;
-  if (D.param[CoeffVelZ___].hasChanged()) isRefreshed= false;
-  if (D.param[CoeffPres___].hasChanged()) isRefreshed= false;
-  if (D.param[CoeffSmok___].hasChanged()) isRefreshed= false;
-  if (D.param[ObjectPosX__].hasChanged()) isRefreshed= false;
-  if (D.param[ObjectPosY__].hasChanged()) isRefreshed= false;
-  if (D.param[ObjectPosZ__].hasChanged()) isRefreshed= false;
-  if (D.param[ObjectSize__].hasChanged()) isRefreshed= false;
+  if (D.param[CoeffVelX___].hasChanged() ||
+      D.param[CoeffVelY___].hasChanged() ||
+      D.param[CoeffVelZ___].hasChanged() ||
+      D.param[CoeffPres___].hasChanged() ||
+      D.param[CoeffSmok___].hasChanged() ||
+      D.param[ObjectPosX__].hasChanged() ||
+      D.param[ObjectPosY__].hasChanged() ||
+      D.param[ObjectPosZ__].hasChanged() ||
+      D.param[ObjectSize__].hasChanged()) isRefreshed= false;
 }
 
 
@@ -522,32 +485,32 @@ void CompuFluidDyna::Animate() {
 
   // // Draw the plot data
   // D.plotData.resize(7);
-  // if (D.plotData[0].second.size() < 1000) {
-  //   D.plotData[0].first= "TotVelX";
-  //   D.plotData[1].first= "TotVelY";
-  //   D.plotData[2].first= "TotVelZ";
-  //   D.plotData[3].first= "TotVelMag";
-  //   D.plotData[4].first= "TotSmoke";
-  //   D.plotData[5].first= "TotPress";
-  //   D.plotData[6].first= "TotVorti";
-  //   D.plotData[0].second.push_back(0.0f);
-  //   D.plotData[1].second.push_back(0.0f);
-  //   D.plotData[2].second.push_back(0.0f);
-  //   D.plotData[3].second.push_back(0.0f);
-  //   D.plotData[4].second.push_back(0.0f);
-  //   D.plotData[5].second.push_back(0.0f);
-  //   D.plotData[6].second.push_back(0.0f);
+  // if (D.plotData[0].size() < 1000) {
+  //   D.plotData[0]= "TotVelX";
+  //   D.plotData[1]= "TotVelY";
+  //   D.plotData[2]= "TotVelZ";
+  //   D.plotData[3]= "TotVelMag";
+  //   D.plotData[4]= "TotSmoke";
+  //   D.plotData[5]= "TotPress";
+  //   D.plotData[6]= "TotVorti";
+  //   D.plotData[0].push_back(0.0f);
+  //   D.plotData[1].push_back(0.0f);
+  //   D.plotData[2].push_back(0.0f);
+  //   D.plotData[3].push_back(0.0f);
+  //   D.plotData[4].push_back(0.0f);
+  //   D.plotData[5].push_back(0.0f);
+  //   D.plotData[6].push_back(0.0f);
   //   for (int x= 0; x < nbX; x++) {
   //     for (int y= 0; y < nbY; y++) {
   //       for (int z= 0; z < nbZ; z++) {
   //         if (!Solid[x][y][z]) {
-  //           D.plotData[0].second[D.plotData[0].second.size() - 1]+= VelX[x][y][z];
-  //           D.plotData[1].second[D.plotData[1].second.size() - 1]+= VelY[x][y][z];
-  //           D.plotData[2].second[D.plotData[2].second.size() - 1]+= VelZ[x][y][z];
-  //           D.plotData[3].second[D.plotData[3].second.size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
-  //           D.plotData[4].second[D.plotData[4].second.size() - 1]+= Smok[x][y][z];
-  //           D.plotData[5].second[D.plotData[5].second.size() - 1]+= Pres[x][y][z];
-  //           D.plotData[6].second[D.plotData[6].second.size() - 1]+= Vort[x][y][z];
+  //           D.plotData[0][D.plotData[0].size() - 1]+= VelX[x][y][z];
+  //           D.plotData[1][D.plotData[1].size() - 1]+= VelY[x][y][z];
+  //           D.plotData[2][D.plotData[2].size() - 1]+= VelZ[x][y][z];
+  //           D.plotData[3][D.plotData[3].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
+  //           D.plotData[4][D.plotData[4].size() - 1]+= Smok[x][y][z];
+  //           D.plotData[5][D.plotData[5].size() - 1]+= Pres[x][y][z];
+  //           D.plotData[6][D.plotData[6].size() - 1]+= Vort[x][y][z];
   //         }
   //       }
   //     }
@@ -555,35 +518,37 @@ void CompuFluidDyna::Animate() {
   // }
 
   // Draw the scatter data
+  D.scatLegend.resize(4);
+  D.scatLegend[0]= "Horiz VZ";
+  D.scatLegend[1]= "Verti VY";
+  D.scatLegend[2]= "Horiz P";
+  D.scatLegend[3]= "Verti P";
   D.scatData.resize(4);
-  D.scatData[0].first= "Horiz VZ";
-  D.scatData[1].first= "Verti VY";
-  D.scatData[2].first= "Horiz P";
-  D.scatData[3].first= "Verti P";
   for (int k= 0; k < (int)D.scatData.size(); k++)
-    D.scatData[k].second.clear();
+    D.scatData[k].clear();
   if (nbZ > 1) {
     const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
     for (int y= 0; y < nbY; y++) {
-      D.scatData[0].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
-      D.scatData[2].second.push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+      D.scatData[0].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+      D.scatData[2].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
     }
   }
   if (nbY > 1) {
     const int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
     for (int z= 0; z < nbZ; z++) {
-      D.scatData[1].second.push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
-      D.scatData[3].second.push_back(std::array<double, 2>({Pres[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      D.scatData[1].push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      D.scatData[3].push_back(std::array<double, 2>({Pres[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
     }
   }
 
   // Add hard coded lid driven cavity flow benchmark for visual comparison
   if ((int)std::round(D.param[Scenario____].Get()) == 3) {
+    D.scatLegend.resize(4);
+    D.scatLegend[2]= "Ghia 100";
+    D.scatLegend[3]= "Ghia 100";
     D.scatData.resize(4);
-    D.scatData[2].first= "Ghia 100";
-    D.scatData[3].first= "Ghia 100";
-    D.scatData[2].second.clear();
-    D.scatData[3].second.clear();
+    D.scatData[2].clear();
+    D.scatData[3].clear();
     const std::vector<double> GhiaData0X({+0.00000, +0.06250, +0.07030, +0.07810, +0.09380, +0.15630, +0.22660, +0.23440, +0.50000, +0.80470, +0.85940, +0.90630, +0.94530, +0.95310, +0.96090, +0.96880, +1.00000});  // coord along horiz slice
     // Data from Ghia 1982 http://www.msaidi.ir/upload/Ghia1982.pdf
     const std::vector<double> GhiaData0Y({+0.00000, +0.09233, +0.10091, +0.10890, +0.12317, +0.16077, +0.17507, +0.17527, +0.05454, -0.24533, -0.22445, -0.16914, -0.10313, -0.08864, -0.07391, -0.05906, +0.00000});  // Re 100   verti vel along horiz slice
@@ -602,14 +567,15 @@ void CompuFluidDyna::Animate() {
     // const std::vector<double> GhiaData1X({+0.00000, -0.42735, -0.42537, -0.41657, -0.38000, -0.32709, -0.23186, -0.07540, +0.03111, +0.08344, +0.20673, +0.34635, +0.47804, +0.48070, +0.47783, +0.47221, +1.00000});  // Re 10000 horiz vel on verti slice
     const std::vector<double> GhiaData1Y({+0.00000, +0.05470, +0.06250, +0.07030, +0.10160, +0.17190, +0.28130, +0.45310, +0.50000, +0.61720, +0.73440, +0.85160, +0.95310, +0.96090, +0.96880, +0.97660, +1.00000});  // coord along verti slice
     for (int k= 0; k < (int)GhiaData0X.size(); k++) {
-      D.scatData[2].second.push_back(std::array<double, 2>({GhiaData0X[k], GhiaData0Y[k] + 0.5f}));
-      D.scatData[3].second.push_back(std::array<double, 2>({GhiaData1X[k] + 0.5f, GhiaData1Y[k]}));
+      D.scatData[2].push_back(std::array<double, 2>({GhiaData0X[k], GhiaData0Y[k] + 0.5f}));
+      D.scatData[3].push_back(std::array<double, 2>({GhiaData1X[k] + 0.5f, GhiaData1Y[k]}));
     }
+    D.scatLegend.resize(6);
+    D.scatLegend[4]= "Ertu 5k";
+    D.scatLegend[5]= "Ertu 5k";
     D.scatData.resize(6);
-    D.scatData[4].first= "Ertu 5k";
-    D.scatData[5].first= "Ertu 5k";
-    D.scatData[4].second.clear();
-    D.scatData[5].second.clear();
+    D.scatData[4].clear();
+    D.scatData[5].clear();
     const std::vector<double> ErtuData0X({+0.00000, +0.01500, +0.03000, +0.04500, +0.06000, +0.07500, +0.09000, +0.10500, +0.12000, +0.13500, +0.15000, +0.50000, +0.85000, +0.86500, +0.88000, +0.89500, +0.91000, +0.92500, +0.94000, +0.95500, +0.97000, +0.98500, +1.00000});  // coord along horiz slice
     // Data from Erturk 2005 https://arxiv.org/pdf/physics/0505121.pdf
     // const std::vector<double> ErtuData0Y({+0.00000, +0.10190, +0.17920, +0.23490, +0.27460, +0.30410, +0.32730, +0.34600, +0.36050, +0.37050, +0.37560, +0.02580, -0.40280, -0.44070, -0.48030, -0.51320, -0.52630, -0.50520, -0.44170, -0.34000, -0.21730, -0.09730, +0.00000});  // Re 1000  verti vel along horiz slice
@@ -634,8 +600,8 @@ void CompuFluidDyna::Animate() {
     // const std::vector<double> ErtuData1X({+0.00000, -0.35620, -0.44630, -0.41210, -0.39250, -0.37580, -0.35850, -0.34120, -0.32390, -0.30660, -0.28920, -0.02320, +0.39920, +0.41320, +0.42770, +0.44250, +0.45800, +0.47420, +0.48970, +0.49830, +0.48950, +0.50030, +1.00000});  // Re 21000 horiz vel on verti slice
     const std::vector<double> ErtuData1Y({+0.00000, +0.02000, +0.04000, +0.06000, +0.08000, +0.10000, +0.12000, +0.14000, +0.16000, +0.18000, +0.20000, +0.50000, +0.90000, +0.91000, +0.92000, +0.93000, +0.94000, +0.95000, +0.96000, +0.97000, +0.98000, +0.99000, +1.00000});  // coord along verti slice
     for (int k= 0; k < (int)ErtuData0X.size(); k++) {
-      D.scatData[4].second.push_back(std::array<double, 2>({ErtuData0X[k], ErtuData0Y[k] + 0.5f}));
-      D.scatData[5].second.push_back(std::array<double, 2>({ErtuData1X[k] + 0.5f, ErtuData1Y[k]}));
+      D.scatData[4].push_back(std::array<double, 2>({ErtuData0X[k], ErtuData0Y[k] + 0.5f}));
+      D.scatData[5].push_back(std::array<double, 2>({ErtuData1X[k] + 0.5f, ErtuData1Y[k]}));
     }
   }
 }
@@ -1003,13 +969,14 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   // ApplyBC(iFieldID, ioField);
 
   // Prepare convergence plot
+  D.plotLegend.resize(5);
+  D.plotLegend[FieldID::IDSmok]= "Diffu S";
+  D.plotLegend[FieldID::IDVelX]= "Diffu VX";
+  D.plotLegend[FieldID::IDVelY]= "Diffu VY";
+  D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
+  D.plotLegend[FieldID::IDPres]= "Proj  P";
   D.plotData.resize(5);
-  D.plotData[FieldID::IDSmok].first= "Diffu S";
-  D.plotData[FieldID::IDVelX].first= "Diffu VX";
-  D.plotData[FieldID::IDVelY].first= "Diffu VY";
-  D.plotData[FieldID::IDVelZ].first= "Diffu VZ";
-  D.plotData[FieldID::IDPres].first= "Proj  P";
-  D.plotData[iFieldID].second.clear();
+  D.plotData[iFieldID].clear();
   const float normRHS= ImplicitFieldDotProd(iField, iField);
 
   // Allocate fields
@@ -1029,7 +996,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   float errTmp= ImplicitFieldDotProd(rField, rField);
   if (D.param[Verbose_____].Get() > 0.0) printf("CG [%.3e] ", normRHS);
   if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
+  D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
 
   // d = M^-1 r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
@@ -1069,7 +1036,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     // Error plot
     errTmp= ImplicitFieldDotProd(rField, rField);
     if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
 
     // s = M^-1 r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
@@ -1116,13 +1083,14 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   // ApplyBC(iFieldID, ioField);
 
   // Prepare convergence plot
+  D.plotLegend.resize(5);
+  D.plotLegend[FieldID::IDSmok]= "Diffu S";
+  D.plotLegend[FieldID::IDVelX]= "Diffu VX";
+  D.plotLegend[FieldID::IDVelY]= "Diffu VY";
+  D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
+  D.plotLegend[FieldID::IDPres]= "Proj  P";
   D.plotData.resize(5);
-  D.plotData[FieldID::IDSmok].first= "Diffu S";
-  D.plotData[FieldID::IDVelX].first= "Diffu VX";
-  D.plotData[FieldID::IDVelY].first= "Diffu VY";
-  D.plotData[FieldID::IDVelZ].first= "Diffu VZ";
-  D.plotData[FieldID::IDPres].first= "Proj  P";
-  D.plotData[iFieldID].second.clear();
+  D.plotData[iFieldID].clear();
   const float normRHS= ImplicitFieldDotProd(iField, iField);
 
   // Get parameters
@@ -1138,7 +1106,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   float errBeg= errNew;
   if (D.param[Verbose_____].Get() > 0.0) printf("GS [%.3e] ", normRHS);
   if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-  D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+  D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
 
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   for (int k= 0; k < iMaxIter; k++) {
@@ -1235,7 +1203,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     ImplicitFieldSub(iField, t0Field, rField);
     errNew= ImplicitFieldDotProd(rField, rField);
     if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-    D.plotData[iFieldID].second.push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
   }
   if (iFieldID == FieldID::IDSmok) Dum0= rField;
   if (iFieldID == FieldID::IDVelX) Dum1= rField;

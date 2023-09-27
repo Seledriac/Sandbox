@@ -2,20 +2,15 @@
 
 
 // Standard lib
-#include <array>
-#include <cmath>
-#include <cstdio>
-#include <ctime>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
 #include "../Util/Colormap.hpp"
 #include "../Util/Field.hpp"
-#include "../Util/Random.hpp"
 #include "../Util/Vector.hpp"
 
 
@@ -39,8 +34,6 @@ enum ParamType
 
 // Constructor
 FractalElevMap::FractalElevMap() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -50,6 +43,7 @@ FractalElevMap::FractalElevMap() {
 // Initialize Project UI parameters
 void FractalElevMap::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("testVar0____", 500.0));
     D.param.push_back(ParamUI("testVar1____", 500.0));
     D.param.push_back(ParamUI("testVar2____", 0.5));
@@ -74,20 +68,20 @@ void FractalElevMap::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void FractalElevMap::CheckAlloc() {
-  if (D.param[testVar0____].hasChanged()) isAllocated= false;
-  if (D.param[testVar1____].hasChanged()) isAllocated= false;
+  if (D.param[testVar0____].hasChanged() ||
+      D.param[testVar1____].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void FractalElevMap::CheckRefresh() {
-  if (D.param[testVar2____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar3____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar4____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar5____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar6____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar7____].hasChanged()) isRefreshed= false;
-  if (D.param[testVar8____].hasChanged()) isRefreshed= false;
+  if (D.param[testVar2____].hasChanged() ||
+      D.param[testVar3____].hasChanged() ||
+      D.param[testVar4____].hasChanged() ||
+      D.param[testVar5____].hasChanged() ||
+      D.param[testVar6____].hasChanged() ||
+      D.param[testVar7____].hasChanged() ||
+      D.param[testVar8____].hasChanged()) isRefreshed= false;
 }
 
 

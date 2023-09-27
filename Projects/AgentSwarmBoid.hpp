@@ -7,6 +7,13 @@
 #include "../Util/Vector.hpp"
 
 
+// Simple implementation of Reynolds Boids to produce emergent swarm intelligence
+// - Each boid is an agent with an evolving position and velocity vector
+// - Agent velocities evolve through explicit time integration
+// - The forces are a combination of separation, aligment, cohesion and target attraction/repulsion behaviors
+//
+// References for "Boids" concept
+// https://en.wikipedia.org/wiki/Boids
 class AgentSwarmBoid
 {
   private:

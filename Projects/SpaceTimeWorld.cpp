@@ -4,12 +4,10 @@
 // Standard lib
 #include <array>
 #include <cmath>
-#include <cstdio>
-#include <ctime>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -159,8 +157,6 @@ enum ParamType
 
 // Constructor
 SpaceTimeWorld::SpaceTimeWorld() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -170,13 +166,14 @@ SpaceTimeWorld::SpaceTimeWorld() {
 // Initialize Project UI parameters
 void SpaceTimeWorld::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("WorldNbT____", 16));
-    D.param.push_back(ParamUI("WorldNbX____", 32));
-    D.param.push_back(ParamUI("WorldNbY____", 32));
-    D.param.push_back(ParamUI("WorldNbZ____", 32));
-    D.param.push_back(ParamUI("ScreenNbH___", 64));
-    D.param.push_back(ParamUI("ScreenNbV___", 64));
-    D.param.push_back(ParamUI("ScreenNbS___", 64));
+    D.param.push_back(ParamUI("WorldNbX____", 50));
+    D.param.push_back(ParamUI("WorldNbY____", 80));
+    D.param.push_back(ParamUI("WorldNbZ____", 80));
+    D.param.push_back(ParamUI("ScreenNbH___", 100));
+    D.param.push_back(ParamUI("ScreenNbV___", 100));
+    D.param.push_back(ParamUI("ScreenNbS___", 50));
     D.param.push_back(ParamUI("CursorWorldT", 8));
     D.param.push_back(ParamUI("MassReach___", 8));
     D.param.push_back(ParamUI("TimePersist_", 0.8));
@@ -197,23 +194,23 @@ void SpaceTimeWorld::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void SpaceTimeWorld::CheckAlloc() {
-  if (D.param[WorldNbT____].hasChanged()) isAllocated= false;
-  if (D.param[WorldNbX____].hasChanged()) isAllocated= false;
-  if (D.param[WorldNbY____].hasChanged()) isAllocated= false;
-  if (D.param[WorldNbZ____].hasChanged()) isAllocated= false;
-  if (D.param[ScreenNbH___].hasChanged()) isAllocated= false;
-  if (D.param[ScreenNbV___].hasChanged()) isAllocated= false;
-  if (D.param[ScreenNbS___].hasChanged()) isAllocated= false;
+  if (D.param[WorldNbT____].hasChanged() ||
+      D.param[WorldNbX____].hasChanged() ||
+      D.param[WorldNbY____].hasChanged() ||
+      D.param[WorldNbZ____].hasChanged() ||
+      D.param[ScreenNbH___].hasChanged() ||
+      D.param[ScreenNbV___].hasChanged() ||
+      D.param[ScreenNbS___].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void SpaceTimeWorld::CheckRefresh() {
-  if (D.param[CursorWorldT].hasChanged()) isRefreshed= false;
-  if (D.param[MassReach___].hasChanged()) isRefreshed= false;
-  if (D.param[TimePersist_].hasChanged()) isRefreshed= false;
-  if (D.param[FactorCurv__].hasChanged()) isRefreshed= false;
-  if (D.param[FactorDoppl_].hasChanged()) isRefreshed= false;
+  if (D.param[CursorWorldT].hasChanged() ||
+      D.param[MassReach___].hasChanged() ||
+      D.param[TimePersist_].hasChanged() ||
+      D.param[FactorCurv__].hasChanged() ||
+      D.param[FactorDoppl_].hasChanged()) isRefreshed= false;
 }
 
 
@@ -386,7 +383,6 @@ void SpaceTimeWorld::Refresh() {
   // Ensure parameter validity
   int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
 
-  // Allocate the screen fields and photon fields
   // Initialize the photon fields
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {

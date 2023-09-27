@@ -2,14 +2,11 @@
 
 
 // Standard lib
-#include <array>
 #include <cmath>
-#include <cstdio>
-#include <ctime>
 #include <vector>
 
 // GLUT lib
-#include <GL/freeglut.h>
+#include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../Data.hpp"
@@ -40,8 +37,6 @@ enum ParamType
 
 // Constructor
 TerrainErosion::TerrainErosion() {
-  D.param.clear();
-  D.plotData.clear();
   isActivProj= false;
   isAllocated= false;
   isRefreshed= false;
@@ -51,6 +46,7 @@ TerrainErosion::TerrainErosion() {
 // Initialize Project UI parameters
 void TerrainErosion::SetActiveProject() {
   if (!isActivProj) {
+    D.param.clear();
     D.param.push_back(ParamUI("TerrainNbX__", 128));
     D.param.push_back(ParamUI("TerrainNbY__", 128));
     D.param.push_back(ParamUI("TerrainNbCut", 256));
@@ -76,9 +72,9 @@ void TerrainErosion::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void TerrainErosion::CheckAlloc() {
-  if (D.param[TerrainNbX__].hasChanged()) isAllocated= false;
-  if (D.param[TerrainNbY__].hasChanged()) isAllocated= false;
-  if (D.param[DropletNbK__].hasChanged()) isAllocated= false;
+  if (D.param[TerrainNbX__].hasChanged() ||
+      D.param[TerrainNbY__].hasChanged() ||
+      D.param[DropletNbK__].hasChanged()) isAllocated= false;
 }
 
 

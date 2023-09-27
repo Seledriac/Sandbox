@@ -7,6 +7,10 @@
 #include "../Util/Vector.hpp"
 
 
+// Improvised curved space-time rendering
+// - 4D Eulerian representation of the world
+// - Local curvature evaluated from mass distribution
+// - Explicit integration of photons backtracing in the curved fields from the screen to the source
 class SpaceTimeWorld
 {
   private:

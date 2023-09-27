@@ -7,6 +7,11 @@
 #include "../Util/Vector.hpp"
 
 
+// Generate 2.5D surface based on the Julia Set fractal
+// - Representation with height map
+// - Interactive depth, coefficients and zoom factor as UI parameters
+//
+// https://en.wikipedia.org/wiki/Julia_set
 class FractalElevMap
 {
   private:

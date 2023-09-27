@@ -5,6 +5,14 @@
 #include <vector>
 
 
+// Procedural generation of voxel scenes based on Markov algorithm
+// - Substitution rule sets generated in code for various scenarios or by importing bitmaps
+// - Matching and substitution operated as brute force search on the domain
+// - Voxels visualized with shading from hacky volumetric obscuration
+//
+// Reference on Markov algorithm
+// https://en.wikipedia.org/wiki/Markov_algorithm
+// https://github.com/mxgmn/MarkovJunior
 class MarkovProcGene
 {
   private:

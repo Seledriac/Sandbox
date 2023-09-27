@@ -1,11 +1,10 @@
 #include "FileInput.hpp"
 
 // Standard lib
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
+#include <array>
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <vector>
 
 
 void FileInput::LoadScalarFieldBinaryFile(
@@ -406,18 +405,18 @@ void FileInput::LoadImageBMPFile(
   int height= info[22] + (info[23] << 8);  // Height
   int depth= info[28] + (info[29] << 8);   // Bit depth
   if (iVerbose) {
-    std::cout << "dataOffset: " << offset << std::endl;
-    std::cout << "width: " << width << std::endl;
-    std::cout << "height: " << height << std::endl;
-    std::cout << "depth: " << depth << "-bit" << std::endl;
+    printf("dataOffset: %d\n", offset);
+    printf("width: %d\n", width);
+    printf("height: %d\n", height);
+    printf("depth: %d-bit\n", depth);
   }
 
   fseek(inputFile, offset, SEEK_SET);  // Seek to pixel offset.
   oImageRGBA= std::vector<std::vector<std::array<float, 4>>>(width, std::vector<std::array<float, 4>>(height));
   int row_padded= width * 4;
   if (iVerbose) {
-    std::cout << "row_padded: " << row_padded << std::endl;
-    std::cout << "width_padded: " << row_padded / 4 << std::endl;
+    printf("row_padded: %d\n", row_padded);
+    printf("width_padded: %d\n", row_padded / 4);
   }
   auto data= new unsigned char[row_padded];
   for (int h= 0; h < height; h++) {

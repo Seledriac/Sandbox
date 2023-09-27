@@ -1,6 +1,5 @@
 #pragma once
 
-
 // Standard lib
 #include <chrono>
 
