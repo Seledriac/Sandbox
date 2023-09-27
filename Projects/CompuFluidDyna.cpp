@@ -15,6 +15,17 @@
 #include "../Util/Field.hpp"
 #include "../Util/Vector.hpp"
 
+// Fluid simulation code based on the "Stable Fluid" method popularized by Jos Stam in 1999
+// - Eulerian voxel grid
+// - Linear solve in implicit diffusion step for viscosity and smoke spread/mixing
+// - Linear solve in implicit pressure computation to enforce mass conservation
+// - Semi Lagrangian backtracing for velocity advection
+//
+// This implementation has various improvements over standard Stable Fluids implementations
+// - Handles both 2D and 3D
+// - Handles arbitrary boundary conditions and obstacles in the simulation domain
+// - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
+// - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and Venturi benchmarks
 
 // Reference for "stable fluid" method
 // http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
