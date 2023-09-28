@@ -43,16 +43,16 @@ FractalElevMap::FractalElevMap() {
 // Initialize Project UI parameters
 void FractalElevMap::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("testVar0____", 500.0));
-    D.param.push_back(ParamUI("testVar1____", 500.0));
-    D.param.push_back(ParamUI("testVar2____", 0.5));
-    D.param.push_back(ParamUI("testVar3____", 40.0));
-    D.param.push_back(ParamUI("testVar4____", 0.365242));
-    D.param.push_back(ParamUI("testVar5____", 0.534752));
-    D.param.push_back(ParamUI("testVar6____", -0.8350));
-    D.param.push_back(ParamUI("testVar7____", -0.2241));
-    D.param.push_back(ParamUI("testVar8____", 32.0));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("testVar0____", 500.0));
+    D.UI.push_back(ParamUI("testVar1____", 500.0));
+    D.UI.push_back(ParamUI("testVar2____", 0.5));
+    D.UI.push_back(ParamUI("testVar3____", 40.0));
+    D.UI.push_back(ParamUI("testVar4____", 0.365242));
+    D.UI.push_back(ParamUI("testVar5____", 0.534752));
+    D.UI.push_back(ParamUI("testVar6____", -0.8350));
+    D.UI.push_back(ParamUI("testVar7____", -0.2241));
+    D.UI.push_back(ParamUI("testVar8____", 32.0));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -68,20 +68,20 @@ void FractalElevMap::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void FractalElevMap::CheckAlloc() {
-  if (D.param[testVar0____].hasChanged() ||
-      D.param[testVar1____].hasChanged()) isAllocated= false;
+  if (D.UI[testVar0____].hasChanged() ||
+      D.UI[testVar1____].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void FractalElevMap::CheckRefresh() {
-  if (D.param[testVar2____].hasChanged() ||
-      D.param[testVar3____].hasChanged() ||
-      D.param[testVar4____].hasChanged() ||
-      D.param[testVar5____].hasChanged() ||
-      D.param[testVar6____].hasChanged() ||
-      D.param[testVar7____].hasChanged() ||
-      D.param[testVar8____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar2____].hasChanged() ||
+      D.UI[testVar3____].hasChanged() ||
+      D.UI[testVar4____].hasChanged() ||
+      D.UI[testVar5____].hasChanged() ||
+      D.UI[testVar6____].hasChanged() ||
+      D.UI[testVar7____].hasChanged() ||
+      D.UI[testVar8____].hasChanged()) isRefreshed= false;
 }
 
 
@@ -94,8 +94,8 @@ void FractalElevMap::Allocate() {
   isAllocated= true;
 
   // Get UI parameters
-  mapNbX= std::max(2, int(std::round(D.param[testVar0____].Get())));
-  mapNbY= std::max(2, int(std::round(D.param[testVar1____].Get())));
+  mapNbX= std::max(D.UI[testVar0____].GetI(), 2);
+  mapNbY= std::max(D.UI[testVar1____].GetI(), 2);
 
   // Allocate data
   mapPos= Field::AllocField2D(mapNbX, mapNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -113,14 +113,14 @@ void FractalElevMap::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  mapZoom= std::max(1.e-6, double(D.param[testVar2____].Get()));
+  mapZoom= std::max(D.UI[testVar2____].GetD(), 1.e-6);
 
-  mapNbIter= std::max(1, int(std::round(D.param[testVar3____].Get())));
+  mapNbIter= std::max(D.UI[testVar3____].GetI(), 1);
 
-  mapFocus= Math::Vec2d(D.param[testVar4____].Get(), D.param[testVar5____].Get());
-  mapConst= Math::Vec2d(D.param[testVar6____].Get(), D.param[testVar7____].Get());
+  mapFocus= Math::Vec2d(D.UI[testVar4____].GetD(), D.UI[testVar5____].GetD());
+  mapConst= Math::Vec2d(D.UI[testVar6____].GetD(), D.UI[testVar7____].GetD());
 
-  mapDivThresh= std::max(0.0, double(D.param[testVar8____].Get()));
+  mapDivThresh= std::max(D.UI[testVar8____].GetD(), 0.0);
 
 
   // Compute positions
@@ -145,7 +145,7 @@ void FractalElevMap::Refresh() {
       // if (val != 0.0) val= std::log2(std::max(std::log2(val), 1.0));
 
       // mapPos[x][y][2]= float(z.norm());
-      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.param[testVar8____].Get();
+      // if (mapPos[x][y][2] != mapPos[x][y][2]) mapPos[x][y][2]= D.UI[testVar8____].Get();
       Colormap::RatioToJetSmooth(float(val), mapCol[x][y][0], mapCol[x][y][1], mapCol[x][y][2]);
 
       mapPos[x][y][2]= 0.5f + 0.04f * std::min(std::max(float(val), 0.0f), 1.0f);

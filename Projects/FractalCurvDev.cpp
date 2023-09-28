@@ -44,12 +44,12 @@ FractalCurvDev::FractalCurvDev() {
 // Initialize Project UI parameters
 void FractalCurvDev::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("MaxDepth____", 5.0));
-    D.param.push_back(ParamUI("testVar1____", 0.2));
-    D.param.push_back(ParamUI("testVar2____", 1.5));
-    D.param.push_back(ParamUI("testVar3____", 1.0));
-    D.param.push_back(ParamUI("WriteFile___", 0.0));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("MaxDepth____", 5.0));
+    D.UI.push_back(ParamUI("testVar1____", 0.2));
+    D.UI.push_back(ParamUI("testVar2____", 1.5));
+    D.UI.push_back(ParamUI("testVar3____", 1.0));
+    D.UI.push_back(ParamUI("WriteFile___", 0.0));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -70,10 +70,10 @@ void FractalCurvDev::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void FractalCurvDev::CheckRefresh() {
-  if (D.param[MaxDepth____].hasChanged() ||
-      D.param[testVar1____].hasChanged() ||
-      D.param[testVar2____].hasChanged() ||
-      D.param[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.UI[MaxDepth____].hasChanged() ||
+      D.UI[testVar1____].hasChanged() ||
+      D.UI[testVar2____].hasChanged() ||
+      D.UI[testVar3____].hasChanged()) isRefreshed= false;
 }
 
 
@@ -96,7 +96,7 @@ void FractalCurvDev::Refresh() {
   if (isRefreshed) return;
   isRefreshed= true;
 
-  int maxDepth= std::max((int)std::round(D.param[MaxDepth____].Get()), 2);
+  int maxDepth= std::max(D.UI[MaxDepth____].GetI(), 2);
   Faces.clear();
   Nodes.clear();
 
@@ -123,7 +123,7 @@ void FractalCurvDev::Refresh() {
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
       Math::Vec3f posA= Nodes[idxDepth - 1][idxNode];
       Math::Vec3f posB= Nodes[idxDepth - 1][idxNode + 1];
-      Math::Vec3f ZOffset(0.0f, 0.0f, -D.param[testVar1____].Get() / std::pow(D.param[testVar2____].Get(), double(idxDepth)));
+      Math::Vec3f ZOffset(0.0f, 0.0f, -D.UI[testVar1____].GetF() / std::pow(D.UI[testVar2____].GetF(), double(idxDepth)));
 
 #ifdef KOCH_SNOWFLAKE
       Math::Vec3f posN0= ZOffset + posA;
@@ -152,7 +152,7 @@ void FractalCurvDev::Refresh() {
       if (idxNode % 2 == 0)
         dir= Math::Vec3f() - dir;
       Math::Vec3f posN0= ZOffset + posA;
-      Math::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.param[testVar3____].Get() * (posB - posA).norm() * dir;
+      Math::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.UI[testVar3____].Get() * (posB - posA).norm() * dir;
       Math::Vec3f posN2= ZOffset + posB;
 
       if (idxNode == 0)
@@ -170,7 +170,7 @@ void FractalCurvDev::Refresh() {
   }
 
   // Save OBJ file of developed surface
-  if ((int)std::round(D.param[WriteFile___].Get()) > 0) {
+  if (D.UI[WriteFile___].GetB()) {
     std::string iFullpath= "Outputs/test.obj";
     printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
     FILE* outputFile= nullptr;

@@ -46,17 +46,17 @@ TerrainErosion::TerrainErosion() {
 // Initialize Project UI parameters
 void TerrainErosion::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("TerrainNbX__", 128));
-    D.param.push_back(ParamUI("TerrainNbY__", 128));
-    D.param.push_back(ParamUI("TerrainNbCut", 256));
-    D.param.push_back(ParamUI("DropletNbK__", 400));
-    D.param.push_back(ParamUI("DropletRad__", 0.01));
-    D.param.push_back(ParamUI("SimuTimestep", 0.02));
-    D.param.push_back(ParamUI("VelDecay____", 0.5));
-    D.param.push_back(ParamUI("ErosionCoeff", 0.05));
-    D.param.push_back(ParamUI("SmoothResist", 0.99));
-    D.param.push_back(ParamUI("CliffThresh_", 0.80));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("TerrainNbX__", 128));
+    D.UI.push_back(ParamUI("TerrainNbY__", 128));
+    D.UI.push_back(ParamUI("TerrainNbCut", 256));
+    D.UI.push_back(ParamUI("DropletNbK__", 400));
+    D.UI.push_back(ParamUI("DropletRad__", 0.01));
+    D.UI.push_back(ParamUI("SimuTimestep", 0.02));
+    D.UI.push_back(ParamUI("VelDecay____", 0.5));
+    D.UI.push_back(ParamUI("ErosionCoeff", 0.05));
+    D.UI.push_back(ParamUI("SmoothResist", 0.99));
+    D.UI.push_back(ParamUI("CliffThresh_", 0.80));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -72,15 +72,15 @@ void TerrainErosion::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void TerrainErosion::CheckAlloc() {
-  if (D.param[TerrainNbX__].hasChanged() ||
-      D.param[TerrainNbY__].hasChanged() ||
-      D.param[DropletNbK__].hasChanged()) isAllocated= false;
+  if (D.UI[TerrainNbX__].hasChanged() ||
+      D.UI[TerrainNbY__].hasChanged() ||
+      D.UI[DropletNbK__].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void TerrainErosion::CheckRefresh() {
-  if (D.param[TerrainNbCut].hasChanged()) isRefreshed= false;
+  if (D.UI[TerrainNbCut].hasChanged()) isRefreshed= false;
 }
 
 
@@ -93,9 +93,9 @@ void TerrainErosion::Allocate() {
   isAllocated= true;
 
   // Get UI parameters
-  terrainNbX= std::max(2, int(std::round(D.param[TerrainNbX__].Get())));
-  terrainNbY= std::max(2, int(std::round(D.param[TerrainNbY__].Get())));
-  dropletNbK= std::max(1, int(std::round(D.param[DropletNbK__].Get())));
+  terrainNbX= std::max(2, D.UI[TerrainNbX__].GetI());
+  terrainNbY= std::max(2, D.UI[TerrainNbY__].GetI());
+  dropletNbK= std::max(1, D.UI[DropletNbK__].GetI());
 
   // Allocate data
   terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -126,7 +126,7 @@ void TerrainErosion::Refresh() {
   isRefreshed= true;
 
   // Get UI parameters
-  terrainNbC= std::max(0, int(std::round(D.param[TerrainNbCut].Get())));
+  terrainNbC= std::max(0, D.UI[TerrainNbCut].GetI());
 
   // Reset random seed to always generate same terrain
   srand(0);
@@ -217,8 +217,8 @@ void TerrainErosion::Animate() {
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
-  float dt= D.param[SimuTimestep].Get();
-  float velocityDecay= std::min(std::max(D.param[VelDecay____].Get(), 0.0), 1.0);
+  float dt= D.UI[SimuTimestep].GetF();
+  float velocityDecay= std::min(std::max(D.UI[VelDecay____].GetF(), 0.0f), 1.0f);
   Math::Vec3f gravity(0.0f, 0.0f, -0.5f);
 
   // Respawn dead droplets
@@ -229,7 +229,7 @@ void TerrainErosion::Animate() {
       dropletColCur[k].set(0.5f, 0.5f, 1.0f);
       dropletMasCur[k]= 1.0f;
       dropletSatCur[k]= 0.01f;
-      dropletRadCur[k]= std::max(D.param[DropletRad__].Get(), 1.e-6);
+      dropletRadCur[k]= std::max(D.UI[DropletRad__].GetF(), 1.e-6f);
       dropletIsDead[k]= false;
     }
   }
@@ -256,7 +256,7 @@ void TerrainErosion::Animate() {
     for (int xOff= std::max(xRef - xRad, 0); xOff <= std::min(xRef + xRad, terrainNbX - 1); xOff++) {
       for (int yOff= std::max(yRef - yRad, 0); yOff <= std::min(yRef + yRad, terrainNbY - 1); yOff++) {
         float weight= std::max(dropletRadCur[k] * 2.0f - (dropletPosCur[k] - terrainPos[xOff][yOff]).norm(), 0.0f);
-        terrainChg[xOff][yOff]-= weight * D.param[ErosionCoeff].Get();
+        terrainChg[xOff][yOff]-= weight * D.UI[ErosionCoeff].GetF();
       }
     }
   }
@@ -354,7 +354,7 @@ void TerrainErosion::Animate() {
         }
       }
       terrainPos[x][y][2]/= float(count);
-      terrainPos[x][y][2]= D.param[SmoothResist].Get() * terrainPosOld[x][y][2] + (1.0f - D.param[SmoothResist].Get()) * terrainPos[x][y][2];
+      terrainPos[x][y][2]= D.UI[SmoothResist].GetF() * terrainPosOld[x][y][2] + (1.0f - D.UI[SmoothResist].GetF()) * terrainPos[x][y][2];
     }
   }
 
@@ -403,7 +403,7 @@ void TerrainErosion::Draw() {
         terrainCol[x][y][2]= 0.5f + terrainNor[x][y][2] / 2.0f;
       }
       else if (D.displayMode3) {
-        if (terrainNor[x][y].dot(Math::Vec3f(0.0f, 0.0f, 1.0f)) < D.param[CliffThresh_].Get()) {
+        if (terrainNor[x][y].dot(Math::Vec3f(0.0f, 0.0f, 1.0f)) < D.UI[CliffThresh_].GetF()) {
           terrainCol[x][y][0]= 0.7f;
           terrainCol[x][y][1]= 0.6f;
           terrainCol[x][y][2]= 0.3f;

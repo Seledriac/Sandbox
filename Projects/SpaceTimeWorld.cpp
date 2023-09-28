@@ -166,19 +166,19 @@ SpaceTimeWorld::SpaceTimeWorld() {
 // Initialize Project UI parameters
 void SpaceTimeWorld::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("WorldNbT____", 16));
-    D.param.push_back(ParamUI("WorldNbX____", 50));
-    D.param.push_back(ParamUI("WorldNbY____", 80));
-    D.param.push_back(ParamUI("WorldNbZ____", 80));
-    D.param.push_back(ParamUI("ScreenNbH___", 100));
-    D.param.push_back(ParamUI("ScreenNbV___", 100));
-    D.param.push_back(ParamUI("ScreenNbS___", 50));
-    D.param.push_back(ParamUI("CursorWorldT", 8));
-    D.param.push_back(ParamUI("MassReach___", 8));
-    D.param.push_back(ParamUI("TimePersist_", 0.8));
-    D.param.push_back(ParamUI("FactorCurv__", 1.0));
-    D.param.push_back(ParamUI("FactorDoppl_", 1.0));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("WorldNbT____", 16));
+    D.UI.push_back(ParamUI("WorldNbX____", 50));
+    D.UI.push_back(ParamUI("WorldNbY____", 80));
+    D.UI.push_back(ParamUI("WorldNbZ____", 80));
+    D.UI.push_back(ParamUI("ScreenNbH___", 100));
+    D.UI.push_back(ParamUI("ScreenNbV___", 100));
+    D.UI.push_back(ParamUI("ScreenNbS___", 50));
+    D.UI.push_back(ParamUI("CursorWorldT", 8));
+    D.UI.push_back(ParamUI("MassReach___", 8));
+    D.UI.push_back(ParamUI("TimePersist_", 0.8));
+    D.UI.push_back(ParamUI("FactorCurv__", 1.0));
+    D.UI.push_back(ParamUI("FactorDoppl_", 1.0));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -194,23 +194,23 @@ void SpaceTimeWorld::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void SpaceTimeWorld::CheckAlloc() {
-  if (D.param[WorldNbT____].hasChanged() ||
-      D.param[WorldNbX____].hasChanged() ||
-      D.param[WorldNbY____].hasChanged() ||
-      D.param[WorldNbZ____].hasChanged() ||
-      D.param[ScreenNbH___].hasChanged() ||
-      D.param[ScreenNbV___].hasChanged() ||
-      D.param[ScreenNbS___].hasChanged()) isAllocated= false;
+  if (D.UI[WorldNbT____].hasChanged() ||
+      D.UI[WorldNbX____].hasChanged() ||
+      D.UI[WorldNbY____].hasChanged() ||
+      D.UI[WorldNbZ____].hasChanged() ||
+      D.UI[ScreenNbH___].hasChanged() ||
+      D.UI[ScreenNbV___].hasChanged() ||
+      D.UI[ScreenNbS___].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void SpaceTimeWorld::CheckRefresh() {
-  if (D.param[CursorWorldT].hasChanged() ||
-      D.param[MassReach___].hasChanged() ||
-      D.param[TimePersist_].hasChanged() ||
-      D.param[FactorCurv__].hasChanged() ||
-      D.param[FactorDoppl_].hasChanged()) isRefreshed= false;
+  if (D.UI[CursorWorldT].hasChanged() ||
+      D.UI[MassReach___].hasChanged() ||
+      D.UI[TimePersist_].hasChanged() ||
+      D.UI[FactorCurv__].hasChanged() ||
+      D.UI[FactorDoppl_].hasChanged()) isRefreshed= false;
 }
 
 
@@ -223,14 +223,14 @@ void SpaceTimeWorld::Allocate() {
   isAllocated= true;
 
   // Get UI parameters
-  worldNbT= std::max(int(std::round(D.param[WorldNbT____].Get())), 1);
-  worldNbX= std::max(int(std::round(D.param[WorldNbX____].Get())), 1);
-  worldNbY= std::max(int(std::round(D.param[WorldNbY____].Get())), 1);
-  worldNbZ= std::max(int(std::round(D.param[WorldNbZ____].Get())), 1);
+  worldNbT= std::max(D.UI[WorldNbT____].GetI(), 1);
+  worldNbX= std::max(D.UI[WorldNbX____].GetI(), 1);
+  worldNbY= std::max(D.UI[WorldNbY____].GetI(), 1);
+  worldNbZ= std::max(D.UI[WorldNbZ____].GetI(), 1);
 
-  screenNbH= std::max(int(std::round(D.param[ScreenNbH___].Get())), 1);
-  screenNbV= std::max(int(std::round(D.param[ScreenNbV___].Get())), 1);
-  screenNbS= std::max(int(std::round(D.param[ScreenNbS___].Get())), 1);
+  screenNbH= std::max(D.UI[ScreenNbH___].GetI(), 1);
+  screenNbV= std::max(D.UI[ScreenNbV___].GetI(), 1);
+  screenNbS= std::max(D.UI[ScreenNbS___].GetI(), 1);
 
   // Allocate data
   if (!Field::CheckFieldDimensions(worldSolid, worldNbT, worldNbX, worldNbY, worldNbZ)) worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
@@ -333,7 +333,7 @@ void SpaceTimeWorld::Refresh() {
   }
 
   // Precompute a mask for the world flow
-  int maskSize= int(std::floor(D.param[MassReach___].Get()));
+  int maskSize= D.UI[MassReach___].GetI();
   std::vector<std::vector<std::vector<std::vector<Math::Vec4f>>>> maskVec= Field::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
   for (int t= 0; t < maskSize * 2 + 1; t++) {
     for (int x= 0; x < maskSize * 2 + 1; x++) {
@@ -378,10 +378,10 @@ void SpaceTimeWorld::Refresh() {
   //   for (int x= 0; x < worldNbX; x++)
   //     for (int y= 0; y < worldNbY; y++)
   //       for (int z= 0; z < worldNbZ; z++)
-  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.param[TimePersist_].Get() * worldFlows[t - 1][x][y][z];
+  //         worldFlows[t][x][y][z]= worldFlows[t][x][y][z] + D.UI[TimePersist_].Get() * worldFlows[t - 1][x][y][z];
 
   // Ensure parameter validity
-  int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
+  int idxT= std::min(std::max(D.UI[CursorWorldT].GetI(), 0), worldNbT - 1);
 
   // Initialize the photon fields
   for (int h= 0; h < screenNbH; h++) {
@@ -405,18 +405,18 @@ void SpaceTimeWorld::Refresh() {
         if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) break;
 
         // if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
-        //   float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   float velDif= D.UI[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
         //   screenColor[h][v]= Math::Vec3f(0.1, 0.1, 0.1) * (1.0 + velDif);
         //   break;
         // }
 
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / float(screenNbS);
         Math::Vec4f flow(
-            worldFlows[idxT][idxX][idxY][idxZ][0] * D.param[TimePersist_].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][1] * D.param[FactorCurv__].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][2] * D.param[FactorCurv__].Get(),
-            worldFlows[idxT][idxX][idxY][idxZ][3] * D.param[FactorCurv__].Get());
-        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.param[FactorCurv__].Get() * flow / float(screenNbS);
+            worldFlows[idxT][idxX][idxY][idxZ][0] * D.UI[TimePersist_].GetF(),
+            worldFlows[idxT][idxX][idxY][idxZ][1] * D.UI[FactorCurv__].GetF(),
+            worldFlows[idxT][idxX][idxY][idxZ][2] * D.UI[FactorCurv__].GetF(),
+            worldFlows[idxT][idxX][idxY][idxZ][3] * D.UI[FactorCurv__].GetF());
+        photonVel[h][v][s + 1]= photonVel[h][v][s] + D.UI[FactorCurv__].GetF() * flow / float(screenNbS);
         screenCount[h][v]++;
 
         int endX= std::min(std::max(int(std::floor(photonPos[h][v][s + 1][1] * worldNbX)), 0), worldNbX - 1);
@@ -426,18 +426,18 @@ void SpaceTimeWorld::Refresh() {
         std::vector<std::array<int, 3>> listVox= Bresenham3D(idxX, idxY, idxZ, endX, endY, endZ);
         for (std::array<int, 3> voxIdx : listVox) {
           if (worldSolid[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]]) {
-            // float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+            // float velDif= D.UI[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
             // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0 + velDif);
-            float velDif= D.param[FactorDoppl_].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+            float velDif= D.UI[FactorDoppl_].GetF() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
             screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
             foundCollision= true;
             break;
           }
         }
         // if (worldSolid[idxT][endX][endY][endZ]) {
-        //   // float velDif= D.param[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
+        //   // float velDif= D.UI[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
         //   // screenColor[h][v]= worldColor[idxT][voxIdx[0]][voxIdx[1]][voxIdx[2]] * (1.0f + velDif);
-        //   float velDif= D.param[FactorDoppl_].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
+        //   float velDif= D.UI[FactorDoppl_].Get() * (photonPos[h][v][0][0] - photonPos[h][v][s][0]);
         //   screenColor[h][v]= worldColor[idxT][endX][endY][endZ] * (1.0f + velDif);
         //   foundCollision= true;
         //   break;
@@ -467,7 +467,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the solid voxels
   if (D.displayMode1) {
-    int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
+    int idxT= std::min(std::max(D.UI[CursorWorldT].GetI(), 0), worldNbT - 1);
     glPushMatrix();
     glScalef(1.0f / float(worldNbX), 1.0f / float(worldNbY), 1.0f / float(worldNbZ));
     glTranslatef(0.5f, 0.5f, 0.5f);
@@ -489,7 +489,7 @@ void SpaceTimeWorld::Draw() {
 
   // Draw the space time flow field
   if (D.displayMode2) {
-    int idxT= std::min(std::max((int)std::floor(D.param[CursorWorldT].Get()), 0), worldNbT - 1);
+    int idxT= std::min(std::max(D.UI[CursorWorldT].GetI(), 0), worldNbT - 1);
     glBegin(GL_LINES);
     // int displaySkipsize= std::pow((worldNbX * worldNbY * worldNbZ) / 10000, 1.0 / 3.0);
     // for (int x= displaySkipsize / 2; x < worldNbX; x+= displaySkipsize) {
@@ -505,7 +505,7 @@ void SpaceTimeWorld::Draw() {
           glColor3f(r, g, b);
           Math::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           glVertex3fv(pos.array());
-          glVertex3fv((pos + D.param[FactorCurv__].Get() * flowVec / float(screenNbS)).array());
+          glVertex3fv((pos + D.UI[FactorCurv__].GetF() * flowVec / float(screenNbS)).array());
         }
       }
     }

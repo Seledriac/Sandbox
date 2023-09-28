@@ -23,9 +23,10 @@ class ParamUI
     val= iVal;
   }
 
-  double Get() {
-    return val;
-  }
+  bool GetB() { return val > 0.0; }
+  int GetI() { return (int)((val < 0.0) ? (val - 0.5) : (val + 0.5)); }
+  float GetF() { return (float)val; }
+  double GetD() { return val; }
 
   bool hasChanged() {
     if (changeFlag) {
@@ -59,7 +60,7 @@ class Data
 
   int idxParamUI= 0;
   int idxCursorUI= 0;
-  std::vector<ParamUI> param;
+  std::vector<ParamUI> UI;
 
   bool plotLogScale= true;
   std::vector<std::string> plotLegend;

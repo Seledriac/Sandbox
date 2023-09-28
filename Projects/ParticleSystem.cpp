@@ -45,17 +45,17 @@ ParticleSystem::ParticleSystem() {
 // Initialize Project UI parameters
 void ParticleSystem::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("Constrain2D_", 1));
-    D.param.push_back(ParamUI("NbParticles_", 1000));
-    D.param.push_back(ParamUI("TimeStep____", 0.05));
-    D.param.push_back(ParamUI("NbSubStep___", 8));
-    D.param.push_back(ParamUI("VelDecay____", 0.1));
-    D.param.push_back(ParamUI("FactorCondu_", 2.0));
-    D.param.push_back(ParamUI("ForceGrav___", -1.0));
-    D.param.push_back(ParamUI("ForceBuoy___", 4.0));
-    D.param.push_back(ParamUI("HeatInput___", 4.0));
-    D.param.push_back(ParamUI("HeatOutput__", 0.1));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("Constrain2D_", 1));
+    D.UI.push_back(ParamUI("NbParticles_", 1000));
+    D.UI.push_back(ParamUI("TimeStep____", 0.05));
+    D.UI.push_back(ParamUI("NbSubStep___", 8));
+    D.UI.push_back(ParamUI("VelDecay____", 0.1));
+    D.UI.push_back(ParamUI("FactorCondu_", 2.0));
+    D.UI.push_back(ParamUI("ForceGrav___", -1.0));
+    D.UI.push_back(ParamUI("ForceBuoy___", 4.0));
+    D.UI.push_back(ParamUI("HeatInput___", 4.0));
+    D.UI.push_back(ParamUI("HeatOutput__", 0.1));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -71,7 +71,7 @@ void ParticleSystem::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void ParticleSystem::CheckAlloc() {
-  if (D.param[NbParticles_].hasChanged()) isAllocated= false;
+  if (D.UI[NbParticles_].hasChanged()) isAllocated= false;
 }
 
 
@@ -89,7 +89,7 @@ void ParticleSystem::Allocate() {
   isAllocated= true;
 
   // Get UI parameters
-  NbParticles= std::max((int)std::round(D.param[NbParticles_].Get()), 1);
+  NbParticles= std::max(D.UI[NbParticles_].GetI(), 1);
 
   // Allocate data
   PosOld= std::vector<Math::Vec3f>(NbParticles, Math::Vec3f(0.0f, 0.0f, 0.0f));
@@ -116,7 +116,7 @@ void ParticleSystem::Refresh() {
 
   // Compute radius based on box size and 2D or 3D
   float BaseRadius= 0.6;
-  if (int(std::round(D.param[Constrain2D_].Get())) >= 1)
+  if (D.UI[Constrain2D_].GetB())
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 2.0f);
   else
     BaseRadius/= std::pow(float(NbParticles), 1.0f / 3.0f);
@@ -124,7 +124,7 @@ void ParticleSystem::Refresh() {
   // Initialize with random particle properties
   for (int k= 0; k < NbParticles; k++) {
     for (int dim= 0; dim < 3; dim++) {
-      if (int(std::round(D.param[Constrain2D_].Get())) >= 1 && dim == 0) continue;
+      if (D.UI[Constrain2D_].GetB() && dim == 0) continue;
       PosCur[k][dim]= Random::Val(-0.5f, 0.5f);
       ColCur[k][dim]= Random::Val(0.0f, 1.0f);
     }
@@ -134,7 +134,7 @@ void ParticleSystem::Refresh() {
   }
 
   // Apply collision constraint (Gauss Seidel)
-  for (int idxStep= 0; idxStep < int(std::round(D.param[NbSubStep___].Get())); idxStep++) {
+  for (int idxStep= 0; idxStep < D.UI[NbSubStep___].GetI(); idxStep++) {
     for (int k0= 0; k0 < NbParticles; k0++) {
       for (int k1= k0 + 1; k1 < NbParticles; k1++) {
         if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
@@ -159,21 +159,21 @@ void ParticleSystem::Animate() {
   if (!isRefreshed) Refresh();
 
   float domainRad= 1.0f;
-  int nbSubstep= int(std::round(D.param[NbSubStep___].Get()));
-  float dt= D.param[TimeStep____].Get() / float(nbSubstep);
-  float velocityDecay= (1.0f - D.param[VelDecay____].Get() * dt);
+  int nbSubstep= D.UI[NbSubStep___].GetI();
+  float dt= D.UI[TimeStep____].GetF() / float(nbSubstep);
+  float velocityDecay= 1.0f - D.UI[VelDecay____].GetF() * dt;
 
-  Math::Vec3f gravity(0.0f, 0.0f, D.param[ForceGrav___].Get());
-  Math::Vec3f buoyancy(0.0f, 0.0f, D.param[ForceBuoy___].Get());
+  Math::Vec3f gravity(0.0f, 0.0f, D.UI[ForceGrav___].GetF());
+  Math::Vec3f buoyancy(0.0f, 0.0f, D.UI[ForceBuoy___].GetF());
 
-  float conductionFactor= D.param[FactorCondu_].Get();
+  float conductionFactor= D.UI[FactorCondu_].GetF();
 
-  float heatAdd= D.param[HeatInput___].Get();
-  float heatRem= D.param[HeatOutput__].Get();
+  float heatAdd= D.UI[HeatInput___].GetF();
+  float heatRem= D.UI[HeatOutput__].GetF();
 
   for (int idxStep= 0; idxStep < nbSubstep; idxStep++) {
     // Project to 2D
-    if (int(std::round(D.param[Constrain2D_].Get())) >= 1) {
+    if (D.UI[Constrain2D_].GetB()) {
       for (int k0= 0; k0 < NbParticles; k0++) {
         PosCur[k0][0]= 0.0f;
         VelCur[k0][0]= 0.0f;

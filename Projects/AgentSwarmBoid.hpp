@@ -18,11 +18,10 @@ class AgentSwarmBoid
 {
   private:
   int NbAgents;
+  int NbTypes;
   std::vector<Math::Vec3f> Pos;
   std::vector<Math::Vec3f> Vel;
-  std::vector<Math::Vec3f> Nor;
-  Math::Vec3f PosFood;
-  Math::Vec3f PosPred;
+  std::vector<int> Typ;
 
   public:
   bool isActivProj;

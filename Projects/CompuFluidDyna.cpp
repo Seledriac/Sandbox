@@ -68,39 +68,39 @@ CompuFluidDyna::CompuFluidDyna() {
 // Initialize Project UI parameters
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("Scenario____", 2));
-    D.param.push_back(ParamUI("InputFile___", 2));
-    D.param.push_back(ParamUI("ResolutionX_", 1));
-    D.param.push_back(ParamUI("ResolutionY_", 80));
-    D.param.push_back(ParamUI("ResolutionZ_", 40));
-    D.param.push_back(ParamUI("TimeStep____", 0.02));
-    D.param.push_back(ParamUI("SolvMaxIter_", 50));
-    D.param.push_back(ParamUI("SolvTolRhs__", 1.e-5));
-    D.param.push_back(ParamUI("SolvTolRel__", 1.e-5));
-    D.param.push_back(ParamUI("SolvSOR_____", 1.75));
-    D.param.push_back(ParamUI("CoeffDiffu__", 0.0001));
-    D.param.push_back(ParamUI("CoeffVisco__", 0.002));
-    D.param.push_back(ParamUI("CoeffVorti__", 0.0));
-    D.param.push_back(ParamUI("CoeffVelX___", 0.0));
-    D.param.push_back(ParamUI("CoeffVelY___", 1.0));
-    D.param.push_back(ParamUI("CoeffVelZ___", 0.0));
-    D.param.push_back(ParamUI("CoeffPres___", 0.02));
-    D.param.push_back(ParamUI("CoeffSmok___", 1.0));
-    D.param.push_back(ParamUI("ObjectPosX__", 0.5));
-    D.param.push_back(ParamUI("ObjectPosY__", 0.25));
-    D.param.push_back(ParamUI("ObjectPosZ__", 0.5));
-    D.param.push_back(ParamUI("ObjectSize__", 0.08));
-    D.param.push_back(ParamUI("ColorFactor_", 1.0));
-    D.param.push_back(ParamUI("ColorThresh_", 0.0));
-    D.param.push_back(ParamUI("ColorMode___", 2));
-    D.param.push_back(ParamUI("SlicePlotX__", 0.5));
-    D.param.push_back(ParamUI("SlicePlotY__", 0.5));
-    D.param.push_back(ParamUI("SlicePlotZ__", 0.5));
-    D.param.push_back(ParamUI("SolvCGPress_", 0.5));
-    D.param.push_back(ParamUI("SolvCGVisco_", 0.5));
-    D.param.push_back(ParamUI("SolvCGSmoke_", 0.5));
-    D.param.push_back(ParamUI("Verbose_____", -0.5));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("Scenario____", 2));
+    D.UI.push_back(ParamUI("InputFile___", 2));
+    D.UI.push_back(ParamUI("ResolutionX_", 1));
+    D.UI.push_back(ParamUI("ResolutionY_", 80));
+    D.UI.push_back(ParamUI("ResolutionZ_", 40));
+    D.UI.push_back(ParamUI("TimeStep____", 0.02));
+    D.UI.push_back(ParamUI("SolvMaxIter_", 50));
+    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-5));
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-5));
+    D.UI.push_back(ParamUI("SolvSOR_____", 1.75));
+    D.UI.push_back(ParamUI("CoeffDiffu__", 0.0001));
+    D.UI.push_back(ParamUI("CoeffVisco__", 0.002));
+    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));
+    D.UI.push_back(ParamUI("CoeffVelX___", 0.0));
+    D.UI.push_back(ParamUI("CoeffVelY___", 1.0));
+    D.UI.push_back(ParamUI("CoeffVelZ___", 0.0));
+    D.UI.push_back(ParamUI("CoeffPres___", 0.02));
+    D.UI.push_back(ParamUI("CoeffSmok___", 1.0));
+    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));
+    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));
+    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));
+    D.UI.push_back(ParamUI("ObjectSize__", 0.08));
+    D.UI.push_back(ParamUI("ColorFactor_", 1.0));
+    D.UI.push_back(ParamUI("ColorThresh_", 0.0));
+    D.UI.push_back(ParamUI("ColorMode___", 2));
+    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));
+    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));
+    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));
+    D.UI.push_back(ParamUI("SolvCGPress_", 0.5));
+    D.UI.push_back(ParamUI("SolvCGVisco_", 0.5));
+    D.UI.push_back(ParamUI("SolvCGSmoke_", 0.5));
+    D.UI.push_back(ParamUI("Verbose_____", -0.5));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -116,25 +116,25 @@ void CompuFluidDyna::SetActiveProject() {
 
 // Check if parameter changes should trigger an allocation
 void CompuFluidDyna::CheckAlloc() {
-  if (D.param[Scenario____].hasChanged() ||
-      D.param[InputFile___].hasChanged() ||
-      D.param[ResolutionX_].hasChanged() ||
-      D.param[ResolutionY_].hasChanged() ||
-      D.param[ResolutionZ_].hasChanged()) isAllocated= false;
+  if (D.UI[Scenario____].hasChanged() ||
+      D.UI[InputFile___].hasChanged() ||
+      D.UI[ResolutionX_].hasChanged() ||
+      D.UI[ResolutionY_].hasChanged() ||
+      D.UI[ResolutionZ_].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void CompuFluidDyna::CheckRefresh() {
-  if (D.param[CoeffVelX___].hasChanged() ||
-      D.param[CoeffVelY___].hasChanged() ||
-      D.param[CoeffVelZ___].hasChanged() ||
-      D.param[CoeffPres___].hasChanged() ||
-      D.param[CoeffSmok___].hasChanged() ||
-      D.param[ObjectPosX__].hasChanged() ||
-      D.param[ObjectPosY__].hasChanged() ||
-      D.param[ObjectPosZ__].hasChanged() ||
-      D.param[ObjectSize__].hasChanged()) isRefreshed= false;
+  if (D.UI[CoeffVelX___].hasChanged() ||
+      D.UI[CoeffVelY___].hasChanged() ||
+      D.UI[CoeffVelZ___].hasChanged() ||
+      D.UI[CoeffPres___].hasChanged() ||
+      D.UI[CoeffSmok___].hasChanged() ||
+      D.UI[ObjectPosX__].hasChanged() ||
+      D.UI[ObjectPosY__].hasChanged() ||
+      D.UI[ObjectPosZ__].hasChanged() ||
+      D.UI[ObjectSize__].hasChanged()) isRefreshed= false;
 }
 
 
@@ -147,9 +147,9 @@ void CompuFluidDyna::Allocate() {
   isAllocated= true;
 
   // Get UI parameters
-  nbX= std::max((int)std::round(D.param[ResolutionX_].Get()), 1);
-  nbY= std::max((int)std::round(D.param[ResolutionY_].Get()), 1);
-  nbZ= std::max((int)std::round(D.param[ResolutionZ_].Get()), 1);
+  nbX= std::max(D.UI[ResolutionX_].GetI(), 1);
+  nbY= std::max(D.UI[ResolutionY_].GetI(), 1);
+  nbZ= std::max(D.UI[ResolutionZ_].GetI(), 1);
   voxSize= 1.0f / (float)std::max(std::max(nbX, nbY), nbZ);
   D.boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
   D.boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
@@ -193,8 +193,8 @@ void CompuFluidDyna::Refresh() {
   isRefreshed= true;
 
   // Get scenario ID and optionnally load bitmap file
-  const int scenarioType= (int)std::round(D.param[Scenario____].Get());
-  const int inputFile= (int)std::round(D.param[InputFile___].Get());
+  const int scenarioType= D.UI[Scenario____].GetI();
+  const int inputFile= D.UI[InputFile___].GetI();
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (scenarioType == 0) {
     if (inputFile == 0)
@@ -245,15 +245,15 @@ void CompuFluidDyna::Refresh() {
           }
           // Set forced values
           if (PreBC[x][y][z]) {
-            PresForced[x][y][z]= (colRGBA[0] > 0.5f) ? (D.param[CoeffPres___].Get()) : (-D.param[CoeffPres___].Get());
+            PresForced[x][y][z]= (colRGBA[0] > 0.5f) ? (D.UI[CoeffPres___].GetF()) : (-D.UI[CoeffPres___].GetF());
           }
           if (VelBC[x][y][z]) {
-            VelXForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.param[CoeffVelX___].Get()) : (-D.param[CoeffVelX___].Get());
-            VelYForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.param[CoeffVelY___].Get()) : (-D.param[CoeffVelY___].Get());
-            VelZForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.param[CoeffVelZ___].Get()) : (-D.param[CoeffVelZ___].Get());
+            VelXForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[CoeffVelX___].GetF()) : (-D.UI[CoeffVelX___].GetF());
+            VelYForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[CoeffVelY___].GetF()) : (-D.UI[CoeffVelY___].GetF());
+            VelZForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[CoeffVelZ___].GetF()) : (-D.UI[CoeffVelZ___].GetF());
           }
           if (SmoBC[x][y][z]) {
-            SmokForced[x][y][z]= (colRGBA[2] > 0.5f) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
+            SmokForced[x][y][z]= (colRGBA[2] > 0.5f) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
         }
 
@@ -267,15 +267,15 @@ void CompuFluidDyna::Refresh() {
           }
           for (int k= 0; k < 2; k++) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
+            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
-            if ((posCell - posObstacle).norm() <= std::max((float)D.param[ObjectSize__].Get(), 0.0f)) {
+            if ((posCell - posObstacle).norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
               VelBC[x][y][z]= true;
               SmoBC[x][y][z]= true;
-              VelXForced[x][y][z]= (k == 1) ? (-D.param[CoeffVelX___].Get()) : (D.param[CoeffVelX___].Get());
-              VelYForced[x][y][z]= (k == 1) ? (-D.param[CoeffVelY___].Get()) : (D.param[CoeffVelY___].Get());
-              VelZForced[x][y][z]= (k == 1) ? (-D.param[CoeffVelZ___].Get()) : (D.param[CoeffVelZ___].Get());
-              SmokForced[x][y][z]= (k == 1) ? (-D.param[CoeffSmok___].Get()) : (D.param[CoeffSmok___].Get());
+              VelXForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelX___].GetF()) : (D.UI[CoeffVelX___].GetF());
+              VelYForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelY___].GetF()) : (D.UI[CoeffVelY___].GetF());
+              VelZForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelZ___].GetF()) : (D.UI[CoeffVelZ___].GetF());
+              SmokForced[x][y][z]= (k == 1) ? (-D.UI[CoeffSmok___].GetF()) : (D.UI[CoeffSmok___].GetF());
             }
           }
         }
@@ -292,20 +292,20 @@ void CompuFluidDyna::Refresh() {
           }
           else if (y == 0) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.param[CoeffVelX___].Get();
-            VelYForced[x][y][z]= D.param[CoeffVelY___].Get();
-            VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
+            VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
+            VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
+            VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
+            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
           else {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), D.param[ObjectPosY__].Get(), D.param[ObjectPosZ__].Get());
+            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             Math::Vec3f dist= (posCell - posObstacle);
             dist[0]*= (float)(nbX - 1) * voxSize;
             dist[1]*= (float)(nbY - 1) * voxSize;
             dist[2]*= (float)(nbZ - 1) * voxSize;
-            if (dist.norm() <= std::max((float)D.param[ObjectSize__].Get(), 0.0f))
+            if (dist.norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
               Solid[x][y][z]= true;
           }
         }
@@ -322,44 +322,44 @@ void CompuFluidDyna::Refresh() {
           // Force tangential velocity on cavity lid
           else if (z == nbZ - 1) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.param[CoeffVelX___].Get();
-            VelYForced[x][y][z]= D.param[CoeffVelY___].Get();
-            VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
+            VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
+            VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
+            VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
           }
           // Add smoke source for visualization
           else if (y == nbY / 2 && z > nbZ / 2) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (z % 16 < 8) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
+            SmokForced[x][y][z]= (z % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
         }
 
         // Vortex ring with inlet in Y-, outlet in Y+ and wall with hole in the corridor
         if (scenarioType == 4) {
-          int wallPos= (float)D.param[ObjectPosY__].Get() * (float)nbY;
-          int wallThick= (float)D.param[ObjectSize__].Get() * (float)nbY;
+          int wallPos= std::round(D.UI[ObjectPosY__].GetF() * (float)nbY);
+          int wallThick= std::round(D.UI[ObjectSize__].GetF() * (float)nbY);
           if ((nbX > 1 && (x == 0 || x == nbX - 1)) ||
               (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
             Solid[x][y][z]= true;
           }
           else if (y == 0) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.param[CoeffVelX___].Get();
-            VelYForced[x][y][z]= D.param[CoeffVelY___].Get();
-            VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
+            VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
+            VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
+            VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
           }
           else if (std::abs(y - wallPos) <= wallThick) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, 0.0f, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(D.param[ObjectPosX__].Get(), 0.0f, D.param[ObjectPosZ__].Get());
+            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), 0.0f, D.UI[ObjectPosZ__].GetF());
             Math::Vec3f dist= (posCell - posObstacle);
             dist[0]*= (float)(nbX - 1) * voxSize;
             dist[1]*= (float)(nbY - 1) * voxSize;
             dist[2]*= (float)(nbZ - 1) * voxSize;
-            if (dist.norm() >= std::max((float)D.param[ObjectSize__].Get(), 0.0f))
+            if (dist.norm() >= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
               Solid[x][y][z]= true;
           }
           else if (y < wallPos) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= D.param[CoeffVelY___].Get() * D.param[CoeffSmok___].Get();
+            SmokForced[x][y][z]= D.UI[CoeffVelY___].GetF() * D.UI[CoeffSmok___].GetF();
           }
           else if (y == nbY - 1) {
             PreBC[x][y][z]= true;
@@ -384,11 +384,11 @@ void CompuFluidDyna::Refresh() {
                    ((nbY == 1) != (std::min(y, nbY - 1 - y) > nbY / 3)) &&
                    ((nbZ == 1) != (std::min(z, nbZ - 1 - z) > nbZ / 3))) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.param[CoeffVelX___].Get();
-            VelYForced[x][y][z]= D.param[CoeffVelY___].Get();
-            VelZForced[x][y][z]= D.param[CoeffVelZ___].Get();
+            VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
+            VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
+            VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::min(z, nbZ - 1 - z) < 4 * (nbZ - 1) / 9) ? -D.param[CoeffSmok___].Get() : D.param[CoeffSmok___].Get();
+            SmokForced[x][y][z]= (std::min(z, nbZ - 1 - z) < 4 * (nbZ - 1) / 9) ? -D.UI[CoeffSmok___].GetF() : D.UI[CoeffSmok___].GetF();
           }
         }
 
@@ -400,17 +400,17 @@ void CompuFluidDyna::Refresh() {
           }
           else if (nbZ > 1 && (z == 1 || z == nbZ - 2)) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelX___].Get() : D.param[CoeffVelX___].Get();
-            VelYForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelY___].Get() : D.param[CoeffVelY___].Get();
-            VelZForced[x][y][z]= (z < nbZ / 2) ? -D.param[CoeffVelZ___].Get() : D.param[CoeffVelZ___].Get();
+            VelXForced[x][y][z]= (z < nbZ / 2) ? -D.UI[CoeffVelX___].GetF() : D.UI[CoeffVelX___].GetF();
+            VelYForced[x][y][z]= (z < nbZ / 2) ? -D.UI[CoeffVelY___].GetF() : D.UI[CoeffVelY___].GetF();
+            VelZForced[x][y][z]= (z < nbZ / 2) ? -D.UI[CoeffVelZ___].GetF() : D.UI[CoeffVelZ___].GetF();
           }
           else if (nbY > 1 && (y == 0 || y == nbY - 1)) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= (y > nbY / 2) ? -D.param[CoeffPres___].Get() : D.param[CoeffPres___].Get();
+            PresForced[x][y][z]= (y > nbY / 2) ? -D.UI[CoeffPres___].GetF() : D.UI[CoeffPres___].GetF();
           }
           else if (std::max(y, nbY - 1 - y) == nbY / 2) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.param[CoeffSmok___].Get()) : (-D.param[CoeffSmok___].Get());
+            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
         }
       }
@@ -435,14 +435,14 @@ void CompuFluidDyna::Animate() {
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
-  if (D.param[Verbose_____].Get() > 0.0) printf("\n");
+  if (D.UI[Verbose_____].GetB()) printf("\n");
 
   // Get simulation parameters
-  const int maxIter= std::max((int)std::round(D.param[SolvMaxIter_].Get()), 0);
-  const float timestep= D.param[TimeStep____].Get();
-  const float coeffDiffu= std::max(D.param[CoeffDiffu__].Get(), 0.0);
-  const float coeffVisco= std::max(D.param[CoeffVisco__].Get(), 0.0);
-  const float coeffVorti= D.param[CoeffVorti__].Get();
+  const int maxIter= std::max(D.UI[SolvMaxIter_].GetI(), 0);
+  const float timestep= D.UI[TimeStep____].GetF();
+  const float coeffDiffu= std::max(D.UI[CoeffDiffu__].GetF(), 0.0f);
+  const float coeffVisco= std::max(D.UI[CoeffVisco__].GetF(), 0.0f);
+  const float coeffVorti= D.UI[CoeffVorti__].GetF();
 
   // Advection steps
   AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
@@ -455,24 +455,24 @@ void CompuFluidDyna::Animate() {
 
   // Diffusion steps
   std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
-  if (D.param[SolvCGSmoke_].Get() < 0.0) {
-    GaussSeidelSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
+  if (D.UI[SolvCGSmoke_].GetB()) {
+    ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
   else {
-    ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
+    GaussSeidelSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
   oldVelX= VelX;
   oldVelY= VelY;
   oldVelZ= VelZ;
-  if (D.param[SolvCGVisco_].Get() < 0.0) {
-    GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-    GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-    GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
-  }
-  else {
+  if (D.UI[SolvCGVisco_].GetB()) {
     ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
     ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
     ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+  }
+  else {
+    GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
+    GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
+    GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
   }
 
   // Vorticity step
@@ -527,14 +527,14 @@ void CompuFluidDyna::Animate() {
   for (int k= 0; k < (int)D.scatData.size(); k++)
     D.scatData[k].clear();
   if (nbZ > 1) {
-    const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * (float)D.param[SlicePlotZ__].Get()), 0), nbZ - 1);
+    const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * D.UI[SlicePlotZ__].GetF()), 0), nbZ - 1);
     for (int y= 0; y < nbY; y++) {
       D.scatData[0].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
       D.scatData[2].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
     }
   }
   if (nbY > 1) {
-    const int y= std::min(std::max((int)std::round((float)(nbY - 1) * (float)D.param[SlicePlotY__].Get()), 0), nbY - 1);
+    const int y= std::min(std::max((int)std::round((float)(nbY - 1) * D.UI[SlicePlotY__].GetF()), 0), nbY - 1);
     for (int z= 0; z < nbZ; z++) {
       D.scatData[1].push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
       D.scatData[3].push_back(std::array<double, 2>({Pres[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
@@ -542,7 +542,7 @@ void CompuFluidDyna::Animate() {
   }
 
   // Add hard coded lid driven cavity flow benchmark for visual comparison
-  if ((int)std::round(D.param[Scenario____].Get()) == 3) {
+  if (D.UI[Scenario____].GetI() == 3) {
     D.scatLegend.resize(4);
     D.scatLegend[2]= "Ghia 100";
     D.scatLegend[3]= "Ghia 100";
@@ -662,56 +662,56 @@ void CompuFluidDyna::Draw() {
         for (int z= 0; z < nbZ; z++) {
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by pressure
-          if ((int)std::round(D.param[ColorMode___].Get()) == 1) {
-            if (std::abs(Pres[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Pres[x][y][z] / voxSize) * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 1) {
+            if (std::abs(Pres[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Pres[x][y][z] / voxSize) * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by smoke
-          if ((int)std::round(D.param[ColorMode___].Get()) == 2) {
-            if (std::abs(Smok[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToRainbow(0.5f + 0.5f * Smok[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 2) {
+            if (std::abs(Smok[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToRainbow(0.5f + 0.5f * Smok[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by velocity magnitude
-          if ((int)std::round(D.param[ColorMode___].Get()) == 3) {
+          if (D.UI[ColorMode___].GetI() == 3) {
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
-            if (vec.norm() < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
+            if (vec.norm() < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by vorticity
-          if ((int)std::round(D.param[ColorMode___].Get()) == 4) {
-            if (std::abs(Vort[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(2.0f * Vort[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 4) {
+            if (std::abs(Vort[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(2.0f * Vort[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in X
-          if ((int)std::round(D.param[ColorMode___].Get()) == 5) {
-            if (std::abs(CurX[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurX[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 5) {
+            if (std::abs(CurX[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurX[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in Y
-          if ((int)std::round(D.param[ColorMode___].Get()) == 6) {
-            if (std::abs(CurY[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurY[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 6) {
+            if (std::abs(CurY[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurY[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in Z
-          if ((int)std::round(D.param[ColorMode___].Get()) == 7) {
-            if (std::abs(CurZ[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurZ[x][y][z] * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 7) {
+            if (std::abs(CurZ[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurZ[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by divergence
-          if ((int)std::round(D.param[ColorMode___].Get()) == 8) {
-            if (std::abs(Dive[x][y][z]) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Dive[x][y][z] / voxSize) * D.param[ColorFactor_].Get(), r, g, b);
+          if (D.UI[ColorMode___].GetI() == 8) {
+            if (std::abs(Dive[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Dive[x][y][z] / voxSize) * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by dummy values
-          if ((int)std::round(D.param[ColorMode___].Get()) >= 10 && (int)std::round(D.param[ColorMode___].Get()) <= 14) {
+          if (D.UI[ColorMode___].GetI() >= 10 && D.UI[ColorMode___].GetI() <= 14) {
             float val= 0.0f;
-            if ((int)std::round(D.param[ColorMode___].Get()) == 10) val= Dum0[x][y][z];
-            if ((int)std::round(D.param[ColorMode___].Get()) == 11) val= Dum1[x][y][z];
-            if ((int)std::round(D.param[ColorMode___].Get()) == 12) val= Dum2[x][y][z];
-            if ((int)std::round(D.param[ColorMode___].Get()) == 13) val= Dum3[x][y][z];
-            if ((int)std::round(D.param[ColorMode___].Get()) == 14) val= Dum4[x][y][z];
-            if (std::abs(val) < D.param[ColorThresh_].Get()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.param[ColorFactor_].Get(), r, g, b);
+            if (D.UI[ColorMode___].GetI() == 10) val= Dum0[x][y][z];
+            if (D.UI[ColorMode___].GetI() == 11) val= Dum1[x][y][z];
+            if (D.UI[ColorMode___].GetI() == 12) val= Dum2[x][y][z];
+            if (D.UI[ColorMode___].GetI() == 13) val= Dum3[x][y][z];
+            if (D.UI[ColorMode___].GetI() == 14) val= Dum4[x][y][z];
+            if (std::abs(val) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * val * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           glColor3f(r, g, b);
           glPushMatrix();
@@ -746,7 +746,7 @@ void CompuFluidDyna::Draw() {
             // Draw the velocity field
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.normSquared() > 0.0f) {
-              Colormap::RatioToJetBrightSmooth(vec.norm() * D.param[ColorFactor_].Get(), r, g, b);
+              Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
               glColor3f(r, g, b);
               Math::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
@@ -994,8 +994,8 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
   // Error plot
   float errTmp= ImplicitFieldDotProd(rField, rField);
-  if (D.param[Verbose_____].Get() > 0.0) printf("CG [%.3e] ", normRHS);
-  if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+  if (D.UI[Verbose_____].GetB()) printf("CG [%.3e] ", normRHS);
+  if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
   D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
 
   // d = M^-1 r
@@ -1008,8 +1008,8 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew / normRHS < (float)D.param[SolvTolRhs__].Get()) break;
-    if (errNew / errBeg < (float)D.param[SolvTolRel__].Get()) break;
+    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
+    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
 
     // q = A d
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, dField, qField);
@@ -1017,7 +1017,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     // alpha = errNew / (d^T q)
     float denom= ImplicitFieldDotProd(dField, qField);
     if (denom == 0.0) {
-      if (D.param[Verbose_____].Get() > 0.0) printf("div by zero denom");
+      if (D.UI[Verbose_____].GetB()) printf("div by zero denom");
       break;
     }
     float alpha= errNew / denom;
@@ -1035,7 +1035,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
     // Error plot
     errTmp= ImplicitFieldDotProd(rField, rField);
-    if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
     D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
 
     // s = M^-1 r
@@ -1045,7 +1045,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     errOld= errNew;
     errNew= ImplicitFieldDotProd(rField, sField);
     if (errOld == 0.0) {
-      if (D.param[Verbose_____].Get() > 0.0) printf("div by zero errOld");
+      if (D.UI[Verbose_____].GetB()) printf("div by zero errOld");
       break;
     }
 
@@ -1061,7 +1061,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   if (iFieldID == FieldID::IDVelY) Dum2= rField;
   if (iFieldID == FieldID::IDVelZ) Dum3= rField;
   if (iFieldID == FieldID::IDPres) Dum4= rField;
-  if (D.param[Verbose_____].Get() > 0.0) printf("\n");
+  if (D.UI[Verbose_____].GetB()) printf("\n");
 }
 
 
@@ -1095,7 +1095,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
 
   // Get parameters
   const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
-  const float coeffOverrelax= std::min(std::max((float)D.param[SolvSOR_____].Get(), 0.0f), 1.99f);
+  const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
 
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -1104,14 +1104,14 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   ImplicitFieldSub(iField, t0Field, rField);
   float errNew= ImplicitFieldDotProd(rField, rField);
   float errBeg= errNew;
-  if (D.param[Verbose_____].Get() > 0.0) printf("GS [%.3e] ", normRHS);
-  if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+  if (D.UI[Verbose_____].GetB()) printf("GS [%.3e] ", normRHS);
+  if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
   D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
 
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew / normRHS < (float)D.param[SolvTolRhs__].Get()) break;
-    if (errNew / errBeg < (float)D.param[SolvTolRel__].Get()) break;
+    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
+    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
     std::vector<std::vector<std::vector<float>>> FieldA= ioField;
     std::vector<std::vector<std::vector<float>>> FieldB= ioField;
 #pragma omp parallel sections
@@ -1202,7 +1202,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     ApplyBC(iFieldID, t0Field);
     ImplicitFieldSub(iField, t0Field, rField);
     errNew= ImplicitFieldDotProd(rField, rField);
-    if (D.param[Verbose_____].Get() > 0.0) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+    if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
     D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
   }
   if (iFieldID == FieldID::IDSmok) Dum0= rField;
@@ -1210,7 +1210,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   if (iFieldID == FieldID::IDVelY) Dum2= rField;
   if (iFieldID == FieldID::IDVelZ) Dum3= rField;
   if (iFieldID == FieldID::IDPres) Dum4= rField;
-  if (D.param[Verbose_____].Get() > 0.0) printf("\n");
+  if (D.UI[Verbose_____].GetB()) printf("\n");
 }
 
 
@@ -1234,11 +1234,11 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   ApplyBC(FieldID::IDPres, Dive);
 
   // Solve for pressure
-  if (D.param[SolvCGPress_].Get() < 0.0) {
-    GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
+  if (D.UI[SolvCGPress_].GetB()) {
+    ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
   }
   else {
-    ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
+    GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
   }
 
   // Update velocities based on neighboring pressures

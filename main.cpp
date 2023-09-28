@@ -217,13 +217,13 @@ void callback_display() {
   // Draw the parameter list
   {
     glLineWidth(2.0f);
-    for (int k= 0; k < int(D.param.size()); k++) {
+    for (int k= 0; k < int(D.UI.size()); k++) {
       if (k == D.idxParamUI)
         glColor3f(0.8f, 0.4f, 0.4f);
       else
         glColor3f(0.8f, 0.8f, 0.8f);
       char str[50];
-      sprintf(str, "%s = %+014.6f", D.param[k].name.c_str(), D.param[k].Get());
+      sprintf(str, "%s = %+014.6f", D.UI[k].name.c_str(), D.UI[k].GetD());
       draw_text(0, winH - (k + 1) * (characHeight + margin), str);
       if (k == D.idxParamUI) {
         sprintf(str, "_");
@@ -415,7 +415,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == ' ') D.playAnimation= !D.playAnimation;
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\r') D.autoRefresh= !D.autoRefresh;
-  else if (key == '\b') D.param[D.idxParamUI].Set(0.0);
+  else if (key == '\b') D.UI[D.idxParamUI].Set(0.0);
 
   else if (key == '1') D.displayMode1= !D.displayMode1;
   else if (key == '2') D.displayMode2= !D.displayMode2;
@@ -447,32 +447,32 @@ void callback_keyboard_special(int key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  if (D.param.empty()) return;
+  if (D.UI.empty()) return;
 
   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
-    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 5 + int(D.param.size())) % int(D.param.size());
-    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 5) % int(D.param.size());
+    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 5 + int(D.UI.size())) % int(D.UI.size());
+    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 5) % int(D.UI.size());
   }
   else {
-    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 1 + int(D.param.size())) % int(D.param.size());
-    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 1) % int(D.param.size());
+    if (key == GLUT_KEY_UP) D.idxParamUI= (D.idxParamUI - 1 + int(D.UI.size())) % int(D.UI.size());
+    if (key == GLUT_KEY_DOWN) D.idxParamUI= (D.idxParamUI + 1) % int(D.UI.size());
   }
 
   if (glutGetModifiers() & GLUT_ACTIVE_SHIFT) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() / 2.0);
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() * 2.0);
+    if (key == GLUT_KEY_LEFT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() / 2.0);
+    if (key == GLUT_KEY_RIGHT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() * 2.0);
   }
   else if (glutGetModifiers() & GLUT_ACTIVE_CTRL) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() / (1.0 + 1.0 / 16.0));
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() * (1.0 + 1.0 / 16.0));
+    if (key == GLUT_KEY_LEFT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() / (1.0 + 1.0 / 16.0));
+    if (key == GLUT_KEY_RIGHT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() * (1.0 + 1.0 / 16.0));
   }
   else if (glutGetModifiers() & GLUT_ACTIVE_ALT) {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - 1.0 / 16.0);
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + 1.0 / 16.0);
+    if (key == GLUT_KEY_LEFT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - 1.0 / 16.0);
+    if (key == GLUT_KEY_RIGHT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + 1.0 / 16.0);
   }
   else {
-    if (key == GLUT_KEY_LEFT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - 1.0);
-    if (key == GLUT_KEY_RIGHT) D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + 1.0);
+    if (key == GLUT_KEY_LEFT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - 1.0);
+    if (key == GLUT_KEY_RIGHT) D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + 1.0);
   }
 
   // Compute refresh
@@ -495,22 +495,22 @@ void callback_mouse_click(int button, int state, int x, int y) {
   if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON) cam->endPan();
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
-    if (!D.param.empty()) {
+    if (!D.UI.empty()) {
       if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-        if ((y - 3) > margin && (y - 3) < int(D.param.size()) * (characHeight + margin)) {
+        if ((y - 3) > margin && (y - 3) < int(D.UI.size()) * (characHeight + margin)) {
           if (button == 3) {
-            if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+            if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
             if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(6 - D.idxCursorUI)));
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(6 - D.idxCursorUI)));
             if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() + std::pow(10.0, double(7 - D.idxCursorUI)));
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(7 - D.idxCursorUI)));
           }
           if (button == 4) {
-            if (D.idxCursorUI == 0) D.param[D.idxParamUI].Set(-D.param[D.idxParamUI].Get());
+            if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
             if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(6 - D.idxCursorUI)));
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(6 - D.idxCursorUI)));
             if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-              D.param[D.idxParamUI].Set(D.param[D.idxParamUI].Get() - std::pow(10.0, double(7 - D.idxCursorUI)));
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(7 - D.idxCursorUI)));
           }
 
           // Compute refresh
@@ -538,7 +538,7 @@ void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
   if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-    if ((y - 3) > margin && (y - 3) < int(D.param.size()) * (characHeight + margin)) {
+    if ((y - 3) > margin && (y - 3) < int(D.UI.size()) * (characHeight + margin)) {
       D.idxParamUI= (y - 3) / (characHeight + margin);
       D.idxCursorUI= (x - (paramNbCharac + 3) * characWidth) / characWidth;
     }

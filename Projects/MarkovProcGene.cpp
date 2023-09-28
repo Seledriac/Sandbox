@@ -46,16 +46,16 @@ MarkovProcGene::MarkovProcGene() {
 // Initialize Project UI parameters
 void MarkovProcGene::SetActiveProject() {
   if (!isActivProj) {
-    D.param.clear();
-    D.param.push_back(ParamUI("Scenario____", 0));
-    D.param.push_back(ParamUI("ResolutionX_", 1));
-    D.param.push_back(ParamUI("ResolutionY_", 21));
-    D.param.push_back(ParamUI("ResolutionZ_", 21));
-    D.param.push_back(ParamUI("RuleSizeX___", 4));
-    D.param.push_back(ParamUI("RuleSizeY___", 4));
-    D.param.push_back(ParamUI("RuleSizeZ___", 4));
-    D.param.push_back(ParamUI("NbSubsti____", 1));
-    D.param.push_back(ParamUI("ShadeCoeff__", 1));
+    D.UI.clear();
+    D.UI.push_back(ParamUI("Scenario____", 0));
+    D.UI.push_back(ParamUI("ResolutionX_", 1));
+    D.UI.push_back(ParamUI("ResolutionY_", 21));
+    D.UI.push_back(ParamUI("ResolutionZ_", 21));
+    D.UI.push_back(ParamUI("RuleSizeX___", 4));
+    D.UI.push_back(ParamUI("RuleSizeY___", 4));
+    D.UI.push_back(ParamUI("RuleSizeZ___", 4));
+    D.UI.push_back(ParamUI("NbSubsti____", 1));
+    D.UI.push_back(ParamUI("ShadeCoeff__", 1));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -76,13 +76,13 @@ void MarkovProcGene::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void MarkovProcGene::CheckRefresh() {
-  if (D.param[Scenario____].hasChanged() ||
-      D.param[ResolutionX_].hasChanged() ||
-      D.param[ResolutionY_].hasChanged() ||
-      D.param[ResolutionZ_].hasChanged() ||
-      D.param[RuleSizeX___].hasChanged() ||
-      D.param[RuleSizeY___].hasChanged() ||
-      D.param[RuleSizeZ___].hasChanged()) isRefreshed= false;
+  if (D.UI[Scenario____].hasChanged() ||
+      D.UI[ResolutionX_].hasChanged() ||
+      D.UI[ResolutionY_].hasChanged() ||
+      D.UI[ResolutionZ_].hasChanged() ||
+      D.UI[RuleSizeX___].hasChanged() ||
+      D.UI[RuleSizeY___].hasChanged() ||
+      D.UI[RuleSizeZ___].hasChanged()) isRefreshed= false;
 }
 
 
@@ -106,9 +106,9 @@ void MarkovProcGene::Refresh() {
   isRefreshed= true;
 
   // Get UI parameters
-  nbX= std::max((int)std::round(D.param[ResolutionX_].Get()), 1);
-  nbY= std::max((int)std::round(D.param[ResolutionY_].Get()), 1);
-  nbZ= std::max((int)std::round(D.param[ResolutionZ_].Get()), 1);
+  nbX= std::max(D.UI[ResolutionX_].GetI(), 1);
+  nbY= std::max(D.UI[ResolutionY_].GetI(), 1);
+  nbZ= std::max(D.UI[ResolutionZ_].GetI(), 1);
 
   // Reset progress counters
   activeSet= -1;
@@ -122,7 +122,7 @@ void MarkovProcGene::Refresh() {
   int scenario= 0;
 
   // Wave Function collapse from BMP image
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     nbX= 2;
     Field= Field::AllocField3D(nbX, nbY, nbZ, 0);
 
@@ -130,8 +130,8 @@ void MarkovProcGene::Refresh() {
     FileInput::LoadImageBMPFile("Resources/WFC_Example.bmp", imageRGBA, false);
     const int nbWImag= (int)imageRGBA.size();
     const int nbHImag= (int)imageRGBA[0].size();
-    const int nbWCell= std::min(std::max((int)std::round(D.param[RuleSizeY___].Get()), 3), nbWImag);
-    const int nbHCell= std::min(std::max((int)std::round(D.param[RuleSizeZ___].Get()), 3), nbHImag);
+    const int nbWCell= std::min(std::max(D.UI[RuleSizeY___].GetI(), 3), nbWImag);
+    const int nbHCell= std::min(std::max(D.UI[RuleSizeZ___].GetI(), 3), nbHImag);
 
     std::vector<std::vector<int>> Imag= Field::AllocField2D(nbWImag, nbHImag, 0);
     for (int wImag= 0; wImag < nbWImag; wImag++) {
@@ -201,7 +201,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Random noise
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
@@ -209,7 +209,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Random noise with multiple sets
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 1, 0), Field::AllocField3D(1, 1, 1, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][0]= 0;
@@ -230,7 +230,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Spread
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 2, 0), Field::AllocField3D(1, 1, 2, 0)});
     tmpRule[0][0][0][0]= 0;
@@ -248,7 +248,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Tron infinite wall
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)});
     tmpRule[0][0][0][0]= 1;
@@ -266,7 +266,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Snake
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 5, 0), Field::AllocField3D(1, 1, 5, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][2]= 3;
@@ -306,7 +306,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Spanning tree
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 3, 0), Field::AllocField3D(1, 1, 3, 0)});
     tmpRule[0][0][0][0]= 3;
@@ -329,7 +329,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Flower garden
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(5, 5, 1, 0), Field::AllocField3D(5, 5, 1, 0)}));
     FillRuleBox(Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1], 0, 0, 0, 4, 4, 0, 2, true, true);
@@ -375,7 +375,7 @@ void MarkovProcGene::Refresh() {
   }
 
   // Galton board
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     Dict[(int)Dict.size() - 1].push_back(std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(1, 1, 2, 0), Field::AllocField3D(1, 1, 2, 0)}));
     Dict[(int)Dict.size() - 1][(int)Dict[Dict.size() - 1].size() - 1][0][0][0][1]= 3;
@@ -416,10 +416,10 @@ void MarkovProcGene::Refresh() {
   }
 
   // Skyscraper
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
-    int const blocX= std::max((int)std::round(D.param[RuleSizeX___].Get()), 3);
+  if (scenario++ == D.UI[Scenario____].GetI()) {
+    int const blocX= std::max(D.UI[RuleSizeX___].GetI(), 3);
     int const blocY= blocX;
-    int const blocZ= std::max((int)std::round(D.param[RuleSizeZ___].Get()), 3);
+    int const blocZ= std::max(D.UI[RuleSizeZ___].GetI(), 3);
 
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     tmpRule= std::array<std::vector<std::vector<std::vector<int>>>, 2>({Field::AllocField3D(blocX, blocY, blocZ, 0), Field::AllocField3D(blocX, blocY, blocZ, 0)});
@@ -458,7 +458,7 @@ void MarkovProcGene::Refresh() {
 
 
   // Conway game of life
-  if (scenario++ == (int)std::round(D.param[Scenario____].Get())) {
+  if (scenario++ == D.UI[Scenario____].GetI()) {
     Dict.push_back(std::vector<std::array<std::vector<std::vector<std::vector<int>>>, 2>>());
     for (int useCC= 0; useCC < 2; useCC++) {
       for (int useNN= 0; useNN < 2; useNN++) {
@@ -550,7 +550,7 @@ void MarkovProcGene::Animate() {
 
   // Iterate over the desired number of substitutions
   if (Dict.empty()) return;
-  for (int idxIter= 0; idxIter < (int)std::round(D.param[NbSubsti____].Get()); idxIter++) {
+  for (int idxIter= 0; idxIter < D.UI[NbSubsti____].GetI(); idxIter++) {
     activeRul= -1;
     activeSet= -1;
     int activeMatchCount= 0;
@@ -713,7 +713,7 @@ void MarkovProcGene::Draw() {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
           if (Field[x][y][z] > 0) {
-            util_SetColorVoxel(Field[x][y][z], 1.0f - (float)D.param[ShadeCoeff__].Get() * (1.0f - FieldVisi[x][y][z]));
+            util_SetColorVoxel(Field[x][y][z], 1.0f - D.UI[ShadeCoeff__].GetF() * (1.0f - FieldVisi[x][y][z]));
             Draw::DrawBoxPosSiz(0.5f - 0.5f * (float)nbX / (float)maxDim + (float)x * voxSize,
                                 0.5f - 0.5f * (float)nbY / (float)maxDim + (float)y * voxSize,
                                 0.5f - 0.5f * (float)nbZ / (float)maxDim + (float)z * voxSize,
