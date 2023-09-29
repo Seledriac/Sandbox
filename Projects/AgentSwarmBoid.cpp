@@ -47,18 +47,18 @@ AgentSwarmBoid::AgentSwarmBoid() {
 void AgentSwarmBoid::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Constrain2D_", 1));
-    D.UI.push_back(ParamUI("PopSize_____", 100));
-    D.UI.push_back(ParamUI("PopTypes____", 4));
+    D.UI.push_back(ParamUI("Constrain2D_", 0));
+    D.UI.push_back(ParamUI("PopSize_____", 300));
+    D.UI.push_back(ParamUI("PopTypes____", 3));
     D.UI.push_back(ParamUI("TimeStep____", 0.05));
-    D.UI.push_back(ParamUI("SizeView____", 0.05));
+    D.UI.push_back(ParamUI("SizeView____", 0.15));
     D.UI.push_back(ParamUI("SizeBody____", 0.05));
-    D.UI.push_back(ParamUI("CoeffSep____", 0.75));
-    D.UI.push_back(ParamUI("CoeffAli____", 0.015));
-    D.UI.push_back(ParamUI("CoeffCoh____", 0.45));
-    D.UI.push_back(ParamUI("CoeffEat____", 0.04));
-    D.UI.push_back(ParamUI("CoeffRun____", 0.1));
-    D.UI.push_back(ParamUI("CoeffOri____", 0.01));
+    D.UI.push_back(ParamUI("CoeffSep____", 0.15));
+    D.UI.push_back(ParamUI("CoeffAli____", 0.05));
+    D.UI.push_back(ParamUI("CoeffCoh____", 0.10));
+    D.UI.push_back(ParamUI("CoeffEat____", 0.10));
+    D.UI.push_back(ParamUI("CoeffRun____", 0.15));
+    D.UI.push_back(ParamUI("CoeffOri____", 0.02));
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -118,6 +118,14 @@ void AgentSwarmBoid::Refresh() {
     Vel[k].set(Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f), Random::Val(-0.2f, 0.2f));
     Typ[k]= Random::Val(0, NbTypes - 1);
   }
+
+  // Optionally constrain to 2D
+  if (D.UI[Constrain2D_].GetB()) {
+    for (int k0= 0; k0 < NbAgents; k0++) {
+      Pos[k0][0]= 0.5;
+      Vel[k0][0]= 0.0;
+    }
+  }
 }
 
 
@@ -129,8 +137,8 @@ void AgentSwarmBoid::Animate() {
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
-  // Constrain to 2D
-  if (D.UI[SizeView____].GetB()) {
+  // Optionally constrain to 2D
+  if (D.UI[Constrain2D_].GetB()) {
     for (int k0= 0; k0 < NbAgents; k0++) {
       Pos[k0][0]= 0.5;
       Vel[k0][0]= 0.0;
