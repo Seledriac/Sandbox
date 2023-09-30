@@ -27,14 +27,17 @@ enum ParamType
   ResolutionX_,
   ResolutionY_,
   ResolutionZ_,
+  VoxelSize___,
   TimeStep____,
   SolvMaxIter_,
   SolvTolRhs__,
   SolvTolRel__,
-  SolvSOR_____,
-  CoeffDiffu__,
-  CoeffVisco__,
+  CoeffAdvecS_,
+  CoeffAdvecV_,
+  CoeffDiffuS_,
+  CoeffDiffuV_,
   CoeffVorti__,
+  CoeffProj___,
   CoeffVelX___,
   CoeffVelY___,
   CoeffVelZ___,
@@ -44,15 +47,13 @@ enum ParamType
   ObjectPosY__,
   ObjectPosZ__,
   ObjectSize__,
+  ScaleFactor_,
   ColorFactor_,
   ColorThresh_,
   ColorMode___,
   SlicePlotX__,
   SlicePlotY__,
   SlicePlotZ__,
-  SolvCGPress_,
-  SolvCGVisco_,
-  SolvCGSmoke_,
   Verbose_____,
 };
 
@@ -69,19 +70,22 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 2));
+    D.UI.push_back(ParamUI("Scenario____", 6));
     D.UI.push_back(ParamUI("InputFile___", 2));
     D.UI.push_back(ParamUI("ResolutionX_", 1));
-    D.UI.push_back(ParamUI("ResolutionY_", 80));
-    D.UI.push_back(ParamUI("ResolutionZ_", 40));
-    D.UI.push_back(ParamUI("TimeStep____", 0.02));
-    D.UI.push_back(ParamUI("SolvMaxIter_", 50));
-    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-5));
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-5));
-    D.UI.push_back(ParamUI("SolvSOR_____", 1.75));
-    D.UI.push_back(ParamUI("CoeffDiffu__", 0.0001));
-    D.UI.push_back(ParamUI("CoeffVisco__", 0.002));
+    D.UI.push_back(ParamUI("ResolutionY_", 50));
+    D.UI.push_back(ParamUI("ResolutionZ_", 50));
+    D.UI.push_back(ParamUI("VoxelSize___", 0.01));
+    D.UI.push_back(ParamUI("TimeStep____", 0.01));
+    D.UI.push_back(ParamUI("SolvMaxIter_", 19));
+    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-6));
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-6));
+    D.UI.push_back(ParamUI("CoeffAdvecS_", 1.0));
+    D.UI.push_back(ParamUI("CoeffAdvecV_", 1.0));
+    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.0001));
     D.UI.push_back(ParamUI("CoeffVorti__", 0.0));
+    D.UI.push_back(ParamUI("CoeffProj___", 1.0));
     D.UI.push_back(ParamUI("CoeffVelX___", 0.0));
     D.UI.push_back(ParamUI("CoeffVelY___", 1.0));
     D.UI.push_back(ParamUI("CoeffVelZ___", 0.0));
@@ -91,15 +95,13 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ObjectPosY__", 0.25));
     D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));
     D.UI.push_back(ParamUI("ObjectSize__", 0.08));
+    D.UI.push_back(ParamUI("ScaleFactor_", 5.0));
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));
     D.UI.push_back(ParamUI("ColorThresh_", 0.0));
     D.UI.push_back(ParamUI("ColorMode___", 2));
     D.UI.push_back(ParamUI("SlicePlotX__", 0.5));
     D.UI.push_back(ParamUI("SlicePlotY__", 0.5));
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));
-    D.UI.push_back(ParamUI("SolvCGPress_", 0.5));
-    D.UI.push_back(ParamUI("SolvCGVisco_", 0.5));
-    D.UI.push_back(ParamUI("SolvCGSmoke_", 0.5));
     D.UI.push_back(ParamUI("Verbose_____", -0.5));
   }
 
@@ -120,7 +122,8 @@ void CompuFluidDyna::CheckAlloc() {
       D.UI[InputFile___].hasChanged() ||
       D.UI[ResolutionX_].hasChanged() ||
       D.UI[ResolutionY_].hasChanged() ||
-      D.UI[ResolutionZ_].hasChanged()) isAllocated= false;
+      D.UI[ResolutionZ_].hasChanged() ||
+      D.UI[VoxelSize___].hasChanged()) isAllocated= false;
 }
 
 
@@ -150,7 +153,8 @@ void CompuFluidDyna::Allocate() {
   nbX= std::max(D.UI[ResolutionX_].GetI(), 1);
   nbY= std::max(D.UI[ResolutionY_].GetI(), 1);
   nbZ= std::max(D.UI[ResolutionZ_].GetI(), 1);
-  voxSize= 1.0f / (float)std::max(std::max(nbX, nbY), nbZ);
+  voxSize= std::max(D.UI[VoxelSize___].GetF(), 1.e-6f);
+  // voxSize= 1.0f / (float)std::max(std::max(nbX, nbY), nbZ);
   D.boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
   D.boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
 
@@ -314,10 +318,11 @@ void CompuFluidDyna::Refresh() {
         if (scenarioType == 3) {
           // Force zero velocity for no-slip condition on cavity wall
           if (y == 0 || y == nbY - 1 || z == 0) {
-            VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= 0;
-            VelYForced[x][y][z]= 0;
-            VelZForced[x][y][z]= 0;
+            // VelBC[x][y][z]= true;
+            // VelXForced[x][y][z]= 0;
+            // VelYForced[x][y][z]= 0;
+            // VelZForced[x][y][z]= 0;
+            Solid[x][y][z]= true;
           }
           // Force tangential velocity on cavity lid
           else if (z == nbZ - 1) {
@@ -325,6 +330,8 @@ void CompuFluidDyna::Refresh() {
             VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
             VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
             VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
+            PreBC[x][y][z]= true;
+            PresForced[x][y][z]= 0.0f;
           }
           // Add smoke source for visualization
           else if (y == nbY / 2 && z > nbZ / 2) {
@@ -396,9 +403,6 @@ void CompuFluidDyna::Refresh() {
         if (scenarioType == 6) {
           if ((nbX > 1 && (x == 0 || x == nbX - 1)) ||
               (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
-            Solid[x][y][z]= true;
-          }
-          else if (nbZ > 1 && (z == 1 || z == nbZ - 2)) {
             VelBC[x][y][z]= true;
             VelXForced[x][y][z]= (z < nbZ / 2) ? -D.UI[CoeffVelX___].GetF() : D.UI[CoeffVelX___].GetF();
             VelYForced[x][y][z]= (z < nbZ / 2) ? -D.UI[CoeffVelY___].GetF() : D.UI[CoeffVelY___].GetF();
@@ -440,84 +444,52 @@ void CompuFluidDyna::Animate() {
   // Get simulation parameters
   const int maxIter= std::max(D.UI[SolvMaxIter_].GetI(), 0);
   const float timestep= D.UI[TimeStep____].GetF();
-  const float coeffDiffu= std::max(D.UI[CoeffDiffu__].GetF(), 0.0f);
-  const float coeffVisco= std::max(D.UI[CoeffVisco__].GetF(), 0.0f);
+  const float coeffDiffu= std::max(D.UI[CoeffDiffuS_].GetF(), 0.0f);
+  const float coeffVisco= std::max(D.UI[CoeffDiffuV_].GetF(), 0.0f);
   const float coeffVorti= D.UI[CoeffVorti__].GetF();
 
   // Advection steps
-  AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
-  std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
-  std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
-  std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
-  AdvectField(FieldID::IDVelX, timestep, oldVelX, oldVelY, oldVelZ, VelX);
-  AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
-  AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
+  if (D.UI[CoeffAdvecS_].GetB()) {
+    AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
+  }
+  if (D.UI[CoeffAdvecV_].GetB()) {
+    std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
+    std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
+    std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
+    AdvectField(FieldID::IDVelX, timestep, oldVelX, oldVelY, oldVelZ, VelX);
+    AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
+    AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
+  }
 
   // Diffusion steps
-  std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
-  if (D.UI[SolvCGSmoke_].GetB()) {
+  if (D.UI[CoeffDiffuS_].GetB()) {
+    std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
     ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
-  else {
-    GaussSeidelSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
-  }
-  oldVelX= VelX;
-  oldVelY= VelY;
-  oldVelZ= VelZ;
-  if (D.UI[SolvCGVisco_].GetB()) {
+  if (D.UI[CoeffDiffuV_].GetB()) {
+    std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
+    std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
+    std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
     ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
     ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
     ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
   }
-  else {
-    GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-    GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-    GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
-  }
 
   // Vorticity step
-  VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
+  if (D.UI[CoeffVorti__].GetB()) {
+    VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
+  }
 
   // Projection step
-  ProjectField(maxIter, timestep, VelX, VelY, VelZ);
+  if (D.UI[CoeffProj___].GetB()) {
+    ProjectField(maxIter, timestep, VelX, VelY, VelZ);
+  }
 
   // TODO test heuristic optimization of solid regions
 
-  // // Draw the plot data
-  // D.plotData.resize(7);
-  // if (D.plotData[0].size() < 1000) {
-  //   D.plotData[0]= "TotVelX";
-  //   D.plotData[1]= "TotVelY";
-  //   D.plotData[2]= "TotVelZ";
-  //   D.plotData[3]= "TotVelMag";
-  //   D.plotData[4]= "TotSmoke";
-  //   D.plotData[5]= "TotPress";
-  //   D.plotData[6]= "TotVorti";
-  //   D.plotData[0].push_back(0.0f);
-  //   D.plotData[1].push_back(0.0f);
-  //   D.plotData[2].push_back(0.0f);
-  //   D.plotData[3].push_back(0.0f);
-  //   D.plotData[4].push_back(0.0f);
-  //   D.plotData[5].push_back(0.0f);
-  //   D.plotData[6].push_back(0.0f);
-  //   for (int x= 0; x < nbX; x++) {
-  //     for (int y= 0; y < nbY; y++) {
-  //       for (int z= 0; z < nbZ; z++) {
-  //         if (!Solid[x][y][z]) {
-  //           D.plotData[0][D.plotData[0].size() - 1]+= VelX[x][y][z];
-  //           D.plotData[1][D.plotData[1].size() - 1]+= VelY[x][y][z];
-  //           D.plotData[2][D.plotData[2].size() - 1]+= VelZ[x][y][z];
-  //           D.plotData[3][D.plotData[3].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
-  //           D.plotData[4][D.plotData[4].size() - 1]+= Smok[x][y][z];
-  //           D.plotData[5][D.plotData[5].size() - 1]+= Pres[x][y][z];
-  //           D.plotData[6][D.plotData[6].size() - 1]+= Vort[x][y][z];
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
   // Draw the scatter data
+  const int yCursor= std::min(std::max((int)std::round((float)(nbY - 1) * D.UI[SlicePlotY__].GetF()), 0), nbY - 1);
+  const int zCursor= std::min(std::max((int)std::round((float)(nbZ - 1) * D.UI[SlicePlotZ__].GetF()), 0), nbZ - 1);
   D.scatLegend.resize(4);
   D.scatLegend[0]= "Horiz VZ";
   D.scatLegend[1]= "Verti VY";
@@ -527,17 +499,15 @@ void CompuFluidDyna::Animate() {
   for (int k= 0; k < (int)D.scatData.size(); k++)
     D.scatData[k].clear();
   if (nbZ > 1) {
-    const int z= std::min(std::max((int)std::round((float)(nbZ - 1) * D.UI[SlicePlotZ__].GetF()), 0), nbZ - 1);
     for (int y= 0; y < nbY; y++) {
-      D.scatData[0].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
-      D.scatData[2].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][z] + (double)z / (double)(nbZ - 1)}));
+      D.scatData[0].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), VelZ[nbX / 2][y][zCursor] + (double)zCursor / (double)(nbZ - 1)}));
+      D.scatData[2].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), Pres[nbX / 2][y][zCursor] + (double)zCursor / (double)(nbZ - 1)}));
     }
   }
   if (nbY > 1) {
-    const int y= std::min(std::max((int)std::round((float)(nbY - 1) * D.UI[SlicePlotY__].GetF()), 0), nbY - 1);
     for (int z= 0; z < nbZ; z++) {
-      D.scatData[1].push_back(std::array<double, 2>({VelY[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
-      D.scatData[3].push_back(std::array<double, 2>({Pres[nbX / 2][y][z] + (double)y / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      D.scatData[1].push_back(std::array<double, 2>({VelY[nbX / 2][yCursor][z] + (double)yCursor / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      D.scatData[3].push_back(std::array<double, 2>({Pres[nbX / 2][yCursor][z] + (double)yCursor / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
     }
   }
 
@@ -549,61 +519,64 @@ void CompuFluidDyna::Animate() {
     D.scatData.resize(4);
     D.scatData[2].clear();
     D.scatData[3].clear();
-    const std::vector<double> GhiaData0X({+0.00000, +0.06250, +0.07030, +0.07810, +0.09380, +0.15630, +0.22660, +0.23440, +0.50000, +0.80470, +0.85940, +0.90630, +0.94530, +0.95310, +0.96090, +0.96880, +1.00000});  // coord along horiz slice
     // Data from Ghia 1982 http://www.msaidi.ir/upload/Ghia1982.pdf
+    const std::vector<double> GhiaData0X({+0.00000, +0.06250, +0.07030, +0.07810, +0.09380, +0.15630, +0.22660, +0.23440, +0.50000, +0.80470, +0.85940, +0.90630, +0.94530, +0.95310, +0.96090, +0.96880, +1.00000});  // coord along horiz slice
     const std::vector<double> GhiaData0Y({+0.00000, +0.09233, +0.10091, +0.10890, +0.12317, +0.16077, +0.17507, +0.17527, +0.05454, -0.24533, -0.22445, -0.16914, -0.10313, -0.08864, -0.07391, -0.05906, +0.00000});  // Re 100   verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.18360, +0.19713, +0.20920, +0.22965, +0.28124, +0.30203, +0.30174, +0.05186, -0.38598, -0.44993, -0.23827, -0.22847, -0.19254, -0.15663, -0.12146, +0.00000});  // Re 400   verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.27485, +0.29012, +0.30353, +0.32627, +0.37095, +0.33075, +0.32235, +0.02526, -0.31966, -0.42665, -0.51500, -0.39188, -0.33714, -0.27669, -0.21388, +0.00000});  // Re 1000  verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.39560, +0.40917, +0.41906, +0.42768, +0.37119, +0.29030, +0.28188, +0.00999, -0.31184, -0.37401, -0.44307, -0.54053, -0.52357, -0.47425, -0.39017, +0.00000});  // Re 3200  verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.42447, +0.43329, +0.43648, +0.42951, +0.35368, +0.28066, +0.27280, +0.00945, -0.30018, -0.36214, -0.41442, -0.52876, -0.55408, -0.55069, -0.49774, +0.00000});  // Re 5000  verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.43979, +0.44030, +0.43564, +0.41824, +0.35060, +0.28117, +0.27348, +0.00824, -0.30448, -0.36213, -0.41050, -0.48590, -0.52347, -0.55216, -0.53858, +0.00000});  // Re 7500  verti vel along horiz slice
-    // const std::vector<double> GhiaData0Y({+0.00000, +0.43983, +0.43733, +0.43124, +0.41487, +0.35070, +0.28003, +0.27224, +0.00831, -0.30719, -0.36737, -0.41496, -0.45863, -0.49099, -0.52987, -0.54302, +0.00000});  // Re 10000 verti vel along horiz slice
     const std::vector<double> GhiaData1X({+0.00000, -0.03717, -0.04192, -0.04775, -0.06434, -0.10150, -0.15662, -0.21090, -0.20581, -0.13641, +0.00332, +0.23151, +0.68717, +0.73722, +0.78871, +0.84123, +1.00000});  // Re 100   horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.08186, -0.09266, -0.10338, -0.14612, -0.24299, -0.32726, -0.17119, -0.11477, +0.02135, +0.16256, +0.29093, +0.55892, +0.61756, +0.68439, +0.75837, +1.00000});  // Re 400   horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.18109, -0.20196, -0.22220, -0.29730, -0.38289, -0.27805, -0.10648, -0.06080, +0.05702, +0.18719, +0.33304, +0.46604, +0.51117, +0.57492, +0.65928, +1.00000});  // Re 1000  horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.32407, -0.35344, -0.37827, -0.41933, -0.34323, -0.24427, -0.86636, -0.04272, +0.07156, +0.19791, +0.34682, +0.46101, +0.46547, +0.48296, +0.53236, +1.00000});  // Re 3200  horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.41165, -0.42901, -0.43643, -0.40435, -0.33050, -0.22855, -0.07404, -0.03039, +0.08183, +0.20087, +0.33556, +0.46036, +0.45992, +0.46120, +0.48223, +1.00000});  // Re 5000  horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.43154, -0.43590, -0.43025, -0.38324, -0.32393, -0.23176, -0.07503, -0.03800, +0.08342, +0.20591, +0.34228, +0.47167, +0.47323, +0.47048, +0.47244, +1.00000});  // Re 7500  horiz vel on verti slice
-    // const std::vector<double> GhiaData1X({+0.00000, -0.42735, -0.42537, -0.41657, -0.38000, -0.32709, -0.23186, -0.07540, +0.03111, +0.08344, +0.20673, +0.34635, +0.47804, +0.48070, +0.47783, +0.47221, +1.00000});  // Re 10000 horiz vel on verti slice
     const std::vector<double> GhiaData1Y({+0.00000, +0.05470, +0.06250, +0.07030, +0.10160, +0.17190, +0.28130, +0.45310, +0.50000, +0.61720, +0.73440, +0.85160, +0.95310, +0.96090, +0.96880, +0.97660, +1.00000});  // coord along verti slice
     for (int k= 0; k < (int)GhiaData0X.size(); k++) {
       D.scatData[2].push_back(std::array<double, 2>({GhiaData0X[k], GhiaData0Y[k] + 0.5f}));
       D.scatData[3].push_back(std::array<double, 2>({GhiaData1X[k] + 0.5f, GhiaData1Y[k]}));
     }
     D.scatLegend.resize(6);
-    D.scatLegend[4]= "Ertu 5k";
-    D.scatLegend[5]= "Ertu 5k";
+    D.scatLegend[4]= "Ertu 10k";
+    D.scatLegend[5]= "Ertu 10k";
     D.scatData.resize(6);
     D.scatData[4].clear();
     D.scatData[5].clear();
-    const std::vector<double> ErtuData0X({+0.00000, +0.01500, +0.03000, +0.04500, +0.06000, +0.07500, +0.09000, +0.10500, +0.12000, +0.13500, +0.15000, +0.50000, +0.85000, +0.86500, +0.88000, +0.89500, +0.91000, +0.92500, +0.94000, +0.95500, +0.97000, +0.98500, +1.00000});  // coord along horiz slice
     // Data from Erturk 2005 https://arxiv.org/pdf/physics/0505121.pdf
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.10190, +0.17920, +0.23490, +0.27460, +0.30410, +0.32730, +0.34600, +0.36050, +0.37050, +0.37560, +0.02580, -0.40280, -0.44070, -0.48030, -0.51320, -0.52630, -0.50520, -0.44170, -0.34000, -0.21730, -0.09730, +0.00000});  // Re 1000  verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.16070, +0.26330, +0.32380, +0.36490, +0.39500, +0.41420, +0.42170, +0.41870, +0.40780, +0.39180, +0.01600, -0.36710, -0.38430, -0.40420, -0.43210, -0.47410, -0.52680, -0.56030, -0.51920, -0.37250, -0.16750, +0.00000});  // Re 2500  verti vel along horiz slice
-    const std::vector<double> ErtuData0Y({+0.00000, +0.21600, +0.32630, +0.38680, +0.42580, +0.44260, +0.44030, +0.42600, +0.40700, +0.38780, +0.36990, +0.01170, -0.36240, -0.38060, -0.39820, -0.41470, -0.43180, -0.45950, -0.51390, -0.57000, -0.50190, -0.24410, +0.00000});  // Re 5000  verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.25090, +0.36080, +0.42100, +0.44940, +0.44950, +0.43370, +0.41370, +0.39500, +0.37790, +0.36160, +0.00990, -0.35740, -0.37550, -0.39380, -0.41180, -0.42830, -0.44430, -0.47480, -0.54340, -0.55500, -0.29910, +0.00000});  // Re 7500  verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.27560, +0.38440, +0.44090, +0.45660, +0.44490, +0.42470, +0.40560, +0.38850, +0.37220, +0.35620, +0.00880, -0.35380, -0.37150, -0.38950, -0.40780, -0.42560, -0.44110, -0.45920, -0.51240, -0.57120, -0.34190, +0.00000});  // Re 10000 verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.29400, +0.40180, +0.45220, +0.45630, +0.43830, +0.41800, +0.40040, +0.38400, +0.36780, +0.35190, +0.00800, -0.35080, -0.36820, -0.38590, -0.40400, -0.42210, -0.43880, -0.45340, -0.48990, -0.56940, -0.37620, +0.00000});  // Re 12500 verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.30830, +0.41520, +0.45800, +0.45290, +0.43230, +0.41320, +0.39640, +0.38010, +0.36410, +0.34830, +0.00740, -0.34810, -0.36540, -0.38280, -0.40050, -0.41860, -0.43610, -0.45050, -0.47540, -0.55930, -0.40410, +0.00000});  // Re 15000 verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.31970, +0.42540, +0.46020, +0.44840, +0.42730, +0.40930, +0.39290, +0.37670, +0.36080, +0.34520, +0.00690, -0.34570, -0.36270, -0.38000, -0.39750, -0.41530, -0.43310, -0.44820, -0.46640, -0.54600, -0.42690, +0.00000});  // Re 17500 verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.32900, +0.43320, +0.46010, +0.44380, +0.42320, +0.40600, +0.38970, +0.37360, +0.35790, +0.34230, +0.00650, -0.34340, -0.36030, -0.37740, -0.39460, -0.41220, -0.43000, -0.44590, -0.46050, -0.53210, -0.44570, +0.00000});  // Re 20000 verti vel along horiz slice
-    // const std::vector<double> ErtuData0Y({+0.00000, +0.33230, +0.43570, +0.45960, +0.44200, +0.42180, +0.40480, +0.38850, +0.37250, +0.35670, +0.34130, +0.00630, -0.34250, -0.35930, -0.37640, -0.39360, -0.41100, -0.42870, -0.44490, -0.45880, -0.52660, -0.45220, +0.00000});  // Re 21000 verti vel along horiz slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.07570, -0.13920, -0.19510, -0.24720, -0.29600, -0.33810, -0.36900, -0.38540, -0.38690, -0.37560, -0.06200, +0.38380, +0.39130, +0.39930, +0.41010, +0.42760, +0.45820, +0.51020, +0.59170, +0.70650, +0.84860, +1.00000});  // Re 1000  horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.15170, -0.25470, -0.33720, -0.39790, -0.42500, -0.42000, -0.39650, -0.36880, -0.34390, -0.32280, -0.04030, +0.41410, +0.42560, +0.43530, +0.44240, +0.44700, +0.45060, +0.46070, +0.49710, +0.59240, +0.77040, +1.00000});  // Re 2500  horiz vel on verti slice
-    const std::vector<double> ErtuData1X({+0.00000, -0.22230, -0.34800, -0.42720, -0.44190, -0.41680, -0.38760, -0.36520, -0.34670, -0.32850, -0.31000, -0.03190, +0.41550, +0.43070, +0.44520, +0.45820, +0.46830, +0.47380, +0.47390, +0.47490, +0.51590, +0.68660, +1.00000});  // Re 5000  horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.26330, -0.39800, -0.44910, -0.42840, -0.39780, -0.37660, -0.35870, -0.34060, -0.32220, -0.30380, -0.02870, +0.41230, +0.42750, +0.44310, +0.45850, +0.47230, +0.48240, +0.48600, +0.48170, +0.49070, +0.63000, +1.00000});  // Re 7500  horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.29070, -0.42590, -0.44690, -0.41420, -0.38990, -0.37210, -0.35430, -0.33610, -0.31790, -0.29980, -0.02680, +0.40950, +0.42430, +0.43980, +0.45560, +0.47110, +0.48430, +0.49170, +0.48910, +0.48370, +0.58910, +1.00000});  // Re 10000 horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.31130, -0.44070, -0.43800, -0.40540, -0.38590, -0.36850, -0.35060, -0.33260, -0.31460, -0.29670, -0.02560, +0.40700, +0.42160, +0.43660, +0.45230, +0.46840, +0.48330, +0.49370, +0.49410, +0.48330, +0.55870, +1.00000});  // Re 12500 horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.32780, -0.44740, -0.42860, -0.40010, -0.38270, -0.36520, -0.34740, -0.32970, -0.31190, -0.29420, -0.02470, +0.40470, +0.41900, +0.43380, +0.44920, +0.46530, +0.48110, +0.49370, +0.49690, +0.48500, +0.53580, +1.00000});  // Re 15000 horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.34120, -0.44900, -0.42060, -0.39650, -0.37970, -0.36220, -0.34460, -0.32710, -0.30960, -0.29200, -0.02400, +0.40240, +0.41660, +0.43120, +0.44630, +0.46220, +0.47840, +0.49250, +0.49820, +0.48710, +0.51830, +1.00000});  // Re 17500 horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.35230, -0.44750, -0.41430, -0.39360, -0.37690, -0.35950, -0.34220, -0.32480, -0.30740, -0.28990, -0.02340, +0.40010, +0.41420, +0.42870, +0.44360, +0.45920, +0.47540, +0.49060, +0.49850, +0.48890, +0.50480, +1.00000});  // Re 20000 horiz vel on verti slice
-    // const std::vector<double> ErtuData1X({+0.00000, -0.35620, -0.44630, -0.41210, -0.39250, -0.37580, -0.35850, -0.34120, -0.32390, -0.30660, -0.28920, -0.02320, +0.39920, +0.41320, +0.42770, +0.44250, +0.45800, +0.47420, +0.48970, +0.49830, +0.48950, +0.50030, +1.00000});  // Re 21000 horiz vel on verti slice
-    const std::vector<double> ErtuData1Y({+0.00000, +0.02000, +0.04000, +0.06000, +0.08000, +0.10000, +0.12000, +0.14000, +0.16000, +0.18000, +0.20000, +0.50000, +0.90000, +0.91000, +0.92000, +0.93000, +0.94000, +0.95000, +0.96000, +0.97000, +0.98000, +0.99000, +1.00000});  // coord along verti slice
+    const std::vector<double> ErtuData0X({+0.0000, +0.0150, +0.0300, +0.0450, +0.0600, +0.0750, +0.0900, +0.1050, +0.1200, +0.1350, +0.1500, +0.5000, +0.8500, +0.8650, +0.8800, +0.8950, +0.9100, +0.9250, +0.9400, +0.9550, +0.9700, +0.9850, +1.0000});  // coord along horiz slice
+    const std::vector<double> ErtuData0Y({+0.0000, +0.2756, +0.3844, +0.4409, +0.4566, +0.4449, +0.4247, +0.4056, +0.3885, +0.3722, +0.3562, +0.0088, -0.3538, -0.3715, -0.3895, -0.4078, -0.4256, -0.4411, -0.4592, -0.5124, -0.5712, -0.3419, +0.0000});  // Re 10000 verti vel along horiz slice
+    const std::vector<double> ErtuData1X({+0.0000, -0.2907, -0.4259, -0.4469, -0.4142, -0.3899, -0.3721, -0.3543, -0.3361, -0.3179, -0.2998, -0.0268, +0.4095, +0.4243, +0.4398, +0.4556, +0.4711, +0.4843, +0.4917, +0.4891, +0.4837, +0.5891, +1.0000});  // Re 10000 horiz vel on verti slice
+    const std::vector<double> ErtuData1Y({+0.0000, +0.0200, +0.0400, +0.0600, +0.0800, +0.1000, +0.1200, +0.1400, +0.1600, +0.1800, +0.2000, +0.5000, +0.9000, +0.9100, +0.9200, +0.9300, +0.9400, +0.9500, +0.9600, +0.9700, +0.9800, +0.9900, +1.0000});  // coord along verti slice
     for (int k= 0; k < (int)ErtuData0X.size(); k++) {
       D.scatData[4].push_back(std::array<double, 2>({ErtuData0X[k], ErtuData0Y[k] + 0.5f}));
       D.scatData[5].push_back(std::array<double, 2>({ErtuData1X[k] + 0.5f, ErtuData1Y[k]}));
     }
   }
+
+  // Add hard coded analytical solution of Poiseuille flow
+  if (D.UI[Scenario____].GetI() == 6) {
+    D.scatData[0].clear();
+    D.scatData[3].clear();
+    D.scatLegend.resize(6);
+    D.scatData.resize(6);
+    D.scatLegend[4]= "Analy VY";
+    D.scatLegend[5]= "Analy P";
+    D.scatData[4].clear();
+    D.scatData[5].clear();
+    const float press0= D.UI[CoeffPres___].GetF();
+    const float press1= -D.UI[CoeffPres___].GetF();
+    const float kinVisco= D.UI[CoeffDiffuV_].GetF();
+    if (nbY > 1) {
+      for (int z= 0; z < nbZ; z++) {
+        const float width= voxSize * (float)(nbY - 1);
+        const float height= voxSize * (float)(nbZ - 1);
+        const float posZ= (float)z * voxSize;
+        const float pressDiff= (press1 - press0) / width;
+        const float analyVelY= -pressDiff * (1.0f / (2.0f * kinVisco)) * posZ * (height - posZ);
+        D.scatData[4].push_back(std::array<double, 2>({analyVelY + (double)yCursor / (double)(nbY - 1), (double)z / (double)(nbZ - 1)}));
+      }
+    }
+    if (nbZ > 1) {
+      for (int y= 0; y < nbY; y++) {
+        const float analyP= press0 + (press1 - press0) * (float)y / (float)(nbY - 1);
+        D.scatData[5].push_back(std::array<double, 2>({(double)y / (double)(nbY - 1), analyP + (double)zCursor / (double)(nbZ - 1)}));
+      }
+    }
+  }
+  // D.scatData[1].clear();
+  // D.scatData[4].clear();
 }
 
 
@@ -664,7 +637,7 @@ void CompuFluidDyna::Draw() {
           // Color by pressure
           if (D.UI[ColorMode___].GetI() == 1) {
             if (std::abs(Pres[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Pres[x][y][z] / voxSize) * D.UI[ColorFactor_].GetF(), r, g, b);
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * Pres[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by smoke
           if (D.UI[ColorMode___].GetI() == 2) {
@@ -677,30 +650,30 @@ void CompuFluidDyna::Draw() {
             if (vec.norm() < D.UI[ColorThresh_].GetF()) continue;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
           }
-          // Color by vorticity
+          // Color by divergence
           if (D.UI[ColorMode___].GetI() == 4) {
+            if (std::abs(Dive[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToGreenToRed(0.5f + 0.5f * Dive[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+          }
+          // Color by vorticity
+          if (D.UI[ColorMode___].GetI() == 5) {
             if (std::abs(Vort[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(2.0f * Vort[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            Colormap::RatioToJetBrightSmooth(Vort[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in X
-          if (D.UI[ColorMode___].GetI() == 5) {
+          if (D.UI[ColorMode___].GetI() == 6) {
             if (std::abs(CurX[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurX[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurX[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in Y
-          if (D.UI[ColorMode___].GetI() == 6) {
+          if (D.UI[ColorMode___].GetI() == 7) {
             if (std::abs(CurY[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurY[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurY[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by curl in Z
-          if (D.UI[ColorMode___].GetI() == 7) {
-            if (std::abs(CurZ[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 2.0f * CurZ[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
-          }
-          // Color by divergence
           if (D.UI[ColorMode___].GetI() == 8) {
-            if (std::abs(Dive[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * (Dive[x][y][z] / voxSize) * D.UI[ColorFactor_].GetF(), r, g, b);
+            if (std::abs(CurZ[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurZ[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by dummy values
           if (D.UI[ColorMode___].GetI() >= 10 && D.UI[ColorMode___].GetI() <= 14) {
@@ -727,7 +700,6 @@ void CompuFluidDyna::Draw() {
 
   // Draw the vector fields
   if (D.displayMode3) {
-    constexpr int nbLineWidths= 3;
     // Set the scene transformation
     glPushMatrix();
     if (nbX == 1) glTranslatef(voxSize, 0.0f, 0.0f);
@@ -736,7 +708,9 @@ void CompuFluidDyna::Draw() {
     glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
     glScalef(voxSize, voxSize, voxSize);
     // Sweep the field
+    constexpr int nbLineWidths= 3;
     for (int k= 0; k < nbLineWidths; k++) {
+      const float segmentRelLength= 1.0f - (float)k / (float)nbLineWidths;
       glLineWidth((float)k + 1.0f);
       glBegin(GL_LINES);
       for (int x= 0; x < nbX; x++) {
@@ -750,7 +724,9 @@ void CompuFluidDyna::Draw() {
               glColor3f(r, g, b);
               Math::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
-              glVertex3fv(pos + vec.normalized() * 5.0f * std::log(vec.norm() + 1.0f) * (1.0f - ((float)k / (float)nbLineWidths)));
+              // glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
+              // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF());
+              glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF() * std::log(vec.norm() + 1.0f));
             }
           }
         }
@@ -760,48 +736,6 @@ void CompuFluidDyna::Draw() {
     glLineWidth(1.0f);
     glPopMatrix();
   }
-
-  // // Testing colormaps
-  // if (D.displayMode5) {
-  //   // Set the scene transformation
-  //   glPushMatrix();
-  //   glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
-  //   glScalef(voxSize, voxSize, voxSize);
-  //   if (nbX == 1) glScalef(0.1f, 1.0f, 1.0f);
-  //   if (nbY == 1) glScalef(1.0f, 0.1f, 1.0f);
-  //   if (nbZ == 1) glScalef(1.0f, 1.0f, 0.1f);
-  //   // Sweep the field
-  //   for (int x= 0; x < nbX; x++) {
-  //     for (int y= 0; y < nbY; y++) {
-  //       for (int z= 0; z < nbZ; z++) {
-  //         float r= 0.0f, g= 0.0f, b= 0.0f;
-  //         if (z / 5 == 3) Colormap::RatioToBlackBody((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 4) Colormap::RatioToBlueToRed((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 5) Colormap::RatioToGrayscale((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 6) Colormap::RatioToGreenToRed((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 7) Colormap::RatioToJet((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 8) Colormap::RatioToJetBright((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 9) Colormap::RatioToJetBrightSmooth((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 10) Colormap::RatioToJetSmooth((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 11) Colormap::RatioToPlasma((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 12) Colormap::RatioToRainbow((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 13) Colormap::RatioToRedGreenBlueRed((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 14) Colormap::RatioToTurbo((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 15) Colormap::RatioToViridis((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 16) Colormap::RatioBands5((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 17) Colormap::RatioBands10((float)y / (float)(nbY - 1), r, g, b);
-  //         if (z / 5 == 18) Colormap::RatioBands20((float)y / (float)(nbY - 1), r, g, b);
-  //         glColor3f(r, g, b);
-  //         glPushMatrix();
-  //         glTranslatef((float)x, (float)y, (float)z);
-  //         if (nbX > 1 && nbY > 1 && nbZ > 1) glutWireCube(1.0);
-  //         else glutSolidCube(1.0);
-  //         glPopMatrix();
-  //       }
-  //     }
-  //   }
-  //   glPopMatrix();
-  // }
 }
 
 
@@ -908,7 +842,7 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
                                                    const std::vector<std::vector<std::vector<float>>>& iField,
                                                    std::vector<std::vector<std::vector<float>>>& oField) {
   // Precompute value
-  const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
+  const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize * voxSize);
   // Sweep through the field
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
@@ -1065,155 +999,6 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 }
 
 
-void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
-                                      const bool iDiffuMode, const float iDiffuCoeff,
-                                      const std::vector<std::vector<std::vector<float>>>& iField,
-                                      std::vector<std::vector<std::vector<float>>>& ioField) {
-  // // Skip if non changing field
-  // if (iDiffuMode && iDiffuCoeff == 0.0f) return;
-  // if (iFieldID == FieldID::IDVelX && nbX == 1) return;
-  // if (iFieldID == FieldID::IDVelY && nbY == 1) return;
-  // if (iFieldID == FieldID::IDVelZ && nbZ == 1) return;
-
-  // // Reset solution value
-  // for (int x= 0; x < nbX; x++)
-  //   for (int y= 0; y < nbY; y++)
-  //     for (int z= 0; z < nbZ; z++)
-  //       ioField[x][y][z]= 0.0f;
-  // ApplyBC(iFieldID, ioField);
-
-  // Prepare convergence plot
-  D.plotLegend.resize(5);
-  D.plotLegend[FieldID::IDSmok]= "Diffu S";
-  D.plotLegend[FieldID::IDVelX]= "Diffu VX";
-  D.plotLegend[FieldID::IDVelY]= "Diffu VY";
-  D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
-  D.plotLegend[FieldID::IDPres]= "Proj  P";
-  D.plotData.resize(5);
-  D.plotData[iFieldID].clear();
-  const float normRHS= ImplicitFieldDotProd(iField, iField);
-
-  // Get parameters
-  const float diffuVal= iTimeStep * (float)(nbX * nbY * nbZ) * iDiffuCoeff;
-  const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
-
-  std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-  std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
-  ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
-  ApplyBC(iFieldID, t0Field);
-  ImplicitFieldSub(iField, t0Field, rField);
-  float errNew= ImplicitFieldDotProd(rField, rField);
-  float errBeg= errNew;
-  if (D.UI[Verbose_____].GetB()) printf("GS [%.3e] ", normRHS);
-  if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-  D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-
-  // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
-  for (int k= 0; k < iMaxIter; k++) {
-    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
-    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
-    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
-    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
-#pragma omp parallel sections
-    {
-#pragma omp section
-      {
-        // Forward pass
-        for (int x= 0; x < nbX; x++) {
-          for (int y= 0; y < nbY; y++) {
-            for (int z= 0; z < nbZ; z++) {
-              // Skip solid or fixed values
-              if (Solid[x][y][z]) continue;
-              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-              // Get count and sum of valid neighbors
-              int count= 0;
-              float sum= 0.0f;
-              for (int k= 0; k < MaskSize; k++) {
-                const int xOff= x + Mask[k][0];
-                const int yOff= y + Mask[k][1];
-                const int zOff= z + Mask[k][2];
-                if (xOff < 0 || xOff >= nbX || yOff < 0 || yOff >= nbY || zOff < 0 || zOff >= nbZ) continue;
-                if (Solid[xOff][yOff][zOff]) continue;
-                sum+= FieldA[xOff][yOff][zOff];
-                count++;
-              }
-              // Set new value according to coefficients and flags
-              const float prevVal= FieldA[x][y][z];
-              if (iDiffuMode)
-                FieldA[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-              else if (count > 0)
-                FieldA[x][y][z]= (sum - iField[x][y][z]) / (float)count;
-              // Apply overrelaxation trick
-              FieldA[x][y][z]= prevVal + coeffOverrelax * (FieldA[x][y][z] - prevVal);
-            }
-          }
-        }
-      }
-#pragma omp section
-      {
-        // Backward pass
-        for (int x= nbX - 1; x >= 0; x--) {
-          for (int y= nbY - 1; y >= 0; y--) {
-            for (int z= nbZ - 1; z >= 0; z--) {
-              // Skip solid or fixed values
-              if (Solid[x][y][z]) continue;
-              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-              // Get count and sum of valid neighbors
-              int count= 0;
-              float sum= 0.0f;
-              for (int k= 0; k < MaskSize; k++) {
-                const int xOff= x + Mask[k][0];
-                const int yOff= y + Mask[k][1];
-                const int zOff= z + Mask[k][2];
-                if (xOff < 0 || xOff >= nbX || yOff < 0 || yOff >= nbY || zOff < 0 || zOff >= nbZ) continue;
-                if (Solid[xOff][yOff][zOff]) continue;
-                sum+= FieldB[xOff][yOff][zOff];
-                count++;
-              }
-              // Set new value according to coefficients and flags
-              const float prevVal= FieldB[x][y][z];
-              if (iDiffuMode)
-                FieldB[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-              else if (count > 0)
-                FieldB[x][y][z]= (sum - iField[x][y][z]) / (float)count;
-              // Apply overrelaxation trick
-              FieldB[x][y][z]= prevVal + coeffOverrelax * (FieldB[x][y][z] - prevVal);
-            }
-          }
-        }
-      }
-      // Recombine forward and backward passes
-      for (int x= 0; x < nbX; x++)
-        for (int y= 0; y < nbY; y++)
-          for (int z= 0; z < nbZ; z++)
-            ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
-    }
-    // Reapply BC to maintain consistency
-    ApplyBC(iFieldID, ioField);
-    ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
-    ApplyBC(iFieldID, t0Field);
-    ImplicitFieldSub(iField, t0Field, rField);
-    errNew= ImplicitFieldDotProd(rField, rField);
-    if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-  }
-  if (iFieldID == FieldID::IDSmok) Dum0= rField;
-  if (iFieldID == FieldID::IDVelX) Dum1= rField;
-  if (iFieldID == FieldID::IDVelY) Dum2= rField;
-  if (iFieldID == FieldID::IDVelZ) Dum3= rField;
-  if (iFieldID == FieldID::IDPres) Dum4= rField;
-  if (D.UI[Verbose_____].GetB()) printf("\n");
-}
-
-
 void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelX,
                                   std::vector<std::vector<std::vector<float>>>& ioVelY,
@@ -1224,7 +1009,8 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         Dive[x][y][z]= 0.0f;
-        if (Solid[x][y][z] || PreBC[x][y][z]) continue;
+        if (Solid[x][y][z]) continue;
+        // if (Solid[x][y][z] || PreBC[x][y][z]) continue;
         if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= 0.5f * (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) * voxSize;
         if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= 0.5f * (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) * voxSize;
         if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= 0.5f * (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) * voxSize;
@@ -1234,12 +1020,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   ApplyBC(FieldID::IDPres, Dive);
 
   // Solve for pressure
-  if (D.UI[SolvCGPress_].GetB()) {
-    ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
-  }
-  else {
-    GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
-  }
+  ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
 
   // Update velocities based on neighboring pressures
 #pragma omp parallel for
@@ -1315,9 +1096,9 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 
         // Find source position of current voxel via backtracing
-        float posX= (float)x - iTimeStep * iVelX[x][y][z] / voxSize;
-        float posY= (float)y - iTimeStep * iVelY[x][y][z] / voxSize;
-        float posZ= (float)z - iTimeStep * iVelZ[x][y][z] / voxSize;
+        float posX= (float)x - iVelX[x][y][z] * iTimeStep / voxSize;
+        float posY= (float)y - iVelY[x][y][z] * iTimeStep / voxSize;
+        float posZ= (float)z - iVelZ[x][y][z] * iTimeStep / voxSize;
 
         // Trilinear interpolation at source position
         ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);

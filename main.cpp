@@ -28,16 +28,17 @@
 // Global variables used for the display
 int winW, winH;
 constexpr int winFPS= 60;
-constexpr int paramNbCharac= 12;
-constexpr int characHeight= 14;
-constexpr int characWidth= 10;
-constexpr int margin= 1;
-constexpr int plotW= 600;
-constexpr int plotH= 100;
-constexpr int scatW= 250;
-constexpr int scatH= 250;
-constexpr int textW= 9 * characWidth;
-constexpr int textH= characHeight;
+constexpr int paramLabelNbChar= 12;
+constexpr int paramSpaceNbChar= 1;
+constexpr int charHeight= 14;
+constexpr int charWidth= 10;
+constexpr int pixelMargin= 1;
+constexpr int plotAreaW= 600;
+constexpr int plotAreaH= 100;
+constexpr int scatAreaW= 250;
+constexpr int scatAreaH= 250;
+constexpr int textBoxW= 9 * charWidth;
+constexpr int textBoxH= charHeight;
 Camera *cam;
 
 // Global variables used by the scene
@@ -139,7 +140,7 @@ void draw_text(int const x, int const y, char *const text) {
   glTranslatef(float(x), float(y), 0.0f);
   const float baseHeight= 152.38f;
   const float baseWidth= 104.76f;
-  glScalef(float(characWidth) / baseWidth, float(characHeight) / baseHeight, 1.0f);
+  glScalef(float(charWidth) / baseWidth, float(charHeight) / baseHeight, 1.0f);
   for (char *p= text; *p; p++)
     glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *p);
   glPopMatrix();
@@ -223,12 +224,12 @@ void callback_display() {
       else
         glColor3f(0.8f, 0.8f, 0.8f);
       char str[50];
-      sprintf(str, "%s = %+014.6f", D.UI[k].name.c_str(), D.UI[k].GetD());
-      draw_text(0, winH - (k + 1) * (characHeight + margin), str);
+      sprintf(str, "%s %+014.6f", D.UI[k].name.c_str(), D.UI[k].GetD());
+      draw_text(0, winH - (k + 1) * (charHeight + pixelMargin), str);
       if (k == D.idxParamUI) {
         sprintf(str, "_");
-        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - (k + 1) * (characHeight + margin), str);
-        draw_text((paramNbCharac + 3 + D.idxCursorUI) * characWidth, winH - 1 - k * (characHeight + margin), str);
+        draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - (k + 1) * (charHeight + pixelMargin), str);
+        draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - 1 - k * (charHeight + pixelMargin), str);
       }
     }
     glLineWidth(1.0f);
@@ -260,15 +261,15 @@ void callback_display() {
         strcpy(str, D.plotLegend[k0].c_str());
       else
         strcpy(str, "<name>");
-      draw_text(winW - plotW - 3 * textW, winH - textH - textH * k0 - textH - margin, str);
+      draw_text(winW - plotAreaW - 3 * textBoxW, winH - textBoxH - textBoxH * k0 - textBoxH - pixelMargin, str);
       sprintf(str, "%+.2e", valMax);
-      draw_text(winW - textW - plotW + k0 * textW, winH - textH - margin, str);
+      draw_text(winW - textBoxW - plotAreaW + k0 * textBoxW, winH - textBoxH - pixelMargin, str);
       sprintf(str, "%+.2e", valMin);
-      draw_text(winW - textW - plotW + k0 * textW, winH - plotH - 2 * textH - 2 * margin, str);
+      draw_text(winW - textBoxW - plotAreaW + k0 * textBoxW, winH - plotAreaH - 2 * textBoxH - 2 * pixelMargin, str);
       sprintf(str, "%+.2e", D.plotData[k0][0]);
-      draw_text(winW - plotW - 2 * textW, winH - textH - textH * k0 - textH - margin, str);
+      draw_text(winW - plotAreaW - 2 * textBoxW, winH - textBoxH - textBoxH * k0 - textBoxH - pixelMargin, str);
       sprintf(str, "%+.2e", D.plotData[k0][D.plotData[k0].size() - 1]);
-      draw_text(winW - textW, winH - textH - textH * k0 - textH - margin, str);
+      draw_text(winW - textBoxW, winH - textBoxH - textBoxH * k0 - textBoxH - pixelMargin, str);
 
       // Draw the plot curves and markers
       if (int(D.plotData[k0].size()) >= 2) {
@@ -281,7 +282,7 @@ void callback_display() {
               if (D.plotLogScale) valScaled= (D.plotData[k0][k1] - valMin) / (valMax - valMin);
               else valScaled= (std::log10(D.plotData[k0][k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
             }
-            glVertex3i(winW - plotW - textW + plotW * k1 / std::max((int)D.plotData[k0].size() - 1, 1), winH - plotH - textH - 2 * margin + plotH * valScaled, 0);
+            glVertex3i(winW - plotAreaW - textBoxW + plotAreaW * k1 / std::max((int)D.plotData[k0].size() - 1, 1), winH - plotAreaH - textBoxH - 2 * pixelMargin + plotAreaH * valScaled, 0);
           }
           glEnd();
         }
@@ -296,9 +297,9 @@ void callback_display() {
     glLineWidth(2.0f);
     glBegin(GL_LINE_STRIP);
     glColor3f(0.7f, 0.7f, 0.7f);
-    glVertex3i(textW, scatH + 3 * textH, 0);
-    glVertex3i(textW, 3 * textH, 0);
-    glVertex3i(textW + scatW, 3 * textH, 0);
+    glVertex3i(textBoxW, scatAreaH + 3 * textBoxH, 0);
+    glVertex3i(textBoxW, 3 * textBoxH, 0);
+    glVertex3i(textBoxW + scatAreaW, 3 * textBoxH, 0);
     glEnd();
 
     // Find the min max range for scaling
@@ -318,13 +319,13 @@ void callback_display() {
     // Draw min max values
     char str[50];
     sprintf(str, "%+.2e", valMinX);
-    draw_text(textW, 2 * textH, str);
+    draw_text(textBoxW, 2 * textBoxH, str);
     sprintf(str, "%+.2e", valMaxX);
-    draw_text(textW + scatW - textW, 2 * textH, str);
+    draw_text(textBoxW + scatAreaW - textBoxW, 2 * textBoxH, str);
     sprintf(str, "%+.2e", valMinY);
-    draw_text(0, 3 * textH, str);
+    draw_text(0, 3 * textBoxH, str);
     sprintf(str, "%+.2e", valMaxY);
-    draw_text(0, 3 * textH + scatH - textH, str);
+    draw_text(0, 3 * textBoxH + scatAreaH - textBoxH, str);
 
     glPointSize(4.0f);
     for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
@@ -340,14 +341,14 @@ void callback_display() {
         strcpy(str, D.scatLegend[k0].c_str());
       else
         strcpy(str, "<name>");
-      draw_text(0, scatH - k0 * textH, str);
+      draw_text(0, scatAreaH - k0 * textBoxH, str);
 
       // Draw the polyline
       glBegin(GL_POINTS);
       for (int k1= 0; k1 < int(D.scatData[k0].size()); k1++) {
         double relPosX= (D.scatData[k0][k1][0] - valMinX) / (valMaxX - valMinX);
         double relPosY= (D.scatData[k0][k1][1] - valMinY) / (valMaxY - valMinY);
-        glVertex3i(textW + (int)std::round((double)scatW * relPosX), 3 * textH + (int)std::round((double)scatH * relPosY), 0);
+        glVertex3i(textBoxW + (int)std::round((double)scatAreaW * relPosX), 3 * textBoxH + (int)std::round((double)scatAreaH * relPosY), 0);
       }
       glEnd();
     }
@@ -369,14 +370,14 @@ void callback_display() {
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     sprintf(str, "R");
-    draw_text(0, 2 + characHeight, str);
+    draw_text(0, 2 + charHeight, str);
 
     if (D.playAnimation)
       glColor3f(1.0f, 0.6f, 0.6f);
     else
       glColor3f(0.8f, 0.8f, 0.8f);
     sprintf(str, "P");
-    draw_text(characWidth, 2 + characHeight, str);
+    draw_text(charWidth, 2 + charHeight, str);
     glLineWidth(1.0f);
   }
 
@@ -496,8 +497,8 @@ void callback_mouse_click(int button, int state, int x, int y) {
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.UI.empty()) {
-      if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-        if ((y - 3) > margin && (y - 3) < int(D.UI.size()) * (characHeight + margin)) {
+      if (x > (paramLabelNbChar + paramSpaceNbChar) * charWidth && x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+        if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
           if (button == 3) {
             if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
             if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
@@ -537,10 +538,10 @@ void callback_mouse_motion(int x, int y) {
 void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
-  if (x > (paramNbCharac + 3) * characWidth && x < (paramNbCharac + 3 + 14) * characWidth) {
-    if ((y - 3) > margin && (y - 3) < int(D.UI.size()) * (characHeight + margin)) {
-      D.idxParamUI= (y - 3) / (characHeight + margin);
-      D.idxCursorUI= (x - (paramNbCharac + 3) * characWidth) / characWidth;
+  if (x > (paramLabelNbChar + paramSpaceNbChar) * charWidth && x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+    if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
+      D.idxParamUI= (y - 3) / (charHeight + pixelMargin);
+      D.idxCursorUI= (x - (paramLabelNbChar + paramSpaceNbChar) * charWidth) / charWidth;
     }
   }
 

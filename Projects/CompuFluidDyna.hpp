@@ -107,10 +107,6 @@ class CompuFluidDyna
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
                               std::vector<std::vector<std::vector<float>>>& ioField);
-  void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
-                        const bool iDiffuMode, const float iDiffuCoeff,
-                        const std::vector<std::vector<std::vector<float>>>& iField,
-                        std::vector<std::vector<std::vector<float>>>& ioField);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                const std::vector<std::vector<std::vector<float>>>& iFieldRef);
   void AdvectField(const int iFieldID, const float iTimeStep,
