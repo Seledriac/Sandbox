@@ -76,14 +76,14 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ResolutionY_", 50));
     D.UI.push_back(ParamUI("ResolutionZ_", 50));
     D.UI.push_back(ParamUI("VoxelSize___", 0.01));
-    D.UI.push_back(ParamUI("TimeStep____", 0.01));
-    D.UI.push_back(ParamUI("SolvMaxIter_", 19));
-    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-6));
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-6));
+    D.UI.push_back(ParamUI("TimeStep____", 0.02));
+    D.UI.push_back(ParamUI("SolvMaxIter_", 50));
+    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-2));
     D.UI.push_back(ParamUI("CoeffAdvecS_", 1.0));
     D.UI.push_back(ParamUI("CoeffAdvecV_", 1.0));
     D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));
-    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.0001));
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));
     D.UI.push_back(ParamUI("CoeffVorti__", 0.0));
     D.UI.push_back(ParamUI("CoeffProj___", 1.0));
     D.UI.push_back(ParamUI("CoeffVelX___", 0.0));
@@ -154,7 +154,7 @@ void CompuFluidDyna::Allocate() {
   nbY= std::max(D.UI[ResolutionY_].GetI(), 1);
   nbZ= std::max(D.UI[ResolutionZ_].GetI(), 1);
   voxSize= std::max(D.UI[VoxelSize___].GetF(), 1.e-6f);
-  // voxSize= 1.0f / (float)std::max(std::max(nbX, nbY), nbZ);
+  voxMeasure= std::pow(voxSize, (nbX > 1) + (nbY > 1) + (nbZ > 1));
   D.boxMin= {0.5f - 0.5f * (float)nbX * voxSize, 0.5f - 0.5f * (float)nbY * voxSize, 0.5f - 0.5f * (float)nbZ * voxSize};
   D.boxMax= {0.5f + 0.5f * (float)nbX * voxSize, 0.5f + 0.5f * (float)nbY * voxSize, 0.5f + 0.5f * (float)nbZ * voxSize};
 
@@ -456,9 +456,9 @@ void CompuFluidDyna::Animate() {
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
-    AdvectField(FieldID::IDVelX, timestep, oldVelX, oldVelY, oldVelZ, VelX);
-    AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
-    AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
+    if (nbX > 1) AdvectField(FieldID::IDVelX, timestep, oldVelX, oldVelY, oldVelZ, VelX);
+    if (nbY > 1) AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
+    if (nbZ > 1) AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
   }
 
   // Diffusion steps
@@ -470,9 +470,9 @@ void CompuFluidDyna::Animate() {
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
-    ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-    ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-    ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+    if (nbX > 1) ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
+    if (nbY > 1) ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
+    if (nbZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
   }
 
   // Vorticity step
@@ -842,7 +842,7 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
                                                    const std::vector<std::vector<std::vector<float>>>& iField,
                                                    std::vector<std::vector<std::vector<float>>>& oField) {
   // Precompute value
-  const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize * voxSize);
+  const float diffuVal= iDiffuCoeff * iTimeStep / voxMeasure;
   // Sweep through the field
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
@@ -875,9 +875,9 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         }
         else {
           if (iPrecondMode)
-            oField[x][y][z]= 1.0f / (float)count * iField[x][y][z];
+            oField[x][y][z]= 1.0f / ((float)count / voxMeasure) * iField[x][y][z];
           else
-            oField[x][y][z]= sum - (float)count * iField[x][y][z];
+            oField[x][y][z]= sum / voxMeasure - ((float)count / voxMeasure) * iField[x][y][z];
         }
       }
     }
@@ -889,19 +889,6 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
                                             const bool iDiffuMode, const float iDiffuCoeff,
                                             const std::vector<std::vector<std::vector<float>>>& iField,
                                             std::vector<std::vector<std::vector<float>>>& ioField) {
-  // // Skip if non changing field
-  // if (iDiffuMode && iDiffuCoeff == 0.0f) return;
-  // if (iFieldID == FieldID::IDVelX && nbX == 1) return;
-  // if (iFieldID == FieldID::IDVelY && nbY == 1) return;
-  // if (iFieldID == FieldID::IDVelZ && nbZ == 1) return;
-
-  // // Reset solution value
-  // for (int x= 0; x < nbX; x++)
-  //   for (int y= 0; y < nbY; y++)
-  //     for (int z= 0; z < nbZ; z++)
-  //       ioField[x][y][z]= 0.0f;
-  // ApplyBC(iFieldID, ioField);
-
   // Prepare convergence plot
   D.plotLegend.resize(5);
   D.plotLegend[FieldID::IDSmok]= "Diffu S";
@@ -1009,11 +996,11 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         Dive[x][y][z]= 0.0f;
-        if (Solid[x][y][z]) continue;
-        // if (Solid[x][y][z] || PreBC[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= 0.5f * (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) * voxSize;
-        if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= 0.5f * (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) * voxSize;
-        if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= 0.5f * (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) * voxSize;
+        // if (Solid[x][y][z]) continue;
+        if (Solid[x][y][z] || PreBC[x][y][z]) continue;
+        if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) / (2.0f * voxSize);
+        if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) / (2.0f * voxSize);
+        if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) / (2.0f * voxSize);
       }
     }
   }
@@ -1028,9 +1015,9 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= 0.5f * (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / voxSize;
-        if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= 0.5f * (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / voxSize;
-        if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= 0.5f * (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / voxSize;
+        if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
+        if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
+        if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / (2.0f * voxSize);
       }
     }
   }
