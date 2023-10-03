@@ -497,7 +497,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.UI.empty()) {
-      if (x > (paramLabelNbChar + paramSpaceNbChar) * charWidth && x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+      if (x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
         if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
           if (button == 3) {
             if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
@@ -526,7 +526,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
 }
 
 
-// Mouse motion interruption callback
+// Mouse active motion interruption callback
 void callback_mouse_motion(int x, int y) {
   cam->setCurrentMousePos(float(x), float(y));
 
@@ -534,14 +534,14 @@ void callback_mouse_motion(int x, int y) {
 }
 
 
-// Mouse motion interruption callback
+// Mouse passive motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
-  if (x > (paramLabelNbChar + paramSpaceNbChar) * charWidth && x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+  if (x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
     if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
       D.idxParamUI= (y - 3) / (charHeight + pixelMargin);
-      D.idxCursorUI= (x - (paramLabelNbChar + paramSpaceNbChar) * charWidth) / charWidth;
+      D.idxCursorUI= std::max((x - (paramLabelNbChar + paramSpaceNbChar) * charWidth) / charWidth, 0);
     }
   }
 

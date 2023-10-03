@@ -14,6 +14,7 @@
 // - Handles both 2D and 3D
 // - Handles arbitrary boundary conditions and obstacles in the simulation domain
 // - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
+// - Uses MackCormack backtracking scheme to achieve 2nd order accuracy in advection steps
 // - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and venturi benchmarks
 //
 // References for "stable fluid" method
@@ -23,12 +24,18 @@
 // https://www.dgp.toronto.edu/public_user/stam/reality/Research/pub.html
 // https://fr.wikipedia.org/wiki/Stable-Fluids
 // http://www.dgp.utoronto.ca/~stam/reality/Talks/FluidsTalk/FluidsTalkNotes.pdf
-// https://www.youtube.com/watch?v=qsYE1wMEMPA
-// https://www.youtube.com/watch?v=iKAVRgIrUOU
+// https://www.youtube.com/watch?v=qsYE1wMEMPA theory simple explanation
+// https://www.youtube.com/watch?v=iKAVRgIrUOU JS, Matthias Müller, slightly different approach for pressure
+// https://www.youtube.com/watch?v=wbYe58NGJJI python
 // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 //
 // References for fluid flow photographs, scenarios and visual comparison
 // http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
+//
+// References for MacCormack backtracking scheme
+// https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
+// https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
+// https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 //
 // References for vorticity confinement implem
 // https://github.com/awesson/stable-fluids/tree/master
@@ -86,6 +93,9 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> CurX;
   std::vector<std::vector<std::vector<float>>> CurY;
   std::vector<std::vector<std::vector<float>>> CurZ;
+  std::vector<std::vector<std::vector<float>>> AdvX;
+  std::vector<std::vector<std::vector<float>>> AdvY;
+  std::vector<std::vector<std::vector<float>>> AdvZ;
 
   // CFD solver functions
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);

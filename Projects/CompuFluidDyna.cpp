@@ -70,39 +70,39 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 6));
-    D.UI.push_back(ParamUI("InputFile___", 2));
-    D.UI.push_back(ParamUI("ResolutionX_", 1));
-    D.UI.push_back(ParamUI("ResolutionY_", 50));
-    D.UI.push_back(ParamUI("ResolutionZ_", 50));
-    D.UI.push_back(ParamUI("VoxelSize___", 0.01));
-    D.UI.push_back(ParamUI("TimeStep____", 0.02));
-    D.UI.push_back(ParamUI("SolvMaxIter_", 50));
-    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-2));
-    D.UI.push_back(ParamUI("CoeffAdvecS_", 1.0));
-    D.UI.push_back(ParamUI("CoeffAdvecV_", 1.0));
-    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));
-    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));
-    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));
-    D.UI.push_back(ParamUI("CoeffProj___", 1.0));
-    D.UI.push_back(ParamUI("CoeffVelX___", 0.0));
-    D.UI.push_back(ParamUI("CoeffVelY___", 1.0));
-    D.UI.push_back(ParamUI("CoeffVelZ___", 0.0));
-    D.UI.push_back(ParamUI("CoeffPres___", 0.02));
-    D.UI.push_back(ParamUI("CoeffSmok___", 1.0));
-    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));
-    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));
-    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));
-    D.UI.push_back(ParamUI("ObjectSize__", 0.08));
-    D.UI.push_back(ParamUI("ScaleFactor_", 5.0));
-    D.UI.push_back(ParamUI("ColorFactor_", 1.0));
-    D.UI.push_back(ParamUI("ColorThresh_", 0.0));
-    D.UI.push_back(ParamUI("ColorMode___", 2));
-    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));
-    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));
-    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));
-    D.UI.push_back(ParamUI("Verbose_____", -0.5));
+    D.UI.push_back(ParamUI("Scenario____", 6));        // Scenario ID, 0= load file, 1> hard coded scenarii
+    D.UI.push_back(ParamUI("InputFile___", 2));        // BMP file to load
+    D.UI.push_back(ParamUI("ResolutionX_", 1));        // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionY_", 50));       // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionZ_", 50));       // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("VoxelSize___", 0.01));     // Element size
+    D.UI.push_back(ParamUI("TimeStep____", 0.02));     // Simulation time step
+    D.UI.push_back(ParamUI("SolvMaxIter_", 50));       // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));      // Solver tolerance relative to RHS norm
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-4));    // Solver tolerance relative to initial guess
+    D.UI.push_back(ParamUI("CoeffAdvecS_", 2.0));      // 0= no advection, 1= linear advection, 2= MacCormack advection
+    D.UI.push_back(ParamUI("CoeffAdvecV_", 2.0));      // 0= no advection, 1= linear advection, 2= MacCormack advection
+    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));  // Diffusion of smoke field
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));    // Diffusion of velocity field, i.e viscosity
+    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));      // Vorticity confinement
+    D.UI.push_back(ParamUI("CoeffProj___", 1.0));      // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
+    D.UI.push_back(ParamUI("CoeffVelX___", 0.0));      // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("CoeffVelY___", 1.0));      // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("CoeffVelZ___", 0.0));      // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("CoeffPres___", 0.02));     // Pressure value for voxels with enforced pressure
+    D.UI.push_back(ParamUI("CoeffSmok___", 1.0));      // Smoke value for voxels with enforced smoke
+    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));      // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));     // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));      // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize__", 0.08));     // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ScaleFactor_", 1.0));      // Scale factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorFactor_", 1.0));      // Color factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorThresh_", 0.0));      // Color cutoff drawn geometry
+    D.UI.push_back(ParamUI("ColorMode___", 2));        // Selector for the scalar field to be drawn
+    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));      // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));      // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));      // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("Verbose_____", -0.5));     // Verbose mode
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -184,6 +184,9 @@ void CompuFluidDyna::Allocate() {
   CurX= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   CurY= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
   CurZ= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  AdvX= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  AdvY= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
+  AdvZ= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
 }
 
 
@@ -205,8 +208,10 @@ void CompuFluidDyna::Refresh() {
       FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", imageRGBA, false);
     else if (inputFile == 1)
       FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
-    else
+    else if (inputFile == 2)
       FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
+    else
+      FileInput::LoadImageBMPFile("Resources/CFD_Nozzle.bmp", imageRGBA, false);
   }
 
   // Initialize scenario values
@@ -575,8 +580,10 @@ void CompuFluidDyna::Animate() {
       }
     }
   }
-  // D.scatData[1].clear();
-  // D.scatData[4].clear();
+  // D.scatData[1].clear();  // Delete velocity scopes for testing
+  // D.scatData[4].clear();  // Delete velocity scopes for testing
+  // D.scatData[2].clear();  // Delete pressure scopes for testing
+  // D.scatData[5].clear();  // Delete pressure scopes for testing
 }
 
 
@@ -698,7 +705,7 @@ void CompuFluidDyna::Draw() {
     glPopMatrix();
   }
 
-  // Draw the vector fields
+  // Draw the velocity field
   if (D.displayMode3) {
     // Set the scene transformation
     glPushMatrix();
@@ -716,17 +723,17 @@ void CompuFluidDyna::Draw() {
       for (int x= 0; x < nbX; x++) {
         for (int y= 0; y < nbY; y++) {
           for (int z= 0; z < nbZ; z++) {
-            float r= 0.0f, g= 0.0f, b= 0.0f;
             // Draw the velocity field
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.normSquared() > 0.0f) {
+              float r= 0.0f, g= 0.0f, b= 0.0f;
               Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
               glColor3f(r, g, b);
               Math::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
-              // glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
+              glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
               // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF());
-              glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF() * std::log(vec.norm() + 1.0f));
+              // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF() * std::log(vec.norm() + 1.0f));
             }
           }
         }
@@ -734,6 +741,36 @@ void CompuFluidDyna::Draw() {
       glEnd();
     }
     glLineWidth(1.0f);
+    glPopMatrix();
+  }
+
+  // Draw the advection source field
+  if (D.displayMode4) {
+    // Set the scene transformation
+    glPushMatrix();
+    if (nbX == 1) glTranslatef(voxSize, 0.0f, 0.0f);
+    if (nbY == 1) glTranslatef(0.0f, voxSize, 0.0f);
+    if (nbZ == 1) glTranslatef(0.0f, 0.0f, voxSize);
+    glTranslatef(D.boxMin[0] + 0.5f * voxSize, D.boxMin[1] + 0.5f * voxSize, D.boxMin[2] + 0.5f * voxSize);
+    glScalef(voxSize, voxSize, voxSize);
+    // Sweep the field
+    glBegin(GL_LINES);
+    for (int x= 0; x < nbX; x++) {
+      for (int y= 0; y < nbY; y++) {
+        for (int z= 0; z < nbZ; z++) {
+          // Draw the velocity field
+          Math::Vec3f vec(AdvX[x][y][z], AdvY[x][y][z], AdvZ[x][y][z]);
+          if (vec.normSquared() > 0.0f) {
+            float r= 0.5f, g= 0.5f, b= 0.5f;
+            glColor3f(r, g, b);
+            Math::Vec3f pos((float)x, (float)y, (float)z);
+            glVertex3fv(pos.array());
+            glVertex3fv(pos + vec * D.UI[ScaleFactor_].GetF());
+          }
+        }
+      }
+    }
+    glEnd();
     glPopMatrix();
   }
 }
@@ -869,15 +906,15 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         // Apply linear expression
         if (iDiffuMode) {
           if (iPrecondMode)
-            oField[x][y][z]= 1.0f / (1.0f + diffuVal * (float)count) * iField[x][y][z];
-          else
-            oField[x][y][z]= -diffuVal * sum + (1.0f + diffuVal * (float)count) * iField[x][y][z];
+            oField[x][y][z]= 1.0f / (1.0f + diffuVal * (float)count) * iField[x][y][z];             //           [   -D*dt/v]
+          else                                                                                      // [-D*dt/v] [1+4*D*dt/v] [-D*dt/v]
+            oField[x][y][z]= -diffuVal * sum + (1.0f + diffuVal * (float)count) * iField[x][y][z];  //           [   -D*dt/v]
         }
         else {
           if (iPrecondMode)
-            oField[x][y][z]= 1.0f / ((float)count / voxMeasure) * iField[x][y][z];
-          else
-            oField[x][y][z]= sum / voxMeasure - ((float)count / voxMeasure) * iField[x][y][z];
+            oField[x][y][z]= 1.0f / ((float)count / voxMeasure) * iField[x][y][z];              //       [ 1/v]
+          else                                                                                  // [1/v] [-4/v] [1/v]
+            oField[x][y][z]= sum / voxMeasure - ((float)count / voxMeasure) * iField[x][y][z];  //       [ 1/v]
         }
       }
     }
@@ -915,8 +952,8 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
   // Error plot
   float errTmp= ImplicitFieldDotProd(rField, rField);
-  if (D.UI[Verbose_____].GetB()) printf("CG [%.3e] ", normRHS);
-  if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+  if (D.UI[Verbose_____].GetB()) printf("CG [%.2e] ", normRHS);
+  if (D.UI[Verbose_____].GetB()) printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
   D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
 
   // d = M^-1 r
@@ -956,7 +993,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
     // Error plot
     errTmp= ImplicitFieldDotProd(rField, rField);
-    if (D.UI[Verbose_____].GetB()) printf("%.3e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    if (D.UI[Verbose_____].GetB()) printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
     D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
 
     // s = M^-1 r
@@ -996,11 +1033,19 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         Dive[x][y][z]= 0.0f;
-        // if (Solid[x][y][z]) continue;
         if (Solid[x][y][z] || PreBC[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) / (2.0f * voxSize);
-        if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) / (2.0f * voxSize);
-        if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) / (2.0f * voxSize);
+        // if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) / (2.0f * voxSize);
+        // if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) / (2.0f * voxSize);
+        // if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) / (2.0f * voxSize);
+        const int countX= (x - 1 >= 0) + (x + 1 < nbX);
+        const int countY= (y - 1 >= 0) + (y + 1 < nbY);
+        const int countZ= (z - 1 >= 0) + (z + 1 < nbZ);
+        if (x - 1 >= 0) Dive[x][y][z]+= (ioVelX[x][y][z] - ioVelX[x - 1][y][z]) / ((float)countX * voxSize);
+        if (y - 1 >= 0) Dive[x][y][z]+= (ioVelY[x][y][z] - ioVelY[x][y - 1][z]) / ((float)countY * voxSize);
+        if (z - 1 >= 0) Dive[x][y][z]+= (ioVelZ[x][y][z] - ioVelZ[x][y][z - 1]) / ((float)countZ * voxSize);
+        if (x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x][y][z]) / ((float)countX * voxSize);
+        if (y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y][z]) / ((float)countY * voxSize);
+        if (z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z]) / ((float)countZ * voxSize);
       }
     }
   }
@@ -1015,9 +1060,19 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
-        if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
-        if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / (2.0f * voxSize);
+        // if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
+        // if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
+        // if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / (2.0f * voxSize);
+        const int countX= (x - 1 >= 0) + (x + 1 < nbX);
+        const int countY= (y - 1 >= 0) + (y + 1 < nbY);
+        const int countZ= (z - 1 >= 0) + (z + 1 < nbZ);
+        float timeDependance= (D.UI[CoeffProj___].GetI() == 2) ? iTimeStep : 1.0f;
+        if (x - 1 >= 0) ioVelX[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x - 1][y][z]) / ((float)countX * voxSize);
+        if (y - 1 >= 0) ioVelY[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x][y - 1][z]) / ((float)countY * voxSize);
+        if (z - 1 >= 0) ioVelZ[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x][y][z - 1]) / ((float)countZ * voxSize);
+        if (x + 1 < nbX) ioVelX[x][y][z]-= timeDependance * (Pres[x + 1][y][z] - Pres[x][y][z]) / ((float)countX * voxSize);
+        if (y + 1 < nbY) ioVelY[x][y][z]-= timeDependance * (Pres[x][y + 1][z] - Pres[x][y][z]) / ((float)countY * voxSize);
+        if (z + 1 < nbZ) ioVelZ[x][y][z]-= timeDependance * (Pres[x][y][z + 1] - Pres[x][y][z]) / ((float)countZ * voxSize);
       }
     }
   }
@@ -1077,18 +1132,35 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
 
-        // TODO try MacCormack to get 2nd order accuracy
-        // https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
-        // https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
-        // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
+        // Find source position for active voxel
+        Math::Vec3f posSource(0.0f, 0.0f, 0.0f);
+        Math::Vec3f posEnd((float)x, (float)y, (float)z);
+        Math::Vec3f velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
+        if ((iFieldID == FieldID::IDSmok && D.UI[CoeffAdvecS_].GetI() == 2) ||
+            (iFieldID == FieldID::IDVelX && D.UI[CoeffAdvecV_].GetI() == 2) ||
+            (iFieldID == FieldID::IDVelY && D.UI[CoeffAdvecV_].GetI() == 2) ||
+            (iFieldID == FieldID::IDVelZ && D.UI[CoeffAdvecV_].GetI() == 2)) {
+          // 2nd order MacCormack backtracking
+          Math::Vec3f posBeg= posEnd - iTimeStep * velEnd / voxSize;
+          Math::Vec3f velBeg;
+          velBeg[0]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
+          velBeg[1]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
+          velBeg[2]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelZ);
+          Math::Vec3f vecErr= posEnd - (posBeg + velBeg);
+          posSource= posBeg + vecErr / 2.0f;
+        }
+        else {
+          // Naive linear backtracking
+          posSource= posEnd - iTimeStep * velEnd / voxSize;
+        }
 
-        // Find source position of current voxel via backtracing
-        float posX= (float)x - iVelX[x][y][z] * iTimeStep / voxSize;
-        float posY= (float)y - iVelY[x][y][z] * iTimeStep / voxSize;
-        float posZ= (float)z - iVelZ[x][y][z] * iTimeStep / voxSize;
+        // Save source vector for display
+        AdvX[x][y][z]= posSource[0] - posEnd[0];
+        AdvY[x][y][z]= posSource[1] - posEnd[1];
+        AdvZ[x][y][z]= posSource[2] - posEnd[2];
 
         // Trilinear interpolation at source position
-        ioField[x][y][z]= TrilinearInterpolation(posX, posY, posZ, oldField);
+        ioField[x][y][z]= TrilinearInterpolation(posSource[0], posSource[1], posSource[2], oldField);
       }
     }
   }
