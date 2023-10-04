@@ -54,7 +54,7 @@ SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
 
 
-void project_SetActiveProject(unsigned char key) {
+void project_ForceHardInit(unsigned char key) {
   D.plotLegend.clear();
   D.scatLegend.clear();
   D.plotData.clear();
@@ -77,6 +77,18 @@ void project_SetActiveProject(unsigned char key) {
   if (key == 'p') myParticleSystem.SetActiveProject();
   if (key == 'r') mySpaceTimeWorld.SetActiveProject();
   if (key == 'e') myTerrainErosion.SetActiveProject();
+}
+
+
+void project_QueueSoftRefresh(unsigned char key) {
+  if (key == 'A') myAgentSwarmBoid.isRefreshed= false;
+  if (key == 'C') myCompuFluidDyna.isRefreshed= false;
+  if (key == 'F') myFractalCurvDev.isRefreshed= false;
+  if (key == 'H') myFractalElevMap.isRefreshed= false;
+  if (key == 'M') myMarkovProcGene.isRefreshed= false;
+  if (key == 'P') myParticleSystem.isRefreshed= false;
+  if (key == 'R') mySpaceTimeWorld.isRefreshed= false;
+  if (key == 'E') myTerrainErosion.isRefreshed= false;
 }
 
 
@@ -433,7 +445,8 @@ void callback_keyboard(unsigned char key, int x, int y) {
   }
   else if (key == '-') D.plotLogScale= !D.plotLogScale;
 
-  else if (key >= 'a' && key <= 'z') project_SetActiveProject(key);
+  else if (key >= 'a' && key <= 'z') project_ForceHardInit(key);
+  else if (key >= 'A' && key <= 'Z') project_QueueSoftRefresh(key);
 
   // Compute refresh
   if (D.autoRefresh)

@@ -70,26 +70,26 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 6));        // Scenario ID, 0= load file, 1> hard coded scenarii
-    D.UI.push_back(ParamUI("InputFile___", 2));        // BMP file to load
+    D.UI.push_back(ParamUI("Scenario____", 0));        // Scenario ID, 0= load file, 1> hard coded scenarii
+    D.UI.push_back(ParamUI("InputFile___", 4));        // BMP file to load
     D.UI.push_back(ParamUI("ResolutionX_", 1));        // Eulerian mesh resolution
     D.UI.push_back(ParamUI("ResolutionY_", 50));       // Eulerian mesh resolution
     D.UI.push_back(ParamUI("ResolutionZ_", 50));       // Eulerian mesh resolution
     D.UI.push_back(ParamUI("VoxelSize___", 0.01));     // Element size
     D.UI.push_back(ParamUI("TimeStep____", 0.02));     // Simulation time step
-    D.UI.push_back(ParamUI("SolvMaxIter_", 50));       // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvMaxIter_", 20));       // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));      // Solver tolerance relative to RHS norm
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-4));    // Solver tolerance relative to initial guess
-    D.UI.push_back(ParamUI("CoeffAdvecS_", 2.0));      // 0= no advection, 1= linear advection, 2= MacCormack advection
-    D.UI.push_back(ParamUI("CoeffAdvecV_", 2.0));      // 0= no advection, 1= linear advection, 2= MacCormack advection
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));    // Solver tolerance relative to initial guess
+    D.UI.push_back(ParamUI("CoeffAdvecS_", 5.0));      // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
+    D.UI.push_back(ParamUI("CoeffAdvecV_", 5.0));      // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));  // Diffusion of smoke field
     D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));    // Diffusion of velocity field, i.e viscosity
     D.UI.push_back(ParamUI("CoeffVorti__", 0.0));      // Vorticity confinement
     D.UI.push_back(ParamUI("CoeffProj___", 1.0));      // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
     D.UI.push_back(ParamUI("CoeffVelX___", 0.0));      // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("CoeffVelY___", 1.0));      // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("CoeffVelY___", 0.5));      // Velocity value for voxels with enforced velocity
     D.UI.push_back(ParamUI("CoeffVelZ___", 0.0));      // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("CoeffPres___", 0.02));     // Pressure value for voxels with enforced pressure
+    D.UI.push_back(ParamUI("CoeffPres___", 0.0));      // Pressure value for voxels with enforced pressure
     D.UI.push_back(ParamUI("CoeffSmok___", 1.0));      // Smoke value for voxels with enforced smoke
     D.UI.push_back(ParamUI("ObjectPosX__", 0.5));      // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosY__", 0.25));     // Coordinates for objects in hard coded scenarios
@@ -98,7 +98,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ScaleFactor_", 1.0));      // Scale factor for drawn geometry
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));      // Color factor for drawn geometry
     D.UI.push_back(ParamUI("ColorThresh_", 0.0));      // Color cutoff drawn geometry
-    D.UI.push_back(ParamUI("ColorMode___", 2));        // Selector for the scalar field to be drawn
+    D.UI.push_back(ParamUI("ColorMode___", 1));        // Selector for the scalar field to be drawn
     D.UI.push_back(ParamUI("SlicePlotX__", 0.5));      // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("SlicePlotY__", 0.5));      // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));      // Positions for the scatter plot slices
@@ -210,8 +210,12 @@ void CompuFluidDyna::Refresh() {
       FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
     else if (inputFile == 2)
       FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
-    else
+    else if (inputFile == 3)
       FileInput::LoadImageBMPFile("Resources/CFD_Nozzle.bmp", imageRGBA, false);
+    else if (inputFile == 4)
+      FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
+    else
+      FileInput::LoadImageBMPFile("Resources/CFD_Pipe.bmp", imageRGBA, false);
   }
 
   // Initialize scenario values
@@ -358,6 +362,8 @@ void CompuFluidDyna::Refresh() {
             VelXForced[x][y][z]= D.UI[CoeffVelX___].GetF();
             VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
             VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
+            SmoBC[x][y][z]= true;
+            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
           else if (std::abs(y - wallPos) <= wallThick) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, 0.0f, ((float)z + 0.5f) / (float)nbZ);
@@ -368,10 +374,6 @@ void CompuFluidDyna::Refresh() {
             dist[2]*= (float)(nbZ - 1) * voxSize;
             if (dist.norm() >= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
               Solid[x][y][z]= true;
-          }
-          else if (y < wallPos) {
-            SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= D.UI[CoeffVelY___].GetF() * D.UI[CoeffSmok___].GetF();
           }
           else if (y == nbY - 1) {
             PreBC[x][y][z]= true;
@@ -489,6 +491,8 @@ void CompuFluidDyna::Animate() {
   if (D.UI[CoeffProj___].GetB()) {
     ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
+
+  // TODO compute fluid density to check if constant as it should be in incompressible case
 
   // TODO test heuristic optimization of solid regions
 
@@ -641,21 +645,21 @@ void CompuFluidDyna::Draw() {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
           float r= 0.0f, g= 0.0f, b= 0.0f;
-          // Color by pressure
-          if (D.UI[ColorMode___].GetI() == 1) {
-            if (std::abs(Pres[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToBlueToRed(0.5f + 0.5f * Pres[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
-          }
           // Color by smoke
-          if (D.UI[ColorMode___].GetI() == 2) {
+          if (D.UI[ColorMode___].GetI() == 1) {
             if (std::abs(Smok[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
             Colormap::RatioToRainbow(0.5f + 0.5f * Smok[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by velocity magnitude
-          if (D.UI[ColorMode___].GetI() == 3) {
+          if (D.UI[ColorMode___].GetI() == 2) {
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.norm() < D.UI[ColorThresh_].GetF()) continue;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
+          }
+          // Color by pressure
+          if (D.UI[ColorMode___].GetI() == 3) {
+            if (std::abs(Pres[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToBlueToRed(0.5f + 0.5f * Pres[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by divergence
           if (D.UI[ColorMode___].GetI() == 4) {
@@ -727,7 +731,7 @@ void CompuFluidDyna::Draw() {
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.normSquared() > 0.0f) {
               float r= 0.0f, g= 0.0f, b= 0.0f;
-              Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
+              Colormap::RatioToJetBrightSmooth(vec.norm(), r, g, b);
               glColor3f(r, g, b);
               Math::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
@@ -761,7 +765,9 @@ void CompuFluidDyna::Draw() {
           // Draw the velocity field
           Math::Vec3f vec(AdvX[x][y][z], AdvY[x][y][z], AdvZ[x][y][z]);
           if (vec.normSquared() > 0.0f) {
-            float r= 0.5f, g= 0.5f, b= 0.5f;
+            const float r= 0.5f - vec[0];
+            const float g= 0.5f - vec[1];
+            const float b= 0.5f - vec[2];
             glColor3f(r, g, b);
             Math::Vec3f pos((float)x, (float)y, (float)z);
             glVertex3fv(pos.array());
@@ -927,15 +933,17 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
                                             const std::vector<std::vector<std::vector<float>>>& iField,
                                             std::vector<std::vector<std::vector<float>>>& ioField) {
   // Prepare convergence plot
-  D.plotLegend.resize(5);
-  D.plotLegend[FieldID::IDSmok]= "Diffu S";
-  D.plotLegend[FieldID::IDVelX]= "Diffu VX";
-  D.plotLegend[FieldID::IDVelY]= "Diffu VY";
-  D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
-  D.plotLegend[FieldID::IDPres]= "Proj  P";
-  D.plotData.resize(5);
-  D.plotData[iFieldID].clear();
   const float normRHS= ImplicitFieldDotProd(iField, iField);
+  if (D.UI[Verbose_____].GetB()) {
+    D.plotLegend.resize(5);
+    D.plotLegend[FieldID::IDSmok]= "Diffu S";
+    D.plotLegend[FieldID::IDVelX]= "Diffu VX";
+    D.plotLegend[FieldID::IDVelY]= "Diffu VY";
+    D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
+    D.plotLegend[FieldID::IDPres]= "Proj  P";
+    D.plotData.resize(5);
+    D.plotData[iFieldID].clear();
+  }
 
   // Allocate fields
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nbX, nbY, nbZ, 0.0f);
@@ -951,10 +959,12 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   ImplicitFieldSub(iField, t0Field, rField);
 
   // Error plot
-  float errTmp= ImplicitFieldDotProd(rField, rField);
-  if (D.UI[Verbose_____].GetB()) printf("CG [%.2e] ", normRHS);
-  if (D.UI[Verbose_____].GetB()) printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-  D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
+  if (D.UI[Verbose_____].GetB()) {
+    const float errTmp= ImplicitFieldDotProd(rField, rField);
+    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
+    printf("CG [%.2e] ", normRHS);
+    printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+  }
 
   // d = M^-1 r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
@@ -968,17 +978,15 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   for (int k= 0; k < iMaxIter; k++) {
     if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
     if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
+    if (errNew == 0.0f) break;
 
     // q = A d
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, dField, qField);
 
     // alpha = errNew / (d^T q)
-    float denom= ImplicitFieldDotProd(dField, qField);
-    if (denom == 0.0) {
-      if (D.UI[Verbose_____].GetB()) printf("div by zero denom");
-      break;
-    }
-    float alpha= errNew / denom;
+    const float denom= ImplicitFieldDotProd(dField, qField);
+    if (denom == 0.0) break;
+    const float alpha= errNew / denom;
 
     // x = x + alpha d
     ImplicitFieldScale(alpha, dField, t0Field);
@@ -992,9 +1000,11 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     rField= t1Field;
 
     // Error plot
-    errTmp= ImplicitFieldDotProd(rField, rField);
-    if (D.UI[Verbose_____].GetB()) printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    if (D.UI[Verbose_____].GetB()) {
+      const float errTmp= ImplicitFieldDotProd(rField, rField);
+      D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+      printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    }
 
     // s = M^-1 r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
@@ -1002,24 +1012,24 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     // errNew = r^T s
     errOld= errNew;
     errNew= ImplicitFieldDotProd(rField, sField);
-    if (errOld == 0.0) {
-      if (D.UI[Verbose_____].GetB()) printf("div by zero errOld");
-      break;
-    }
 
     // beta = errNew / errOld
-    float beta= errNew / errOld;
+    const float beta= errNew / errOld;
 
     // d = s + beta d
     ImplicitFieldScale(beta, dField, t0Field);
     ImplicitFieldAdd(sField, t0Field, dField);
   }
-  if (iFieldID == FieldID::IDSmok) Dum0= rField;
-  if (iFieldID == FieldID::IDVelX) Dum1= rField;
-  if (iFieldID == FieldID::IDVelY) Dum2= rField;
-  if (iFieldID == FieldID::IDVelZ) Dum3= rField;
-  if (iFieldID == FieldID::IDPres) Dum4= rField;
-  if (D.UI[Verbose_____].GetB()) printf("\n");
+
+  // Error plot
+  if (D.UI[Verbose_____].GetB()) {
+    if (iFieldID == FieldID::IDSmok) Dum0= rField;
+    if (iFieldID == FieldID::IDVelX) Dum1= rField;
+    if (iFieldID == FieldID::IDVelY) Dum2= rField;
+    if (iFieldID == FieldID::IDVelZ) Dum3= rField;
+    if (iFieldID == FieldID::IDPres) Dum4= rField;
+    printf("\n");
+  }
 }
 
 
@@ -1034,9 +1044,6 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
       for (int z= 0; z < nbZ; z++) {
         Dive[x][y][z]= 0.0f;
         if (Solid[x][y][z] || PreBC[x][y][z]) continue;
-        // if (x - 1 >= 0 && x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x - 1][y][z]) / (2.0f * voxSize);
-        // if (y - 1 >= 0 && y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y - 1][z]) / (2.0f * voxSize);
-        // if (z - 1 >= 0 && z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z - 1]) / (2.0f * voxSize);
         const int countX= (x - 1 >= 0) + (x + 1 < nbX);
         const int countY= (y - 1 >= 0) + (y + 1 < nbY);
         const int countZ= (z - 1 >= 0) + (z + 1 < nbZ);
@@ -1060,13 +1067,10 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nbY; y++) {
       for (int z= 0; z < nbZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        // if (x - 1 >= 0 && x + 1 < nbX) ioVelX[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x + 1][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
-        // if (y - 1 >= 0 && y + 1 < nbY) ioVelY[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x][y + 1][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
-        // if (z - 1 >= 0 && z + 1 < nbZ) ioVelZ[x][y][z]-= iTimeStep * D.UI[CoeffProj___].GetF() * (Pres[x][y][z + 1] - Pres[x][y][z - 1]) / (2.0f * voxSize);
         const int countX= (x - 1 >= 0) + (x + 1 < nbX);
         const int countY= (y - 1 >= 0) + (y + 1 < nbY);
         const int countZ= (z - 1 >= 0) + (z + 1 < nbZ);
-        float timeDependance= (D.UI[CoeffProj___].GetI() == 2) ? iTimeStep : 1.0f;
+        const float timeDependance= (D.UI[CoeffProj___].GetI() == 2) ? iTimeStep : 1.0f;
         if (x - 1 >= 0) ioVelX[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x - 1][y][z]) / ((float)countX * voxSize);
         if (y - 1 >= 0) ioVelY[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x][y - 1][z]) / ((float)countY * voxSize);
         if (z - 1 >= 0) ioVelZ[x][y][z]-= timeDependance * (Pres[x][y][z] - Pres[x][y][z - 1]) / ((float)countZ * voxSize);
@@ -1132,35 +1136,33 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
 
-        // Find source position for active voxel
-        Math::Vec3f posSource(0.0f, 0.0f, 0.0f);
-        Math::Vec3f posEnd((float)x, (float)y, (float)z);
-        Math::Vec3f velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
-        if ((iFieldID == FieldID::IDSmok && D.UI[CoeffAdvecS_].GetI() == 2) ||
-            (iFieldID == FieldID::IDVelX && D.UI[CoeffAdvecV_].GetI() == 2) ||
-            (iFieldID == FieldID::IDVelY && D.UI[CoeffAdvecV_].GetI() == 2) ||
-            (iFieldID == FieldID::IDVelZ && D.UI[CoeffAdvecV_].GetI() == 2)) {
-          // 2nd order MacCormack backtracking
-          Math::Vec3f posBeg= posEnd - iTimeStep * velEnd / voxSize;
-          Math::Vec3f velBeg;
-          velBeg[0]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
-          velBeg[1]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
-          velBeg[2]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelZ);
-          Math::Vec3f vecErr= posEnd - (posBeg + velBeg);
-          posSource= posBeg + vecErr / 2.0f;
-        }
-        else {
-          // Naive linear backtracking
-          posSource= posEnd - iTimeStep * velEnd / voxSize;
+        // Find source position for active voxel using naive linear backtracking scheme
+        const Math::Vec3f posEnd((float)x, (float)y, (float)z);
+        const Math::Vec3f velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
+        Math::Vec3f posBeg= posEnd - iTimeStep * velEnd / voxSize;
+
+        // Iterative source position correction with 2nd order MacCormack scheme
+        int correcMaxIter= 0;
+        if (iFieldID == FieldID::IDSmok) correcMaxIter= std::max(D.UI[CoeffAdvecS_].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelX) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelY) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelZ) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
+        for (int iter= 0; iter < correcMaxIter; iter++) {
+          const float velBegX= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
+          const float velBegY= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
+          const float velBegZ= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelZ);
+          const Math::Vec3f velBeg(velBegX, velBegY, velBegZ);
+          const Math::Vec3f vecErr= posEnd - (posBeg + velBeg);
+          posBeg= posBeg + vecErr / 2.0f;
         }
 
         // Save source vector for display
-        AdvX[x][y][z]= posSource[0] - posEnd[0];
-        AdvY[x][y][z]= posSource[1] - posEnd[1];
-        AdvZ[x][y][z]= posSource[2] - posEnd[2];
+        AdvX[x][y][z]= posBeg[0] - posEnd[0];
+        AdvY[x][y][z]= posBeg[1] - posEnd[1];
+        AdvZ[x][y][z]= posBeg[2] - posEnd[2];
 
         // Trilinear interpolation at source position
-        ioField[x][y][z]= TrilinearInterpolation(posSource[0], posSource[1], posSource[2], oldField);
+        ioField[x][y][z]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], oldField);
       }
     }
   }
