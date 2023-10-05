@@ -273,22 +273,26 @@ void CompuFluidDyna::Refresh() {
         // Double facing inlets
         if (scenarioType == 1) {
           if ((nbX > 1 && (x == 0 || x == nbX - 1)) ||
-              (nbY > 1 && (y == 0 || y == nbY - 1)) ||
-              (nbZ > 1 && (z == 0 || z == nbZ - 1))) {
+              (nbY > 1 && (y == 0 || y == nbY - 1))) {
             PreBC[x][y][z]= true;
             PresForced[x][y][z]= 0.0f;
           }
-          for (int k= 0; k < 2; k++) {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
-            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
-            if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
-            if ((posCell - posObstacle).norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
-              VelBC[x][y][z]= true;
-              SmoBC[x][y][z]= true;
-              VelXForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelX___].GetF()) : (D.UI[CoeffVelX___].GetF());
-              VelYForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelY___].GetF()) : (D.UI[CoeffVelY___].GetF());
-              VelZForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelZ___].GetF()) : (D.UI[CoeffVelZ___].GetF());
-              SmokForced[x][y][z]= (k == 1) ? (-D.UI[CoeffSmok___].GetF()) : (D.UI[CoeffSmok___].GetF());
+          else if (nbZ > 1 && (z == 0 || z == nbZ - 1)) {
+            Solid[x][y][z]= true;
+          }
+          else {
+            for (int k= 0; k < 2; k++) {
+              Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, ((float)y + 0.5f) / (float)nbY, ((float)z + 0.5f) / (float)nbZ);
+              Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+              if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
+              if ((posCell - posObstacle).norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
+                VelBC[x][y][z]= true;
+                SmoBC[x][y][z]= true;
+                VelXForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelX___].GetF()) : (D.UI[CoeffVelX___].GetF());
+                VelYForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelY___].GetF()) : (D.UI[CoeffVelY___].GetF());
+                VelZForced[x][y][z]= (k == 1) ? (-D.UI[CoeffVelZ___].GetF()) : (D.UI[CoeffVelZ___].GetF());
+                SmokForced[x][y][z]= (k == 1) ? (-D.UI[CoeffSmok___].GetF()) : (D.UI[CoeffSmok___].GetF());
+              }
             }
           }
         }
@@ -327,10 +331,6 @@ void CompuFluidDyna::Refresh() {
         if (scenarioType == 3) {
           // Force zero velocity for no-slip condition on cavity wall
           if (y == 0 || y == nbY - 1 || z == 0) {
-            // VelBC[x][y][z]= true;
-            // VelXForced[x][y][z]= 0;
-            // VelYForced[x][y][z]= 0;
-            // VelZForced[x][y][z]= 0;
             Solid[x][y][z]= true;
           }
           // Force tangential velocity on cavity lid
@@ -345,7 +345,7 @@ void CompuFluidDyna::Refresh() {
           // Add smoke source for visualization
           else if (y == nbY / 2 && z > nbZ / 2) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (z % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
+            SmokForced[x][y][z]= (z % 8 < 4) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
         }
 
@@ -363,7 +363,7 @@ void CompuFluidDyna::Refresh() {
             VelYForced[x][y][z]= D.UI[CoeffVelY___].GetF();
             VelZForced[x][y][z]= D.UI[CoeffVelZ___].GetF();
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 16 < 8) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
+            SmokForced[x][y][z]= (std::max(z, nbZ - 1 - z) % 8 < 4) ? (D.UI[CoeffSmok___].GetF()) : (-D.UI[CoeffSmok___].GetF());
           }
           else if (std::abs(y - wallPos) <= wallThick) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nbX, 0.0f, ((float)z + 0.5f) / (float)nbZ);
@@ -466,6 +466,11 @@ void CompuFluidDyna::Animate() {
     if (nbX > 1) AdvectField(FieldID::IDVelX, timestep, oldVelX, oldVelY, oldVelZ, VelX);
     if (nbY > 1) AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
     if (nbZ > 1) AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
+  }
+
+  // Projection step
+  if (D.UI[CoeffProj___].GetB()) {
+    ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
 
   // Diffusion steps
@@ -1037,7 +1042,13 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelX,
                                   std::vector<std::vector<std::vector<float>>>& ioVelY,
                                   std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  // Compute divergence
+  // TODO check why RHS seems different in link
+  // TODO check why vel update seems different in link
+  // https://barbagroup.github.io/essential_skills_RRC/numba/4/#application-pressure-poisson-equation
+  // Bonus link
+  // http://www.thevisualroom.com/poisson_for_pressure.html
+
+  // Compute divergence for RHS
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
@@ -1058,10 +1069,10 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   }
   ApplyBC(FieldID::IDPres, Dive);
 
-  // Solve for pressure
+  // Solve for pressure in the pressure Poisson equation
   ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
 
-  // Update velocities based on neighboring pressures
+  // Update velocities based on local pressure gradient
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
     for (int y= 0; y < nbY; y++) {
@@ -1152,7 +1163,7 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
           const float velBegY= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
           const float velBegZ= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelZ);
           const Math::Vec3f velBeg(velBegX, velBegY, velBegZ);
-          const Math::Vec3f vecErr= posEnd - (posBeg + velBeg);
+          const Math::Vec3f vecErr= posEnd - (posBeg + iTimeStep * velBeg / voxSize);
           posBeg= posBeg + vecErr / 2.0f;
         }
 
@@ -1208,7 +1219,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
     for (int x= 0; x < nbX; x++) {
       for (int y= 0; y < nbY; y++) {
         for (int z= 0; z < nbZ; z++) {
-          if (Solid[x][y][z] || VelBC[x][y][z]) continue;
+          if (Solid[x][y][z] || VelBC[x][y][z] || PreBC[x][y][z]) continue;
           float dVort_dx= 0.0f;
           float dVort_dy= 0.0f;
           float dVort_dz= 0.0f;

@@ -118,6 +118,10 @@ class CompuFluidDyna
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
                               std::vector<std::vector<std::vector<float>>>& ioField);
+  void ProjectField(const int iMaxIter, const float iTimeStep,
+                    std::vector<std::vector<std::vector<float>>>& ioVelX,
+                    std::vector<std::vector<std::vector<float>>>& ioVelY,
+                    std::vector<std::vector<std::vector<float>>>& ioVelZ);
   float TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                const std::vector<std::vector<std::vector<float>>>& iFieldRef);
   void AdvectField(const int iFieldID, const float iTimeStep,
@@ -125,10 +129,6 @@ class CompuFluidDyna
                    const std::vector<std::vector<std::vector<float>>>& iVelY,
                    const std::vector<std::vector<std::vector<float>>>& iVelZ,
                    std::vector<std::vector<std::vector<float>>>& ioField);
-  void ProjectField(const int iMaxIter, const float iTimeStep,
-                    std::vector<std::vector<std::vector<float>>>& ioVelX,
-                    std::vector<std::vector<std::vector<float>>>& ioVelY,
-                    std::vector<std::vector<std::vector<float>>>& ioVelZ);
   void VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
