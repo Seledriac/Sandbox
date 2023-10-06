@@ -64,7 +64,6 @@ class CompuFluidDyna
   int nbY;
   int nbZ;
   float voxSize;
-  float voxMeasure;
 
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
