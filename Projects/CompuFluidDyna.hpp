@@ -14,7 +14,7 @@
 // - Handles both 2D and 3D
 // - Handles arbitrary boundary conditions and obstacles in the simulation domain
 // - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
-// - Uses MackCormack backtracking scheme to achieve 2nd order accuracy in advection steps
+// - Uses iterative MackCormack backtracking scheme to achieve 2nd order accuracy in advection steps
 // - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and venturi benchmarks
 //
 // References for "stable fluid" method
@@ -40,6 +40,12 @@
 // References for vorticity confinement implem
 // https://github.com/awesson/stable-fluids/tree/master
 // https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
+//
+// References for pressure poisson equation and incompressiblity projection
+// https://barbagroup.github.io/essential_skills_RRC/numba/4/#application-pressure-poisson-equation
+// http://www.thevisualroom.com/poisson_for_pressure.html
+// https://github.com/barbagroup/CFDPython
+// https://mycourses.aalto.fi/pluginfile.php/891524/mod_folder/content/0/Lecture03_Pressure.pdf
 //
 // References for linear solvers and particularily PCG
 // https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf

@@ -71,40 +71,40 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 0));        // Scenario ID, 0= load file, 1> hard coded scenarii
-    D.UI.push_back(ParamUI("InputFile___", 4));        // BMP file to load
-    D.UI.push_back(ParamUI("ResolutionX_", 1));        // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionY_", 50));       // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionZ_", 50));       // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("VoxelSize___", 0.01));     // Element size
-    D.UI.push_back(ParamUI("TimeStep____", 0.02));     // Simulation time step
-    D.UI.push_back(ParamUI("FluidDensi__", 1.0));      // Constant density value of incompressible fluid
-    D.UI.push_back(ParamUI("SolvMaxIter_", 64));       // Max number of solver iterations
-    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));      // Solver tolerance relative to RHS norm
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));    // Solver tolerance relative to initial guess
-    D.UI.push_back(ParamUI("CoeffAdvecS_", 5.0));      // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
-    D.UI.push_back(ParamUI("CoeffAdvecV_", 5.0));      // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
-    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.00001));  // Diffusion of smoke field
-    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));    // Diffusion of velocity field, i.e viscosity
-    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));      // Vorticity confinement
-    D.UI.push_back(ParamUI("CoeffProj___", 1.0));      // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
-    D.UI.push_back(ParamUI("BCVelX______", 0.0));      // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCVelY______", 0.5));      // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCVelZ______", 0.0));      // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCPres______", 0.0));      // Pressure value for voxels with enforced pressure
-    D.UI.push_back(ParamUI("BCSmok______", 1.0));      // Smoke value for voxels with enforced smoke
-    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));      // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));     // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));      // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectSize__", 0.08));     // Size for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ScaleFactor_", 1.0));      // Scale factor for drawn geometry
-    D.UI.push_back(ParamUI("ColorFactor_", 1.0));      // Color factor for drawn geometry
-    D.UI.push_back(ParamUI("ColorThresh_", 0.0));      // Color cutoff drawn geometry
-    D.UI.push_back(ParamUI("ColorMode___", 1));        // Selector for the scalar field to be drawn
-    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));      // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));      // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));      // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("Verbose_____", 0.5));      // Verbose mode
+    D.UI.push_back(ParamUI("Scenario____", 0));       // Scenario ID, 0= load file, 1> hard coded scenarii
+    D.UI.push_back(ParamUI("InputFile___", 4));       // BMP file to load
+    D.UI.push_back(ParamUI("ResolutionX_", 1));       // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionY_", 100));     // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionZ_", 100));     // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("VoxelSize___", 0.01));    // Element size
+    D.UI.push_back(ParamUI("TimeStep____", 0.02));    // Simulation time step
+    D.UI.push_back(ParamUI("FluidDensi__", 1.0));     // Constant density value of incompressible fluid
+    D.UI.push_back(ParamUI("SolvMaxIter_", 64));      // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));     // Solver tolerance relative to RHS norm
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));   // Solver tolerance relative to initial guess
+    D.UI.push_back(ParamUI("CoeffAdvecS_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
+    D.UI.push_back(ParamUI("CoeffAdvecV_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
+    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.0001));  // Diffusion of smoke field
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));   // Diffusion of velocity field, i.e viscosity
+    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));     // Vorticity confinement
+    D.UI.push_back(ParamUI("CoeffProj___", 1.0));     // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
+    D.UI.push_back(ParamUI("BCVelX______", 0.0));     // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCVelY______", 0.5));     // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCVelZ______", 0.0));     // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCPres______", 0.0));     // Pressure value for voxels with enforced pressure
+    D.UI.push_back(ParamUI("BCSmok______", 1.0));     // Smoke value for voxels with enforced smoke
+    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));     // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));    // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));     // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize__", 0.08));    // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ScaleFactor_", 1.0));     // Scale factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorFactor_", 1.0));     // Color factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorThresh_", 0.0));     // Color cutoff drawn geometry
+    D.UI.push_back(ParamUI("ColorMode___", 1));       // Selector for the scalar field to be drawn
+    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));     // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));     // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));     // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("Verbose_____", -0.5));    // Verbose mode
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -456,11 +456,19 @@ void CompuFluidDyna::Animate() {
   const float coeffVisco= std::max(D.UI[CoeffDiffuV_].GetF(), 0.0f);
   const float coeffVorti= D.UI[CoeffVorti__].GetF();
 
+  // Incompressible Navier Stokes
+  // ∂vel/∂t + (vel · ∇) vel = − 1/ρ ∇press + visco ∇²vel + f
+  // ∇ · vel = 0
+
   // Advection steps
   if (D.UI[CoeffAdvecS_].GetB()) {
+    // smo ⇐ smo{pos-vel}
+    // smo ⇐ smo - Δt (vel · ∇) vel
     AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
   }
   if (D.UI[CoeffAdvecV_].GetB()) {
+    // vel ⇐ vel{pos-vel}
+    // vel ⇐ vel - Δt (vel · ∇) vel
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
@@ -471,10 +479,12 @@ void CompuFluidDyna::Animate() {
 
   // Diffusion steps
   if (D.UI[CoeffDiffuS_].GetB()) {
+    // (Id - diffu Δt ∇²) smo = smo
     std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
     ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
   if (D.UI[CoeffDiffuV_].GetB()) {
+    // (Id - visco Δt ∇²) vel = vel
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
@@ -485,11 +495,16 @@ void CompuFluidDyna::Animate() {
 
   // Vorticity step
   if (D.UI[CoeffVorti__].GetB()) {
+    // TODO check validity curl= ∇ ⨯ vel
+    // TODO check validity vorti= ‖curl‖₂
+    // TODO write math formulation vel update
     VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
   }
 
   // Projection step
   if (D.UI[CoeffProj___].GetB()) {
+    // ∇² press = ρ (∇ · vel)
+    // vel ⇐ vel - ∇ press
     ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
 
@@ -1042,12 +1057,6 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelX,
                                   std::vector<std::vector<std::vector<float>>>& ioVelY,
                                   std::vector<std::vector<std::vector<float>>>& ioVelZ) {
-  // TODO check why RHS seems different in link
-  // TODO check why vel update seems different in link
-  // https://barbagroup.github.io/essential_skills_RRC/numba/4/#application-pressure-poisson-equation
-  // http://www.thevisualroom.com/poisson_for_pressure.html
-  // https://github.com/barbagroup/CFDPython
-
   // Compute divergence for RHS
 #pragma omp parallel for
   for (int x= 0; x < nbX; x++) {
@@ -1064,6 +1073,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
         if (x + 1 < nbX) Dive[x][y][z]+= (ioVelX[x + 1][y][z] - ioVelX[x][y][z]) / ((float)countX * voxSize);
         if (y + 1 < nbY) Dive[x][y][z]+= (ioVelY[x][y + 1][z] - ioVelY[x][y][z]) / ((float)countY * voxSize);
         if (z + 1 < nbZ) Dive[x][y][z]+= (ioVelZ[x][y][z + 1] - ioVelZ[x][y][z]) / ((float)countZ * voxSize);
+        Dive[x][y][z]*= D.UI[FluidDensi__].GetF();
       }
     }
   }
