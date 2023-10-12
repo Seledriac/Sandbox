@@ -35,8 +35,8 @@ constexpr int charWidth= 10;
 constexpr int pixelMargin= 1;
 constexpr int plotAreaW= 600;
 constexpr int plotAreaH= 100;
-constexpr int scatAreaW= 250;
-constexpr int scatAreaH= 250;
+constexpr int scatAreaW= 200;
+constexpr int scatAreaH= 200;
 constexpr int textBoxW= 9 * charWidth;
 constexpr int textBoxH= charHeight;
 Camera *cam;
@@ -250,7 +250,7 @@ void callback_display() {
   // Draw the 2D plot
   if (!D.plotData.empty()) {
     glLineWidth(2.0f);
-    glPointSize(4.0f);
+    glPointSize(3.0f);
     for (int k0= 0; k0 < int(D.plotData.size()); k0++) {
       if (D.plotData[k0].empty()) continue;
 
@@ -339,7 +339,7 @@ void callback_display() {
     sprintf(str, "%+.2e", valMaxY);
     draw_text(0, 3 * textBoxH + scatAreaH - textBoxH, str);
 
-    glPointSize(4.0f);
+    glPointSize(3.0f);
     for (int k0= 0; k0 < int(D.scatData.size()); k0++) {
       if (D.scatData[k0].empty()) continue;
 

@@ -66,9 +66,9 @@ class CompuFluidDyna
   };
 
   // Problem dimensions
-  int nbX;
-  int nbY;
-  int nbZ;
+  int nX;
+  int nY;
+  int nZ;
   float voxSize;
 
   // Fields for scenario setup
@@ -103,6 +103,8 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> AdvZ;
 
   // CFD solver functions
+  void SetUpUIData();
+  void InitializeScenario();
   void ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField);
   void ImplicitFieldAdd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                         const std::vector<std::vector<std::vector<float>>>& iFieldB,
@@ -123,6 +125,7 @@ class CompuFluidDyna
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
                               std::vector<std::vector<std::vector<float>>>& ioField);
+  void ExternalForces();
   void ProjectField(const int iMaxIter, const float iTimeStep,
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
                     std::vector<std::vector<std::vector<float>>>& ioVelY,
@@ -138,6 +141,8 @@ class CompuFluidDyna
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
                             std::vector<std::vector<std::vector<float>>>& ioVelZ);
+  void ComputeVelocityDivergence();
+  void ComputeVelocityCurlVorticity();
 
   public:
   bool isActivProj;
