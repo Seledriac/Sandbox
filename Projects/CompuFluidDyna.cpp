@@ -40,6 +40,8 @@ enum ParamType
   CoeffDiffuV_,
   CoeffVorti__,
   CoeffProj___,
+  CoeffProj2__,
+  CoeffProj3__,
   BCVelX______,
   BCVelY______,
   BCVelZ______,
@@ -82,13 +84,15 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SolvMaxIter_", 30));      // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));     // Solver tolerance relative to RHS norm
     D.UI.push_back(ParamUI("SolvTolRel__", 0.0));     // Solver tolerance relative to initial guess
-    D.UI.push_back(ParamUI("CoeffGravi__", 2.0));     // Magnitude of gravity in Z- direction
+    D.UI.push_back(ParamUI("CoeffGravi__", 0.0));     // Magnitude of gravity in Z- direction
     D.UI.push_back(ParamUI("CoeffAdvecS_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffAdvecV_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffDiffuS_", 0.0001));  // Diffusion of smoke field
     D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));   // Diffusion of velocity field, i.e viscosity
     D.UI.push_back(ParamUI("CoeffVorti__", 0.0));     // Vorticity confinement
     D.UI.push_back(ParamUI("CoeffProj___", 1.0));     // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
+    D.UI.push_back(ParamUI("CoeffProj2__", 0.5));     // Test coeff for Rhie Chow interpolation
+    D.UI.push_back(ParamUI("CoeffProj3__", 0.5));     // Test coeff for Rhie Chow interpolation
     D.UI.push_back(ParamUI("BCVelX______", 0.0));     // Velocity value for voxels with enforced velocity
     D.UI.push_back(ParamUI("BCVelY______", 1.0));     // Velocity value for voxels with enforced velocity
     D.UI.push_back(ParamUI("BCVelZ______", 0.0));     // Velocity value for voxels with enforced velocity
@@ -104,7 +108,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ColorMode___", 1));       // Selector for the scalar field to be drawn
     D.UI.push_back(ParamUI("SlicePlotY__", 0.5));     // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));     // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("Verbose_____", +0.5));    // Verbose mode
+    D.UI.push_back(ParamUI("Verbose_____", -0.5));    // Verbose mode
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));    // Verbose mode for linear solvers
   }
 
@@ -307,8 +311,8 @@ void CompuFluidDyna::Animate() {
   }
 
   // Compute field data for display
-  ComputeVelocityDivergence();
-  ComputeVelocityCurlVorticity();
+  // ComputeVelocityDivergence();    // TODO reenable after Rhie Chow interpolation properly tested
+  // ComputeVelocityCurlVorticity(); // TODO reenable after Rhie Chow interpolation properly tested
 
   // TODO Compute fluid density to check if constant as it should be in incompressible case
 
@@ -759,11 +763,11 @@ void CompuFluidDyna::InitializeScenario() {
         // Cavity lid shear benchmark
         if (scenarioType == 3) {
           // Force zero velocity for no-slip condition on cavity walls
-          if (y == 0 || y == nY - 1 || z == 0 || z == nZ - 1) {
+          if (y == 0 || y == nY - 1 || z == 0) {
             Solid[x][y][z]= true;
           }
           // Force tangential velocity on cavity lid
-          else if (z == nZ - 2) {
+          else if (z == nZ - 1) {
             VelBC[x][y][z]= true;
             VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
             VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
@@ -1288,21 +1292,77 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
 
 
 void CompuFluidDyna::ComputeVelocityDivergence() {
-  for (int x= 0; x < nX; x++) {
-    for (int y= 0; y < nY; y++) {
-      for (int z= 0; z < nZ; z++) {
-        Dive[x][y][z]= 0.0f;
-        if (PreBC[x][y][z])
-          Dive[x][y][z]= PresForced[x][y][z];
-        if (Solid[x][y][z] || PreBC[x][y][z]) continue;
-        // Divergence with mirrored velocities at solid interface
-        if (x - 1 >= 0) Dive[x][y][z]+= (Solid[x - 1][y][z]) ? (+2.0f * VelX[x][y][z]) : (VelX[x][y][z] - VelX[x - 1][y][z]);
-        if (y - 1 >= 0) Dive[x][y][z]+= (Solid[x][y - 1][z]) ? (+2.0f * VelY[x][y][z]) : (VelY[x][y][z] - VelY[x][y - 1][z]);
-        if (z - 1 >= 0) Dive[x][y][z]+= (Solid[x][y][z - 1]) ? (+2.0f * VelZ[x][y][z]) : (VelZ[x][y][z] - VelZ[x][y][z - 1]);
-        if (x + 1 < nX) Dive[x][y][z]+= (Solid[x + 1][y][z]) ? (-2.0f * VelX[x][y][z]) : (VelX[x + 1][y][z] - VelX[x][y][z]);
-        if (y + 1 < nY) Dive[x][y][z]+= (Solid[x][y + 1][z]) ? (-2.0f * VelY[x][y][z]) : (VelY[x][y + 1][z] - VelY[x][y][z]);
-        if (z + 1 < nZ) Dive[x][y][z]+= (Solid[x][y][z + 1]) ? (-2.0f * VelZ[x][y][z]) : (VelZ[x][y][z + 1] - VelZ[x][y][z]);
-        Dive[x][y][z]/= (2.0f * voxSize);
+  if (D.UI[CoeffProj___].GetI() == 4) {
+    // Precompute pressure gradient
+    std::vector<std::vector<std::vector<float>>> PresGradX= Field::AllocField3D(nX, nY, nZ, 0.0f);
+    std::vector<std::vector<std::vector<float>>> PresGradY= Field::AllocField3D(nX, nY, nZ, 0.0f);
+    std::vector<std::vector<std::vector<float>>> PresGradZ= Field::AllocField3D(nX, nY, nZ, 0.0f);
+    for (int x= 0; x < nX; x++) {
+      for (int y= 0; y < nY; y++) {
+        for (int z= 0; z < nZ; z++) {
+          if (Solid[x][y][z]) continue;
+          // Pressure gradient with zero derivative at solid interface
+          if (x - 1 >= 0 && !Solid[x - 1][y][z]) PresGradX[x][y][z]+= (Pres[x][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
+          if (y - 1 >= 0 && !Solid[x][y - 1][z]) PresGradY[x][y][z]+= (Pres[x][y][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
+          if (z - 1 >= 0 && !Solid[x][y][z - 1]) PresGradZ[x][y][z]+= (Pres[x][y][z] - Pres[x][y][z - 1]) / (2.0f * voxSize);
+          if (x + 1 < nX && !Solid[x + 1][y][z]) PresGradX[x][y][z]+= (Pres[x + 1][y][z] - Pres[x][y][z]) / (2.0f * voxSize);
+          if (y + 1 < nY && !Solid[x][y + 1][z]) PresGradY[x][y][z]+= (Pres[x][y + 1][z] - Pres[x][y][z]) / (2.0f * voxSize);
+          if (z + 1 < nZ && !Solid[x][y][z + 1]) PresGradZ[x][y][z]+= (Pres[x][y][z + 1] - Pres[x][y][z]) / (2.0f * voxSize);
+        }
+      }
+    }
+    // Compute divergence of velocity field using Rhie Chow interpolation correction
+    for (int x= 0; x < nX; x++) {
+      for (int y= 0; y < nY; y++) {
+        for (int z= 0; z < nZ; z++) {
+          Dive[x][y][z]= 0.0f;
+          if (PreBC[x][y][z])
+            Dive[x][y][z]= PresForced[x][y][z];
+          if (Solid[x][y][z] || PreBC[x][y][z]) continue;
+          // Classical linear interpolation for face velocities
+          float velXN= (x - 1 >= 0) ? ((Solid[x - 1][y][z]) ? (0.0f) : (VelX[x][y][z] + VelX[x - 1][y][z]) / 2.0f) : (VelX[x][y][z]);
+          float velYN= (y - 1 >= 0) ? ((Solid[x][y - 1][z]) ? (0.0f) : (VelY[x][y][z] + VelY[x][y - 1][z]) / 2.0f) : (VelY[x][y][z]);
+          float velZN= (z - 1 >= 0) ? ((Solid[x][y][z - 1]) ? (0.0f) : (VelZ[x][y][z] + VelZ[x][y][z - 1]) / 2.0f) : (VelZ[x][y][z]);
+          float velXP= (x + 1 < nX) ? ((Solid[x + 1][y][z]) ? (0.0f) : (VelX[x + 1][y][z] + VelX[x][y][z]) / 2.0f) : (VelX[x][y][z]);
+          float velYP= (y + 1 < nY) ? ((Solid[x][y + 1][z]) ? (0.0f) : (VelY[x][y + 1][z] + VelY[x][y][z]) / 2.0f) : (VelY[x][y][z]);
+          float velZP= (z + 1 < nZ) ? ((Solid[x][y][z + 1]) ? (0.0f) : (VelZ[x][y][z + 1] + VelZ[x][y][z]) / 2.0f) : (VelZ[x][y][z]);
+          // Rhie and Chow correction by subtracting pressure gradient minus linear interpolation of pressure gradients
+          velXN-= D.UI[CoeffProj2__].GetF() * ((x - 1 >= 0 && !Solid[x - 1][y][z]) ? ((Pres[x][y][z] - Pres[x - 1][y][z]) / voxSize) : (0.0f));
+          velYN-= D.UI[CoeffProj2__].GetF() * ((y - 1 >= 0 && !Solid[x][y - 1][z]) ? ((Pres[x][y][z] - Pres[x][y - 1][z]) / voxSize) : (0.0f));
+          velZN-= D.UI[CoeffProj2__].GetF() * ((z - 1 >= 0 && !Solid[x][y][z - 1]) ? ((Pres[x][y][z] - Pres[x][y][z - 1]) / voxSize) : (0.0f));
+          velXP-= D.UI[CoeffProj2__].GetF() * ((x + 1 < nX && !Solid[x + 1][y][z]) ? ((Pres[x + 1][y][z] - Pres[x][y][z]) / voxSize) : (0.0f));
+          velYP-= D.UI[CoeffProj2__].GetF() * ((y + 1 < nY && !Solid[x][y + 1][z]) ? ((Pres[x][y + 1][z] - Pres[x][y][z]) / voxSize) : (0.0f));
+          velZP-= D.UI[CoeffProj2__].GetF() * ((z + 1 < nZ && !Solid[x][y][z + 1]) ? ((Pres[x][y][z + 1] - Pres[x][y][z]) / voxSize) : (0.0f));
+          velXN+= D.UI[CoeffProj3__].GetF() * ((x - 1 >= 0) ? ((PresGradX[x][y][z] + PresGradX[x - 1][y][z]) / 2.0f) : (0.0f));
+          velYN+= D.UI[CoeffProj3__].GetF() * ((y - 1 >= 0) ? ((PresGradY[x][y][z] + PresGradY[x][y - 1][z]) / 2.0f) : (0.0f));
+          velZN+= D.UI[CoeffProj3__].GetF() * ((z - 1 >= 0) ? ((PresGradZ[x][y][z] + PresGradZ[x][y][z - 1]) / 2.0f) : (0.0f));
+          velXP+= D.UI[CoeffProj3__].GetF() * ((x + 1 < nX) ? ((PresGradX[x + 1][y][z] + PresGradX[x][y][z]) / 2.0f) : (0.0f));
+          velYP+= D.UI[CoeffProj3__].GetF() * ((y + 1 < nY) ? ((PresGradY[x][y + 1][z] + PresGradY[x][y][z]) / 2.0f) : (0.0f));
+          velZP+= D.UI[CoeffProj3__].GetF() * ((z + 1 < nZ) ? ((PresGradZ[x][y][z + 1] + PresGradZ[x][y][z]) / 2.0f) : (0.0f));
+          // Divergence based on face velocities
+          Dive[x][y][z]= ((velXP - velXN) + (velYP - velYN) + (velZP - velZN)) / voxSize;
+        }
+      }
+    }
+  }
+  else {
+    // Compute divergence of velocity field using simple linear interpolation
+    for (int x= 0; x < nX; x++) {
+      for (int y= 0; y < nY; y++) {
+        for (int z= 0; z < nZ; z++) {
+          Dive[x][y][z]= 0.0f;
+          if (PreBC[x][y][z])
+            Dive[x][y][z]= PresForced[x][y][z];
+          if (Solid[x][y][z] || PreBC[x][y][z]) continue;
+          // Divergence with mirrored velocities at solid interface
+          if (x - 1 >= 0) Dive[x][y][z]+= (Solid[x - 1][y][z]) ? (+2.0f * VelX[x][y][z]) : (VelX[x][y][z] - VelX[x - 1][y][z]);
+          if (y - 1 >= 0) Dive[x][y][z]+= (Solid[x][y - 1][z]) ? (+2.0f * VelY[x][y][z]) : (VelY[x][y][z] - VelY[x][y - 1][z]);
+          if (z - 1 >= 0) Dive[x][y][z]+= (Solid[x][y][z - 1]) ? (+2.0f * VelZ[x][y][z]) : (VelZ[x][y][z] - VelZ[x][y][z - 1]);
+          if (x + 1 < nX) Dive[x][y][z]+= (Solid[x + 1][y][z]) ? (-2.0f * VelX[x][y][z]) : (VelX[x + 1][y][z] - VelX[x][y][z]);
+          if (y + 1 < nY) Dive[x][y][z]+= (Solid[x][y + 1][z]) ? (-2.0f * VelY[x][y][z]) : (VelY[x][y + 1][z] - VelY[x][y][z]);
+          if (z + 1 < nZ) Dive[x][y][z]+= (Solid[x][y][z + 1]) ? (-2.0f * VelZ[x][y][z]) : (VelZ[x][y][z + 1] - VelZ[x][y][z]);
+          Dive[x][y][z]/= (2.0f * voxSize);
+        }
       }
     }
   }
