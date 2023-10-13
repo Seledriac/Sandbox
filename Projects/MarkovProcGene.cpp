@@ -64,8 +64,6 @@ void MarkovProcGene::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
@@ -76,13 +74,13 @@ void MarkovProcGene::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void MarkovProcGene::CheckRefresh() {
-  if (D.UI[Scenario____].hasChanged() ||
-      D.UI[ResolutionX_].hasChanged() ||
-      D.UI[ResolutionY_].hasChanged() ||
-      D.UI[ResolutionZ_].hasChanged() ||
-      D.UI[RuleSizeX___].hasChanged() ||
-      D.UI[RuleSizeY___].hasChanged() ||
-      D.UI[RuleSizeZ___].hasChanged()) isRefreshed= false;
+  if (D.UI[Scenario____].hasChanged()) isRefreshed= false;
+  if (D.UI[ResolutionX_].hasChanged()) isRefreshed= false;
+  if (D.UI[ResolutionY_].hasChanged()) isRefreshed= false;
+  if (D.UI[ResolutionZ_].hasChanged()) isRefreshed= false;
+  if (D.UI[RuleSizeX___].hasChanged()) isRefreshed= false;
+  if (D.UI[RuleSizeY___].hasChanged()) isRefreshed= false;
+  if (D.UI[RuleSizeZ___].hasChanged()) isRefreshed= false;
 }
 
 

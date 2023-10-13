@@ -187,30 +187,28 @@ void SpaceTimeWorld::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
 // Check if parameter changes should trigger an allocation
 void SpaceTimeWorld::CheckAlloc() {
-  if (D.UI[WorldNbT____].hasChanged() ||
-      D.UI[WorldNbX____].hasChanged() ||
-      D.UI[WorldNbY____].hasChanged() ||
-      D.UI[WorldNbZ____].hasChanged() ||
-      D.UI[ScreenNbH___].hasChanged() ||
-      D.UI[ScreenNbV___].hasChanged() ||
-      D.UI[ScreenNbS___].hasChanged()) isAllocated= false;
+  if (D.UI[WorldNbT____].hasChanged()) isAllocated= false;
+  if (D.UI[WorldNbX____].hasChanged()) isAllocated= false;
+  if (D.UI[WorldNbY____].hasChanged()) isAllocated= false;
+  if (D.UI[WorldNbZ____].hasChanged()) isAllocated= false;
+  if (D.UI[ScreenNbH___].hasChanged()) isAllocated= false;
+  if (D.UI[ScreenNbV___].hasChanged()) isAllocated= false;
+  if (D.UI[ScreenNbS___].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void SpaceTimeWorld::CheckRefresh() {
-  if (D.UI[CursorWorldT].hasChanged() ||
-      D.UI[MassReach___].hasChanged() ||
-      D.UI[TimePersist_].hasChanged() ||
-      D.UI[FactorCurv__].hasChanged() ||
-      D.UI[FactorDoppl_].hasChanged()) isRefreshed= false;
+  if (D.UI[CursorWorldT].hasChanged()) isRefreshed= false;
+  if (D.UI[MassReach___].hasChanged()) isRefreshed= false;
+  if (D.UI[TimePersist_].hasChanged()) isRefreshed= false;
+  if (D.UI[FactorCurv__].hasChanged()) isRefreshed= false;
+  if (D.UI[FactorDoppl_].hasChanged()) isRefreshed= false;
 }
 
 

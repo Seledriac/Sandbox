@@ -56,6 +56,7 @@ enum ParamType
   SlicePlotY__,
   SlicePlotZ__,
   Verbose_____,
+  VerboseSolv_,
 };
 
 
@@ -104,6 +105,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SlicePlotY__", 0.5));     // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));     // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("Verbose_____", +0.5));    // Verbose mode
+    D.UI.push_back(ParamUI("VerboseSolv_", -0.5));    // Verbose mode for linear solvers
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -112,33 +114,31 @@ void CompuFluidDyna::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
 // Check if parameter changes should trigger an allocation
 void CompuFluidDyna::CheckAlloc() {
-  if (D.UI[Scenario____].hasChanged() ||
-      D.UI[InputFile___].hasChanged() ||
-      D.UI[ResolutionX_].hasChanged() ||
-      D.UI[ResolutionY_].hasChanged() ||
-      D.UI[ResolutionZ_].hasChanged() ||
-      D.UI[VoxelSize___].hasChanged()) isAllocated= false;
+  if (D.UI[Scenario____].hasChanged()) isAllocated= false;
+  if (D.UI[InputFile___].hasChanged()) isAllocated= false;
+  if (D.UI[ResolutionX_].hasChanged()) isAllocated= false;
+  if (D.UI[ResolutionY_].hasChanged()) isAllocated= false;
+  if (D.UI[ResolutionZ_].hasChanged()) isAllocated= false;
+  if (D.UI[VoxelSize___].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void CompuFluidDyna::CheckRefresh() {
-  if (D.UI[BCVelX______].hasChanged() ||
-      D.UI[BCVelY______].hasChanged() ||
-      D.UI[BCVelZ______].hasChanged() ||
-      D.UI[BCPres______].hasChanged() ||
-      D.UI[BCSmok______].hasChanged() ||
-      D.UI[ObjectPosX__].hasChanged() ||
-      D.UI[ObjectPosY__].hasChanged() ||
-      D.UI[ObjectPosZ__].hasChanged() ||
-      D.UI[ObjectSize__].hasChanged()) isRefreshed= false;
+  if (D.UI[BCVelX______].hasChanged()) isRefreshed= false;
+  if (D.UI[BCVelY______].hasChanged()) isRefreshed= false;
+  if (D.UI[BCVelZ______].hasChanged()) isRefreshed= false;
+  if (D.UI[BCPres______].hasChanged()) isRefreshed= false;
+  if (D.UI[BCSmok______].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectPosX__].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectPosY__].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectPosZ__].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectSize__].hasChanged()) isRefreshed= false;
 }
 
 
@@ -149,6 +149,7 @@ void CompuFluidDyna::Allocate() {
   if (isAllocated) return;
   isRefreshed= false;
   isAllocated= true;
+  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Allocate()\n");
 
   // Get UI parameters
   nX= std::max(D.UI[ResolutionX_].GetI(), 1);
@@ -198,6 +199,7 @@ void CompuFluidDyna::Refresh() {
   CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
+  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Refresh()\n");
 
   // Initialize scenario values
   for (int x= 0; x < nX; x++) {
@@ -240,8 +242,7 @@ void CompuFluidDyna::Animate() {
   if (!isAllocated) Allocate();
   CheckRefresh();
   if (!isRefreshed) Refresh();
-
-  if (D.UI[Verbose_____].GetB()) printf("\n");
+  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Animate()\n");
 
   // Get simulation parameters
   const int maxIter= std::max(D.UI[SolvMaxIter_].GetI(), 0);
@@ -322,6 +323,7 @@ void CompuFluidDyna::Draw() {
   if (!isActivProj) return;
   if (!isAllocated) return;
   if (!isRefreshed) return;
+  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Draw()\n");
 
   // Draw the voxels
   if (D.displayMode1) {
@@ -608,35 +610,37 @@ void CompuFluidDyna::SetUpUIData() {
     }
   }
 
-  // // Draw the plot data
-  // D.plotData.resize(8);
-  // D.plotLegend.resize(8);
-  // D.plotLegend[0]= "VelMag";
-  // D.plotLegend[1]= "Smok";
-  // D.plotLegend[2]= "SmokAbs";
-  // D.plotLegend[3]= "Dive";
-  // D.plotLegend[4]= "DiveAbs";
-  // D.plotLegend[5]= "Pres";
-  // D.plotLegend[6]= "PresAbs";
-  // D.plotLegend[7]= "Vorti";
-  // if (D.plotData[0].size() < 500) {
-  //   for (int k= 0; k < (int)D.plotLegend.size(); k++)
-  //     D.plotData[k].push_back(0.0f);
-  //   for (int x= 0; x < nX; x++) {
-  //     for (int y= 0; y < nY; y++) {
-  //       for (int z= 0; z < nZ; z++) {
-  //         D.plotData[0][D.plotData[0].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
-  //         D.plotData[1][D.plotData[1].size() - 1]+= Smok[x][y][z];
-  //         D.plotData[2][D.plotData[2].size() - 1]+= std::abs(Smok[x][y][z]);
-  //         D.plotData[3][D.plotData[3].size() - 1]+= Dive[x][y][z];
-  //         D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Dive[x][y][z]);
-  //         D.plotData[5][D.plotData[5].size() - 1]+= Pres[x][y][z];
-  //         D.plotData[6][D.plotData[6].size() - 1]+= std::abs(Pres[x][y][z]);
-  //         D.plotData[7][D.plotData[7].size() - 1]+= Vort[x][y][z];
-  //       }
-  //     }
-  //   }
-  // }
+  if (!D.UI[VerboseSolv_].GetB()) {
+    // Draw the plot data
+    D.plotData.resize(8);
+    D.plotLegend.resize(8);
+    D.plotLegend[0]= "VelMag";
+    D.plotLegend[1]= "Smok";
+    D.plotLegend[2]= "SmokAbs";
+    D.plotLegend[3]= "Dive";
+    D.plotLegend[4]= "DiveAbs";
+    D.plotLegend[5]= "Pres";
+    D.plotLegend[6]= "PresAbs";
+    D.plotLegend[7]= "Vorti";
+    if (D.plotData[0].size() < 500) {
+      for (int k= 0; k < (int)D.plotLegend.size(); k++)
+        D.plotData[k].push_back(0.0f);
+      for (int x= 0; x < nX; x++) {
+        for (int y= 0; y < nY; y++) {
+          for (int z= 0; z < nZ; z++) {
+            D.plotData[0][D.plotData[0].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
+            D.plotData[1][D.plotData[1].size() - 1]+= Smok[x][y][z];
+            D.plotData[2][D.plotData[2].size() - 1]+= std::abs(Smok[x][y][z]);
+            D.plotData[3][D.plotData[3].size() - 1]+= Dive[x][y][z];
+            D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Dive[x][y][z]);
+            D.plotData[5][D.plotData[5].size() - 1]+= Pres[x][y][z];
+            D.plotData[6][D.plotData[6].size() - 1]+= std::abs(Pres[x][y][z]);
+            D.plotData[7][D.plotData[7].size() - 1]+= Vort[x][y][z];
+          }
+        }
+      }
+    }
+  }
 }
 
 
@@ -1003,7 +1007,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
                                             std::vector<std::vector<std::vector<float>>>& ioField) {
   // Prepare convergence plot
   const float normRHS= ImplicitFieldDotProd(iField, iField);
-  if (D.UI[Verbose_____].GetB()) {
+  if (D.UI[VerboseSolv_].GetB()) {
     D.plotLegend.resize(5);
     D.plotLegend[FieldID::IDSmok]= "Diffu S";
     D.plotLegend[FieldID::IDVelX]= "Diffu VX";
@@ -1028,7 +1032,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   ImplicitFieldSub(iField, t0Field, rField);
 
   // Error plot
-  if (D.UI[Verbose_____].GetB()) {
+  if (D.UI[VerboseSolv_].GetB()) {
     const float errTmp= ImplicitFieldDotProd(rField, rField);
     D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
     if (iFieldID == FieldID::IDSmok) printf("CG Diffu S  [%.2e] ", normRHS);
@@ -1073,7 +1077,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     rField= t1Field;
 
     // Error plot
-    if (D.UI[Verbose_____].GetB()) {
+    if (D.UI[VerboseSolv_].GetB()) {
       const float errTmp= ImplicitFieldDotProd(rField, rField);
       D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
       printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
@@ -1095,7 +1099,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   }
 
   // Error plot
-  if (D.UI[Verbose_____].GetB()) {
+  if (D.UI[VerboseSolv_].GetB()) {
     if (iFieldID == FieldID::IDSmok) Dum0= rField;
     if (iFieldID == FieldID::IDVelX) Dum1= rField;
     if (iFieldID == FieldID::IDVelY) Dum2= rField;

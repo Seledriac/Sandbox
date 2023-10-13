@@ -64,8 +64,6 @@ void ParticleSystem::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 

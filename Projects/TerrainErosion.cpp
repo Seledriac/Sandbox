@@ -65,16 +65,14 @@ void TerrainErosion::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
 // Check if parameter changes should trigger an allocation
 void TerrainErosion::CheckAlloc() {
-  if (D.UI[TerrainNbX__].hasChanged() ||
-      D.UI[TerrainNbY__].hasChanged() ||
-      D.UI[DropletNbK__].hasChanged()) isAllocated= false;
+  if (D.UI[TerrainNbX__].hasChanged()) isAllocated= false;
+  if (D.UI[TerrainNbY__].hasChanged()) isAllocated= false;
+  if (D.UI[DropletNbK__].hasChanged()) isAllocated= false;
 }
 
 

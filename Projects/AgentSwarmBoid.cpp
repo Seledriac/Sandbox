@@ -67,15 +67,13 @@ void AgentSwarmBoid::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
 // Check if parameter changes should trigger an allocation
 void AgentSwarmBoid::CheckAlloc() {
-  if (D.UI[PopSize_____].hasChanged() ||
-      D.UI[PopTypes____].hasChanged()) isAllocated= false;
+  if (D.UI[PopSize_____].hasChanged()) isAllocated= false;
+  if (D.UI[PopTypes____].hasChanged()) isAllocated= false;
 }
 
 

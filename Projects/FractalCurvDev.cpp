@@ -58,8 +58,6 @@ void FractalCurvDev::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
@@ -70,10 +68,10 @@ void FractalCurvDev::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 void FractalCurvDev::CheckRefresh() {
-  if (D.UI[MaxDepth____].hasChanged() ||
-      D.UI[testVar1____].hasChanged() ||
-      D.UI[testVar2____].hasChanged() ||
-      D.UI[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.UI[MaxDepth____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar1____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar2____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar3____].hasChanged()) isRefreshed= false;
 }
 
 

@@ -61,27 +61,25 @@ void FractalElevMap::SetActiveProject() {
   isActivProj= true;
   isAllocated= false;
   isRefreshed= false;
-  Allocate();
-  Refresh();
 }
 
 
 // Check if parameter changes should trigger an allocation
 void FractalElevMap::CheckAlloc() {
-  if (D.UI[testVar0____].hasChanged() ||
-      D.UI[testVar1____].hasChanged()) isAllocated= false;
+  if (D.UI[testVar0____].hasChanged()) isAllocated= false;
+  if (D.UI[testVar1____].hasChanged()) isAllocated= false;
 }
 
 
 // Check if parameter changes should trigger a refresh
 void FractalElevMap::CheckRefresh() {
-  if (D.UI[testVar2____].hasChanged() ||
-      D.UI[testVar3____].hasChanged() ||
-      D.UI[testVar4____].hasChanged() ||
-      D.UI[testVar5____].hasChanged() ||
-      D.UI[testVar6____].hasChanged() ||
-      D.UI[testVar7____].hasChanged() ||
-      D.UI[testVar8____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar2____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar4____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar5____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar6____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar7____].hasChanged()) isRefreshed= false;
+  if (D.UI[testVar8____].hasChanged()) isRefreshed= false;
 }
 
 
