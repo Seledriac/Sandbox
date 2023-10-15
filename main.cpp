@@ -20,7 +20,8 @@
 #include "Projects/FractalCurvDev.hpp"
 #include "Projects/FractalElevMap.hpp"
 #include "Projects/MarkovProcGene.hpp"
-#include "Projects/ParticleSystem.hpp"
+#include "Projects/MassSpringSyst.hpp"
+#include "Projects/PosiBasedDynam.hpp"
 #include "Projects/SpaceTimeWorld.hpp"
 #include "Projects/TerrainErosion.hpp"
 
@@ -49,7 +50,8 @@ CompuFluidDyna myCompuFluidDyna;
 FractalCurvDev myFractalCurvDev;
 FractalElevMap myFractalElevMap;
 MarkovProcGene myMarkovProcGene;
-ParticleSystem myParticleSystem;
+MassSpringSyst myMassSpringSyst;
+PosiBasedDynam myPosiBasedDynam;
 SpaceTimeWorld mySpaceTimeWorld;
 TerrainErosion myTerrainErosion;
 
@@ -65,7 +67,8 @@ void project_ForceHardInit(unsigned char key) {
   if (key != 'f' && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
   if (key != 'h' && myFractalElevMap.isActivProj) myFractalElevMap= FractalElevMap();
   if (key != 'm' && myMarkovProcGene.isActivProj) myMarkovProcGene= MarkovProcGene();
-  if (key != 'p' && myParticleSystem.isActivProj) myParticleSystem= ParticleSystem();
+  if (key != 's' && myMassSpringSyst.isActivProj) myMassSpringSyst= MassSpringSyst();
+  if (key != 'p' && myPosiBasedDynam.isActivProj) myPosiBasedDynam= PosiBasedDynam();
   if (key != 'r' && mySpaceTimeWorld.isActivProj) mySpaceTimeWorld= SpaceTimeWorld();
   if (key != 'e' && myTerrainErosion.isActivProj) myTerrainErosion= TerrainErosion();
 
@@ -74,7 +77,8 @@ void project_ForceHardInit(unsigned char key) {
   if (key == 'f') myFractalCurvDev.SetActiveProject();
   if (key == 'h') myFractalElevMap.SetActiveProject();
   if (key == 'm') myMarkovProcGene.SetActiveProject();
-  if (key == 'p') myParticleSystem.SetActiveProject();
+  if (key == 's') myMassSpringSyst.SetActiveProject();
+  if (key == 'p') myPosiBasedDynam.SetActiveProject();
   if (key == 'r') mySpaceTimeWorld.SetActiveProject();
   if (key == 'e') myTerrainErosion.SetActiveProject();
 }
@@ -86,7 +90,8 @@ void project_QueueSoftRefresh(unsigned char key) {
   if (key == 'F') myFractalCurvDev.isRefreshed= false;
   if (key == 'H') myFractalElevMap.isRefreshed= false;
   if (key == 'M') myMarkovProcGene.isRefreshed= false;
-  if (key == 'P') myParticleSystem.isRefreshed= false;
+  if (key == 'S') myMassSpringSyst.isRefreshed= false;
+  if (key == 'P') myPosiBasedDynam.isRefreshed= false;
   if (key == 'R') mySpaceTimeWorld.isRefreshed= false;
   if (key == 'E') myTerrainErosion.isRefreshed= false;
 }
@@ -98,7 +103,8 @@ void project_Refresh() {
   myFractalCurvDev.Refresh();
   myFractalElevMap.Refresh();
   myMarkovProcGene.Refresh();
-  myParticleSystem.Refresh();
+  myMassSpringSyst.Refresh();
+  myPosiBasedDynam.Refresh();
   mySpaceTimeWorld.Refresh();
   myTerrainErosion.Refresh();
 }
@@ -110,7 +116,8 @@ void project_Animate() {
   myFractalCurvDev.Animate();
   myFractalElevMap.Animate();
   myMarkovProcGene.Animate();
-  myParticleSystem.Animate();
+  myMassSpringSyst.Animate();
+  myPosiBasedDynam.Animate();
   mySpaceTimeWorld.Animate();
   myTerrainErosion.Animate();
 }
@@ -122,7 +129,8 @@ void project_Draw() {
   myFractalCurvDev.Draw();
   myFractalElevMap.Draw();
   myMarkovProcGene.Draw();
-  myParticleSystem.Draw();
+  myMassSpringSyst.Draw();
+  myPosiBasedDynam.Draw();
   mySpaceTimeWorld.Draw();
   myTerrainErosion.Draw();
 }

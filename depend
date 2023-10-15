@@ -5,5 +5,5 @@ main.o: main.cpp freeglut/include/GL/freeglut.h \
  tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid.hpp \
  Projects/CompuFluidDyna.hpp Projects/FractalCurvDev.hpp \
  Projects/FractalElevMap.hpp Projects/MarkovProcGene.hpp \
- Projects/ParticleSystem.hpp Projects/SpaceTimeWorld.hpp \
- Projects/TerrainErosion.hpp
+ Projects/MassSpringSyst.hpp Projects/PosiBasedDynam.hpp \
+ Projects/SpaceTimeWorld.hpp Projects/TerrainErosion.hpp

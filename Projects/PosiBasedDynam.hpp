@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard lib
+#include <array>
 #include <vector>
 
 // Project lib
@@ -10,14 +11,15 @@
 // Particle system simulation with a Position-Based Dynamics (PBD) approach
 // - Particle positions are iteratively updated with explicit time integration
 // - Collision constraints are resolved by correcting positions of particles with a Gauss Seidel relaxation
+// - Velocities are deduced from changed positions
 //
 // Reference
 // https://www.youtube.com/watch?v=jrociOAYqxA
 // https://www.youtube.com/watch?v=lS_qeBy3aQI
-class ParticleSystem
+class PosiBasedDynam
 {
   private:
-  int NbParticles;
+  int N;
 
   std::vector<Math::Vec3f> PosOld;
   std::vector<Math::Vec3f> PosCur;
@@ -34,7 +36,7 @@ class ParticleSystem
   bool isAllocated;
   bool isRefreshed;
 
-  ParticleSystem();
+  PosiBasedDynam();
 
   void SetActiveProject();
   void CheckAlloc();
