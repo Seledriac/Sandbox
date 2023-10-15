@@ -16,6 +16,9 @@
 // Reference implicit solve
 // http://www.cs.cmu.edu/~baraff/sigcourse/notese.pdf
 // http://www.cs.cmu.edu/~baraff/sigcourse/slidese.pdf
+// https://blog.mmacklin.com/2012/05/04/implicitsprings/
+// https://stackoverflow.com/questions/3897424/implementing-semi-implicit-backward-euler-in-a-1-dof-mass-spring-system?rq=4
+// https://hugi.scene.org/online/hugi28/hugi%2028%20-%20coding%20corner%20uttumuttu%20implementing%20the%20implicit%20euler%20method%20for%20mass-spring%20systems.htm
 class MassSpringSyst
 {
   private:
