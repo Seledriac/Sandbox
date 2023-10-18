@@ -636,8 +636,8 @@ int main(int argc, char *argv[]) {
   // Window creation
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(1200, 800);
-  glutInitWindowPosition(2400, 50);
+  glutInitWindowSize(1400, 900);
+  glutInitWindowPosition(-1, -1);
   glutCreateWindow("Display");
 
   // World initialization

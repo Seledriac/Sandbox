@@ -34,8 +34,7 @@ enum ParamType
   SolvTolRhs__,
   SolvTolRel__,
   CoeffGravi__,
-  CoeffAdvecS_,
-  CoeffAdvecV_,
+  CoeffAdvec__,
   CoeffDiffuS_,
   CoeffDiffuV_,
   CoeffVorti__,
@@ -47,6 +46,8 @@ enum ParamType
   BCVelZ______,
   BCPres______,
   BCSmok______,
+  BCSmokTime__,
+  BCAdvecWall_,
   ObjectPosX__,
   ObjectPosY__,
   ObjectPosZ__,
@@ -74,42 +75,43 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 0));       // Scenario ID, 0= load file, 1> hard coded scenarii
-    D.UI.push_back(ParamUI("InputFile___", 4));       // BMP file to load
-    D.UI.push_back(ParamUI("ResolutionX_", 1));       // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionY_", 60));      // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionZ_", 60));      // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("VoxelSize___", 0.01));    // Element size
-    D.UI.push_back(ParamUI("TimeStep____", 0.02));    // Simulation time step
-    D.UI.push_back(ParamUI("SolvMaxIter_", 30));      // Max number of solver iterations
-    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));     // Solver tolerance relative to RHS norm
-    D.UI.push_back(ParamUI("SolvTolRel__", 0.0));     // Solver tolerance relative to initial guess
-    D.UI.push_back(ParamUI("CoeffGravi__", 0.0));     // Magnitude of gravity in Z- direction
-    D.UI.push_back(ParamUI("CoeffAdvecS_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
-    D.UI.push_back(ParamUI("CoeffAdvecV_", 5.0));     // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
-    D.UI.push_back(ParamUI("CoeffDiffuS_", 0.0001));  // Diffusion of smoke field
-    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.001));   // Diffusion of velocity field, i.e viscosity
-    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));     // Vorticity confinement
-    D.UI.push_back(ParamUI("CoeffProj___", 1.0));     // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
-    D.UI.push_back(ParamUI("CoeffProj2__", 0.5));     // Test coeff for Rhie Chow interpolation
-    D.UI.push_back(ParamUI("CoeffProj3__", 0.5));     // Test coeff for Rhie Chow interpolation
-    D.UI.push_back(ParamUI("BCVelX______", 0.0));     // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCVelY______", 1.0));     // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCVelZ______", 0.0));     // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCPres______", 0.0));     // Pressure value for voxels with enforced pressure
-    D.UI.push_back(ParamUI("BCSmok______", 1.0));     // Smoke value for voxels with enforced smoke
-    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));     // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));    // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));     // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectSize__", 0.08));    // Size for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ScaleFactor_", 1.0));     // Scale factor for drawn geometry
-    D.UI.push_back(ParamUI("ColorFactor_", 1.0));     // Color factor for drawn geometry
-    D.UI.push_back(ParamUI("ColorThresh_", 0.0));     // Color cutoff drawn geometry
-    D.UI.push_back(ParamUI("ColorMode___", 1));       // Selector for the scalar field to be drawn
-    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));     // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));     // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("Verbose_____", -0.5));    // Verbose mode
-    D.UI.push_back(ParamUI("VerboseSolv_", -0.5));    // Verbose mode for linear solvers
+    D.UI.push_back(ParamUI("Scenario____", 0));      // Scenario ID, 0= load file, 1> hard coded scenarios
+    D.UI.push_back(ParamUI("InputFile___", 3));      // BMP file to load
+    D.UI.push_back(ParamUI("ResolutionX_", 1));      // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionY_", 60));     // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionZ_", 60));     // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("VoxelSize___", 0.01));   // Element size
+    D.UI.push_back(ParamUI("TimeStep____", 0.02));   // Simulation time step
+    D.UI.push_back(ParamUI("SolvMaxIter_", 30));     // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-9));  // Solver tolerance relative to RHS norm
+    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
+    D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
+    D.UI.push_back(ParamUI("CoeffAdvec__", 5.0));    // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
+    D.UI.push_back(ParamUI("CoeffDiffuS_", 1.e-4));  // Diffusion of smoke field, i.e. smoke spread/smear
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 1.e-3));  // Diffusion of velocity field, i.e. viscosity
+    D.UI.push_back(ParamUI("CoeffVorti__", 0.0));    // Vorticity confinement to avoid dissipation of energy in small scale vortices
+    D.UI.push_back(ParamUI("CoeffProj___", 1.0));    // 0 = No correction, 1= incompressiblity correction, 2= time dependant correction
+    D.UI.push_back(ParamUI("CoeffProj2__", 0.5));    // TODO test coeff for Rhie Chow correction of voxel face velocities
+    D.UI.push_back(ParamUI("CoeffProj3__", 0.5));    // TODO test coeff for Rhie Chow correction of voxel face velocities
+    D.UI.push_back(ParamUI("BCVelX______", 0.0));    // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCVelY______", 1.0));    // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCVelZ______", 0.0));    // Velocity value for voxels with enforced velocity
+    D.UI.push_back(ParamUI("BCPres______", 0.0));    // Pressure value for voxels with enforced pressure
+    D.UI.push_back(ParamUI("BCSmok______", 1.0));    // Smoke value for voxels with enforced smoke
+    D.UI.push_back(ParamUI("BCSmokTime__", 1.0));    // Period duration for input smoke oscillation
+    D.UI.push_back(ParamUI("BCAdvecWall_", 1.0));    // Enable advection of non-zero smoke from the walls
+    D.UI.push_back(ParamUI("ObjectPosX__", 0.5));    // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosY__", 0.25));   // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));    // Coordinates for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize__", 0.08));   // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ScaleFactor_", 1.0));    // Scale factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorFactor_", 1.0));    // Color factor for drawn geometry
+    D.UI.push_back(ParamUI("ColorThresh_", 0.0));    // Color cutoff drawn geometry
+    D.UI.push_back(ParamUI("ColorMode___", 1));      // Selector for the scalar field to be drawn
+    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));    // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("Verbose_____", -0.5));   // Verbose mode
+    D.UI.push_back(ParamUI("VerboseSolv_", -0.5));   // Verbose mode for linear solvers
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -206,6 +208,7 @@ void CompuFluidDyna::Refresh() {
   if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Refresh()\n");
 
   // Initialize scenario values
+  simTime= 0;
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
@@ -254,18 +257,22 @@ void CompuFluidDyna::Animate() {
   const float coeffDiffu= std::max(D.UI[CoeffDiffuS_].GetF(), 0.0f);
   const float coeffVisco= std::max(D.UI[CoeffDiffuV_].GetF(), 0.0f);
   const float coeffVorti= D.UI[CoeffVorti__].GetF();
+  simTime+= D.UI[TimeStep____].GetF();
+
+  // Update periodic smoke in inlet
+  ApplyBC(FieldID::IDSmok, Smok);
 
   // Incompressible Navier Stokes
   // ∂vel/∂t + (vel · ∇) vel = − 1/ρ ∇press + visco ∇²vel + f
   // ∇ · vel = 0
 
   // Advection steps
-  if (D.UI[CoeffAdvecS_].GetB()) {
+  if (D.UI[CoeffAdvec__].GetB()) {
     // smo ⇐ smo{pos-vel}
     // smo ⇐ smo - Δt (vel · ∇) smo
     AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
   }
-  if (D.UI[CoeffAdvecV_].GetB()) {
+  if (D.UI[CoeffAdvec__].GetB()) {
     // vel ⇐ vel{pos-vel}
     // vel ⇐ vel - Δt (vel · ∇) vel
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
@@ -301,7 +308,10 @@ void CompuFluidDyna::Animate() {
   }
 
   // External forces
-  ExternalForces();
+  // vel ⇐ vel + Δt * F / m
+  if (D.UI[CoeffGravi__].GetB()) {
+    ExternalForces();
+  }
 
   // Projection step
   if (D.UI[CoeffProj___].GetB()) {
@@ -311,8 +321,8 @@ void CompuFluidDyna::Animate() {
   }
 
   // Compute field data for display
-  // ComputeVelocityDivergence();    // TODO reenable after Rhie Chow interpolation properly tested
-  // ComputeVelocityCurlVorticity(); // TODO reenable after Rhie Chow interpolation properly tested
+  ComputeVelocityDivergence();
+  ComputeVelocityCurlVorticity();
 
   // TODO Compute fluid density to check if constant as it should be in incompressible case
 
@@ -467,9 +477,10 @@ void CompuFluidDyna::Draw() {
               glColor3f(r, g, b);
               Math::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
-              glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
+              // glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
               // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF());
               // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF() * std::log(vec.norm() + 1.0f));
+              glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF() * std::sqrt(vec.norm()));
             }
           }
         }
@@ -503,7 +514,7 @@ void CompuFluidDyna::Draw() {
             glColor3f(r, g, b);
             Math::Vec3f pos((float)x, (float)y, (float)z);
             glVertex3fv(pos.array());
-            glVertex3fv(pos + vec * D.UI[ScaleFactor_].GetF());
+            glVertex3fv(pos + vec);
           }
         }
       }
@@ -746,7 +757,7 @@ void CompuFluidDyna::InitializeScenario() {
             VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
             VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nZ - 1 - z) % 16 < 8) ? (D.UI[BCSmok______].GetF()) : (-D.UI[BCSmok______].GetF());
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
           else {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
@@ -776,7 +787,7 @@ void CompuFluidDyna::InitializeScenario() {
           // Add smoke source for visualization
           else if (y == nY / 2 && z > nZ / 2) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (z % 16 < 8) ? (D.UI[BCSmok______].GetF()) : (-D.UI[BCSmok______].GetF());
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
         }
 
@@ -794,7 +805,7 @@ void CompuFluidDyna::InitializeScenario() {
             VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
             VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nZ - 1 - z) % 16 < 8) ? (D.UI[BCSmok______].GetF()) : (-D.UI[BCSmok______].GetF());
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
           else if (std::abs(y - wallPos) <= wallThick) {
             Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, 0.0f, ((float)z + 0.5f) / (float)nZ);
@@ -844,7 +855,7 @@ void CompuFluidDyna::InitializeScenario() {
           }
           else if (std::max(y, nY - 1 - y) == nY / 2) {
             SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= (std::max(z, nZ - 1 - z) % 16 < 8) ? (D.UI[BCSmok______].GetF()) : (-D.UI[BCSmok______].GetF());
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
         }
 
@@ -890,7 +901,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDPres) ioField[x][y][z]= 0.0f;
-        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z];
+        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z] * std::cos(simTime * M_PI / D.UI[BCSmokTime__].GetF());
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) ioField[x][y][z]= VelXForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= VelYForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= VelZForced[x][y][z];
@@ -1150,7 +1161,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
       for (int z= 0; z < nZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
         // Subtract pressure gradient with zero slope at interface to remove divergence
-        const float timeDependance= (D.UI[CoeffProj___].GetI() == 2) ? iTimeStep : 1.0f;
+        const float timeDependance= (D.UI[CoeffProj___].GetI() == 2) ? iTimeStep * D.UI[CoeffProj2__].GetF() : 1.0f;
         if (x - 1 >= 0) ioVelX[x][y][z]-= (Solid[x - 1][y][z]) ? 0.0f : timeDependance * (Pres[x][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
         if (y - 1 >= 0) ioVelY[x][y][z]-= (Solid[x][y - 1][z]) ? 0.0f : timeDependance * (Pres[x][y][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
         if (z - 1 >= 0) ioVelZ[x][y][z]-= (Solid[x][y][z - 1]) ? 0.0f : timeDependance * (Pres[x][y][z] - Pres[x][y][z - 1]) / (2.0f * voxSize);
@@ -1205,6 +1216,27 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
                                  std::vector<std::vector<std::vector<float>>>& ioField) {
   // Sweep through field and apply semi Lagrangian advection
   std::vector<std::vector<std::vector<float>>> oldField= ioField;
+
+  // Adjust the source field to have non-zero values on the wall interface for continuity
+  if (D.UI[BCAdvecWall_].GetB() && iFieldID == FieldID::IDSmok) {
+    for (int x= 0; x < nX; x++) {
+      for (int y= 0; y < nY; y++) {
+        for (int z= 0; z < nZ; z++) {
+          if (!Solid[x][y][z]) continue;
+          int count= 0;
+          float sum= 0.0f;
+          if (x - 1 >= 0 && !Solid[x - 1][y][z] && ++count) sum+= ioField[x - 1][y][z];
+          if (y - 1 >= 0 && !Solid[x][y - 1][z] && ++count) sum+= ioField[x][y - 1][z];
+          if (z - 1 >= 0 && !Solid[x][y][z - 1] && ++count) sum+= ioField[x][y][z - 1];
+          if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
+          if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
+          if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
+          oldField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+        }
+      }
+    }
+  }
+
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
@@ -1222,10 +1254,10 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
 
         // Iterative source position correction with 2nd order MacCormack scheme
         int correcMaxIter= 0;
-        if (iFieldID == FieldID::IDSmok) correcMaxIter= std::max(D.UI[CoeffAdvecS_].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelX) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelY) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelZ) correcMaxIter= std::max(D.UI[CoeffAdvecV_].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDSmok) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelX) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelY) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
+        if (iFieldID == FieldID::IDVelZ) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
         for (int iter= 0; iter < correcMaxIter; iter++) {
           const float velBegX= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
           const float velBegY= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
@@ -1320,12 +1352,12 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
             Dive[x][y][z]= PresForced[x][y][z];
           if (Solid[x][y][z] || PreBC[x][y][z]) continue;
           // Classical linear interpolation for face velocities
-          float velXN= (x - 1 >= 0) ? ((Solid[x - 1][y][z]) ? (0.0f) : (VelX[x][y][z] + VelX[x - 1][y][z]) / 2.0f) : (VelX[x][y][z]);
-          float velYN= (y - 1 >= 0) ? ((Solid[x][y - 1][z]) ? (0.0f) : (VelY[x][y][z] + VelY[x][y - 1][z]) / 2.0f) : (VelY[x][y][z]);
-          float velZN= (z - 1 >= 0) ? ((Solid[x][y][z - 1]) ? (0.0f) : (VelZ[x][y][z] + VelZ[x][y][z - 1]) / 2.0f) : (VelZ[x][y][z]);
-          float velXP= (x + 1 < nX) ? ((Solid[x + 1][y][z]) ? (0.0f) : (VelX[x + 1][y][z] + VelX[x][y][z]) / 2.0f) : (VelX[x][y][z]);
-          float velYP= (y + 1 < nY) ? ((Solid[x][y + 1][z]) ? (0.0f) : (VelY[x][y + 1][z] + VelY[x][y][z]) / 2.0f) : (VelY[x][y][z]);
-          float velZP= (z + 1 < nZ) ? ((Solid[x][y][z + 1]) ? (0.0f) : (VelZ[x][y][z + 1] + VelZ[x][y][z]) / 2.0f) : (VelZ[x][y][z]);
+          float velXN= (x - 1 >= 0) ? ((Solid[x - 1][y][z]) ? (0.0f) : ((VelX[x][y][z] + VelX[x - 1][y][z]) / 2.0f)) : (VelX[x][y][z]);
+          float velYN= (y - 1 >= 0) ? ((Solid[x][y - 1][z]) ? (0.0f) : ((VelY[x][y][z] + VelY[x][y - 1][z]) / 2.0f)) : (VelY[x][y][z]);
+          float velZN= (z - 1 >= 0) ? ((Solid[x][y][z - 1]) ? (0.0f) : ((VelZ[x][y][z] + VelZ[x][y][z - 1]) / 2.0f)) : (VelZ[x][y][z]);
+          float velXP= (x + 1 < nX) ? ((Solid[x + 1][y][z]) ? (0.0f) : ((VelX[x + 1][y][z] + VelX[x][y][z]) / 2.0f)) : (VelX[x][y][z]);
+          float velYP= (y + 1 < nY) ? ((Solid[x][y + 1][z]) ? (0.0f) : ((VelY[x][y + 1][z] + VelY[x][y][z]) / 2.0f)) : (VelY[x][y][z]);
+          float velZP= (z + 1 < nZ) ? ((Solid[x][y][z + 1]) ? (0.0f) : ((VelZ[x][y][z + 1] + VelZ[x][y][z]) / 2.0f)) : (VelZ[x][y][z]);
           // Rhie and Chow correction by subtracting pressure gradient minus linear interpolation of pressure gradients
           velXN-= D.UI[CoeffProj2__].GetF() * ((x - 1 >= 0 && !Solid[x - 1][y][z]) ? ((Pres[x][y][z] - Pres[x - 1][y][z]) / voxSize) : (0.0f));
           velYN-= D.UI[CoeffProj2__].GetF() * ((y - 1 >= 0 && !Solid[x][y - 1][z]) ? ((Pres[x][y][z] - Pres[x][y - 1][z]) / voxSize) : (0.0f));

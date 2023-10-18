@@ -37,6 +37,11 @@
 // https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
 // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 //
+// References for Rhie Chow correction
+// https://youtu.be/yqZ59Xn_aF8 Checkerboard oscillations
+// https://youtu.be/PmEUiUB8ETk Deriving the correction
+// https://mustafabhotvawala.com/wp-content/uploads/2020/11/MB_rhieChow-1.pdf
+//
 // References for vorticity confinement implem
 // https://github.com/awesson/stable-fluids/tree/master
 // https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
@@ -70,6 +75,7 @@ class CompuFluidDyna
   int nY;
   int nZ;
   float voxSize;
+  float simTime;
 
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;

@@ -4,12 +4,12 @@ IndentWidth: 2
 ColumnLimit: 0
 AccessModifierOffset: -4
 NamespaceIndentation: All
-BreakBeforeBraces: Custom
 MaxEmptyLinesToKeep: 2
 SpaceBeforeAssignmentOperators: false
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 InsertNewlineAtEOF: true
 IndentPPDirectives: BeforeHash
+BreakBeforeBraces: Custom
 BraceWrapping:
   AfterEnum: true
   AfterStruct: true

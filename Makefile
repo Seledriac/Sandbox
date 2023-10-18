@@ -7,8 +7,14 @@ LIB_DIRS = -L"freeglut\lib\x64"
 FLAGS_BUILD = -m64
 FLAGS_OPTIMIZATION = -O3
 FLAGS_OPENMP = -fopenmp
+FLAGS_WARNING = -W -Wall -Wextra -g 
+
+UNAME := $(shell uname)
+ifeq ($(UNAME), Windows_NT)
 FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
-FLAGS_WARNING = -W -Wall -Wextra -g
+else
+FLAGS_GLUT = -lGL -lglut -lGLU -lX11 -lm
+endif
 
 CFLAGS = ${FLAGS_BUILD} ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_OPTIMIZATION}
 SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp) $(wildcard FileIO/*.cpp) $(wildcard Util/*.cpp) $(wildcard Projects/*.cpp)

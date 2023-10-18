@@ -2,6 +2,7 @@
 
 
 // Standard lib
+#include <cstring>
 #include <vector>
 
 // GLUT lib

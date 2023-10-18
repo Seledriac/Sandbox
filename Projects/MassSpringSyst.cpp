@@ -3,6 +3,7 @@
 
 // Standard lib
 #include <cstdio>
+#include <cstring>
 #include <vector>
 
 // GLUT lib
