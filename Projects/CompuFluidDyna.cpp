@@ -1296,18 +1296,17 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
           if (Solid[x][y][z] || VelBC[x][y][z] || PreBC[x][y][z]) continue;
-          float dVort_dx= 0.0f;
-          float dVort_dy= 0.0f;
-          float dVort_dz= 0.0f;
-          // TODO handle BC at interface with solid voxels
-          if (x - 1 >= 0 && x + 1 < nX) dVort_dx= (Vort[x + 1][y][z] - Vort[x - 1][y][z]) / (2.0f * voxSize);
-          if (y - 1 >= 0 && y + 1 < nY) dVort_dy= (Vort[x][y + 1][z] - Vort[x][y - 1][z]) / (2.0f * voxSize);
-          if (z - 1 >= 0 && z + 1 < nZ) dVort_dz= (Vort[x][y][z + 1] - Vort[x][y][z - 1]) / (2.0f * voxSize);
-          const float dVortNorm= std::sqrt(dVort_dx * dVort_dx + dVort_dy * dVort_dy + dVort_dz * dVort_dz);
-          if (dVortNorm > 0.0f) {
-            const float dVort_dx_scaled= iVortiCoeff * dVort_dx / dVortNorm;
-            const float dVort_dy_scaled= iVortiCoeff * dVort_dy / dVortNorm;
-            const float dVort_dz_scaled= iVortiCoeff * dVort_dz / dVortNorm;
+          Math::Vec3f vortGrad(0.0f, 0.0f, 0.0f);
+          if (x - 1 >= 0 && !Solid[x - 1][y][z]) vortGrad[0]+= (Vort[x][y][z] - Vort[x - 1][y][z]) / (2.0f * voxSize);
+          if (y - 1 >= 0 && !Solid[x][y - 1][z]) vortGrad[1]+= (Vort[x][y][z] - Vort[x][y - 1][z]) / (2.0f * voxSize);
+          if (z - 1 >= 0 && !Solid[x][y][z - 1]) vortGrad[2]+= (Vort[x][y][z] - Vort[x][y][z - 1]) / (2.0f * voxSize);
+          if (x + 1 < nX && !Solid[x + 1][y][z]) vortGrad[0]+= (Vort[x + 1][y][z] - Vort[x][y][z]) / (2.0f * voxSize);
+          if (y + 1 < nY && !Solid[x][y + 1][z]) vortGrad[1]+= (Vort[x][y + 1][z] - Vort[x][y][z]) / (2.0f * voxSize);
+          if (z + 1 < nZ && !Solid[x][y][z + 1]) vortGrad[2]+= (Vort[x][y][z + 1] - Vort[x][y][z]) / (2.0f * voxSize);
+          if (vortGrad.norm() > 0.0f) {
+            const float dVort_dx_scaled= iVortiCoeff * vortGrad[0] / vortGrad.norm();
+            const float dVort_dy_scaled= iVortiCoeff * vortGrad[1] / vortGrad.norm();
+            const float dVort_dz_scaled= iVortiCoeff * vortGrad[2] / vortGrad.norm();
             ioVelX[x][y][z]+= iTimeStep * (dVort_dy_scaled * CurZ[x][y][z] - dVort_dz_scaled * CurY[x][y][z]);
             ioVelY[x][y][z]+= iTimeStep * (dVort_dz_scaled * CurX[x][y][z] - dVort_dx_scaled * CurZ[x][y][z]);
             ioVelZ[x][y][z]+= iTimeStep * (dVort_dx_scaled * CurY[x][y][z] - dVort_dy_scaled * CurX[x][y][z]);
