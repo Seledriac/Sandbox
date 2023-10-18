@@ -77,6 +77,9 @@ class CompuFluidDyna
   float voxSize;
   float simTime;
 
+  // Fluid properties
+  float fluidDensity;
+
   // Fields for scenario setup
   std::vector<std::vector<std::vector<bool>>> Solid;
   std::vector<std::vector<std::vector<bool>>> VelBC;
