@@ -794,10 +794,18 @@ void CompuFluidDyna::InitializeScenario() {
 
         // Vortex ring with inlet in Y-, outlet in Y+ and wall with hole in the corridor
         if (scenarioType == 4) {
-          int wallPos= std::round(D.UI[ObjectPosY__].GetF() * (float)nY);
-          int wallThick= 5;
+          const int wallPos= std::round(D.UI[ObjectPosY__].GetF() * (float)nY);
+          const Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, 0.0f, ((float)z + 0.5f) / (float)nZ);
+          const Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), 0.0f, D.UI[ObjectPosZ__].GetF());
+          Math::Vec3f dist= (posCell - posObstacle);
+          dist[0]*= (float)(nX - 1) * voxSize;
+          dist[1]*= (float)(nY - 1) * voxSize;
+          dist[2]*= (float)(nZ - 1) * voxSize;
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
+            Solid[x][y][z]= true;
+          }
+          else if (std::abs(y - wallPos) <= nY / 6 && dist.norm() >= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
             Solid[x][y][z]= true;
           }
           else if (y == 0) {
@@ -807,16 +815,6 @@ void CompuFluidDyna::InitializeScenario() {
             VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
             SmoBC[x][y][z]= true;
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
-          }
-          else if (std::abs(y - wallPos) <= wallThick) {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, 0.0f, ((float)z + 0.5f) / (float)nZ);
-            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), 0.0f, D.UI[ObjectPosZ__].GetF());
-            Math::Vec3f dist= (posCell - posObstacle);
-            dist[0]*= (float)(nX - 1) * voxSize;
-            dist[1]*= (float)(nY - 1) * voxSize;
-            dist[2]*= (float)(nZ - 1) * voxSize;
-            if (dist.norm() >= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
-              Solid[x][y][z]= true;
           }
           else if (y == nY - 1) {
             PreBC[x][y][z]= true;
