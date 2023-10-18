@@ -633,11 +633,9 @@ void CompuFluidDyna::SetUpUIData() {
     D.plotLegend[0]= "VelMag";
     D.plotLegend[1]= "Smok";
     D.plotLegend[2]= "SmokAbs";
-    D.plotLegend[3]= "Dive";
-    D.plotLegend[4]= "DiveAbs";
-    D.plotLegend[5]= "Pres";
-    D.plotLegend[6]= "PresAbs";
-    D.plotLegend[7]= "Vorti";
+    D.plotLegend[3]= "Pres";
+    D.plotLegend[4]= "PresAbs";
+    D.plotLegend[5]= "Vorti";
     if (D.plotData[0].size() < 500) {
       for (int k= 0; k < (int)D.plotLegend.size(); k++)
         D.plotData[k].push_back(0.0f);
@@ -647,11 +645,9 @@ void CompuFluidDyna::SetUpUIData() {
             D.plotData[0][D.plotData[0].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
             D.plotData[1][D.plotData[1].size() - 1]+= Smok[x][y][z];
             D.plotData[2][D.plotData[2].size() - 1]+= std::abs(Smok[x][y][z]);
-            D.plotData[3][D.plotData[3].size() - 1]+= Dive[x][y][z];
-            D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Dive[x][y][z]);
-            D.plotData[5][D.plotData[5].size() - 1]+= Pres[x][y][z];
-            D.plotData[6][D.plotData[6].size() - 1]+= std::abs(Pres[x][y][z]);
-            D.plotData[7][D.plotData[7].size() - 1]+= Vort[x][y][z];
+            D.plotData[3][D.plotData[3].size() - 1]+= Pres[x][y][z];
+            D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Pres[x][y][z]);
+            D.plotData[5][D.plotData[5].size() - 1]+= Vort[x][y][z];
           }
         }
       }
