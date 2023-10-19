@@ -553,8 +553,8 @@ void CompuFluidDyna::SetUpUIData() {
   // Add hard coded experimental values for lid driven cavity flow benchmark
   if (D.UI[Scenario____].GetI() == 3) {
     D.scatLegend.resize(4);
-    D.scatLegend[2]= "Ghia 100";
-    D.scatLegend[3]= "Ghia 100";
+    D.scatLegend[2]= "Ghia Re1k";
+    D.scatLegend[3]= "Ghia Re1k";
     D.scatData.resize(4);
     D.scatData[2].clear();
     D.scatData[3].clear();
@@ -580,8 +580,8 @@ void CompuFluidDyna::SetUpUIData() {
       D.scatData[3].push_back(std::array<double, 2>({GhiaData1X[k], GhiaData1Y[k]}));
     }
     D.scatLegend.resize(6);
-    D.scatLegend[4]= "Ertu 10k";
-    D.scatLegend[5]= "Ertu 10k";
+    D.scatLegend[4]= "Ertu Re1k";
+    D.scatLegend[5]= "Ertu Re1k";
     D.scatData.resize(6);
     D.scatData[4].clear();
     D.scatData[5].clear();
