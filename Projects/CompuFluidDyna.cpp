@@ -685,15 +685,13 @@ void CompuFluidDyna::SetUpUIData() {
 
   if (!D.UI[VerboseSolv_].GetB()) {
     // Draw the plot data
-    D.plotData.resize(7);
-    D.plotLegend.resize(7);
+    D.plotData.resize(5);
+    D.plotLegend.resize(5);
     D.plotLegend[0]= "VelMag";
     D.plotLegend[1]= "Smok";
-    D.plotLegend[2]= "SmokAbs";
-    D.plotLegend[3]= "Pres";
-    D.plotLegend[4]= "PresAbs";
-    D.plotLegend[5]= "DiveAbs";
-    D.plotLegend[6]= "Vorti";
+    D.plotLegend[2]= "Pres";
+    D.plotLegend[3]= "DiveAbs";
+    D.plotLegend[4]= "Vorti";
     if (D.plotData[0].size() < 1000) {
       for (int k= 0; k < (int)D.plotLegend.size(); k++)
         D.plotData[k].push_back(0.0f);
@@ -702,11 +700,9 @@ void CompuFluidDyna::SetUpUIData() {
           for (int z= 0; z < nZ; z++) {
             D.plotData[0][D.plotData[0].size() - 1]+= std::sqrt(VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
             D.plotData[1][D.plotData[1].size() - 1]+= Smok[x][y][z];
-            D.plotData[2][D.plotData[2].size() - 1]+= std::abs(Smok[x][y][z]);
-            D.plotData[3][D.plotData[3].size() - 1]+= Pres[x][y][z];
-            D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Pres[x][y][z]);
-            D.plotData[5][D.plotData[5].size() - 1]+= std::abs(Dive[x][y][z]);
-            D.plotData[6][D.plotData[6].size() - 1]+= Vort[x][y][z];
+            D.plotData[2][D.plotData[2].size() - 1]+= Pres[x][y][z];
+            D.plotData[3][D.plotData[3].size() - 1]+= std::abs(Dive[x][y][z]);
+            D.plotData[4][D.plotData[4].size() - 1]+= Vort[x][y][z];
           }
         }
       }
@@ -1101,6 +1097,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
+    // TODO find better convergence criterion because unstable when RHS low and initial guess good
     if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
     if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
     if (errNew == 0.0f) break;
@@ -1200,16 +1197,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   float errNew= ImplicitFieldDotProd(rField, rField);
   float errBeg= errNew;
 
-  // // Mask encoding neighborhood
-  // constexpr int MaskSize= 6;
-  // constexpr int Mask[MaskSize][3]=
-  //     {{+1, +0, +0},
-  //      {-1, +0, +0},
-  //      {+0, +1, +0},
-  //      {+0, -1, +0},
-  //      {+0, +0, +1},
-  //      {+0, +0, -1}};
-
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
@@ -1235,19 +1222,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
               if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-
-              // // Get count and sum of valid neighbors
-              // int count= 0;
-              // float sum= 0.0f;
-              // for (int k= 0; k < MaskSize; k++) {
-              //   const int xOff= x + Mask[k][0];
-              //   const int yOff= y + Mask[k][1];
-              //   const int zOff= z + Mask[k][2];
-              //   if (xOff < 0 || xOff >= nX || yOff < 0 || yOff >= nY || zOff < 0 || zOff >= nZ) continue;
-              //   if (Solid[xOff][yOff][zOff]) continue;
-              //   sum+= FieldA[xOff][yOff][zOff];
-              //   count++;
-              // }
 
               // Get count and sum of valid neighbors
               const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
@@ -1287,19 +1261,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
               if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-
-              // // Get count and sum of valid neighbors
-              // int count= 0;
-              // float sum= 0.0f;
-              // for (int k= 0; k < MaskSize; k++) {
-              //   const int xOff= x + Mask[k][0];
-              //   const int yOff= y + Mask[k][1];
-              //   const int zOff= z + Mask[k][2];
-              //   if (xOff < 0 || xOff >= nX || yOff < 0 || yOff >= nY || zOff < 0 || zOff >= nZ) continue;
-              //   if (Solid[xOff][yOff][zOff]) continue;
-              //   sum+= FieldB[xOff][yOff][zOff];
-              //   count++;
-              // }
 
               // Get count and sum of valid neighbors
               const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
