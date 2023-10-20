@@ -32,6 +32,8 @@ enum ParamType
   ResolutionZ_,
   VoxelSize___,
   TimeStep____,
+  SolvPCG_____,
+  SolvSOR_____,
   SolvMaxIter_,
   SolvTolRhs__,
   SolvTolRel__,
@@ -84,6 +86,8 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("VoxelSize___", 0.01));   // Element size
     D.UI.push_back(ParamUI("TimeStep____", 0.02));   // Simulation time step
     D.UI.push_back(ParamUI("SolvMaxIter_", 40));     // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvPCG_____", 1));      // Flag to use Gauss Seidel (=0) or Preconditioned Conjugate Gradient (>0)
+    D.UI.push_back(ParamUI("SolvSOR_____", 1.8));    // Overrelaxation coefficient in Gauss Seidel solver
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
     D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
     D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
@@ -294,16 +298,26 @@ void CompuFluidDyna::Animate() {
   if (D.UI[CoeffDiffuS_].GetB()) {
     // (Id - diffu Δt ∇²) smo = smo
     std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
+    if (D.UI[SolvPCG_____].GetB())
     ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
+    else
+      GaussSeidelSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
   if (D.UI[CoeffDiffuV_].GetB()) {
     // (Id - visco Δt ∇²) vel = vel
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
+    if (D.UI[SolvPCG_____].GetB()) {
     if (nX > 1) ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
     if (nY > 1) ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
     if (nZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+    }
+    else {
+      GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
+      GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
+      GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+    }
   }
   if (D.UI[VerboseTime_].GetB()) printf("%f T Diffusion\n", Timer::PopTimer());
 
@@ -1158,6 +1172,206 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 }
 
 
+void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
+                                      const bool iDiffuMode, const float iDiffuCoeff,
+                                      const std::vector<std::vector<std::vector<float>>>& iField,
+                                      std::vector<std::vector<std::vector<float>>>& ioField) {
+  // Prepare convergence plot
+  const float normRHS= ImplicitFieldDotProd(iField, iField);
+  if (D.UI[VerboseSolv_].GetB()) {
+    D.plotLegend.resize(5);
+    D.plotLegend[FieldID::IDSmok]= "Diffu S";
+    D.plotLegend[FieldID::IDVelX]= "Diffu VX";
+    D.plotLegend[FieldID::IDVelY]= "Diffu VY";
+    D.plotLegend[FieldID::IDVelZ]= "Diffu VZ";
+    D.plotLegend[FieldID::IDPres]= "Proj  P";
+    D.plotData.resize(5);
+    D.plotData[iFieldID].clear();
+  }
+
+  // Allocate fields
+  std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nX, nY, nZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
+
+  // r = b - A x
+  ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
+  ApplyBC(iFieldID, t0Field);
+  ImplicitFieldSub(iField, t0Field, rField);
+
+  // Error plot
+  if (D.UI[VerboseSolv_].GetB()) {
+    const float errTmp= ImplicitFieldDotProd(rField, rField);
+    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
+    if (iFieldID == FieldID::IDSmok) printf("CG Diffu S  [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelX) printf("CG Diffu VX [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelY) printf("CG Diffu VY [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelZ) printf("CG Diffu VZ [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDPres) printf("CG Proj  P  [%.2e] ", normRHS);
+    printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+  }
+
+  // errNew = r^T d
+  float errNew= ImplicitFieldDotProd(rField, rField);
+  float errBeg= errNew;
+
+  // // Mask encoding neighborhood
+  // constexpr int MaskSize= 6;
+  // constexpr int Mask[MaskSize][3]=
+  //     {{+1, +0, +0},
+  //      {-1, +0, +0},
+  //      {+0, +1, +0},
+  //      {+0, -1, +0},
+  //      {+0, +0, +1},
+  //      {+0, +0, -1}};
+
+  // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
+  const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
+  const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
+  for (int k= 0; k < iMaxIter; k++) {
+    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
+    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
+    if (errNew == 0.0f) break;
+
+    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
+    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
+#pragma omp parallel sections
+    {
+#pragma omp section
+      {
+        // Forward pass
+        for (int x= 0; x < nX; x++) {
+          for (int y= 0; y < nY; y++) {
+            for (int z= 0; z < nZ; z++) {
+              // Skip solid or fixed values
+              if (Solid[x][y][z]) continue;
+              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
+              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
+
+              // // Get count and sum of valid neighbors
+              // int count= 0;
+              // float sum= 0.0f;
+              // for (int k= 0; k < MaskSize; k++) {
+              //   const int xOff= x + Mask[k][0];
+              //   const int yOff= y + Mask[k][1];
+              //   const int zOff= z + Mask[k][2];
+              //   if (xOff < 0 || xOff >= nX || yOff < 0 || yOff >= nY || zOff < 0 || zOff >= nZ) continue;
+              //   if (Solid[xOff][yOff][zOff]) continue;
+              //   sum+= FieldA[xOff][yOff][zOff];
+              //   count++;
+              // }
+
+              // Get count and sum of valid neighbors
+              const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
+              float sum= 0.0f;
+              const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
+              const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
+              const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
+              if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldA[x - 1][y][z];
+              if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldA[x + 1][y][z];
+              if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldA[x][y - 1][z];
+              if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldA[x][y + 1][z];
+              if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldA[x][y][z - 1];
+              if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldA[x][y][z + 1];
+
+              // Set new value according to coefficients and flags
+              const float prevVal= FieldA[x][y][z];
+              if (iDiffuMode)
+                FieldA[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+              else if (count > 0)
+                FieldA[x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
+              // Apply overrelaxation trick
+              FieldA[x][y][z]= prevVal + coeffOverrelax * (FieldA[x][y][z] - prevVal);
+            }
+          }
+        }
+      }
+#pragma omp section
+      {
+        // Backward pass
+        for (int x= nX - 1; x >= 0; x--) {
+          for (int y= nY - 1; y >= 0; y--) {
+            for (int z= nZ - 1; z >= 0; z--) {
+              // Skip solid or fixed values
+              if (Solid[x][y][z]) continue;
+              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
+              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
+              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
+
+              // // Get count and sum of valid neighbors
+              // int count= 0;
+              // float sum= 0.0f;
+              // for (int k= 0; k < MaskSize; k++) {
+              //   const int xOff= x + Mask[k][0];
+              //   const int yOff= y + Mask[k][1];
+              //   const int zOff= z + Mask[k][2];
+              //   if (xOff < 0 || xOff >= nX || yOff < 0 || yOff >= nY || zOff < 0 || zOff >= nZ) continue;
+              //   if (Solid[xOff][yOff][zOff]) continue;
+              //   sum+= FieldB[xOff][yOff][zOff];
+              //   count++;
+              // }
+
+              // Get count and sum of valid neighbors
+              const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
+              float sum= 0.0f;
+              const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
+              const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
+              const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
+              if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldB[x - 1][y][z];
+              if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldB[x + 1][y][z];
+              if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldB[x][y - 1][z];
+              if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldB[x][y + 1][z];
+              if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldB[x][y][z - 1];
+              if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldB[x][y][z + 1];
+
+              // Set new value according to coefficients and flags
+              const float prevVal= FieldB[x][y][z];
+              if (iDiffuMode)
+                FieldB[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+              else if (count > 0)
+                FieldB[x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
+              // Apply overrelaxation trick
+              FieldB[x][y][z]= prevVal + coeffOverrelax * (FieldB[x][y][z] - prevVal);
+            }
+          }
+        }
+      }
+      // Recombine forward and backward passes
+      for (int x= 0; x < nX; x++)
+        for (int y= 0; y < nY; y++)
+          for (int z= 0; z < nZ; z++)
+            ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
+    }
+    ApplyBC(iFieldID, ioField);
+
+    // r = b - A x
+    ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
+    ApplyBC(iFieldID, t0Field);
+    ImplicitFieldSub(iField, t0Field, rField);
+    errNew= ImplicitFieldDotProd(rField, rField);
+
+    // Error plot
+    if (D.UI[VerboseSolv_].GetB()) {
+      D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+      printf("%.2e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+    }
+  }
+  // Error plot
+  if (D.UI[VerboseSolv_].GetB()) {
+    if (iFieldID == FieldID::IDSmok) Dum0= rField;
+    if (iFieldID == FieldID::IDVelX) Dum1= rField;
+    if (iFieldID == FieldID::IDVelY) Dum2= rField;
+    if (iFieldID == FieldID::IDVelZ) Dum3= rField;
+    if (iFieldID == FieldID::IDPres) Dum4= rField;
+    printf("\n");
+  }
+}
+
+
 void CompuFluidDyna::ExternalForces() {
   // Sweep through the field
   for (int x= 0; x < nX; x++) {
@@ -1183,7 +1397,10 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
   ComputeVelocityDivergence();
 
   // Solve for pressure in the pressure Poisson equation
+  if (D.UI[SolvPCG_____].GetB())
   ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
+  else
+    GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
 
   // Update velocities based on local pressure gradient
   for (int x= 0; x < nX; x++) {

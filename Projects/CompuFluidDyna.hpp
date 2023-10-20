@@ -134,6 +134,10 @@ class CompuFluidDyna
                               const bool iDiffuMode, const float iDiffuCoeff,
                               const std::vector<std::vector<std::vector<float>>>& iField,
                               std::vector<std::vector<std::vector<float>>>& ioField);
+  void GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
+                        const bool iDiffuMode, const float iDiffuCoeff,
+                        const std::vector<std::vector<std::vector<float>>>& iField,
+                        std::vector<std::vector<std::vector<float>>>& ioField);
   void ExternalForces();
   void ProjectField(const int iMaxIter, const float iTimeStep,
                     std::vector<std::vector<std::vector<float>>>& ioVelX,
