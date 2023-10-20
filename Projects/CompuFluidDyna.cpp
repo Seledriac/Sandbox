@@ -15,6 +15,7 @@
 #include "../Util/Colormap.hpp"
 #include "../Util/Field.hpp"
 #include "../Util/Random.hpp"
+#include "../Util/Timer.hpp"
 #include "../Util/Vector.hpp"
 
 
@@ -59,6 +60,7 @@ enum ParamType
   SlicePlotZ__,
   Verbose_____,
   VerboseSolv_,
+  VerboseTime_,
 };
 
 
@@ -109,6 +111,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("Verbose_____", -0.5));   // Verbose mode
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));   // Verbose mode for linear solvers
+    D.UI.push_back(ParamUI("VerboseTime_", -0.5));   // Verbose mode for linear solvers
   }
 
   D.boxMin= {0.0, 0.0, 0.0};
@@ -259,13 +262,16 @@ void CompuFluidDyna::Animate() {
   simTime+= D.UI[TimeStep____].GetF();
 
   // Update periodic smoke in inlet
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   ApplyBC(FieldID::IDSmok, Smok);
+  if (D.UI[VerboseTime_].GetB()) printf("%f T ApplyBC\n", Timer::PopTimer());
 
   // Incompressible Navier Stokes
   // ∂vel/∂t + (vel · ∇) vel = − 1/ρ ∇press + visco ∇²vel + f
   // ∇ · vel = 0
 
   // Advection steps
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffAdvec__].GetB()) {
     // smo ⇐ smo{pos-vel}
     // smo ⇐ smo - Δt (vel · ∇) smo
@@ -281,8 +287,10 @@ void CompuFluidDyna::Animate() {
     if (nY > 1) AdvectField(FieldID::IDVelY, timestep, oldVelX, oldVelY, oldVelZ, VelY);
     if (nZ > 1) AdvectField(FieldID::IDVelZ, timestep, oldVelX, oldVelY, oldVelZ, VelZ);
   }
+  if (D.UI[VerboseTime_].GetB()) printf("%f T AdvectField\n", Timer::PopTimer());
 
   // Diffusion steps
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffDiffuS_].GetB()) {
     // (Id - diffu Δt ∇²) smo = smo
     std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
@@ -297,38 +305,53 @@ void CompuFluidDyna::Animate() {
     if (nY > 1) ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
     if (nZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
   }
+  if (D.UI[VerboseTime_].GetB()) printf("%f T Diffusion\n", Timer::PopTimer());
 
   // Vorticity step
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffVorti__].GetB()) {
     // curl= ∇ ⨯ vel
     // vort= ‖curl‖₂
     // vel ⇐ vel + Δt * TODO write formula
     VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
   }
+  if (D.UI[VerboseTime_].GetB()) printf("%f T VorticityConfinement\n", Timer::PopTimer());
 
   // External forces
   // vel ⇐ vel + Δt * F / m
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffGravi__].GetB()) {
     ExternalForces();
   }
+  if (D.UI[VerboseTime_].GetB()) printf("%f T ExternalForces\n", Timer::PopTimer());
 
   // Projection step
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffProj___].GetB()) {
     // https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
     // (-∇²) press = -(ρ / Δt) × ∇ · vel      Minus on both sides to get positive diagonal coeff during solve
     // vel ⇐ vel - (Δt / ρ) × ∇ press
     ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
+  if (D.UI[VerboseTime_].GetB()) printf("%f T ProjectField\n", Timer::PopTimer());
 
   // Compute field data for display
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   ComputeVelocityDivergence();
+  if (D.UI[VerboseTime_].GetB()) printf("%f T Divergence\n", Timer::PopTimer());
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   ComputeVelocityCurlVorticity();
+  if (D.UI[VerboseTime_].GetB()) printf("%f T CurlVorticity\n", Timer::PopTimer());
 
   // TODO Compute fluid density to check if constant as it should be in incompressible case
 
   // TODO Test heuristic optimization of solid regions
 
+  if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   CompuFluidDyna::SetUpUIData();
+  if (D.UI[VerboseTime_].GetB()) printf("%f T SetUpUIData\n", Timer::PopTimer());
+
+  if (D.UI[VerboseTime_].GetB()) printf("\n");
 }
 
 
