@@ -1004,16 +1004,6 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
                                                    const bool iDiffuMode, const float iDiffuCoeff, const bool iPrecondMode,
                                                    const std::vector<std::vector<std::vector<float>>>& iField,
                                                    std::vector<std::vector<std::vector<float>>>& oField) {
-  // Mask encoding neighborhood
-  constexpr int MaskSize= 6;
-  constexpr int Mask[MaskSize][3]=
-      {{+1, +0, +0},
-       {-1, +0, +0},
-       {+0, +1, +0},
-       {+0, -1, +0},
-       {+0, +0, +1},
-       {+0, +0, -1}};
-
   // Precompute value
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   // Sweep through the field
@@ -1027,23 +1017,22 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
         if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
+
         // Get count and sum of valid neighbors
-        int count= 0;
+        const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
         float sum= 0.0f;
-        for (int k= 0; k < MaskSize; k++) {
-          const int xOff= x + Mask[k][0];
-          const int yOff= y + Mask[k][1];
-          const int zOff= z + Mask[k][2];
-          if (xOff < 0 || xOff >= nX || yOff < 0 || yOff >= nY || zOff < 0 || zOff >= nZ) continue;
-          // Add neighbor contribution considering BC (fixed value, zero deriv, mirror)
-          if (!Solid[xOff][yOff][zOff]) sum+= iField[xOff][yOff][zOff];
-          else if (iFieldID == FieldID::IDSmok) sum+= iField[x][y][z];
-          else if (iFieldID == FieldID::IDPres) sum+= iField[x][y][z];
-          else if (iFieldID == FieldID::IDVelX && xOff != x) sum+= -iField[x][y][z];
-          else if (iFieldID == FieldID::IDVelY && yOff != y) sum+= -iField[x][y][z];
-          else if (iFieldID == FieldID::IDVelZ && zOff != z) sum+= -iField[x][y][z];
-          count++;
+        if (!iPrecondMode) {
+          const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
+          const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
+          const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
+          if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : iField[x - 1][y][z];
+          if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : iField[x + 1][y][z];
+          if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : iField[x][y - 1][z];
+          if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : iField[x][y + 1][z];
+          if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : iField[x][y][z - 1];
+          if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : iField[x][y][z + 1];
         }
+
         // Apply linear expression
         if (iDiffuMode) {
           if (iPrecondMode)
@@ -1484,6 +1473,7 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
   }
 
   for (int x= 0; x < nX; x++) {
+#pragma omp parallel for
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
         // Skip solid or fixed values
