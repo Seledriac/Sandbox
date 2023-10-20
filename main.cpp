@@ -297,11 +297,12 @@ void callback_display() {
           if (mode == 0) glBegin(GL_LINE_STRIP);
           if (mode == 1) glBegin(GL_POINTS);
           for (int k1= 0; k1 < int(D.plotData[k0].size()); k1++) {
-            double valScaled= (D.plotLogScale) ? -INFINITY : valMin;
-            if (valMax - valMin != 0.0) {
-              if (D.plotLogScale) valScaled= (D.plotData[k0][k1] - valMin) / (valMax - valMin);
-              else valScaled= (std::log10(D.plotData[k0][k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
-            }
+            double valScaled;
+            if (valMax - valMin == 0.0) valScaled= 0.0;
+            else if (!D.plotLogScale) valScaled= (D.plotData[k0][k1] - valMin) / (valMax - valMin);
+            else if (D.plotData[k0][k1] <= 0.0) valScaled= 0.0;
+            else if (valMin <= 0.0) valScaled= 1.0;
+            else valScaled= (std::log10(D.plotData[k0][k1]) - std::log10(valMin)) / (std::log10(valMax) - std::log10(valMin));
             glVertex3i(winW - plotAreaW - textBoxW + plotAreaW * k1 / std::max((int)D.plotData[k0].size() - 1, 1), winH - plotAreaH - textBoxH - 2 * pixelMargin + plotAreaH * valScaled, 0);
           }
           glEnd();

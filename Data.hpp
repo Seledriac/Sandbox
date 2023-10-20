@@ -62,7 +62,7 @@ class Data
   int idxCursorUI= 0;
   std::vector<ParamUI> UI;
 
-  bool plotLogScale= true;
+  bool plotLogScale= false;
   std::vector<std::string> plotLegend;
   std::vector<std::vector<double>> plotData;
 
