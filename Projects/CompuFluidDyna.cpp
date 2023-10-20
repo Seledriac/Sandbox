@@ -315,7 +315,7 @@ void CompuFluidDyna::Animate() {
   // Projection step
   if (D.UI[CoeffProj___].GetB()) {
     // https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
-    // ∇² press = (ρ / Δt) × ∇ · vel
+    // (-∇²) press = -(ρ / Δt) × ∇ · vel      Minus on both sides to get positive diagonal coeff during solve
     // vel ⇐ vel - (Δt / ρ) × ∇ press
     ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
@@ -1016,9 +1016,9 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         }
         else {
           if (iPrecondMode)
-            oField[x][y][z]= ((voxSize * voxSize) / (float)count) * iField[x][y][z];        //            [ 1/(h*h)]
-          else                                                                              // [ 1/(h*h)] [-4/(h*h)] [ 1/(h*h)]
-            oField[x][y][z]= (sum - (float)count * iField[x][y][z]) / (voxSize * voxSize);  //            [ 1/(h*h)]
+            oField[x][y][z]= ((voxSize * voxSize) / (float)count) * iField[x][y][z];        //            [-1/(h*h)]
+          else                                                                              // [-1/(h*h)] [ 4/(h*h)] [-1/(h*h)]
+            oField[x][y][z]= ((float)count * iField[x][y][z] - sum) / (voxSize * voxSize);  //            [-1/(h*h)]
         }
       }
     }
@@ -1377,7 +1377,7 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
         // velYP+= D.UI[CoeffProj1__].GetF() * ((y + 1 < nY) ? ((PresGradY[x][y + 1][z] + PresGradY[x][y][z]) / 2.0f) : (0.0f));
         // velZP+= D.UI[CoeffProj1__].GetF() * ((z + 1 < nZ) ? ((PresGradZ[x][y][z + 1] + PresGradZ[x][y][z]) / 2.0f) : (0.0f));
         // Divergence based on face velocities
-        Dive[x][y][z]= fluidDensity / D.UI[TimeStep____].GetF() * ((velXP - velXN) + (velYP - velYN) + (velZP - velZN)) / voxSize;
+        Dive[x][y][z]= -fluidDensity / D.UI[TimeStep____].GetF() * ((velXP - velXN) + (velYP - velYN) + (velZP - velZN)) / voxSize;
       }
     }
   }
