@@ -299,7 +299,7 @@ void CompuFluidDyna::Animate() {
     // (Id - diffu Δt ∇²) smo = smo
     std::vector<std::vector<std::vector<float>>> oldSmoke= Smok;
     if (D.UI[SolvPCG_____].GetB())
-    ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
+      ConjugateGradientSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
     else
       GaussSeidelSolve(FieldID::IDSmok, maxIter, timestep, true, coeffDiffu, oldSmoke, Smok);
   }
@@ -309,9 +309,9 @@ void CompuFluidDyna::Animate() {
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
     if (D.UI[SolvPCG_____].GetB()) {
-    if (nX > 1) ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-    if (nY > 1) ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-    if (nZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+      if (nX > 1) ConjugateGradientSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
+      if (nY > 1) ConjugateGradientSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
+      if (nZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
     }
     else {
       GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
@@ -685,14 +685,15 @@ void CompuFluidDyna::SetUpUIData() {
 
   if (!D.UI[VerboseSolv_].GetB()) {
     // Draw the plot data
-    D.plotData.resize(6);
-    D.plotLegend.resize(6);
+    D.plotData.resize(7);
+    D.plotLegend.resize(7);
     D.plotLegend[0]= "VelMag";
     D.plotLegend[1]= "Smok";
     D.plotLegend[2]= "SmokAbs";
     D.plotLegend[3]= "Pres";
     D.plotLegend[4]= "PresAbs";
-    D.plotLegend[5]= "Vorti";
+    D.plotLegend[5]= "DiveAbs";
+    D.plotLegend[6]= "Vorti";
     if (D.plotData[0].size() < 1000) {
       for (int k= 0; k < (int)D.plotLegend.size(); k++)
         D.plotData[k].push_back(0.0f);
@@ -704,7 +705,8 @@ void CompuFluidDyna::SetUpUIData() {
             D.plotData[2][D.plotData[2].size() - 1]+= std::abs(Smok[x][y][z]);
             D.plotData[3][D.plotData[3].size() - 1]+= Pres[x][y][z];
             D.plotData[4][D.plotData[4].size() - 1]+= std::abs(Pres[x][y][z]);
-            D.plotData[5][D.plotData[5].size() - 1]+= Vort[x][y][z];
+            D.plotData[5][D.plotData[5].size() - 1]+= std::abs(Dive[x][y][z]);
+            D.plotData[6][D.plotData[6].size() - 1]+= Vort[x][y][z];
           }
         }
       }
@@ -872,14 +874,9 @@ void CompuFluidDyna::InitializeScenario() {
 
         // Central bloc with initial velocity
         if (scenarioType == 5) {
-          if ((nX > 1 && (x == 0 || x == nX - 1)) ||
-              (nY > 1 && (y == 0 || y == nY - 1)) ||
-              (nZ > 1 && (z == 0 || z == nZ - 1))) {
-            Solid[x][y][z]= true;
-          }
-          else if (((nX == 1) != (std::min(x, nX - 1 - x) > nX / 3)) &&
-                   ((nY == 1) != (std::min(y, nY - 1 - y) > nY / 3)) &&
-                   ((nZ == 1) != (std::min(z, nZ - 1 - z) > nZ / 3))) {
+          if (((nX == 1) != (std::min(x, nX - 1 - x) > nX / 3)) &&
+              ((nY == 1) != (std::min(y, nY - 1 - y) > nY / 3)) &&
+              ((nZ == 1) != (std::min(z, nZ - 1 - z) > nZ / 3))) {
             VelX[x][y][z]= D.UI[BCVelX______].GetF();
             VelY[x][y][z]= D.UI[BCVelY______].GetF();
             VelZ[x][y][z]= D.UI[BCVelZ______].GetF();
@@ -1036,9 +1033,9 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         // Apply linear expression
         if (iDiffuMode) {
           if (iPrecondMode)
-            oField[x][y][z]= 1.0f / (1.0f + diffuVal * (float)count) * iField[x][y][z];             //               [   -D*dt/(h*h)]
-          else                                                                                      // [-D*dt/(h*h)] [1+4*D*dt/(h*h)] [-D*dt/(h*h)]
-            oField[x][y][z]= -diffuVal * sum + (1.0f + diffuVal * (float)count) * iField[x][y][z];  //               [   -D*dt/(h*h)]
+            oField[x][y][z]= 1.0f / (1.0f + diffuVal * (float)count) * iField[x][y][z];            //               [   -D*dt/(h*h)]
+          else                                                                                     // [-D*dt/(h*h)] [1+4*D*dt/(h*h)] [-D*dt/(h*h)]
+            oField[x][y][z]= (1.0f + diffuVal * (float)count) * iField[x][y][z] - diffuVal * sum;  //               [   -D*dt/(h*h)]
         }
         else {
           if (iPrecondMode)
@@ -1387,7 +1384,7 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
 
   // Solve for pressure in the pressure Poisson equation
   if (D.UI[SolvPCG_____].GetB())
-  ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
+    ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
   else
     GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
 
