@@ -12,6 +12,8 @@ FLAGS_WARNING = -W -Wall -Wextra -g
 UNAME := $(shell uname)
 ifeq ($(UNAME), Windows_NT)
 FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
+else ifeq ($(UNAME), MINGW32_NT-6.2)
+FLAGS_GLUT = -lfreeglut -lopengl32 -lglu32
 else
 FLAGS_GLUT = -lGL -lglut -lGLU -lX11 -lm
 endif
