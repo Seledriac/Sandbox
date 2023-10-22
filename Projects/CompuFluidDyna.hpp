@@ -4,18 +4,21 @@
 #include <vector>
 
 
-// Fluid simulation code based on the "Stable Fluid" method popularized by Jos Stam in 1999
+// Fluid simulation code
 // - Eulerian voxel grid
+// - Handles 1D, 2D and 3D transparently
 // - Linear solve in implicit diffusion step for viscosity and smoke spread/mixing
 // - Linear solve in implicit pressure computation and projection to enforce mass conservation
-// - Semi Lagrangian backtracing for velocity and smoke advection
-//
-// Improvements over standard Stable Fluids implementations
-// - Handles both 2D and 3D
-// - Handles arbitrary boundary conditions and obstacles in the simulation domain
 // - Solves all linear systems with a custom matrixless diagonal preconditioned conjugate gradient
+// - Semi Lagrangian backtracing for velocity and smoke advection
 // - Uses iterative MackCormack backtracking scheme to achieve 2nd order accuracy in advection steps
-// - Validated on low and high Reynolds lid driven cavity, Poiseuille, Couette and venturi benchmarks
+// - Reinjects dissipated vorticity at smallest scale using vorticity confinement approach
+// - Handles arbitrary boundary conditions and obstacles in the simulation domain using boolean flag fields
+// - Validated on Re < 2000 in lid-driven cavity flow, Poiseuille, Couette and venturi benchmarks
+// - Uses SI units
+//
+// References for fluid flow photographs, scenarios and visual comparison
+// http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
 //
 // References for "stable fluid" method
 // http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf
@@ -28,36 +31,6 @@
 // https://www.youtube.com/watch?v=iKAVRgIrUOU JS, Matthias Müller, slightly different approach for pressure
 // https://www.youtube.com/watch?v=wbYe58NGJJI python
 // https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
-//
-// References for fluid flow photographs, scenarios and visual comparison
-// http://courses.washington.edu/me431/handouts/Album-Fluid-Motion-Van-Dyke.pdf
-//
-// References for MacCormack backtracking scheme
-// https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
-// https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
-// https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
-//
-// References for Rhie Chow correction
-// https://youtu.be/yqZ59Xn_aF8 Checkerboard oscillations
-// https://youtu.be/PmEUiUB8ETk Deriving the correction
-// https://mustafabhotvawala.com/wp-content/uploads/2020/11/MB_rhieChow-1.pdf
-//
-// References for vorticity confinement implem
-// https://github.com/awesson/stable-fluids/tree/master
-// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
-//
-// References for pressure poisson equation and incompressiblity projection
-// https://barbagroup.github.io/essential_skills_RRC/numba/4/#application-pressure-poisson-equation
-// http://www.thevisualroom.com/poisson_for_pressure.html
-// https://github.com/barbagroup/CFDPython
-// https://mycourses.aalto.fi/pluginfile.php/891524/mod_folder/content/0/Lecture03_Pressure.pdf
-//
-// References for linear solvers and particularily PCG
-// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
-// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
-// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
-// https://github.com/awesson/stable-fluids/tree/master
-// https://en.wikipedia.org/wiki/Conjugate_gradient_method
 class CompuFluidDyna
 {
   private:

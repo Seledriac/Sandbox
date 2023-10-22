@@ -277,13 +277,9 @@ void CompuFluidDyna::Animate() {
   // Advection steps
   if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffAdvec__].GetB()) {
-    // smo ⇐ smo{pos-vel}
-    // smo ⇐ smo - Δt (vel · ∇) smo
     AdvectField(FieldID::IDSmok, timestep, VelX, VelY, VelZ, Smok);
   }
   if (D.UI[CoeffAdvec__].GetB()) {
-    // vel ⇐ vel{pos-vel}
-    // vel ⇐ vel - Δt (vel · ∇) vel
     std::vector<std::vector<std::vector<float>>> oldVelX= VelX;
     std::vector<std::vector<std::vector<float>>> oldVelY= VelY;
     std::vector<std::vector<std::vector<float>>> oldVelZ= VelZ;
@@ -314,9 +310,9 @@ void CompuFluidDyna::Animate() {
       if (nZ > 1) ConjugateGradientSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
     }
     else {
-      GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
-      GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
-      GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
+      if (nX > 1) GaussSeidelSolve(FieldID::IDVelX, maxIter, timestep, true, coeffVisco, oldVelX, VelX);
+      if (nY > 1) GaussSeidelSolve(FieldID::IDVelY, maxIter, timestep, true, coeffVisco, oldVelY, VelY);
+      if (nZ > 1) GaussSeidelSolve(FieldID::IDVelZ, maxIter, timestep, true, coeffVisco, oldVelZ, VelZ);
     }
   }
   if (D.UI[VerboseTime_].GetB()) printf("%f T Diffusion\n", Timer::PopTimer());
@@ -324,15 +320,11 @@ void CompuFluidDyna::Animate() {
   // Vorticity step
   if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffVorti__].GetB()) {
-    // curl= ∇ ⨯ vel
-    // vort= ‖curl‖₂
-    // vel ⇐ vel + Δt * TODO write formula
     VorticityConfinement(timestep, coeffVorti, VelX, VelY, VelZ);
   }
   if (D.UI[VerboseTime_].GetB()) printf("%f T VorticityConfinement\n", Timer::PopTimer());
 
   // External forces
-  // vel ⇐ vel + Δt * F / m
   if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffGravi__].GetB()) {
     ExternalForces();
@@ -342,9 +334,6 @@ void CompuFluidDyna::Animate() {
   // Projection step
   if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   if (D.UI[CoeffProj___].GetB()) {
-    // https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
-    // (-∇²) press = -(ρ / Δt) × ∇ · vel      Minus on both sides to get positive diagonal coeff during solve
-    // vel ⇐ vel - (Δt / ρ) × ∇ press
     ProjectField(maxIter, timestep, VelX, VelY, VelZ);
   }
   if (D.UI[VerboseTime_].GetB()) printf("%f T ProjectField\n", Timer::PopTimer());
@@ -724,6 +713,7 @@ void CompuFluidDyna::InitializeScenario() {
     if (inputFile == 4) FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
     if (inputFile == 5) FileInput::LoadImageBMPFile("Resources/CFD_Pipe.bmp", imageRGBA, false);
     if (inputFile == 6) FileInput::LoadImageBMPFile("Resources/CFD_CriCri.bmp", imageRGBA, false);
+    if (inputFile == 7) FileInput::LoadImageBMPFile("Resources/CFD_TestScenario.bmp", imageRGBA, false);
   }
 
   // Set scenario values
@@ -732,13 +722,11 @@ void CompuFluidDyna::InitializeScenario() {
       for (int z= 0; z < nZ; z++) {
         // Scenario from loaded BMP file
         if (scenarioType == 0 && !imageRGBA.empty()) {
-          // Get pixel colors
           const float posW= (float)(imageRGBA.size() - 1) * ((float)y + 0.5f) / (float)nY;
           const float posH= (float)(imageRGBA[0].size() - 1) * ((float)z + 0.5f) / (float)nZ;
           const int idxPixelW= std::min(std::max((int)std::round(posW), 0), (int)imageRGBA.size() - 1);
           const int idxPixelH= std::min(std::max((int)std::round(posH), 0), (int)imageRGBA[0].size() - 1);
           const std::array<float, 4> colRGBA= imageRGBA[idxPixelW][idxPixelH];
-          // Set flags from pixel colors
           if (colRGBA[3] < 0.1f) {
             Solid[x][y][z]= true;
           }
@@ -747,7 +735,6 @@ void CompuFluidDyna::InitializeScenario() {
             if (std::abs(colRGBA[1] - 0.5f) > 0.1f) VelBC[x][y][z]= true;
             if (std::abs(colRGBA[2] - 0.5f) > 0.1f) SmoBC[x][y][z]= true;
           }
-          // Set forced values
           if (PreBC[x][y][z]) {
             PresForced[x][y][z]= (colRGBA[0] > 0.5f) ? (D.UI[BCPres______].GetF()) : (-D.UI[BCPres______].GetF());
           }
@@ -820,18 +807,15 @@ void CompuFluidDyna::InitializeScenario() {
 
         // Cavity lid shear benchmark
         if (scenarioType == 3) {
-          // Force zero velocity for no-slip condition on cavity walls
           if (y == 0 || y == nY - 1 || z == 0) {
             Solid[x][y][z]= true;
           }
-          // Force tangential velocity on cavity lid
           else if (z == nZ - 1) {
             VelBC[x][y][z]= true;
             VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
             VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
             VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
           }
-          // Add smoke source for visualization
           else if (y == nY / 2 && z > nZ / 2) {
             SmoBC[x][y][z]= true;
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
@@ -930,6 +914,7 @@ void CompuFluidDyna::InitializeScenario() {
 }
 
 
+// Apply boundary conditions enforcing fixed values to fields
 void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::vector<float>>>& ioField) {
   // Sweep through the field
   for (int x= 0; x < nX; x++) {
@@ -952,6 +937,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
 }
 
 
+// Addition of one field to an other
 void CompuFluidDyna::ImplicitFieldAdd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                                       const std::vector<std::vector<std::vector<float>>>& iFieldB,
                                       std::vector<std::vector<std::vector<float>>>& oField) {
@@ -962,6 +948,7 @@ void CompuFluidDyna::ImplicitFieldAdd(const std::vector<std::vector<std::vector<
 }
 
 
+// Subtraction of one field to an other
 void CompuFluidDyna::ImplicitFieldSub(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                                       const std::vector<std::vector<std::vector<float>>>& iFieldB,
                                       std::vector<std::vector<std::vector<float>>>& oField) {
@@ -972,6 +959,7 @@ void CompuFluidDyna::ImplicitFieldSub(const std::vector<std::vector<std::vector<
 }
 
 
+// Multiplication of field by scalar
 void CompuFluidDyna::ImplicitFieldScale(const float iVal,
                                         const std::vector<std::vector<std::vector<float>>>& iField,
                                         std::vector<std::vector<std::vector<float>>>& oField) {
@@ -982,6 +970,7 @@ void CompuFluidDyna::ImplicitFieldScale(const float iVal,
 }
 
 
+// Dot product between two fields
 float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                                            const std::vector<std::vector<std::vector<float>>>& iFieldB) {
   float val= 0.0f;
@@ -993,6 +982,8 @@ float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::ve
 }
 
 
+// TODO check BC properly handled
+// Perform a matrix-vector multiplication without explicitly assembling the Laplacian matrix
 void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const float iTimeStep,
                                                    const bool iDiffuMode, const float iDiffuCoeff, const bool iPrecondMode,
                                                    const std::vector<std::vector<std::vector<float>>>& iField,
@@ -1010,7 +1001,6 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
         if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-
         // Get count and sum of valid neighbors
         const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
         float sum= 0.0f;
@@ -1025,7 +1015,6 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
           if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : iField[x][y][z - 1];
           if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : iField[x][y][z + 1];
         }
-
         // Apply linear expression
         if (iDiffuMode) {
           if (iPrecondMode)
@@ -1045,6 +1034,15 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
 }
 
 
+// TODO check if can remove ApplyBC
+// TODO check BC properly handled
+// Solve linear system with diagonal/Jacobi preconditioned conjugate gradient
+// References for linear solvers and particularily PCG
+// https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
+// https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
+// https://www3.nd.edu/~zxu2/acms60212-40212-S12/final_project/Linear_solvers_GPU.pdf
+// https://github.com/awesson/stable-fluids/tree/master
+// https://en.wikipedia.org/wiki/Conjugate_gradient_method
 void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                                             const bool iDiffuMode, const float iDiffuCoeff,
                                             const std::vector<std::vector<std::vector<float>>>& iField,
@@ -1061,7 +1059,6 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     D.plotData.resize(5);
     D.plotData[iFieldID].clear();
   }
-
   // Allocate fields
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> qField= Field::AllocField3D(nX, nY, nZ, 0.0f);
@@ -1069,12 +1066,10 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   std::vector<std::vector<std::vector<float>>> sField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t1Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
-
   // r = b - A x
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
   ApplyBC(iFieldID, t0Field);
   ImplicitFieldSub(iField, t0Field, rField);
-
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
     const float errTmp= ImplicitFieldDotProd(rField, rField);
@@ -1086,63 +1081,50 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     if (iFieldID == FieldID::IDPres) printf("CG Proj  P  [%.2e] ", normRHS);
     printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
   }
-
   // d = M^-1 r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
-
   // errNew = r^T d
   float errNew= ImplicitFieldDotProd(rField, dField);
   float errBeg= errNew;
   float errOld= 0.0f;
-
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
     // TODO find better convergence criterion because unstable when RHS low and initial guess good
     if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
     if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
     if (errNew == 0.0f) break;
-
     // q = A d
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, dField, qField);
-
     // alpha = errNew / (d^T q)
     const float denom= ImplicitFieldDotProd(dField, qField);
     if (denom == 0.0) break;
     const float alpha= errNew / denom;
-
     // x = x + alpha d
     ImplicitFieldScale(alpha, dField, t0Field);
     ImplicitFieldAdd(ioField, t0Field, t1Field);
     ioField= t1Field;
     ApplyBC(iFieldID, ioField);
-
     // r = r - alpha q
     ImplicitFieldScale(alpha, qField, t0Field);
     ImplicitFieldSub(rField, t0Field, t1Field);
     rField= t1Field;
-
     // Error plot
     if (D.UI[VerboseSolv_].GetB()) {
       const float errTmp= ImplicitFieldDotProd(rField, rField);
       D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
       printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
     }
-
     // s = M^-1 r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
-
     // errNew = r^T s
     errOld= errNew;
     errNew= ImplicitFieldDotProd(rField, sField);
-
     // beta = errNew / errOld
     const float beta= errNew / errOld;
-
     // d = s + beta d
     ImplicitFieldScale(beta, dField, t0Field);
     ImplicitFieldAdd(sField, t0Field, dField);
   }
-
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
     if (iFieldID == FieldID::IDSmok) Dum0= rField;
@@ -1155,6 +1137,11 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
 }
 
 
+// TODO check BC properly handled
+// Solve linear system with an iterative Gauss Seidel scheme
+// Solving each equation sequentially by cascading latest solution to next equation
+// Run a forward and backward pass in parallel to avoid element ordering bias
+// Apply successive overrelaxation coefficient to accelerate convergence
 void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, const float iTimeStep,
                                       const bool iDiffuMode, const float iDiffuCoeff,
                                       const std::vector<std::vector<std::vector<float>>>& iField,
@@ -1171,16 +1158,13 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     D.plotData.resize(5);
     D.plotData[iFieldID].clear();
   }
-
   // Allocate fields
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
-
   // r = b - A x
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
   ApplyBC(iFieldID, t0Field);
   ImplicitFieldSub(iField, t0Field, rField);
-
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
     const float errTmp= ImplicitFieldDotProd(rField, rField);
@@ -1192,11 +1176,9 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     if (iFieldID == FieldID::IDPres) printf("CG Proj  P  [%.2e] ", normRHS);
     printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
   }
-
   // errNew = r^T d
   float errNew= ImplicitFieldDotProd(rField, rField);
   float errBeg= errNew;
-
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
@@ -1300,7 +1282,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     ApplyBC(iFieldID, t0Field);
     ImplicitFieldSub(iField, t0Field, rField);
     errNew= ImplicitFieldDotProd(rField, rField);
-
     // Error plot
     if (D.UI[VerboseSolv_].GetB()) {
       D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
@@ -1319,8 +1300,10 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
 }
 
 
+// Add external forces to velocity field
+// vel ⇐ vel + Δt * F / ρ
 void CompuFluidDyna::ExternalForces() {
-  // Sweep through the field
+  // Update velocities based on applied external forces
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
@@ -1336,19 +1319,32 @@ void CompuFluidDyna::ExternalForces() {
 }
 
 
+
+
+// Project velocity field into a solenoidal/divergence-free field
+// 1. Compute RHS based on divergence
+// RHS = -(ρ / Δt) × ∇ · vel
+// 2. Solve for pressure in pressure Poisson equation
+// (-∇²) press = RHS
+// 3. Update velocity field by subtracting gradient of pressure
+// vel ⇐ vel - (Δt / ρ) × ∇ press
+// References for pressure poisson equation and incompressiblity projection
+// https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
+// https://mycourses.aalto.fi/pluginfile.php/891524/mod_folder/content/0/Lecture03_Pressure.pdf
+// https://barbagroup.github.io/essential_skills_RRC/numba/4/#application-pressure-poisson-equation
+// http://www.thevisualroom.com/poisson_for_pressure.html
+// https://github.com/barbagroup/CFDPython
 void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelX,
                                   std::vector<std::vector<std::vector<float>>>& ioVelY,
                                   std::vector<std::vector<std::vector<float>>>& ioVelZ) {
   // Compute divergence for RHS
   ComputeVelocityDivergence();
-
   // Solve for pressure in the pressure Poisson equation
   if (D.UI[SolvPCG_____].GetB())
     ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
   else
     GaussSeidelSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
-
   // Update velocities based on local pressure gradient
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
@@ -1372,6 +1368,9 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
 }
 
 
+
+
+// Trilinearly interpolate the field value at the given position
 float CompuFluidDyna::TrilinearInterpolation(const float iPosX, const float iPosY, const float iPosZ,
                                              const std::vector<std::vector<std::vector<float>>>& iFieldRef) {
   // Get floor and ceil voxel indices
@@ -1381,7 +1380,6 @@ float CompuFluidDyna::TrilinearInterpolation(const float iPosX, const float iPos
   const int x1= std::min(std::max((int)std::ceil(iPosX), 0), nX - 1);
   const int y1= std::min(std::max((int)std::ceil(iPosY), 0), nY - 1);
   const int z1= std::min(std::max((int)std::ceil(iPosZ), 0), nZ - 1);
-
   // Get floor and ceil voxel weights
   const float xWeight1= iPosX - (float)x0;
   const float yWeight1= iPosY - (float)y0;
@@ -1389,7 +1387,6 @@ float CompuFluidDyna::TrilinearInterpolation(const float iPosX, const float iPos
   const float xWeight0= 1.0f - xWeight1;
   const float yWeight0= 1.0f - yWeight1;
   const float zWeight0= 1.0f - zWeight1;
-
   // Compute the weighted sum
   return iFieldRef[x0][y0][z0] * (xWeight0 * yWeight0 * zWeight0) +
          iFieldRef[x0][y0][z1] * (xWeight0 * yWeight0 * zWeight1) +
@@ -1402,6 +1399,12 @@ float CompuFluidDyna::TrilinearInterpolation(const float iPosX, const float iPos
 }
 
 
+// Apply semi-Lagrangian advection along the velocity field
+// vel ⇐ vel - Δt (vel · ∇) vel    TODO check validity of formula
+// References for MacCormack backtracking scheme
+// https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
+// https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
+// https://github.com/NiallHornFX/StableFluids3D-GL/blob/master/src/fluidsolver3d.cpp
 void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
                                  const std::vector<std::vector<std::vector<float>>>& iVelX,
                                  const std::vector<std::vector<std::vector<float>>>& iVelY,
@@ -1460,12 +1463,10 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
           const Math::Vec3f vecErr= posEnd - (posBeg + iTimeStep * velBeg / voxSize);
           posBeg= posBeg + vecErr / 2.0f;
         }
-
         // Save source vector for display
         AdvX[x][y][z]= posBeg[0] - posEnd[0];
         AdvY[x][y][z]= posBeg[1] - posEnd[1];
         AdvZ[x][y][z]= posBeg[2] - posEnd[2];
-
         // Trilinear interpolation at source position
         ioField[x][y][z]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], oldField);
       }
@@ -1476,19 +1477,23 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
 }
 
 
+// Counteract energy dissipation and introduce turbulent-like behavior by amplifying vorticity on small scales
+// https://github.com/awesson/stable-fluids/tree/master
+// https://github.com/woeishi/StableFluids/blob/master/StableFluid3d.cpp
+// vel ⇐ vel + Δt * TODO write formula
 void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVortiCoeff,
                                           std::vector<std::vector<std::vector<float>>>& ioVelX,
                                           std::vector<std::vector<std::vector<float>>>& ioVelY,
                                           std::vector<std::vector<std::vector<float>>>& ioVelZ) {
   // Compute curl and vorticity from the velocity field
   ComputeVelocityCurlVorticity();
-
   // Amplify non-zero vorticity
   if (iVortiCoeff > 0.0f) {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
           if (Solid[x][y][z] || VelBC[x][y][z] || PreBC[x][y][z]) continue;
+          // Gradient of vorticity with zero derivative at solid interface or domain boundary
           Math::Vec3f vortGrad(0.0f, 0.0f, 0.0f);
           if (x - 1 >= 0 && !Solid[x - 1][y][z]) vortGrad[0]+= (Vort[x][y][z] - Vort[x - 1][y][z]) / (2.0f * voxSize);
           if (y - 1 >= 0 && !Solid[x][y - 1][z]) vortGrad[1]+= (Vort[x][y][z] - Vort[x][y - 1][z]) / (2.0f * voxSize);
@@ -1496,6 +1501,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
           if (x + 1 < nX && !Solid[x + 1][y][z]) vortGrad[0]+= (Vort[x + 1][y][z] - Vort[x][y][z]) / (2.0f * voxSize);
           if (y + 1 < nY && !Solid[x][y + 1][z]) vortGrad[1]+= (Vort[x][y + 1][z] - Vort[x][y][z]) / (2.0f * voxSize);
           if (z + 1 < nZ && !Solid[x][y][z + 1]) vortGrad[2]+= (Vort[x][y][z + 1] - Vort[x][y][z]) / (2.0f * voxSize);
+          // Amplification of small scale vorticity by following current curl
           if (vortGrad.norm() > 0.0f) {
             const float dVort_dx_scaled= iVortiCoeff * vortGrad[0] / vortGrad.norm();
             const float dVort_dy_scaled= iVortiCoeff * vortGrad[1] / vortGrad.norm();
@@ -1516,6 +1522,13 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
 }
 
 
+// Compute RHS of pressure poisson equation as negative divergence scaled by density and timestep
+// https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
+// RHS = -(ρ / Δt) × ∇ · vel
+// References for Rhie Chow correction
+// https://youtu.be/yqZ59Xn_aF8 Checkerboard oscillations
+// https://youtu.be/PmEUiUB8ETk Deriving the correction
+// https://mustafabhotvawala.com/wp-content/uploads/2020/11/MB_rhieChow-1.pdf
 void CompuFluidDyna::ComputeVelocityDivergence() {
   // // Precompute pressure gradient for Rhie and Chow correction
   // std::vector<std::vector<std::vector<float>>> PresGradX= Field::AllocField3D(nX, nY, nZ, 0.0f);
@@ -1525,7 +1538,7 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
   //   for (int y= 0; y < nY; y++) {
   //     for (int z= 0; z < nZ; z++) {
   //       if (Solid[x][y][z]) continue;
-  //       // Pressure gradient with zero derivative at solid interface
+  //       // Pressure gradient with zero derivative at solid interface or domain boundary
   //       if (x - 1 >= 0 && !Solid[x - 1][y][z]) PresGradX[x][y][z]+= (Pres[x][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
   //       if (y - 1 >= 0 && !Solid[x][y - 1][z]) PresGradY[x][y][z]+= (Pres[x][y][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
   //       if (z - 1 >= 0 && !Solid[x][y][z - 1]) PresGradZ[x][y][z]+= (Pres[x][y][z] - Pres[x][y][z - 1]) / (2.0f * voxSize);
@@ -1535,7 +1548,6 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
   //     }
   //   }
   // }
-
   // Compute divergence of velocity field
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
@@ -1544,7 +1556,7 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
         if (PreBC[x][y][z])
           Dive[x][y][z]= PresForced[x][y][z];
         if (Solid[x][y][z] || PreBC[x][y][z]) continue;
-        // Classical linear interpolation for face velocities with mirrored velocities at solid interface
+        // Classical linear interpolation for face velocities with same velocity at domain boundary and zero velocity at solid interface
         float velXN= (x - 1 >= 0) ? ((Solid[x - 1][y][z]) ? (0.0f) : ((VelX[x][y][z] + VelX[x - 1][y][z]) / 2.0f)) : (VelX[x][y][z]);
         float velYN= (y - 1 >= 0) ? ((Solid[x][y - 1][z]) ? (0.0f) : ((VelY[x][y][z] + VelY[x][y - 1][z]) / 2.0f)) : (VelY[x][y][z]);
         float velZN= (z - 1 >= 0) ? ((Solid[x][y][z - 1]) ? (0.0f) : ((VelZ[x][y][z] + VelZ[x][y][z - 1]) / 2.0f)) : (VelZ[x][y][z]);
@@ -1564,7 +1576,7 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
         // velXP+= D.UI[CoeffProj1__].GetF() * ((x + 1 < nX) ? ((PresGradX[x + 1][y][z] + PresGradX[x][y][z]) / 2.0f) : (0.0f));
         // velYP+= D.UI[CoeffProj1__].GetF() * ((y + 1 < nY) ? ((PresGradY[x][y + 1][z] + PresGradY[x][y][z]) / 2.0f) : (0.0f));
         // velZP+= D.UI[CoeffProj1__].GetF() * ((z + 1 < nZ) ? ((PresGradZ[x][y][z + 1] + PresGradZ[x][y][z]) / 2.0f) : (0.0f));
-        // Divergence based on face velocities
+        // Divergence based on face velocities negated and scaled by density and timestep for RHS
         Dive[x][y][z]= -fluidDensity / D.UI[TimeStep____].GetF() * ((velXP - velXN) + (velYP - velYN) + (velZP - velZN)) / voxSize;
       }
     }
@@ -1572,6 +1584,9 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
 }
 
 
+// Compute curl and vorticity of current velocity field
+// curl= ∇ ⨯ vel
+// vort= ‖curl‖₂
 void CompuFluidDyna::ComputeVelocityCurlVorticity() {
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
@@ -1586,6 +1601,7 @@ void CompuFluidDyna::ComputeVelocityCurlVorticity() {
         if (y - 1 >= 0 && y + 1 < nY) dVelz_dy= ((Solid[x][y + 1][z] ? VelZ[x][y][z] : VelZ[x][y + 1][z]) - (Solid[x][y - 1][z] ? VelZ[x][y][z] : VelZ[x][y - 1][z])) / 2.0f;
         if (z - 1 >= 0 && z + 1 < nZ) dVelx_dz= ((Solid[x][y][z + 1] ? VelX[x][y][z] : VelX[x][y][z + 1]) - (Solid[x][y][z - 1] ? VelX[x][y][z] : VelX[x][y][z - 1])) / 2.0f;
         if (z - 1 >= 0 && z + 1 < nZ) dVely_dz= ((Solid[x][y][z + 1] ? VelY[x][y][z] : VelY[x][y][z + 1]) - (Solid[x][y][z - 1] ? VelY[x][y][z] : VelY[x][y][z - 1])) / 2.0f;
+        // Deduce curl and vorticity
         CurX[x][y][z]= dVelz_dy - dVely_dz;
         CurY[x][y][z]= dVelx_dz - dVelz_dx;
         CurZ[x][y][z]= dVely_dx - dVelx_dy;
