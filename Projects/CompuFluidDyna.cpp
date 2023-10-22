@@ -1186,17 +1186,27 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
     if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
     if (errNew == 0.0f) break;
-
-    std::vector<std::vector<std::vector<float>>> FieldA= ioField;
-    std::vector<std::vector<std::vector<float>>> FieldB= ioField;
-#pragma omp parallel sections
-    {
-#pragma omp section
-      {
-        // Forward pass
-        for (int x= 0; x < nX; x++) {
-          for (int y= 0; y < nY; y++) {
-            for (int z= 0; z < nZ; z++) {
+    // Initialize fields for forward and backward passes
+    std::vector<std::vector<std::vector<std::vector<float>>>> FieldT;
+    FieldT.resize(2);
+    FieldT[0]= ioField;
+    FieldT[1]= ioField;
+#pragma omp parallel for
+    for (int k= 0; k < 2; k++) {
+      // Set the loop settings for each pass
+      const int xBeg= (k == 0) ? 0 : nX - 1;
+      const int yBeg= (k == 0) ? 0 : nY - 1;
+      const int zBeg= (k == 0) ? 0 : nZ - 1;
+      const int xEnd= (k == 0) ? nX : -1;
+      const int yEnd= (k == 0) ? nY : -1;
+      const int zEnd= (k == 0) ? nZ : -1;
+      const int xInc= (k == 0) ? 1 : -1;
+      const int yInc= (k == 0) ? 1 : -1;
+      const int zInc= (k == 0) ? 1 : -1;
+      // Apply the current pass
+      for (int x= xBeg; x != xEnd; x+= xInc) {
+        for (int y= yBeg; y != yEnd; y+= yInc) {
+          for (int z= zBeg; z != zEnd; z+= zInc) {
               // Skip solid or fixed values
               if (Solid[x][y][z]) continue;
               if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
@@ -1204,67 +1214,24 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
               if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
               if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-
               // Get count and sum of valid neighbors
               const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
+            const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
+            const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
+            const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
               float sum= 0.0f;
-              const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
-              const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
-              const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldA[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldA[x][y][z]) : (0.0f));
-              if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldA[x - 1][y][z];
-              if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldA[x + 1][y][z];
-              if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldA[x][y - 1][z];
-              if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldA[x][y + 1][z];
-              if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldA[x][y][z - 1];
-              if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldA[x][y][z + 1];
-
+            if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldT[k][x - 1][y][z];
+            if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldT[k][x + 1][y][z];
+            if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldT[k][x][y - 1][z];
+            if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldT[k][x][y + 1][z];
+            if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldT[k][x][y][z - 1];
+            if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldT[k][x][y][z + 1];
               // Set new value according to coefficients and flags
-              const float prevVal= FieldA[x][y][z];
-              if (iDiffuMode)
-                FieldA[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-              else if (count > 0)
-                FieldA[x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
+            const float prevVal= FieldT[k][x][y][z];
+            if (iDiffuMode) FieldT[k][x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+            else if (count > 0) FieldT[k][x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
               // Apply overrelaxation trick
-              FieldA[x][y][z]= prevVal + coeffOverrelax * (FieldA[x][y][z] - prevVal);
-            }
-          }
-        }
-      }
-#pragma omp section
-      {
-        // Backward pass
-        for (int x= nX - 1; x >= 0; x--) {
-          for (int y= nY - 1; y >= 0; y--) {
-            for (int z= nZ - 1; z >= 0; z--) {
-              // Skip solid or fixed values
-              if (Solid[x][y][z]) continue;
-              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-
-              // Get count and sum of valid neighbors
-              const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
-              float sum= 0.0f;
-              const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
-              const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
-              const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldB[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldB[x][y][z]) : (0.0f));
-              if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldB[x - 1][y][z];
-              if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldB[x + 1][y][z];
-              if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldB[x][y - 1][z];
-              if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldB[x][y + 1][z];
-              if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldB[x][y][z - 1];
-              if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldB[x][y][z + 1];
-
-              // Set new value according to coefficients and flags
-              const float prevVal= FieldB[x][y][z];
-              if (iDiffuMode)
-                FieldB[x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-              else if (count > 0)
-                FieldB[x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
-              // Apply overrelaxation trick
-              FieldB[x][y][z]= prevVal + coeffOverrelax * (FieldB[x][y][z] - prevVal);
+            FieldT[k][x][y][z]= prevVal + coeffOverrelax * (FieldT[k][x][y][z] - prevVal);
             }
           }
         }
@@ -1273,10 +1240,8 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
       for (int x= 0; x < nX; x++)
         for (int y= 0; y < nY; y++)
           for (int z= 0; z < nZ; z++)
-            ioField[x][y][z]= 0.5f * (FieldA[x][y][z] + FieldB[x][y][z]);
-    }
+          ioField[x][y][z]= 0.5f * (FieldT[0][x][y][z] + FieldT[1][x][y][z]);
     ApplyBC(iFieldID, ioField);
-
     // r = b - A x
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
     ApplyBC(iFieldID, t0Field);
