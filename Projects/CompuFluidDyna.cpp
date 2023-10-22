@@ -1207,39 +1207,39 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
       for (int x= xBeg; x != xEnd; x+= xInc) {
         for (int y= yBeg; y != yEnd; y+= yInc) {
           for (int z= zBeg; z != zEnd; z+= zInc) {
-              // Skip solid or fixed values
-              if (Solid[x][y][z]) continue;
-              if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-              if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-              if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
-              // Get count and sum of valid neighbors
-              const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
+            // Skip solid or fixed values
+            if (Solid[x][y][z]) continue;
+            if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
+            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
+            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
+            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
+            if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
+            // Get count and sum of valid neighbors
+            const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
             const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
             const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
             const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
-              float sum= 0.0f;
+            float sum= 0.0f;
             if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldT[k][x - 1][y][z];
             if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldT[k][x + 1][y][z];
             if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : FieldT[k][x][y - 1][z];
             if (y + 1 < nY) sum+= Solid[x][y + 1][z] ? yBCVal : FieldT[k][x][y + 1][z];
             if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldT[k][x][y][z - 1];
             if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldT[k][x][y][z + 1];
-              // Set new value according to coefficients and flags
+            // Set new value according to coefficients and flags
             const float prevVal= FieldT[k][x][y][z];
             if (iDiffuMode) FieldT[k][x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
             else if (count > 0) FieldT[k][x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
-              // Apply overrelaxation trick
+            // Apply overrelaxation trick
             FieldT[k][x][y][z]= prevVal + coeffOverrelax * (FieldT[k][x][y][z] - prevVal);
-            }
           }
         }
       }
-      // Recombine forward and backward passes
-      for (int x= 0; x < nX; x++)
-        for (int y= 0; y < nY; y++)
-          for (int z= 0; z < nZ; z++)
+    }
+    // Recombine forward and backward passes
+    for (int x= 0; x < nX; x++)
+      for (int y= 0; y < nY; y++)
+        for (int z= 0; z < nZ; z++)
           ioField[x][y][z]= 0.5f * (FieldT[0][x][y][z] + FieldT[1][x][y][z]);
     ApplyBC(iFieldID, ioField);
     // r = b - A x
@@ -1272,18 +1272,12 @@ void CompuFluidDyna::ExternalForces() {
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
-        // Skip solid or fixed values
-        if (Solid[x][y][z]) continue;
-        if (VelBC[x][y][z]) continue;
-        // Add gravity effect to velocity
-        VelZ[x][y][z]+= D.UI[TimeStep____].GetF() * D.UI[CoeffGravi__].GetF() * Smok[x][y][z];
+        if (Solid[x][y][z] || VelBC[x][y][z]) continue;
+        VelZ[x][y][z]+= D.UI[TimeStep____].GetF() * D.UI[CoeffGravi__].GetF() * Smok[x][y][z] / fluidDensity;
       }
     }
   }
-  ApplyBC(FieldID::IDVelZ, VelZ);
 }
-
-
 
 
 // Project velocity field into a solenoidal/divergence-free field
@@ -1315,24 +1309,17 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
         if (Solid[x][y][z] || VelBC[x][y][z]) continue;
-        // Subtract pressure gradient with zero slope at interface to remove divergence
-        if (x - 1 >= 0) ioVelX[x][y][z]-= (Solid[x - 1][y][z]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
-        if (y - 1 >= 0) ioVelY[x][y][z]-= (Solid[x][y - 1][z]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
-        if (z - 1 >= 0) ioVelZ[x][y][z]-= (Solid[x][y][z - 1]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x][y][z - 1]) / (2.0f * voxSize);
-        if (x + 1 < nX) ioVelX[x][y][z]-= (Solid[x + 1][y][z]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x + 1][y][z] - Pres[x][y][z]) / (2.0f * voxSize);
-        if (y + 1 < nY) ioVelY[x][y][z]-= (Solid[x][y + 1][z]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x][y + 1][z] - Pres[x][y][z]) / (2.0f * voxSize);
-        if (z + 1 < nZ) ioVelZ[x][y][z]-= (Solid[x][y][z + 1]) ? 0.0f : iTimeStep / fluidDensity * (Pres[x][y][z + 1] - Pres[x][y][z]) / (2.0f * voxSize);
+        // Subtract pressure gradient to remove divergence
+        if (x - 1 >= 0 && !Solid[x - 1][y][z]) ioVelX[x][y][z]-= iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x - 1][y][z]) / (2.0f * voxSize);
+        if (y - 1 >= 0 && !Solid[x][y - 1][z]) ioVelY[x][y][z]-= iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x][y - 1][z]) / (2.0f * voxSize);
+        if (z - 1 >= 0 && !Solid[x][y][z - 1]) ioVelZ[x][y][z]-= iTimeStep / fluidDensity * (Pres[x][y][z] - Pres[x][y][z - 1]) / (2.0f * voxSize);
+        if (x + 1 < nX && !Solid[x + 1][y][z]) ioVelX[x][y][z]-= iTimeStep / fluidDensity * (Pres[x + 1][y][z] - Pres[x][y][z]) / (2.0f * voxSize);
+        if (y + 1 < nY && !Solid[x][y + 1][z]) ioVelY[x][y][z]-= iTimeStep / fluidDensity * (Pres[x][y + 1][z] - Pres[x][y][z]) / (2.0f * voxSize);
+        if (z + 1 < nZ && !Solid[x][y][z + 1]) ioVelZ[x][y][z]-= iTimeStep / fluidDensity * (Pres[x][y][z + 1] - Pres[x][y][z]) / (2.0f * voxSize);
       }
     }
   }
-
-  // Reapply BC to maintain consistency
-  ApplyBC(FieldID::IDVelX, ioVelX);
-  ApplyBC(FieldID::IDVelY, ioVelY);
-  ApplyBC(FieldID::IDVelZ, ioVelZ);
 }
-
-
 
 
 // Trilinearly interpolate the field value at the given position
@@ -1375,10 +1362,9 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
                                  const std::vector<std::vector<std::vector<float>>>& iVelY,
                                  const std::vector<std::vector<std::vector<float>>>& iVelZ,
                                  std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Sweep through field and apply semi Lagrangian advection
-  std::vector<std::vector<std::vector<float>>> oldField= ioField;
-
-  // Adjust the source field to have non-zero values on the wall interface for continuity
+  // Copy the field values to serve as source in the update step
+  std::vector<std::vector<std::vector<float>>> sourceField= ioField;
+  // Adjust the source field to make solid voxels have the average smoke value of their non-solid neighbors
   if (D.UI[BCAdvecWall_].GetB() && iFieldID == FieldID::IDSmok) {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
@@ -1392,12 +1378,12 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
           if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
           if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
           if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
-          oldField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
         }
       }
     }
   }
-
+  // Sweep through the field
   for (int x= 0; x < nX; x++) {
 #pragma omp parallel for
     for (int y= 0; y < nY; y++) {
@@ -1408,18 +1394,12 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
-
         // Find source position for active voxel using naive linear backtracking scheme
         const Math::Vec3f posEnd((float)x, (float)y, (float)z);
         const Math::Vec3f velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
         Math::Vec3f posBeg= posEnd - iTimeStep * velEnd / voxSize;
-
         // Iterative source position correction with 2nd order MacCormack scheme
-        int correcMaxIter= 0;
-        if (iFieldID == FieldID::IDSmok) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelX) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelY) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
-        if (iFieldID == FieldID::IDVelZ) correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
+        int correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
         for (int iter= 0; iter < correcMaxIter; iter++) {
           const float velBegX= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
           const float velBegY= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
@@ -1433,12 +1413,10 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         AdvY[x][y][z]= posBeg[1] - posEnd[1];
         AdvZ[x][y][z]= posBeg[2] - posEnd[2];
         // Trilinear interpolation at source position
-        ioField[x][y][z]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], oldField);
+        ioField[x][y][z]= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], sourceField);
       }
     }
   }
-  // Reapply BC to maintain consistency
-  ApplyBC(iFieldID, ioField);
 }
 
 
@@ -1457,7 +1435,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
-          if (Solid[x][y][z] || VelBC[x][y][z] || PreBC[x][y][z]) continue;
+          if (Solid[x][y][z] || VelBC[x][y][z]) continue;
           // Gradient of vorticity with zero derivative at solid interface or domain boundary
           Math::Vec3f vortGrad(0.0f, 0.0f, 0.0f);
           if (x - 1 >= 0 && !Solid[x - 1][y][z]) vortGrad[0]+= (Vort[x][y][z] - Vort[x - 1][y][z]) / (2.0f * voxSize);
@@ -1478,11 +1456,6 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
         }
       }
     }
-
-    // Reapply BC to maintain consistency
-    ApplyBC(FieldID::IDVelX, ioVelX);
-    ApplyBC(FieldID::IDVelY, ioVelY);
-    ApplyBC(FieldID::IDVelZ, ioVelZ);
   }
 }
 
@@ -1517,9 +1490,8 @@ void CompuFluidDyna::ComputeVelocityDivergence() {
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
-        Dive[x][y][z]= 0.0f;
-        if (PreBC[x][y][z])
-          Dive[x][y][z]= PresForced[x][y][z];
+        if (Solid[x][y][z]) Dive[x][y][z]= 0.0f;
+        if (PreBC[x][y][z]) Dive[x][y][z]= PresForced[x][y][z];
         if (Solid[x][y][z] || PreBC[x][y][z]) continue;
         // Classical linear interpolation for face velocities with same velocity at domain boundary and zero velocity at solid interface
         float velXN= (x - 1 >= 0) ? ((Solid[x - 1][y][z]) ? (0.0f) : ((VelX[x][y][z] + VelX[x - 1][y][z]) / 2.0f)) : (VelX[x][y][z]);
