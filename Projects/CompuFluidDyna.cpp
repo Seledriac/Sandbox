@@ -350,6 +350,9 @@ void CompuFluidDyna::Animate() {
 
   // TODO Test heuristic optimization of solid regions
 
+  // TODO Introduce solid interface normals calculations to better handle BC on sloped geometry ?
+  // TODO Test with flow separation scenarios ?
+
   if (D.UI[VerboseTime_].GetB()) Timer::PushTimer();
   CompuFluidDyna::SetUpUIData();
   if (D.UI[VerboseTime_].GetB()) printf("%f T SetUpUIData\n", Timer::PopTimer());
@@ -1463,6 +1466,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
 // Compute RHS of pressure poisson equation as negative divergence scaled by density and timestep
 // https://en.wikipedia.org/wiki/Projection_method_(fluid_dynamics)
 // RHS = -(ρ / Δt) × ∇ · vel
+// TODO implement correction to avoid checkerboard due to odd-even decoupling
 // References for Rhie Chow correction
 // https://youtu.be/yqZ59Xn_aF8 Checkerboard oscillations
 // https://youtu.be/PmEUiUB8ETk Deriving the correction
