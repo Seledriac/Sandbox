@@ -277,7 +277,7 @@ void callback_display() {
 
       // Draw the text for legend and min max values
       char str[50];
-      if (D.plotLegend.size() == D.plotData.size())
+      if (k0 < (int)D.plotLegend.size())
         strcpy(str, D.plotLegend[k0].c_str());
       else
         strcpy(str, "<name>");
