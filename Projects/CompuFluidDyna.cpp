@@ -88,7 +88,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SolvMaxIter_", 40));     // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvPCG_____", 1));      // Flag to use Gauss Seidel (=0) or Preconditioned Conjugate Gradient (>0)
     D.UI.push_back(ParamUI("SolvSOR_____", 1.8));    // Overrelaxation coefficient in Gauss Seidel solver
-    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
+    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-9));  // Solver tolerance relative to RHS norm
     D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
     D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
     D.UI.push_back(ParamUI("CoeffAdvec__", 5.0));    // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
@@ -1088,14 +1088,12 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
   // errNew = r^T d
   float errNew= ImplicitFieldDotProd(rField, dField);
-  float errBeg= errNew;
-  float errOld= 0.0f;
+  const float errBeg= errNew;
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
-    // TODO find better convergence criterion because unstable when RHS low and initial guess good
-    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
-    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
-    if (errNew == 0.0f) break;
+    // TODO tweak handling of exit conditions and flow of iterations
+    if (errNew / normRHS <= std::max(D.UI[SolvTolRhs__].GetF(), 0.0f)) break;
+    if (errNew / errBeg <= std::max(D.UI[SolvTolRel__].GetF(), 0.0f)) break;
     // q = A d
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, dField, qField);
     // alpha = errNew / (d^T q)
@@ -1120,7 +1118,7 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     // s = M^-1 r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
     // errNew = r^T s
-    errOld= errNew;
+    const float errOld= errNew;
     errNew= ImplicitFieldDotProd(rField, sField);
     // beta = errNew / errOld
     const float beta= errNew / errOld;
@@ -1181,14 +1179,14 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   }
   // errNew = r^T d
   float errNew= ImplicitFieldDotProd(rField, rField);
-  float errBeg= errNew;
+  const float errBeg= errNew;
   // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
   for (int k= 0; k < iMaxIter; k++) {
-    if (errNew / normRHS < D.UI[SolvTolRhs__].GetF()) break;
-    if (errNew / errBeg < D.UI[SolvTolRel__].GetF()) break;
-    if (errNew == 0.0f) break;
+    // TODO tweak handling of exit conditions and flow of iterations
+    if (errNew / normRHS <= std::max(D.UI[SolvTolRhs__].GetF(), 0.0f)) break;
+    if (errNew / errBeg <= std::max(D.UI[SolvTolRel__].GetF(), 0.0f)) break;
     // Initialize fields for forward and backward passes
     std::vector<std::vector<std::vector<std::vector<float>>>> FieldT;
     FieldT.resize(2);
@@ -1230,11 +1228,12 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
             if (z - 1 >= 0) sum+= Solid[x][y][z - 1] ? zBCVal : FieldT[k][x][y][z - 1];
             if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldT[k][x][y][z + 1];
             // Set new value according to coefficients and flags
+            if (count > 0) {
             const float prevVal= FieldT[k][x][y][z];
             if (iDiffuMode) FieldT[k][x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
-            else if (count > 0) FieldT[k][x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
-            // Apply overrelaxation trick
+              else FieldT[k][x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
             FieldT[k][x][y][z]= prevVal + coeffOverrelax * (FieldT[k][x][y][z] - prevVal);
+            }
           }
         }
       }
@@ -1243,8 +1242,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     for (int x= 0; x < nX; x++)
       for (int y= 0; y < nY; y++)
         for (int z= 0; z < nZ; z++)
-          ioField[x][y][z]= 0.5f * (FieldT[0][x][y][z] + FieldT[1][x][y][z]);
-    ApplyBC(iFieldID, ioField);
+          ioField[x][y][z]= (FieldT[0][x][y][z] + FieldT[1][x][y][z]) / 2.0f;
     // r = b - A x
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
     ApplyBC(iFieldID, t0Field);
