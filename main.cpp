@@ -31,6 +31,11 @@ int winW, winH;
 constexpr int winFPS= 60;
 constexpr int paramLabelNbChar= 12;
 constexpr int paramSpaceNbChar= 1;
+constexpr int paramValSignNbChar= 1;
+constexpr int paramValInteNbChar= 9;
+constexpr int paramValSepaNbChar= 1;
+constexpr int paramValFracNbChar= 9;
+constexpr int paramValNbChar= paramValSignNbChar + paramValInteNbChar + paramValSepaNbChar + paramValFracNbChar;
 constexpr int charHeight= 14;
 constexpr int charWidth= 10;
 constexpr int pixelMargin= 1;
@@ -244,7 +249,7 @@ void callback_display() {
       else
         glColor3f(0.8f, 0.8f, 0.8f);
       char str[50];
-      sprintf(str, "%s %+014.6f", D.UI[k].name.c_str(), D.UI[k].GetD());
+      sprintf(str, "%s %+020.9f", D.UI[k].name.c_str(), D.UI[k].GetD());  // Format must match paramValNbChar settings
       draw_text(0, winH - (k + 1) * (charHeight + pixelMargin), str);
       if (k == D.idxParamUI) {
         sprintf(str, "_");
@@ -519,21 +524,21 @@ void callback_mouse_click(int button, int state, int x, int y) {
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.UI.empty()) {
-      if (x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+      if (x < (paramLabelNbChar + paramSpaceNbChar + paramValNbChar) * charWidth) {
         if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
-          if (button == 3) {
-            if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
-            if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(6 - D.idxCursorUI)));
-            if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(7 - D.idxCursorUI)));
+          if (button == 3) {  // Mouse wheel up
+            if (D.idxCursorUI < paramValSignNbChar) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
+            if (D.idxCursorUI >= paramValSignNbChar && D.idxCursorUI < paramValSignNbChar + paramValInteNbChar)
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(paramValInteNbChar - D.idxCursorUI)));
+            if (D.idxCursorUI >= paramValSignNbChar + paramValInteNbChar + paramValSepaNbChar && D.idxCursorUI < paramValNbChar)
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(paramValInteNbChar + paramValSepaNbChar - D.idxCursorUI)));
           }
-          if (button == 4) {
-            if (D.idxCursorUI == 0) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
-            if (D.idxCursorUI >= 1 && D.idxCursorUI <= 6)
-              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(6 - D.idxCursorUI)));
-            if (D.idxCursorUI >= 8 && D.idxCursorUI <= 13)
-              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(7 - D.idxCursorUI)));
+          if (button == 4) {  // Mous wheel down
+            if (D.idxCursorUI < paramValSignNbChar) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
+            if (D.idxCursorUI >= paramValSignNbChar && D.idxCursorUI < paramValSignNbChar + paramValInteNbChar)
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(paramValInteNbChar - D.idxCursorUI)));
+            if (D.idxCursorUI >= paramValSignNbChar + paramValInteNbChar + paramValSepaNbChar && D.idxCursorUI < paramValNbChar)
+              D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(paramValInteNbChar + paramValSepaNbChar - D.idxCursorUI)));
           }
 
           // Compute refresh
@@ -560,7 +565,7 @@ void callback_mouse_motion(int x, int y) {
 void callback_passive_mouse_motion(int x, int y) {
   int prevParamIdx= D.idxParamUI;
   int prevCursorIdx= D.idxCursorUI;
-  if (x < (paramLabelNbChar + paramSpaceNbChar + 14) * charWidth) {
+  if (x < (paramLabelNbChar + paramSpaceNbChar + paramValNbChar) * charWidth) {
     if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
       D.idxParamUI= (y - 3) / (charHeight + pixelMargin);
       D.idxCursorUI= std::max((x - (paramLabelNbChar + paramSpaceNbChar) * charWidth) / charWidth, 0);
