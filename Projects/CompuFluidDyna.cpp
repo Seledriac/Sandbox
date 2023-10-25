@@ -81,15 +81,15 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("Scenario____", 0));      // Scenario ID, 0= load file, 1> hard coded scenarios
     D.UI.push_back(ParamUI("InputFile___", 3));      // BMP file to load
     D.UI.push_back(ParamUI("ResolutionX_", 1));      // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionY_", 60));     // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("ResolutionZ_", 60));     // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("VoxelSize___", 0.01));   // Element size
+    D.UI.push_back(ParamUI("ResolutionY_", 100));    // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionZ_", 100));    // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("VoxelSize___", 1.e-2));  // Element size
     D.UI.push_back(ParamUI("TimeStep____", 0.02));   // Simulation time step
-    D.UI.push_back(ParamUI("SolvMaxIter_", 40));     // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvMaxIter_", 16));     // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvPCG_____", 1));      // Flag to use Gauss Seidel (=0) or Preconditioned Conjugate Gradient (>0)
     D.UI.push_back(ParamUI("SolvSOR_____", 1.8));    // Overrelaxation coefficient in Gauss Seidel solver
-    D.UI.push_back(ParamUI("SolvTolRhs__", 1.e-9));  // Solver tolerance relative to RHS norm
-    D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
+    D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
+    D.UI.push_back(ParamUI("SolvTolRel__", 0.0));    // Solver tolerance relative to initial guess
     D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
     D.UI.push_back(ParamUI("CoeffAdvec__", 5.0));    // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffDiffuS_", 1.e-4));  // Diffusion of smoke field, i.e. smoke spread/smear
@@ -271,7 +271,7 @@ void CompuFluidDyna::Animate() {
   if (D.UI[VerboseTime_].GetB()) printf("%f T ApplyBC\n", Timer::PopTimer());
 
   // Incompressible Navier Stokes
-  // ∂vel/∂t + (vel · ∇) vel = − 1/ρ ∇press + visco ∇²vel + f
+  // ∂vel/∂t = - (vel · ∇) vel + visco ∇²vel − 1/ρ ∇press + f
   // ∇ · vel = 0
 
   // Advection steps
@@ -985,7 +985,6 @@ float CompuFluidDyna::ImplicitFieldDotProd(const std::vector<std::vector<std::ve
 }
 
 
-// TODO check BC properly handled
 // Perform a matrix-vector multiplication without explicitly assembling the Laplacian matrix
 void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const float iTimeStep,
                                                    const bool iDiffuMode, const float iDiffuCoeff, const bool iPrecondMode,
@@ -1000,17 +999,15 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
         // Skip solid or fixed values
         if (Solid[x][y][z]) continue;
         if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-        if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-        if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-        if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
+        if (VelBC[x][y][z] && (iFieldID == FieldID::IDVelX || iFieldID == FieldID::IDVelY || iFieldID == FieldID::IDVelZ)) continue;
         if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
         // Get count and sum of valid neighbors
         const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
         float sum= 0.0f;
         if (!iPrecondMode) {
-          const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
-          const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
-          const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-iField[x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (0.0f));
+          const float xBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (iFieldID == FieldID::IDVelX ? -iField[x][y][z] : 0.0f);
+          const float yBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (iFieldID == FieldID::IDVelY ? -iField[x][y][z] : 0.0f);
+          const float zBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (iField[x][y][z]) : (iFieldID == FieldID::IDVelZ ? -iField[x][y][z] : 0.0f);
           if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : iField[x - 1][y][z];
           if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : iField[x + 1][y][z];
           if (y - 1 >= 0) sum+= Solid[x][y - 1][z] ? yBCVal : iField[x][y - 1][z];
@@ -1037,9 +1034,7 @@ void CompuFluidDyna::ImplicitFieldLaplacianMatMult(const int iFieldID, const flo
 }
 
 
-// TODO check if can remove ApplyBC
-// TODO check BC properly handled
-// Solve linear system with diagonal/Jacobi preconditioned conjugate gradient
+// Solve linear system with Conjugate Gradient approach
 // References for linear solvers and particularily PCG
 // https://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf
 // https://services.math.duke.edu/~holee/math361-2020/lectures/Conjugate_gradients.pdf
@@ -1051,7 +1046,6 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
                                             const std::vector<std::vector<std::vector<float>>>& iField,
                                             std::vector<std::vector<std::vector<float>>>& ioField) {
   // Prepare convergence plot
-  const float normRHS= ImplicitFieldDotProd(iField, iField);
   if (D.UI[VerboseSolv_].GetB()) {
     D.plotLegend.resize(5);
     D.plotLegend[FieldID::IDSmok]= "Diffu S";
@@ -1066,32 +1060,30 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> qField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> dField= Field::AllocField3D(nX, nY, nZ, 0.0f);
-  std::vector<std::vector<std::vector<float>>> sField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t1Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
-  // r = b - A x
+  // Compute residual error magnitude    r = b - A x    errNew = r · r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
   ApplyBC(iFieldID, t0Field);
   ImplicitFieldSub(iField, t0Field, rField);
+  const float errBeg= ImplicitFieldDotProd(rField, rField);
+  const float normRHS= ImplicitFieldDotProd(iField, iField);
+  float errNew= errBeg;
+  dField= rField;
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
-    const float errTmp= ImplicitFieldDotProd(rField, rField);
-    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
-    if (iFieldID == FieldID::IDSmok) printf("CG Diffu S  [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelX) printf("CG Diffu VX [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelY) printf("CG Diffu VY [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelZ) printf("CG Diffu VZ [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDPres) printf("CG Proj  P  [%.2e] ", normRHS);
-    printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    if (iFieldID == FieldID::IDSmok) printf("\nCG Diffu S  [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelX) printf("\nCG Diffu VX [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelY) printf("\nCG Diffu VY [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelZ) printf("\nCG Diffu VZ [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDPres) printf("\nCG Proj  P  [%.2e] ", normRHS);
+    printf("%.2e ", errNew);
+    D.plotData[iFieldID].push_back(errNew);
   }
-  // d = M^-1 r
-  ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, dField);
-  // errNew = r^T d
-  float errNew= ImplicitFieldDotProd(rField, dField);
-  const float errBeg= errNew;
   // Iterate to solve
   for (int k= 0; k < iMaxIter; k++) {
-    // TODO tweak handling of exit conditions and flow of iterations
+    // Check exit conditions
+    if (errNew <= 0.0f) break;
     if (errNew / normRHS <= std::max(D.UI[SolvTolRhs__].GetF(), 0.0f)) break;
     if (errNew / errBeg <= std::max(D.UI[SolvTolRel__].GetF(), 0.0f)) break;
     // q = A d
@@ -1109,22 +1101,17 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     ImplicitFieldScale(alpha, qField, t0Field);
     ImplicitFieldSub(rField, t0Field, t1Field);
     rField= t1Field;
+    // errNew = r^T r
+    const float errOld= errNew;
+    errNew= ImplicitFieldDotProd(rField, rField);
     // Error plot
     if (D.UI[VerboseSolv_].GetB()) {
-      const float errTmp= ImplicitFieldDotProd(rField, rField);
-      D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
-      printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+      printf("%.2e ", errNew);
+      D.plotData[iFieldID].push_back(errNew);
     }
-    // s = M^-1 r
-    ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, true, rField, sField);
-    // errNew = r^T s
-    const float errOld= errNew;
-    errNew= ImplicitFieldDotProd(rField, sField);
-    // beta = errNew / errOld
-    const float beta= errNew / errOld;
-    // d = s + beta d
-    ImplicitFieldScale(beta, dField, t0Field);
-    ImplicitFieldAdd(sField, t0Field, dField);
+    // d = r + (errNew / errOld) * d
+    ImplicitFieldScale(errNew / errOld, dField, t0Field);
+    ImplicitFieldAdd(rField, t0Field, dField);
   }
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
@@ -1133,12 +1120,10 @@ void CompuFluidDyna::ConjugateGradientSolve(const int iFieldID, const int iMaxIt
     if (iFieldID == FieldID::IDVelY) Dum2= rField;
     if (iFieldID == FieldID::IDVelZ) Dum3= rField;
     if (iFieldID == FieldID::IDPres) Dum4= rField;
-    printf("\n");
   }
 }
 
 
-// TODO check BC properly handled
 // Solve linear system with an iterative Gauss Seidel scheme
 // Solving each equation sequentially by cascading latest solution to next equation
 // Run a forward and backward pass in parallel to avoid element ordering bias
@@ -1148,7 +1133,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
                                       const std::vector<std::vector<std::vector<float>>>& iField,
                                       std::vector<std::vector<std::vector<float>>>& ioField) {
   // Prepare convergence plot
-  const float normRHS= ImplicitFieldDotProd(iField, iField);
   if (D.UI[VerboseSolv_].GetB()) {
     D.plotLegend.resize(5);
     D.plotLegend[FieldID::IDSmok]= "Diffu S";
@@ -1162,39 +1146,40 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   // Allocate fields
   std::vector<std::vector<std::vector<float>>> rField= Field::AllocField3D(nX, nY, nZ, 0.0f);
   std::vector<std::vector<std::vector<float>>> t0Field= Field::AllocField3D(nX, nY, nZ, 0.0f);
-  // r = b - A x
+  std::vector<std::vector<std::vector<std::vector<float>>>> FieldT(2);
+  // Compute residual error magnitude    r = b - A x    errNew = r · r
   ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
   ApplyBC(iFieldID, t0Field);
   ImplicitFieldSub(iField, t0Field, rField);
+  const float errBeg= ImplicitFieldDotProd(rField, rField);
+  const float normRHS= ImplicitFieldDotProd(iField, iField);
+  float errNew= errBeg;
   // Error plot
   if (D.UI[VerboseSolv_].GetB()) {
-    const float errTmp= ImplicitFieldDotProd(rField, rField);
-    D.plotData[iFieldID].push_back((normRHS != 0.0f) ? errTmp / normRHS : 0.0f);
-    if (iFieldID == FieldID::IDSmok) printf("CG Diffu S  [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelX) printf("CG Diffu VX [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelY) printf("CG Diffu VY [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDVelZ) printf("CG Diffu VZ [%.2e] ", normRHS);
-    if (iFieldID == FieldID::IDPres) printf("CG Proj  P  [%.2e] ", normRHS);
-    printf("%.2e ", (normRHS != 0.0f) ? (errTmp / normRHS) : (0.0f));
+    if (iFieldID == FieldID::IDSmok) printf("\nGS Diffu S  [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelX) printf("\nGS Diffu VX [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelY) printf("\nGS Diffu VY [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDVelZ) printf("\nGS Diffu VZ [%.2e] ", normRHS);
+    if (iFieldID == FieldID::IDPres) printf("\nGS Proj  P  [%.2e] ", normRHS);
+    printf("%.2e ", errNew);
+    D.plotData[iFieldID].push_back(errNew);
   }
-  // errNew = r^T d
-  float errNew= ImplicitFieldDotProd(rField, rField);
-  const float errBeg= errNew;
-  // Solve with PArallel BIdirectionnal GAuss-Seidel Successive Over-Relaxation (PABIGASSOR)
+  // Precompute values
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
+  // Iterate to solve with Gauss-Seidel scheme
   for (int k= 0; k < iMaxIter; k++) {
-    // TODO tweak handling of exit conditions and flow of iterations
+    // Check exit conditions
+    if (errNew <= 0.0f) break;
     if (errNew / normRHS <= std::max(D.UI[SolvTolRhs__].GetF(), 0.0f)) break;
     if (errNew / errBeg <= std::max(D.UI[SolvTolRel__].GetF(), 0.0f)) break;
     // Initialize fields for forward and backward passes
-    std::vector<std::vector<std::vector<std::vector<float>>>> FieldT;
-    FieldT.resize(2);
     FieldT[0]= ioField;
     FieldT[1]= ioField;
+    // Execute the two passes in parallel
 #pragma omp parallel for
     for (int k= 0; k < 2; k++) {
-      // Set the loop settings for each pass
+      // Set the loop settings for the current pass
       const int xBeg= (k == 0) ? 0 : nX - 1;
       const int yBeg= (k == 0) ? 0 : nY - 1;
       const int zBeg= (k == 0) ? 0 : nZ - 1;
@@ -1204,22 +1189,20 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
       const int xInc= (k == 0) ? 1 : -1;
       const int yInc= (k == 0) ? 1 : -1;
       const int zInc= (k == 0) ? 1 : -1;
-      // Apply the current pass
+      // Sweep through the field
       for (int x= xBeg; x != xEnd; x+= xInc) {
         for (int y= yBeg; y != yEnd; y+= yInc) {
           for (int z= zBeg; z != zEnd; z+= zInc) {
             // Skip solid or fixed values
             if (Solid[x][y][z]) continue;
             if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
-            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) continue;
-            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
-            if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
+            if (VelBC[x][y][z] && (iFieldID == FieldID::IDVelX || iFieldID == FieldID::IDVelY || iFieldID == FieldID::IDVelZ)) continue;
             if (PreBC[x][y][z] && iFieldID == FieldID::IDPres) continue;
             // Get count and sum of valid neighbors
             const int count= (x > 0) + (y > 0) + (z > 0) + (x < nX - 1) + (y < nY - 1) + (z < nZ - 1);
-            const float xBCVal= (iFieldID == FieldID::IDVelX) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
-            const float yBCVal= (iFieldID == FieldID::IDVelY) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
-            const float zBCVal= (iFieldID == FieldID::IDVelZ) ? (-FieldT[k][x][y][z]) : ((iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (0.0f));
+            const float xBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (iFieldID == FieldID::IDVelX ? -FieldT[k][x][y][z] : 0.0f);
+            const float yBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (iFieldID == FieldID::IDVelY ? -FieldT[k][x][y][z] : 0.0f);
+            const float zBCVal= (iFieldID == FieldID::IDSmok || iFieldID == FieldID::IDPres) ? (FieldT[k][x][y][z]) : (iFieldID == FieldID::IDVelZ ? -FieldT[k][x][y][z] : 0.0f);
             float sum= 0.0f;
             if (x - 1 >= 0) sum+= Solid[x - 1][y][z] ? xBCVal : FieldT[k][x - 1][y][z];
             if (x + 1 < nX) sum+= Solid[x + 1][y][z] ? xBCVal : FieldT[k][x + 1][y][z];
@@ -1229,10 +1212,10 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
             if (z + 1 < nZ) sum+= Solid[x][y][z + 1] ? zBCVal : FieldT[k][x][y][z + 1];
             // Set new value according to coefficients and flags
             if (count > 0) {
-            const float prevVal= FieldT[k][x][y][z];
-            if (iDiffuMode) FieldT[k][x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
+              const float prevVal= FieldT[k][x][y][z];
+              if (iDiffuMode) FieldT[k][x][y][z]= (iField[x][y][z] + diffuVal * sum) / (1.0f + diffuVal * (float)count);
               else FieldT[k][x][y][z]= ((voxSize * voxSize) * iField[x][y][z] + sum) / (float)count;
-            FieldT[k][x][y][z]= prevVal + coeffOverrelax * (FieldT[k][x][y][z] - prevVal);
+              FieldT[k][x][y][z]= prevVal + coeffOverrelax * (FieldT[k][x][y][z] - prevVal);
             }
           }
         }
@@ -1243,15 +1226,15 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
       for (int y= 0; y < nY; y++)
         for (int z= 0; z < nZ; z++)
           ioField[x][y][z]= (FieldT[0][x][y][z] + FieldT[1][x][y][z]) / 2.0f;
-    // r = b - A x
+    // Compute residual error magnitude    r = b - A x    errNew = r · r
     ImplicitFieldLaplacianMatMult(iFieldID, iTimeStep, iDiffuMode, iDiffuCoeff, false, ioField, t0Field);
     ApplyBC(iFieldID, t0Field);
     ImplicitFieldSub(iField, t0Field, rField);
     errNew= ImplicitFieldDotProd(rField, rField);
     // Error plot
     if (D.UI[VerboseSolv_].GetB()) {
-      D.plotData[iFieldID].push_back((normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
-      printf("%.2e ", (normRHS != 0.0f) ? (errNew / normRHS) : (0.0f));
+      printf("%.2e ", errNew);
+      D.plotData[iFieldID].push_back(errNew);
     }
   }
   // Error plot
@@ -1261,7 +1244,6 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
     if (iFieldID == FieldID::IDVelY) Dum2= rField;
     if (iFieldID == FieldID::IDVelZ) Dum3= rField;
     if (iFieldID == FieldID::IDPres) Dum4= rField;
-    printf("\n");
   }
 }
 
@@ -1300,6 +1282,11 @@ void CompuFluidDyna::ProjectField(const int iIter, const float iTimeStep,
                                   std::vector<std::vector<std::vector<float>>>& ioVelZ) {
   // Compute divergence for RHS
   ComputeVelocityDivergence();
+  // Reset pressure guess to test convergence
+  if (D.UI[CoeffProj___].GetI() == 2) {
+    Pres= Field::AllocField3D(nX, nY, nZ, 0.0f);
+    ApplyBC(FieldID::IDPres, Pres);
+  }
   // Solve for pressure in the pressure Poisson equation
   if (D.UI[SolvPCG_____].GetB())
     ConjugateGradientSolve(FieldID::IDPres, iIter, iTimeStep, false, 0.0f, Dive, Pres);
@@ -1353,7 +1340,8 @@ float CompuFluidDyna::TrilinearInterpolation(const float iPosX, const float iPos
 
 
 // Apply semi-Lagrangian advection along the velocity field
-// vel ⇐ vel - Δt (vel · ∇) vel    TODO check validity of formula
+// vel ⇐ vel - Δt (vel · ∇) vel
+// smo ⇐ smo - Δt (vel · ∇) smo
 // References for MacCormack backtracking scheme
 // https://commons.wikimedia.org/wiki/File:Backtracking_maccormack.png
 // https://physbam.stanford.edu/~fedkiw/papers/stanford2006-09.pdf
