@@ -899,16 +899,36 @@ void CompuFluidDyna::InitializeScenario() {
           }
         }
 
-        // Compression barrel test
+        // Test calib flow separation past cylinder https://link.springer.com/article/10.1007/s00521-020-05079-z
         if (scenarioType == 8) {
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
-              (nY > 1 && (y == 0 || y == nY - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
-            Solid[x][y][z]= true;
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
+            VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
+            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
           }
-          else if (std::min(y, nY - 1 - y) == (nY - 1) / 2) {
-            Smok[x][y][z]= D.UI[BCSmok______].GetF();
-            VelY[x][y][z]= D.UI[BCVelY______].GetF();
+          else if (y == nY - 1) {
+            PreBC[x][y][z]= true;
+            PresForced[x][y][z]= 0.0f;
+          }
+          else if (y == 0) {
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
+            VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
+            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
+            SmoBC[x][y][z]= true;
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
+          }
+          else {
+            Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
+            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+            Math::Vec3f dist= (posCell - posObstacle);
+            dist[0]*= (float)(nX - 1) * voxSize;
+            dist[1]*= (float)(nY - 1) * voxSize;
+            dist[2]*= (float)(nZ - 1) * voxSize;
+            if (dist.norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
+              Solid[x][y][z]= true;
           }
         }
       }
@@ -1168,7 +1188,7 @@ void CompuFluidDyna::GaussSeidelSolve(const int iFieldID, const int iMaxIter, co
   const float diffuVal= iDiffuCoeff * iTimeStep / (voxSize * voxSize);
   const float coeffOverrelax= std::max(D.UI[SolvSOR_____].GetF(), 0.0f);
   // Iterate to solve with Gauss-Seidel scheme
-  for (int k= 0; k < iMaxIter; k++) {
+  for (int idxIter= 0; idxIter < iMaxIter; idxIter++) {
     // Check exit conditions
     if (errNew <= 0.0f) break;
     if (errNew / normRHS <= std::max(D.UI[SolvTolRhs__].GetF(), 0.0f)) break;
