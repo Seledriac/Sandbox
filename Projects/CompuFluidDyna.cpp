@@ -415,6 +415,7 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
+          if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by smoke
           if (D.UI[ColorMode___].GetI() == 1) {
@@ -498,6 +499,7 @@ void CompuFluidDyna::Draw() {
       for (int x= 0; x < nX; x++) {
         for (int y= 0; y < nY; y++) {
           for (int z= 0; z < nZ; z++) {
+            if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
             // Draw the velocity field
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.normSquared() > 0.0f) {
