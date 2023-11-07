@@ -724,12 +724,13 @@ void CompuFluidDyna::InitializeScenario() {
   if (scenarioType == 0) {
     if (inputFile == 0) FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", imageRGBA, false);
     if (inputFile == 1) FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
-    if (inputFile == 2) FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
-    if (inputFile == 3) FileInput::LoadImageBMPFile("Resources/CFD_Nozzle.bmp", imageRGBA, false);
-    if (inputFile == 4) FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
-    if (inputFile == 5) FileInput::LoadImageBMPFile("Resources/CFD_Pipe.bmp", imageRGBA, false);
-    if (inputFile == 6) FileInput::LoadImageBMPFile("Resources/CFD_CriCri.bmp", imageRGBA, false);
-    if (inputFile == 7) FileInput::LoadImageBMPFile("Resources/CFD_TestScenario.bmp", imageRGBA, false);
+    if (inputFile == 2) FileInput::LoadImageBMPFile("Resources/CFD_Nozzle.bmp", imageRGBA, false);
+    if (inputFile == 3) FileInput::LoadImageBMPFile("Resources/CFD_NACA.bmp", imageRGBA, false);
+    if (inputFile == 4) FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
+    if (inputFile == 5) FileInput::LoadImageBMPFile("Resources/CFD_CriCri.bmp", imageRGBA, false);
+    if (inputFile == 6) FileInput::LoadImageBMPFile("Resources/CFD_Pipe.bmp", imageRGBA, false);
+    if (inputFile == 7) FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
+    if (inputFile == 8) FileInput::LoadImageBMPFile("Resources/CFD_TestScenario.bmp", imageRGBA, false);
   }
 
   // Set scenario values
@@ -792,10 +793,14 @@ void CompuFluidDyna::InitializeScenario() {
         }
 
         // Circular obstacle in corridor showing vortex shedding
+        // Test calib flow separation past cylinder https://link.springer.com/article/10.1007/s00521-020-05079-z
         if (scenarioType == 2) {
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
-            Solid[x][y][z]= true;
+            VelBC[x][y][z]= true;
+            VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
+            VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
+            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
           }
           else if (y == nY - 1) {
             PreBC[x][y][z]= true;
@@ -909,39 +914,6 @@ void CompuFluidDyna::InitializeScenario() {
           else if (nZ > 1 && std::min(z, nZ - 1 - z) < nZ / 3) {
             Smok[x][y][z]= (z < nZ / 2) ? D.UI[BCSmok______].GetF() : -D.UI[BCSmok______].GetF();
             Smok[x][y][z]+= Random::Val(-0.01f, 0.01f);
-          }
-        }
-
-        // Test calib flow separation past cylinder https://link.springer.com/article/10.1007/s00521-020-05079-z
-        if (scenarioType == 8) {
-          if ((nX > 1 && (x == 0 || x == nX - 1)) ||
-              (nZ > 1 && (z == 0 || z == nZ - 1))) {
-            VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
-            VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
-            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
-          }
-          else if (y == nY - 1) {
-            PreBC[x][y][z]= true;
-            PresForced[x][y][z]= 0.0f;
-          }
-          else if (y == 0) {
-            VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
-            VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
-            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
-            SmoBC[x][y][z]= true;
-            SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
-          }
-          else {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
-            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
-            Math::Vec3f dist= (posCell - posObstacle);
-            dist[0]*= (float)(nX - 1) * voxSize;
-            dist[1]*= (float)(nY - 1) * voxSize;
-            dist[2]*= (float)(nZ - 1) * voxSize;
-            if (dist.norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
-              Solid[x][y][z]= true;
           }
         }
       }
