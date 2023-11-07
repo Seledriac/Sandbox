@@ -61,7 +61,6 @@ enum ParamType
   ColorMode___,
   SlicePlotY__,
   SlicePlotZ__,
-  Verbose_____,
   VerboseSolv_,
   VerboseTime_,
 };
@@ -115,7 +114,6 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ColorMode___", 1));      // Selector for the scalar field to be drawn
     D.UI.push_back(ParamUI("SlicePlotY__", 0.5));    // Positions for the scatter plot slices
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("Verbose_____", -0.5));   // Verbose mode
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));   // Verbose mode for linear solvers
     D.UI.push_back(ParamUI("VerboseTime_", -0.5));   // Verbose mode for linear solvers
   }
@@ -161,7 +159,6 @@ void CompuFluidDyna::Allocate() {
   if (isAllocated) return;
   isRefreshed= false;
   isAllocated= true;
-  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Allocate()\n");
 
   // Get UI parameters
   nX= std::max(D.UI[ResolutionX_].GetI(), 1);
@@ -213,7 +210,6 @@ void CompuFluidDyna::Refresh() {
   CheckRefresh();
   if (isRefreshed) return;
   isRefreshed= true;
-  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Refresh()\n");
 
   // Initialize scenario values
   simTime= 0;
@@ -257,7 +253,6 @@ void CompuFluidDyna::Animate() {
   if (!isAllocated) Allocate();
   CheckRefresh();
   if (!isRefreshed) Refresh();
-  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Animate()\n");
 
   // Get simulation parameters
   const int maxIter= std::max(D.UI[SolvMaxIter_].GetI(), 0);
@@ -378,7 +373,6 @@ void CompuFluidDyna::Draw() {
   if (!isActivProj) return;
   if (!isAllocated) return;
   if (!isRefreshed) return;
-  if (D.UI[Verbose_____].GetB()) printf("CompuFluidDyna::Draw()\n");
 
   // Draw the voxels
   if (D.displayMode1) {
