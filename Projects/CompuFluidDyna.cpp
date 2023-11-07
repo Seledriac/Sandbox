@@ -589,12 +589,20 @@ void CompuFluidDyna::SetUpUIData() {
 
   // Add hard coded experimental values for lid driven cavity flow benchmark
   if (D.UI[Scenario____].GetI() == 3) {
-    D.scatLegend.resize(4);
-    D.scatLegend[2]= "Ghia Re1k";
-    D.scatLegend[3]= "Ghia Re1k";
-    D.scatData.resize(4);
+    // Clear unnecessary scatter data
     D.scatData[2].clear();
     D.scatData[3].clear();
+    // Allocate required scatter data
+    D.scatLegend.resize(8);
+    D.scatLegend[4]= "Ghia Re1k";
+    D.scatLegend[5]= "Ghia Re1k";
+    D.scatLegend[6]= "Ertu Re1k";
+    D.scatLegend[7]= "Ertu Re1k";
+    D.scatData.resize(8);
+    D.scatData[4].clear();
+    D.scatData[5].clear();
+    D.scatData[6].clear();
+    D.scatData[7].clear();
     // Data from Ghia 1982 http://www.msaidi.ir/upload/Ghia1982.pdf
     const std::vector<double> GhiaData0X({0.0000, +0.0625, +0.0703, +0.0781, +0.0938, +0.1563, +0.2266, +0.2344, +0.5000, +0.8047, +0.8594, +0.9063, +0.9453, +0.9531, +0.9609, +0.9688, +1.0000});  // coord on horiz slice
     const std::vector<double> GhiaData1Y({0.0000, +0.0547, +0.0625, +0.0703, +0.1016, +0.1719, +0.2813, +0.4531, +0.5000, +0.6172, +0.7344, +0.8516, +0.9531, +0.9609, +0.9688, +0.9766, +1.0000});  // coord on verti slice
@@ -612,16 +620,6 @@ void CompuFluidDyna::SetUpUIData() {
     // const std::vector<double> GhiaData1X({0.0000, -0.4315, -0.4359, -0.4303, -0.3832, -0.3239, -0.2318, -0.0750, -0.0380, +0.0834, +0.2059, +0.3423, +0.4717, +0.4732, +0.4705, +0.4724, +1.0000});  // Re 7500  horiz vel on verti slice
     // const std::vector<double> GhiaData0Y({0.0000, +0.4398, +0.4373, +0.4312, +0.4149, +0.3507, +0.2800, +0.2722, +0.0083, -0.3072, -0.3674, -0.4150, -0.4586, -0.4910, -0.5299, -0.5430, +0.0000});  // Re 10000 verti vel on horiz slice
     // const std::vector<double> GhiaData1X({0.0000, -0.4274, -0.4254, -0.4166, -0.3800, -0.3271, -0.2319, -0.0754, +0.0311, +0.0834, +0.2067, +0.3464, +0.4780, +0.4807, +0.4778, +0.4722, +1.0000});  // Re 10000 horiz vel on verti slice
-    for (int k= 0; k < (int)GhiaData0X.size(); k++) {
-      D.scatData[2].push_back(std::array<double, 2>({GhiaData0X[k], GhiaData0Y[k]}));
-      D.scatData[3].push_back(std::array<double, 2>({GhiaData1X[k], GhiaData1Y[k]}));
-    }
-    D.scatLegend.resize(6);
-    D.scatLegend[4]= "Ertu Re1k";
-    D.scatLegend[5]= "Ertu Re1k";
-    D.scatData.resize(6);
-    D.scatData[4].clear();
-    D.scatData[5].clear();
     // Data from Erturk 2005 https://arxiv.org/pdf/physics/0505121.pdf
     const std::vector<double> ErtuData0X({0.0000, +0.0150, +0.0300, +0.0450, +0.0600, +0.0750, +0.0900, +0.1050, +0.1200, +0.1350, +0.1500, +0.5000, +0.8500, +0.8650, +0.8800, +0.8950, +0.9100, +0.9250, +0.9400, +0.9550, +0.9700, +0.9850, +1.0000});  // coord on horiz slice
     const std::vector<double> ErtuData1Y({0.0000, +0.0200, +0.0400, +0.0600, +0.0800, +0.1000, +0.1200, +0.1400, +0.1600, +0.1800, +0.2000, +0.5000, +0.9000, +0.9100, +0.9200, +0.9300, +0.9400, +0.9500, +0.9600, +0.9700, +0.9800, +0.9900, +1.0000});  // coord on verti slice
@@ -645,23 +643,30 @@ void CompuFluidDyna::SetUpUIData() {
     // const std::vector<double> ErtuData1X({0.0000, -0.3523, -0.4475, -0.4143, -0.3936, -0.3769, -0.3595, -0.3422, -0.3248, -0.3074, -0.2899, -0.0234, +0.4001, +0.4142, +0.4287, +0.4436, +0.4592, +0.4754, +0.4906, +0.4985, +0.4889, +0.5048, +1.0000});  // Re 20000 horiz vel on verti slice
     // const std::vector<double> ErtuData0Y({0.0000, +0.3323, +0.4357, +0.4596, +0.4420, +0.4218, +0.4048, +0.3885, +0.3725, +0.3567, +0.3413, +0.0063, -0.3425, -0.3593, -0.3764, -0.3936, -0.4110, -0.4287, -0.4449, -0.4588, -0.5266, -0.4522, +0.0000});  // Re 21000 verti vel on horiz slice
     // const std::vector<double> ErtuData1X({0.0000, -0.3562, -0.4463, -0.4121, -0.3925, -0.3758, -0.3585, -0.3412, -0.3239, -0.3066, -0.2892, -0.0232, +0.3992, +0.4132, +0.4277, +0.4425, +0.4580, +0.4742, +0.4897, +0.4983, +0.4895, +0.5003, +1.0000});  // Re 21000 horiz vel on verti slice
-
+    // Add hard coded experimental values in the scatter plot
+    for (int k= 0; k < (int)GhiaData0X.size(); k++) {
+      D.scatData[4].push_back(std::array<double, 2>({GhiaData0X[k], GhiaData0Y[k]}));
+      D.scatData[5].push_back(std::array<double, 2>({GhiaData1X[k], GhiaData1Y[k]}));
+    }
     for (int k= 0; k < (int)ErtuData0X.size(); k++) {
-      D.scatData[4].push_back(std::array<double, 2>({ErtuData0X[k], ErtuData0Y[k]}));
-      D.scatData[5].push_back(std::array<double, 2>({ErtuData1X[k], ErtuData1Y[k]}));
+      D.scatData[6].push_back(std::array<double, 2>({ErtuData0X[k], ErtuData0Y[k]}));
+      D.scatData[7].push_back(std::array<double, 2>({ErtuData1X[k], ErtuData1Y[k]}));
     }
   }
 
   // Add hard coded analytical values for Poiseuille flow benchmark
   if (D.UI[Scenario____].GetI() == 6) {
+    // Clear unnecessary scatter data
     D.scatData[0].clear();
     D.scatData[3].clear();
+    // Allocate required scatter data
     D.scatLegend.resize(6);
-    D.scatData.resize(6);
     D.scatLegend[4]= "Analy VY";
     D.scatLegend[5]= "Analy P";
+    D.scatData.resize(6);
     D.scatData[4].clear();
     D.scatData[5].clear();
+    // Add analytical values in the scatter plot
     const float press0= D.UI[BCPres______].GetF();
     const float press1= -D.UI[BCPres______].GetF();
     const float kinVisco= D.UI[CoeffDiffuV_].GetF();
