@@ -21,6 +21,8 @@ public:
       x[1]= b;
     }
     inline float dot(const Vec2f& v) const { return x[0] * v.x[0] + x[1] * v.x[1]; }
+    inline Vec2f coeffMul(const Vec2f& v) const { return Vec2f(x[0] * v.x[0], x[1] * v.x[1]); }
+    inline Vec2f coeffDiv(const Vec2f& v) const { return Vec2f(x[0] / v.x[0], x[1] / v.x[1]); }
     inline float normSquared() const { return x[0] * x[0] + x[1] * x[1]; }
     inline float norm() const { return sqrt(normSquared()); }
     inline Vec2f& normalize(float len= 1.0) {
@@ -76,7 +78,6 @@ public:
     friend Vec2f operator*(float f, const Vec2f& v) { return Vec2f(v)*= f; }
     friend Vec2f operator/(const Vec2f& v, float f) { return Vec2f(v)/= f; }
     friend Vec2f operator/(float f, const Vec2f& v) { return Vec2f(v)/= f; }
-    friend float operator*(const Vec2f& a, const Vec2f& b) { return a.dot(b); }
 
     inline float* array() { return x; }
 
@@ -155,7 +156,6 @@ public:
     friend Vec2d operator*(double f, const Vec2d& v) { return Vec2d(v)*= f; }
     friend Vec2d operator/(const Vec2d& v, double f) { return Vec2d(v)/= f; }
     friend Vec2d operator/(double f, const Vec2d& v) { return Vec2d(v)/= f; }
-    friend double operator*(const Vec2d& a, const Vec2d& b) { return a.dot(b); }
 
     inline double* array() { return x; }
 
@@ -187,6 +187,8 @@ public:
           x[2] * v.x[0] - x[0] * v.x[2],
           x[0] * v.x[1] - x[1] * v.x[0]);
     }
+    inline Vec3f coeffMul(const Vec3f& v) const { return Vec3f(x[0] * v.x[0], x[1] * v.x[1], x[2] * v.x[2]); }
+    inline Vec3f coeffDiv(const Vec3f& v) const { return Vec3f(x[0] / v.x[0], x[1] / v.x[1], x[2] / v.x[2]); }
     inline float normSquared() const { return x[0] * x[0] + x[1] * x[1] + x[2] * x[2]; }
     inline float norm() const { return sqrt(normSquared()); }
     inline Vec3f& normalize(float len= 1.0) {
@@ -247,7 +249,6 @@ public:
     friend Vec3f operator*(float f, const Vec3f& v) { return Vec3f(v)*= f; }
     friend Vec3f operator/(const Vec3f& v, float f) { return Vec3f(v)/= f; }
     friend Vec3f operator/(float f, const Vec3f& v) { return Vec3f(v)/= f; }
-    friend float operator*(const Vec3f& a, const Vec3f& b) { return a.dot(b); }
 
     inline float* array() { return x; }
 
@@ -275,6 +276,8 @@ public:
       x[3]= d;
     }
     inline float dot(const Vec4f& v) const { return x[0] * v.x[0] + x[1] * v.x[1] + x[2] * v.x[2] + x[3] * v.x[3]; }
+    inline Vec4f coeffMul(const Vec4f& v) const { return Vec4f(x[0] * v.x[0], x[1] * v.x[1], x[2] * v.x[2], x[3] * v.x[3]); }
+    inline Vec4f coeffDiv(const Vec4f& v) const { return Vec4f(x[0] / v.x[0], x[1] / v.x[1], x[2] / v.x[2], x[3] / v.x[3]); }
     inline float normSquared() const { return x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]; }
     inline float norm() const { return sqrt(normSquared()); }
     inline Vec4f& normalize(float len= 1.0) {
@@ -340,7 +343,6 @@ public:
     friend Vec4f operator*(float f, const Vec4f& v) { return Vec4f(v)*= f; }
     friend Vec4f operator/(const Vec4f& v, float f) { return Vec4f(v)/= f; }
     friend Vec4f operator/(float f, const Vec4f& v) { return Vec4f(v)/= f; }
-    friend float operator*(const Vec4f& a, const Vec4f& b) { return a.dot(b); }
 
     inline float* array() { return x; }
 
@@ -348,4 +350,4 @@ private:
     float x[4];
   };
 
-}  // namespace Vector
+}  // namespace Math
