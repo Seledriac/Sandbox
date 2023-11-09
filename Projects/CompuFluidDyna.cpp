@@ -54,7 +54,8 @@ enum ParamType
   ObjectPosX__,
   ObjectPosY__,
   ObjectPosZ__,
-  ObjectSize__,
+  ObjectSize0_,
+  ObjectSize1_,
   ScaleFactor_,
   ColorFactor_,
   ColorThresh_,
@@ -85,7 +86,7 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ResolutionZ_", 100));    // Eulerian mesh resolution
     D.UI.push_back(ParamUI("VoxelSize___", 1.e-2));  // Element size
     D.UI.push_back(ParamUI("TimeStep____", 0.02));   // Simulation time step
-    D.UI.push_back(ParamUI("SolvMaxIter_", 16));     // Max number of solver iterations
+    D.UI.push_back(ParamUI("SolvMaxIter_", 32));     // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvType____", 2));      // Flag to use Gauss Seidel (=0), Gradient Descent (=1) or Conjugate Gradient (=2)
     D.UI.push_back(ParamUI("SolvSOR_____", 1.8));    // Overrelaxation coefficient in Gauss Seidel solver
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
@@ -100,14 +101,15 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("BCVelX______", 0.0));    // Velocity value for voxels with enforced velocity
     D.UI.push_back(ParamUI("BCVelY______", 1.0));    // Velocity value for voxels with enforced velocity
     D.UI.push_back(ParamUI("BCVelZ______", 0.0));    // Velocity value for voxels with enforced velocity
-    D.UI.push_back(ParamUI("BCPres______", 0.0));    // Pressure value for voxels with enforced pressure
+    D.UI.push_back(ParamUI("BCPres______", 1.0));    // Pressure value for voxels with enforced pressure
     D.UI.push_back(ParamUI("BCSmok______", 1.0));    // Smoke value for voxels with enforced smoke
     D.UI.push_back(ParamUI("BCSmokTime__", 1.0));    // Period duration for input smoke oscillation
     D.UI.push_back(ParamUI("BCAdvecWall_", 1.0));    // Enable advection of non-zero smoke from the walls
     D.UI.push_back(ParamUI("ObjectPosX__", 0.5));    // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosY__", 0.25));   // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));    // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectSize__", 0.08));   // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize0_", 0.08));   // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize1_", 0.08));   // Size for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ScaleFactor_", 1.0));    // Scale factor for drawn geometry
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));    // Color factor for drawn geometry
     D.UI.push_back(ParamUI("ColorThresh_", 0.0));    // Color cutoff drawn geometry
@@ -148,7 +150,8 @@ void CompuFluidDyna::CheckRefresh() {
   if (D.UI[ObjectPosX__].hasChanged()) isRefreshed= false;
   if (D.UI[ObjectPosY__].hasChanged()) isRefreshed= false;
   if (D.UI[ObjectPosZ__].hasChanged()) isRefreshed= false;
-  if (D.UI[ObjectSize__].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectSize0_].hasChanged()) isRefreshed= false;
+  if (D.UI[ObjectSize1_].hasChanged()) isRefreshed= false;
 }
 
 
@@ -732,7 +735,6 @@ void CompuFluidDyna::InitializeScenario() {
     if (inputFile == 7) FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
     if (inputFile == 8) FileInput::LoadImageBMPFile("Resources/CFD_TestScenario.bmp", imageRGBA, false);
   }
-
   // Set scenario values
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {
@@ -753,47 +755,52 @@ void CompuFluidDyna::InitializeScenario() {
             if (std::abs(colRGBA[2] - 0.5f) > 0.1f) SmoBC[x][y][z]= true;
           }
           if (PreBC[x][y][z]) {
-            PresForced[x][y][z]= (colRGBA[0] > 0.5f) ? (D.UI[BCPres______].GetF()) : (-D.UI[BCPres______].GetF());
+            PresForced[x][y][z]= D.UI[BCPres______].GetF() * ((colRGBA[0] > 0.5f) ? (1.0f) : (-1.0f));
           }
           if (VelBC[x][y][z]) {
-            VelXForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[BCVelX______].GetF()) : (-D.UI[BCVelX______].GetF());
-            VelYForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[BCVelY______].GetF()) : (-D.UI[BCVelY______].GetF());
-            VelZForced[x][y][z]= (colRGBA[1] > 0.5f) ? (D.UI[BCVelZ______].GetF()) : (-D.UI[BCVelZ______].GetF());
+            VelXForced[x][y][z]= D.UI[BCVelX______].GetF() * ((colRGBA[1] > 0.5f) ? (1.0f) : (-1.0f));
+            VelYForced[x][y][z]= D.UI[BCVelY______].GetF() * ((colRGBA[1] > 0.5f) ? (1.0f) : (-1.0f));
+            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF() * ((colRGBA[1] > 0.5f) ? (1.0f) : (-1.0f));
           }
           if (SmoBC[x][y][z]) {
-            SmokForced[x][y][z]= (colRGBA[2] > 0.5f) ? (D.UI[BCSmok______].GetF()) : (-D.UI[BCSmok______].GetF());
+            SmokForced[x][y][z]= D.UI[BCSmok______].GetF() * ((colRGBA[2] > 0.5f) ? (1.0f) : (-1.0f));
           }
         }
-
-        // Double facing inlets
+        // Double opposing inlets
+        // |-----------|
+        // |           |
+        // | (>)   (<) |
+        // |           |
+        // |-----------|
         if (scenarioType == 1) {
-          if ((nX > 1 && (x == 0 || x == nX - 1)) ||
-              (nY > 1 && (y == 0 || y == nY - 1))) {
+          if (nY > 1 && (y == 0 || y == nY - 1)) {
             PreBC[x][y][z]= true;
             PresForced[x][y][z]= 0.0f;
           }
-          else if (nZ > 1 && (z == 0 || z == nZ - 1)) {
+          else if ((nX > 1 && (x == 0 || x == nX - 1)) ||
+                   (nZ > 1 && (z == 0 || z == nZ - 1))) {
             Solid[x][y][z]= true;
           }
           else {
+            const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+            const Math::Vec3f posInlet(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             for (int k= 0; k < 2; k++) {
-              Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
-              Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
-              if (k == 1) posObstacle= Math::Vec3f(1.0f, 1.0f, 1.0f) - posObstacle;
-              if ((posCell - posObstacle).norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
+              if (k == 0 && (posVox - posInlet).norm() > D.UI[ObjectSize0_].GetF()) continue;
+              if (k == 1 && (posVox - Math::Vec3f(1.0f, 1.0f, 1.0f) + posInlet).norm() > D.UI[ObjectSize1_].GetF()) continue;
                 VelBC[x][y][z]= true;
                 SmoBC[x][y][z]= true;
-                VelXForced[x][y][z]= (k == 1) ? (-D.UI[BCVelX______].GetF()) : (D.UI[BCVelX______].GetF());
-                VelYForced[x][y][z]= (k == 1) ? (-D.UI[BCVelY______].GetF()) : (D.UI[BCVelY______].GetF());
-                VelZForced[x][y][z]= (k == 1) ? (-D.UI[BCVelZ______].GetF()) : (D.UI[BCVelZ______].GetF());
-                SmokForced[x][y][z]= (k == 1) ? (-D.UI[BCSmok______].GetF()) : (D.UI[BCSmok______].GetF());
+              VelXForced[x][y][z]= D.UI[BCVelX______].GetF() * ((k == 0) ? (1.0f) : (-1.0f));
+              VelYForced[x][y][z]= D.UI[BCVelY______].GetF() * ((k == 0) ? (1.0f) : (-1.0f));
+              VelZForced[x][y][z]= D.UI[BCVelZ______].GetF() * ((k == 0) ? (1.0f) : (-1.0f));
+              SmokForced[x][y][z]= D.UI[BCSmok______].GetF() * ((k == 0) ? (1.0f) : (-1.0f));
               }
             }
           }
-        }
-
         // Circular obstacle in corridor showing vortex shedding
         // Test calib flow separation past cylinder https://link.springer.com/article/10.1007/s00521-020-05079-z
+        // ---------------
+        // >   O         >
+        // ---------------
         if (scenarioType == 2) {
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
@@ -815,18 +822,22 @@ void CompuFluidDyna::InitializeScenario() {
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
           else {
-            Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
-            Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+            const Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
+            const Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             Math::Vec3f dist= (posCell - posObstacle);
             dist[0]*= (float)(nX - 1) * voxSize;
             dist[1]*= (float)(nY - 1) * voxSize;
             dist[2]*= (float)(nZ - 1) * voxSize;
-            if (dist.norm() <= std::max(D.UI[ObjectSize__].GetF(), 0.0f))
+            if (dist.norm() <= std::max(D.UI[ObjectSize0_].GetF(), 0.0f))
               Solid[x][y][z]= true;
           }
         }
-
         // Cavity lid shear benchmark
+        //  >>>>>>>>>>>
+        // |           |
+        // |           |
+        // |           |
+        // |-----------|
         if (scenarioType == 3) {
           if (y == 0 || y == nY - 1 || z == 0) {
             Solid[x][y][z]= true;
@@ -842,21 +853,23 @@ void CompuFluidDyna::InitializeScenario() {
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
         }
-
-        // Vortex ring with inlet in Y-, outlet in Y+ and wall with hole in the corridor
+        // Flow constriction test with circular hole in a wall
+        // -----|||--------
+        // >    |||       >
+        // >              >
+        // >    |||       >
+        // -----|||--------
         if (scenarioType == 4) {
-          const int wallPos= std::round(D.UI[ObjectPosY__].GetF() * (float)nY);
-          const Math::Vec3f posCell(((float)x + 0.5f) / (float)nX, 0.0f, ((float)z + 0.5f) / (float)nZ);
-          const Math::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), 0.0f, D.UI[ObjectPosZ__].GetF());
-          Math::Vec3f dist= (posCell - posObstacle);
-          dist[0]*= (float)(nX - 1) * voxSize;
-          dist[1]*= (float)(nY - 1) * voxSize;
-          dist[2]*= (float)(nZ - 1) * voxSize;
+          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+          const Math::Vec3f posWall(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+          const float radHole= D.UI[ObjectSize0_].GetF();
+          const float radWall= D.UI[ObjectSize1_].GetF();
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
             Solid[x][y][z]= true;
           }
-          else if (std::abs(y - wallPos) <= nY / 6 && dist.norm() >= std::max(D.UI[ObjectSize__].GetF(), 0.0f)) {
+          else if ((posVox - posWall).coeffMul(Math::Vec3f(0.0f, 1.0f, 0.0f)).norm() <= radWall &&
+                   (posVox - posWall).coeffMul(Math::Vec3f(1.0f, 0.0f, 1.0f)).norm() > radHole) {
             Solid[x][y][z]= true;
           }
           else if (y == 0) {
@@ -872,8 +885,11 @@ void CompuFluidDyna::InitializeScenario() {
             PresForced[x][y][z]= 0.0f;
           }
         }
-
         // Central bloc with initial velocity
+        // --------------
+        // |    >>>>    |
+        // |    >>>>    |
+        // --------------
         if (scenarioType == 5) {
           if (((nX == 1) != (std::min(x, nX - 1 - x) > nX / 3)) &&
               ((nY == 1) != (std::min(y, nY - 1 - y) > nY / 3)) &&
@@ -881,30 +897,34 @@ void CompuFluidDyna::InitializeScenario() {
             VelX[x][y][z]= D.UI[BCVelX______].GetF();
             VelY[x][y][z]= D.UI[BCVelY______].GetF();
             VelZ[x][y][z]= D.UI[BCVelZ______].GetF();
-            Smok[x][y][z]= (std::min(z, nZ - 1 - z) < 4 * (nZ - 1) / 9) ? -D.UI[BCSmok______].GetF() : D.UI[BCSmok______].GetF();
+            Smok[x][y][z]= D.UI[BCSmok______].GetF() * ((std::min(z, nZ - 1 - z) < 4 * (nZ - 1) / 9) ? (1.0f) : (-1.0f));
           }
         }
-
         // Poiseuille/Couette flow in tube with pressure gradient
+        // ---------------
+        // high        low
+        // ---------------
         if (scenarioType == 6) {
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
             VelBC[x][y][z]= true;
-            VelXForced[x][y][z]= (z < nZ / 2) ? -D.UI[BCVelX______].GetF() : D.UI[BCVelX______].GetF();
-            VelYForced[x][y][z]= (z < nZ / 2) ? -D.UI[BCVelY______].GetF() : D.UI[BCVelY______].GetF();
-            VelZForced[x][y][z]= (z < nZ / 2) ? -D.UI[BCVelZ______].GetF() : D.UI[BCVelZ______].GetF();
+            VelXForced[x][y][z]= D.UI[BCVelX______].GetF() * ((z < nZ / 2) ? (-1.0f) : (1.0f));
+            VelYForced[x][y][z]= D.UI[BCVelY______].GetF() * ((z < nZ / 2) ? (-1.0f) : (1.0f));
+            VelZForced[x][y][z]= D.UI[BCVelZ______].GetF() * ((z < nZ / 2) ? (-1.0f) : (1.0f));
           }
           else if (nY > 1 && (y == 0 || y == nY - 1)) {
             PreBC[x][y][z]= true;
-            PresForced[x][y][z]= (y > nY / 2) ? -D.UI[BCPres______].GetF() : D.UI[BCPres______].GetF();
+            PresForced[x][y][z]= D.UI[BCPres______].GetF() * ((y < nY / 2) ? (1.0f) : (-1.0f));
           }
           else if (std::max(y, nY - 1 - y) == nY / 2) {
             SmoBC[x][y][z]= true;
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
         }
-
         // Thermal convection cell
+        // |---cold---|
+        // |          |
+        // |---warm---|
         if (scenarioType == 7) {
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nY > 1 && (y == 0 || y == nY - 1)) ||
@@ -912,8 +932,44 @@ void CompuFluidDyna::InitializeScenario() {
             Solid[x][y][z]= true;
           }
           else if (nZ > 1 && std::min(z, nZ - 1 - z) < nZ / 3) {
-            Smok[x][y][z]= (z < nZ / 2) ? D.UI[BCSmok______].GetF() : -D.UI[BCSmok______].GetF();
+            Smok[x][y][z]= D.UI[BCSmok______].GetF() * ((z > nZ / 2) ? (-1.0f) : (1.0f));
             Smok[x][y][z]+= Random::Val(-0.01f, 0.01f);
+          }
+        }
+        // Pipe with constant diameter and right angle turn
+        // ----------_
+        // >          -
+        // -----_      |
+        //       |     |
+        //       |  v  |
+        if (scenarioType == 8) {
+          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+          const Math::Vec3f posBend(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+          const float radPipe= D.UI[ObjectSize0_].GetF();
+          const float radBend= D.UI[ObjectSize1_].GetF();
+          if (posVox[1] <= posBend[1]) {
+            if (posVox[2] - posBend[2] < radBend || posVox[2] - posBend[2] > radBend + radPipe) {
+              Solid[x][y][z]= true;
+            }
+            else if (y == 0) {
+              PreBC[x][y][z]= true;
+              PresForced[x][y][z]= D.UI[BCPres______].GetF();
+              SmoBC[x][y][z]= true;
+              SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
+            }
+          }
+          else if (posVox[2] <= posBend[2]) {
+            if (posVox[1] - posBend[1] < radBend || posVox[1] - posBend[1] > radBend + radPipe) {
+              Solid[x][y][z]= true;
+            }
+            else if (z == 0) {
+              PreBC[x][y][z]= true;
+              PresForced[x][y][z]= -D.UI[BCPres______].GetF();
+            }
+          }
+          else if ((posVox - posBend).norm() < radBend ||
+                   (posVox - posBend).norm() > radBend + radPipe) {
+            Solid[x][y][z]= true;
           }
         }
       }
