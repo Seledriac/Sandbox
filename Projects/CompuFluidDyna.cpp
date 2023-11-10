@@ -792,7 +792,7 @@ void CompuFluidDyna::InitializeScenario() {
             Solid[x][y][z]= true;
           }
           else {
-            const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+            const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
             const Math::Vec3f posInlet(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             for (int k= 0; k < 2; k++) {
               if (k == 0 && (posVox - posInlet).norm() > D.UI[ObjectSize0_].GetF()) continue;
@@ -870,7 +870,7 @@ void CompuFluidDyna::InitializeScenario() {
         // >    |||       >
         // -----|||--------
         if (scenarioType == 4) {
-          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
           const Math::Vec3f posWall(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
           const float radHole= D.UI[ObjectSize0_].GetF();
           const float radWall= D.UI[ObjectSize1_].GetF();
@@ -946,39 +946,47 @@ void CompuFluidDyna::InitializeScenario() {
             Smok[x][y][z]+= Random::Val(-0.01f, 0.01f);
           }
         }
-        // Pipe with constant diameter and right angle turn
+        // Pipe of constant diameter with right angle turn and enforced pressure gradient
         // ----------_
         // >          -
         // -----_      |
         //       |     |
         //       |  v  |
         if (scenarioType == 8) {
-          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x, y, z);
+          const Math::Vec3f posVox= Math::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Math::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
           const Math::Vec3f posBend(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
           const float radPipe= D.UI[ObjectSize0_].GetF();
           const float radBend= D.UI[ObjectSize1_].GetF();
-          if (posVox[1] <= posBend[1]) {
-            if (posVox[2] - posBend[2] < radBend || posVox[2] - posBend[2] > radBend + radPipe) {
+          if ((nX > 1 && (x == 0 || x == nX - 1)) ||
+              (nY > 1 && y == nY - 1) ||
+              (nZ > 1 && z == nZ - 1)) {
+            Solid[x][y][z]= true;
+          }
+          else if (posVox[1] < posBend[1]) {
+            if ((posVox - posBend - Math::Vec3f(0.0f, 0.0f, radBend + radPipe)).coeffMul(Math::Vec3f(1.0f, 0.0f, 1.0f)).norm() > radPipe) {
               Solid[x][y][z]= true;
             }
             else if (y == 0) {
-              PreBC[x][y][z]= true;
-              PresForced[x][y][z]= D.UI[BCPres______].GetF();
+              VelBC[x][y][z]= true;
+              VelXForced[x][y][z]= D.UI[BCVelX______].GetF();
+              VelYForced[x][y][z]= D.UI[BCVelY______].GetF();
+              VelZForced[x][y][z]= D.UI[BCVelZ______].GetF();
+              // PreBC[x][y][z]= true;
+              // PresForced[x][y][z]= D.UI[BCPres______].GetF();
               SmoBC[x][y][z]= true;
               SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
             }
           }
-          else if (posVox[2] <= posBend[2]) {
-            if (posVox[1] - posBend[1] < radBend || posVox[1] - posBend[1] > radBend + radPipe) {
+          else if (posVox[2] < posBend[2]) {
+            if ((posVox - posBend - Math::Vec3f(0.0f, radBend + radPipe, 0.0f)).coeffMul(Math::Vec3f(1.0f, 1.0f, 0.0f)).norm() > radPipe) {
               Solid[x][y][z]= true;
             }
             else if (z == 0) {
               PreBC[x][y][z]= true;
-              PresForced[x][y][z]= -D.UI[BCPres______].GetF();
+              PresForced[x][y][z]= 0.0;
             }
           }
-          else if ((posVox - posBend).norm() < radBend ||
-                   (posVox - posBend).norm() > radBend + radPipe) {
+          else if ((posBend + ((posVox - posBend).coeffMul(Math::Vec3f(0.0f, 1.0f, 1.0f)).normalized() * (radBend + radPipe)) - posVox).norm() > radPipe) {
             Solid[x][y][z]= true;
           }
         }
