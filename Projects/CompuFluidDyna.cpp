@@ -1511,7 +1511,7 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
   // Copy the field values to serve as source in the update step
   std::vector<std::vector<std::vector<float>>> sourceField= ioField;
   // Adjust the source field to make solid voxels have the average smoke value of their non-solid neighbors
-  if (D.UI[BCAdvecWall_].GetB() && iFieldID == FieldID::IDSmok) {
+  if (D.UI[BCAdvecWall_].GetB()) {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
@@ -1524,7 +1524,13 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
           if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
           if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
           if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
-          sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 1 && iFieldID == FieldID::IDSmok) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelX) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelY) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelZ) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelX) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelY) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
+          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelZ) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
         }
       }
     }
