@@ -367,6 +367,7 @@ void CompuFluidDyna::Animate() {
   // TODO Compute fluid density to check if constant as it should be in incompressible case
 
   // TODO Test heuristic optimization of solid regions
+  // https://open-research-europe.ec.europa.eu/articles/3-156
 
   // TODO Introduce solid interface normals calculations to better handle BC on sloped geometry ?
   // TODO Test with flow separation scenarios ?
@@ -397,9 +398,11 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
+          if (D.UI[SliceDim____].GetI() == 1 && x != (int)std::round(D.UI[SlicePlotX__].GetF() * nX)) continue;
+          if (D.UI[SliceDim____].GetI() == 2 && y != (int)std::round(D.UI[SlicePlotY__].GetF() * nY)) continue;
+          if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
           // Set the voxel color components
           float r= 0.4f, g= 0.4f, b= 0.4f;
-          if (Solid[x][y][z]) r= 0.0f;
           if (PreBC[x][y][z]) r= 0.7f;
           if (VelBC[x][y][z]) g= 0.7f;
           if (SmoBC[x][y][z]) b= 0.7f;
@@ -432,9 +435,9 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
-          if (D.UI[SliceDim____].GetI() == 1 && x > D.UI[SlicePlotX__].GetF() * nX) continue;
-          if (D.UI[SliceDim____].GetI() == 2 && y > D.UI[SlicePlotY__].GetF() * nY) continue;
-          if (D.UI[SliceDim____].GetI() == 3 && z > D.UI[SlicePlotZ__].GetF() * nZ) continue;
+          if (D.UI[SliceDim____].GetI() == 1 && x != (int)std::round(D.UI[SlicePlotX__].GetF() * nX)) continue;
+          if (D.UI[SliceDim____].GetI() == 2 && y != (int)std::round(D.UI[SlicePlotY__].GetF() * nY)) continue;
+          if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
           if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by smoke
@@ -463,20 +466,20 @@ void CompuFluidDyna::Draw() {
             if (std::abs(Vort[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
             Colormap::RatioToJetBrightSmooth(Vort[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
-          // Color by curl in X
+          // Color by vel in X
           if (D.UI[ColorMode___].GetI() == 6) {
-            if (std::abs(CurX[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurX[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            if (std::abs(VelX[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * VelX[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
-          // Color by curl in Y
+          // Color by vel in Y
           if (D.UI[ColorMode___].GetI() == 7) {
-            if (std::abs(CurY[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurY[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            if (std::abs(VelY[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * VelY[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
-          // Color by curl in Z
+          // Color by vel in Z
           if (D.UI[ColorMode___].GetI() == 8) {
-            if (std::abs(CurZ[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
-            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * CurZ[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
+            if (std::abs(VelZ[x][y][z]) < D.UI[ColorThresh_].GetF()) continue;
+            Colormap::RatioToJetBrightSmooth(0.5f + 0.5f * VelZ[x][y][z] * D.UI[ColorFactor_].GetF(), r, g, b);
           }
           // Color by dummy values
           if (D.UI[ColorMode___].GetI() >= 10 && D.UI[ColorMode___].GetI() <= 14) {
@@ -518,9 +521,15 @@ void CompuFluidDyna::Draw() {
       for (int x= 0; x < nX; x++) {
         for (int y= 0; y < nY; y++) {
           for (int z= 0; z < nZ; z++) {
+            if (D.UI[SliceDim____].GetI() == 1 && x != (int)std::round(D.UI[SlicePlotX__].GetF() * nX)) continue;
+            if (D.UI[SliceDim____].GetI() == 2 && y != (int)std::round(D.UI[SlicePlotY__].GetF() * nY)) continue;
+            if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
             if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
             // Draw the velocity field
             Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
+            if (std::abs(D.UI[SliceDim____].GetI()) == 1) vec[0]= 0.0f;
+            if (std::abs(D.UI[SliceDim____].GetI()) == 2) vec[1]= 0.0f;
+            if (std::abs(D.UI[SliceDim____].GetI()) == 3) vec[2]= 0.0f;
             if (vec.normSquared() > 0.0f) {
               float r= 0.0f, g= 0.0f, b= 0.0f;
               Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
@@ -555,8 +564,14 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
+          if (D.UI[SliceDim____].GetI() == 1 && x != (int)std::round(D.UI[SlicePlotX__].GetF() * nX)) continue;
+          if (D.UI[SliceDim____].GetI() == 2 && y != (int)std::round(D.UI[SlicePlotY__].GetF() * nY)) continue;
+          if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
           // Draw the velocity field
           Math::Vec3f vec(AdvX[x][y][z], AdvY[x][y][z], AdvZ[x][y][z]);
+          if (std::abs(D.UI[SliceDim____].GetI()) == 1) vec[0]= 0.0f;
+          if (std::abs(D.UI[SliceDim____].GetI()) == 2) vec[1]= 0.0f;
+          if (std::abs(D.UI[SliceDim____].GetI()) == 3) vec[2]= 0.0f;
           if (vec.normSquared() > 0.0f) {
             const float r= 0.5f - vec[0];
             const float g= 0.5f - vec[1];
@@ -1548,6 +1563,9 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
 #pragma omp parallel for
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
+        AdvX[x][y][z]= 0.0f;
+        AdvY[x][y][z]= 0.0f;
+        AdvZ[x][y][z]= 0.0f;
         // Skip solid or fixed values
         if (Solid[x][y][z]) continue;
         if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
