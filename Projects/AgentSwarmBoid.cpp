@@ -62,6 +62,10 @@ void AgentSwarmBoid::SetActiveProject() {
     D.UI.push_back(ParamUI("CoeffOri____", 0.02));
   }
 
+  if (D.UI.size() != CoeffOri____ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

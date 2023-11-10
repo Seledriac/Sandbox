@@ -60,6 +60,10 @@ void TerrainErosion::SetActiveProject() {
     D.UI.push_back(ParamUI("CliffThresh_", 0.80));
   }
 
+  if (D.UI.size() != CliffThresh_ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

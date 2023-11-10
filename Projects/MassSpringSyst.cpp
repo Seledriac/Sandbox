@@ -78,6 +78,10 @@ void MassSpringSyst::SetActiveProject() {
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));
   }
 
+  if (D.UI.size() != VerboseSolv_ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

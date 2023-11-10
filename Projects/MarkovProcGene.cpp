@@ -59,6 +59,10 @@ void MarkovProcGene::SetActiveProject() {
     D.UI.push_back(ParamUI("ShadeCoeff__", 1));
   }
 
+  if (D.UI.size() != ShadeCoeff__ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

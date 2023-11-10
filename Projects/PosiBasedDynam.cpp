@@ -63,6 +63,10 @@ void PosiBasedDynam::SetActiveProject() {
     D.UI.push_back(ParamUI("HeatOutput__", 0.1));
   }
 
+  if (D.UI.size() != HeatOutput__ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

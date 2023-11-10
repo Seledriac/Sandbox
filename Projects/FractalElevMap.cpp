@@ -56,6 +56,10 @@ void FractalElevMap::SetActiveProject() {
     D.UI.push_back(ParamUI("testVar8____", 32.0));
   }
 
+  if (D.UI.size() != testVar8____ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 

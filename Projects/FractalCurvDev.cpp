@@ -53,6 +53,10 @@ void FractalCurvDev::SetActiveProject() {
     D.UI.push_back(ParamUI("WriteFile___", 0.0));
   }
 
+  if (D.UI.size() != WriteFile___ + 1) {
+    printf("[ERROR] Invalid parameter count in UI\n");
+  }
+
   D.boxMin= {0.0, 0.0, 0.0};
   D.boxMax= {1.0, 1.0, 1.0};
 
