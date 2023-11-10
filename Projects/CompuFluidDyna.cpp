@@ -60,6 +60,8 @@ enum ParamType
   ColorFactor_,
   ColorThresh_,
   ColorMode___,
+  SliceDim____,
+  SlicePlotX__,
   SlicePlotY__,
   SlicePlotZ__,
   VerboseSolv_,
@@ -114,8 +116,10 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));    // Color factor for drawn geometry
     D.UI.push_back(ParamUI("ColorThresh_", 0.0));    // Color cutoff drawn geometry
     D.UI.push_back(ParamUI("ColorMode___", 1));      // Selector for the scalar field to be drawn
-    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));    // Positions for the scatter plot slices
-    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the scatter plot slices
+    D.UI.push_back(ParamUI("SliceDim____", 0));      // Enable model slicing along a dimension
+    D.UI.push_back(ParamUI("SlicePlotX__", 0.5));    // Positions for the slices
+    D.UI.push_back(ParamUI("SlicePlotY__", 0.5));    // Positions for the slices
+    D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the slices
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));   // Verbose mode for linear solvers
     D.UI.push_back(ParamUI("VerboseTime_", -0.5));   // Verbose mode for linear solvers
   }
@@ -428,6 +432,9 @@ void CompuFluidDyna::Draw() {
     for (int x= 0; x < nX; x++) {
       for (int y= 0; y < nY; y++) {
         for (int z= 0; z < nZ; z++) {
+          if (D.UI[SliceDim____].GetI() == 1 && x > D.UI[SlicePlotX__].GetF() * nX) continue;
+          if (D.UI[SliceDim____].GetI() == 2 && y > D.UI[SlicePlotY__].GetF() * nY) continue;
+          if (D.UI[SliceDim____].GetI() == 3 && z > D.UI[SlicePlotZ__].GetF() * nZ) continue;
           if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
           float r= 0.0f, g= 0.0f, b= 0.0f;
           // Color by smoke
@@ -485,8 +492,7 @@ void CompuFluidDyna::Draw() {
           glColor3f(r, g, b);
           glPushMatrix();
           glTranslatef((float)x, (float)y, (float)z);
-          if (nX > 1 && nY > 1 && nZ > 1) glutWireCube(1.0);
-          else glutSolidCube(1.0);
+          glutSolidCube(1.0);
           glPopMatrix();
         }
       }
