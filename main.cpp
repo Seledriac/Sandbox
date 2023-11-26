@@ -23,6 +23,7 @@
 #include "Projects/MassSpringSyst.hpp"
 #include "Projects/PosiBasedDynam.hpp"
 #include "Projects/SpaceTimeWorld.hpp"
+#include "Projects/StringArtOptim.hpp"
 #include "Projects/TerrainErosion.hpp"
 
 
@@ -58,6 +59,7 @@ MarkovProcGene myMarkovProcGene;
 MassSpringSyst myMassSpringSyst;
 PosiBasedDynam myPosiBasedDynam;
 SpaceTimeWorld mySpaceTimeWorld;
+StringArtOptim myStringArtOptim;
 TerrainErosion myTerrainErosion;
 
 
@@ -75,6 +77,7 @@ void project_ForceHardInit(unsigned char key) {
   if (key != 's' && myMassSpringSyst.isActivProj) myMassSpringSyst= MassSpringSyst();
   if (key != 'p' && myPosiBasedDynam.isActivProj) myPosiBasedDynam= PosiBasedDynam();
   if (key != 'r' && mySpaceTimeWorld.isActivProj) mySpaceTimeWorld= SpaceTimeWorld();
+  if (key != 't' && myStringArtOptim.isActivProj) myStringArtOptim= StringArtOptim();
   if (key != 'e' && myTerrainErosion.isActivProj) myTerrainErosion= TerrainErosion();
 
   if (key == 'a') myAgentSwarmBoid.SetActiveProject();
@@ -85,6 +88,7 @@ void project_ForceHardInit(unsigned char key) {
   if (key == 's') myMassSpringSyst.SetActiveProject();
   if (key == 'p') myPosiBasedDynam.SetActiveProject();
   if (key == 'r') mySpaceTimeWorld.SetActiveProject();
+  if (key == 't') myStringArtOptim.SetActiveProject();
   if (key == 'e') myTerrainErosion.SetActiveProject();
 }
 
@@ -98,6 +102,7 @@ void project_QueueSoftRefresh(unsigned char key) {
   if (key == 'S') myMassSpringSyst.isRefreshed= false;
   if (key == 'P') myPosiBasedDynam.isRefreshed= false;
   if (key == 'R') mySpaceTimeWorld.isRefreshed= false;
+  if (key == 'T') myStringArtOptim.isRefreshed= false;
   if (key == 'E') myTerrainErosion.isRefreshed= false;
 }
 
@@ -111,6 +116,7 @@ void project_Refresh() {
   myMassSpringSyst.Refresh();
   myPosiBasedDynam.Refresh();
   mySpaceTimeWorld.Refresh();
+  myStringArtOptim.Refresh();
   myTerrainErosion.Refresh();
 }
 
@@ -124,6 +130,7 @@ void project_Animate() {
   myMassSpringSyst.Animate();
   myPosiBasedDynam.Animate();
   mySpaceTimeWorld.Animate();
+  myStringArtOptim.Animate();
   myTerrainErosion.Animate();
 }
 
@@ -137,6 +144,7 @@ void project_Draw() {
   myMassSpringSyst.Draw();
   myPosiBasedDynam.Draw();
   mySpaceTimeWorld.Draw();
+  myStringArtOptim.Draw();
   myTerrainErosion.Draw();
 }
 

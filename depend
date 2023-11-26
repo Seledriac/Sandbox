@@ -6,4 +6,5 @@ main.o: main.cpp freeglut/include/GL/freeglut.h \
  Projects/CompuFluidDyna.hpp Projects/FractalCurvDev.hpp \
  Projects/FractalElevMap.hpp Projects/MarkovProcGene.hpp \
  Projects/MassSpringSyst.hpp Projects/PosiBasedDynam.hpp \
- Projects/SpaceTimeWorld.hpp Projects/TerrainErosion.hpp
+ Projects/SpaceTimeWorld.hpp Projects/StringArtOptim.hpp \
+ Projects/TerrainErosion.hpp

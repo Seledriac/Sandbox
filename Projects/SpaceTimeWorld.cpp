@@ -30,7 +30,7 @@ std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int 
   int zs= (z1 > z0) ? 1 : -1;
 
   // Driving axis is X-axis
-  if (dx >= dy and dx >= dz) {
+  if (dx >= dy && dx >= dz) {
     int p1= 2 * dy - dx;
     int p2= 2 * dz - dx;
     while (x0 != x1) {
@@ -50,7 +50,7 @@ std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int 
   }
 
   // Driving axis is Y-axis
-  else if (dy >= dx and dy >= dz) {
+  else if (dy >= dx && dy >= dz) {
     int p1= 2 * dx - dy;
     int p2= 2 * dz - dy;
     while (y0 != y1) {
