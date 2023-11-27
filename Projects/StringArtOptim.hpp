@@ -22,6 +22,7 @@ class StringArtOptim
   std::vector<std::vector<Math::Vec3f>> ImRef;
   std::vector<std::vector<Math::Vec3f>> ImCur;
   std::vector<std::array<int, 2>> Pegs;
+  std::vector<int> PegsCount;
   std::vector<std::vector<int>> Lines;
 
   void AddLineStep();
