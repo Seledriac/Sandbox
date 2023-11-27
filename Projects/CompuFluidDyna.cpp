@@ -50,7 +50,6 @@ enum ParamType
   BCPres______,
   BCSmok______,
   BCSmokTime__,
-  BCAdvecWall_,
   ObjectPosX__,
   ObjectPosY__,
   ObjectPosZ__,
@@ -106,7 +105,6 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("BCPres______", 1.0));    // Pressure value for voxels with enforced pressure
     D.UI.push_back(ParamUI("BCSmok______", 1.0));    // Smoke value for voxels with enforced smoke
     D.UI.push_back(ParamUI("BCSmokTime__", 1.0));    // Period duration for input smoke oscillation
-    D.UI.push_back(ParamUI("BCAdvecWall_", 1.0));    // Enable advection of non-zero smoke from the walls
     D.UI.push_back(ParamUI("ObjectPosX__", 0.5));    // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosY__", 0.25));   // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));    // Coordinates for objects in hard coded scenarios
@@ -631,6 +629,7 @@ void CompuFluidDyna::SetUpUIData() {
     D.scatData[5].clear();
     D.scatData[6].clear();
     D.scatData[7].clear();
+    // TODO add vorticity data from https://www.acenumerics.com/the-benchmarks.html
     // Data from Ghia 1982 http://www.msaidi.ir/upload/Ghia1982.pdf
     const std::vector<double> GhiaData0X({0.0000, +0.0625, +0.0703, +0.0781, +0.0938, +0.1563, +0.2266, +0.2344, +0.5000, +0.8047, +0.8594, +0.9063, +0.9453, +0.9531, +0.9609, +0.9688, +1.0000});  // coord on horiz slice
     const std::vector<double> GhiaData1Y({0.0000, +0.0547, +0.0625, +0.0703, +0.1016, +0.1719, +0.2813, +0.4531, +0.5000, +0.6172, +0.7344, +0.8516, +0.9531, +0.9609, +0.9688, +0.9766, +1.0000});  // coord on verti slice
@@ -961,7 +960,7 @@ void CompuFluidDyna::InitializeScenario() {
             Smok[x][y][z]+= Random::Val(-0.01f, 0.01f);
           }
         }
-        // Pipe of constant diameter with right angle turn and enforced pressure gradient
+        // Pipe of constant diameter with right angle turn and UI parameters to tweak position, curvature, diameters
         // ----------_
         // >          -
         // -----_      |
@@ -1531,30 +1530,24 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
                                  const std::vector<std::vector<std::vector<float>>>& iVelY,
                                  const std::vector<std::vector<std::vector<float>>>& iVelZ,
                                  std::vector<std::vector<std::vector<float>>>& ioField) {
-  // Copy the field values to serve as source in the update step
+  // Adjust the source field to make solid voxels have a value dependant on their non-solid neighbors
   std::vector<std::vector<std::vector<float>>> sourceField= ioField;
-  // Adjust the source field to make solid voxels have the average smoke value of their non-solid neighbors
-  if (D.UI[BCAdvecWall_].GetB()) {
-    for (int x= 0; x < nX; x++) {
-      for (int y= 0; y < nY; y++) {
-        for (int z= 0; z < nZ; z++) {
-          if (!Solid[x][y][z]) continue;
-          int count= 0;
-          float sum= 0.0f;
-          if (x - 1 >= 0 && !Solid[x - 1][y][z] && ++count) sum+= ioField[x - 1][y][z];
-          if (y - 1 >= 0 && !Solid[x][y - 1][z] && ++count) sum+= ioField[x][y - 1][z];
-          if (z - 1 >= 0 && !Solid[x][y][z - 1] && ++count) sum+= ioField[x][y][z - 1];
-          if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
-          if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
-          if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
-          if (D.UI[BCAdvecWall_].GetI() == 1 && iFieldID == FieldID::IDSmok) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelX) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelY) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 2 && iFieldID == FieldID::IDVelZ) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelX) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelY) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
-          if (D.UI[BCAdvecWall_].GetI() == 3 && iFieldID == FieldID::IDVelZ) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
-        }
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+        if (!Solid[x][y][z]) continue;
+        int count= 0;
+        float sum= 0.0f;
+        if (x - 1 >= 0 && !Solid[x - 1][y][z] && ++count) sum+= ioField[x - 1][y][z];
+        if (y - 1 >= 0 && !Solid[x][y - 1][z] && ++count) sum+= ioField[x][y - 1][z];
+        if (z - 1 >= 0 && !Solid[x][y][z - 1] && ++count) sum+= ioField[x][y][z - 1];
+        if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
+        if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
+        if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
+        if (iFieldID == FieldID::IDSmok) sourceField[x][y][z]= (count > 0) ? sum / (float)count : 0.0f;
+        if (iFieldID == FieldID::IDVelX) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
+        if (iFieldID == FieldID::IDVelY) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
+        if (iFieldID == FieldID::IDVelZ) sourceField[x][y][z]= (count > 0) ? -sum / (float)count : 0.0f;
       }
     }
   }
@@ -1563,9 +1556,7 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
 #pragma omp parallel for
     for (int y= 0; y < nY; y++) {
       for (int z= 0; z < nZ; z++) {
-        AdvX[x][y][z]= 0.0f;
-        AdvY[x][y][z]= 0.0f;
-        AdvZ[x][y][z]= 0.0f;
+        AdvX[x][y][z]= AdvY[x][y][z]= AdvZ[x][y][z]= 0.0f;
         // Skip solid or fixed values
         if (Solid[x][y][z]) continue;
         if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) continue;
