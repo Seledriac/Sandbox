@@ -35,6 +35,7 @@ enum ParamType
   CoeffRGB____,
   CoeffCMY____,
   CoeffBias___,
+  CoeffCommit_,
   Verbose_____,
 };
 
@@ -52,15 +53,16 @@ void StringArtOptim::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
     D.UI.push_back(ParamUI("ImageID_____", 2));
-    D.UI.push_back(ParamUI("ImageSizeW__", 256));
-    D.UI.push_back(ParamUI("ImageSizeH__", 256));
+    D.UI.push_back(ParamUI("ImageSizeW__", 512));
+    D.UI.push_back(ParamUI("ImageSizeH__", 512));
     D.UI.push_back(ParamUI("PegLayout___", 1));
-    D.UI.push_back(ParamUI("PegNumber___", 256));
+    D.UI.push_back(ParamUI("PegNumber___", 512));
     D.UI.push_back(ParamUI("StepCount___", 1));
     D.UI.push_back(ParamUI("CoeffColor__", 0.1));
     D.UI.push_back(ParamUI("CoeffRGB____", 1.0));
-    D.UI.push_back(ParamUI("CoeffCMY____", 1.0));
+    D.UI.push_back(ParamUI("CoeffCMY____", 0.5));
     D.UI.push_back(ParamUI("CoeffBias___", 0.5));
+    D.UI.push_back(ParamUI("CoeffCommit_", 0.0));
     D.UI.push_back(ParamUI("Verbose_____", -0.5));
   }
 
@@ -323,7 +325,7 @@ void StringArtOptim::AddLineStep() {
 
   // Update the image
   for (int idxCol= 0; idxCol < 6; idxCol++) {
-    if (bestPeg[idxCol] >= 0 && bestErr[idxCol] < 0.0f) {
+    if (bestPeg[idxCol] >= 0 && bestErr[idxCol] < D.UI[CoeffCommit_].GetF()) {
       Lines[idxCol].push_back(bestPeg[idxCol]);
       PegsCount[bestPeg[idxCol]]++;
       if ((int)Lines[idxCol].size() > 1) {
