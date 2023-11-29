@@ -21,13 +21,12 @@
 std::vector<std::array<int, 3>> Bresenham3D(int x0, int y0, int z0, int x1, int y1, int z1) {
   std::vector<std::array<int, 3>> listVoxels;
   listVoxels.push_back({x0, y0, z0});
-
-  int dx= std::abs(x1 - x0);
-  int dy= std::abs(y1 - y0);
-  int dz= std::abs(z1 - z0);
-  int xs= (x1 > x0) ? 1 : -1;
-  int ys= (y1 > y0) ? 1 : -1;
-  int zs= (z1 > z0) ? 1 : -1;
+  const int dx= std::abs(x1 - x0);
+  const int dy= std::abs(y1 - y0);
+  const int dz= std::abs(z1 - z0);
+  const int xs= (x1 > x0) ? 1 : -1;
+  const int ys= (y1 > y0) ? 1 : -1;
+  const int zs= (z1 > z0) ? 1 : -1;
 
   // Driving axis is X-axis
   if (dx >= dy && dx >= dz) {
