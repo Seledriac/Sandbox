@@ -30,12 +30,12 @@ enum ParamType
   ImageSizeH__,
   PegLayout___,
   PegNumber___,
+  ColorsAdd___,
+  ColorsSub___,
   StepCount___,
+  SingleLine__,
+  BlendMode___,
   CoeffColor__,
-  CoeffRGB____,
-  CoeffCMY____,
-  CoeffBias___,
-  CoeffCommit_,
   Verbose_____,
 };
 
@@ -52,17 +52,17 @@ StringArtOptim::StringArtOptim() {
 void StringArtOptim::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("ImageID_____", 2));
-    D.UI.push_back(ParamUI("ImageSizeW__", 512));
-    D.UI.push_back(ParamUI("ImageSizeH__", 512));
+    D.UI.push_back(ParamUI("ImageID_____", 3));
+    D.UI.push_back(ParamUI("ImageSizeW__", 256));
+    D.UI.push_back(ParamUI("ImageSizeH__", 256));
     D.UI.push_back(ParamUI("PegLayout___", 1));
-    D.UI.push_back(ParamUI("PegNumber___", 512));
+    D.UI.push_back(ParamUI("PegNumber___", 256));
+    D.UI.push_back(ParamUI("ColorsAdd___", 1));
+    D.UI.push_back(ParamUI("ColorsSub___", 1));
     D.UI.push_back(ParamUI("StepCount___", 1));
+    D.UI.push_back(ParamUI("SingleLine__", -0.5));
+    D.UI.push_back(ParamUI("BlendMode___", -0.5));
     D.UI.push_back(ParamUI("CoeffColor__", 0.1));
-    D.UI.push_back(ParamUI("CoeffRGB____", 1.0));
-    D.UI.push_back(ParamUI("CoeffCMY____", 0.5));
-    D.UI.push_back(ParamUI("CoeffBias___", 0.5));
-    D.UI.push_back(ParamUI("CoeffCommit_", 0.0));
     D.UI.push_back(ParamUI("Verbose_____", -0.5));
   }
 
@@ -86,6 +86,8 @@ void StringArtOptim::CheckAlloc() {
   if (D.UI[ImageSizeH__].hasChanged()) isAllocated= false;
   if (D.UI[PegLayout___].hasChanged()) isAllocated= false;
   if (D.UI[PegNumber___].hasChanged()) isAllocated= false;
+  if (D.UI[ColorsAdd___].hasChanged()) isAllocated= false;
+  if (D.UI[ColorsSub___].hasChanged()) isAllocated= false;
 }
 
 
@@ -128,8 +130,9 @@ void StringArtOptim::Refresh() {
   if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("Resources/SA_Smile.bmp", imageRGBA, false);
   if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("Resources/SA_MonaLisa.bmp", imageRGBA, false);
   if (D.UI[ImageID_____].GetI() == 2) FileInput::LoadImageBMPFile("Resources/SA_Pillars.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("Resources/GR_AlbertArt.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("Resources/GR_DeepField.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("Resources/SA_Butterfly.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("Resources/GR_AlbertArt.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 5) FileInput::LoadImageBMPFile("Resources/GR_DeepField.bmp", imageRGBA, false);
   for (int w= 0; w < nW; w++) {
     for (int h= 0; h < nH; h++) {
       if (!imageRGBA.empty()) {
@@ -158,15 +161,40 @@ void StringArtOptim::Refresh() {
   }
   PegsCount= std::vector<int>(Pegs.size(), 0);
 
+  // Initialize colors
+  Colors.clear();
+  if (D.UI[ColorsAdd___].GetI() >= 1) {
+    Colors.push_back(Math::Vec3f(1.0f, 0.0f, 0.0f));
+    Colors.push_back(Math::Vec3f(0.0f, 1.0f, 0.0f));
+    Colors.push_back(Math::Vec3f(0.0f, 0.0f, 1.0f));
+  }
+  if (D.UI[ColorsAdd___].GetI() >= 2) {
+    Colors.push_back(Math::Vec3f(0.0f, 1.0f, 1.0f));
+    Colors.push_back(Math::Vec3f(1.0f, 0.0f, 1.0f));
+    Colors.push_back(Math::Vec3f(1.0f, 1.0f, 0.0f));
+  }
+  if (D.UI[ColorsAdd___].GetI() >= 3) {
+    Colors.push_back(Math::Vec3f(1.0f, 1.0f, 1.0f));
+  }
+  if (D.UI[ColorsSub___].GetI() >= 1) {
+    Colors.push_back(Math::Vec3f(-1.0f, 0.0f, 0.0f));
+    Colors.push_back(Math::Vec3f(0.0f, -1.0f, 0.0f));
+    Colors.push_back(Math::Vec3f(0.0f, 0.0f, -1.0f));
+  }
+  if (D.UI[ColorsSub___].GetI() >= 2) {
+    Colors.push_back(Math::Vec3f(0.0f, -1.0f, -1.0f));
+    Colors.push_back(Math::Vec3f(-1.0f, 0.0f, -1.0f));
+    Colors.push_back(Math::Vec3f(-1.0f, -1.0f, 0.0f));
+  }
+  if (D.UI[ColorsSub___].GetI() >= 3) {
+    Colors.push_back(Math::Vec3f(-1.0f, -1.0f, -1.0f));
+  }
+  for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++)
+    Colors[idxCol].normalize();
+
   // Initialize lines
   Lines.clear();
-  Lines.resize(6);
-  Lines[0].push_back(0);
-  Lines[1].push_back(0);
-  Lines[2].push_back(0);
-  Lines[3].push_back(0);
-  Lines[4].push_back(0);
-  Lines[5].push_back(0);
+  Lines.resize(Colors.size(), std::vector<int>(1, 0));
 }
 
 
@@ -178,49 +206,52 @@ void StringArtOptim::Animate() {
   CheckRefresh();
   if (!isRefreshed) Refresh();
 
-  for (int idxStep= 0; idxStep < D.UI[StepCount___].GetI(); idxStep++)
-    StringArtOptim::AddLineStep();
-
-  // Compute the total match error
-  float Err= 0.0f;
-  for (int w= 0; w < nW; w++)
-    for (int h= 0; h < nH; h++)
-      Err+= (ImCur[w][h] - ImRef[w][h]).norm();
-
-  // Compute the total string length for each color
-  float Len[6]= {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-  for (int idxCol= 0; idxCol < 6; idxCol++) {
-    for (int idxLine= 1; idxLine < (int)Lines[idxCol].size(); idxLine++) {
-      Math::Vec2f pos0((Pegs[Lines[idxCol][idxLine - 1]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine - 1]][1] + 0.5f) / (float)(nH));
-      Math::Vec2f pos1((Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
-      Len[idxCol]+= (pos0 - pos1).norm();
-    }
+  // Compute and add the new lines
+  bool lineWasAdded= false;
+  for (int idxStep= 0; idxStep < D.UI[StepCount___].GetI(); idxStep++) {
+    if (StringArtOptim::AddLineStep()) lineWasAdded= true;
+    else break;
   }
 
-  // Add to plot data
-  D.plotData.resize(7);
-  D.plotLegend.resize(7);
-  D.plotLegend[0]= "Match Err";
-  D.plotLegend[1]= "Length R";
-  D.plotLegend[2]= "Length G";
-  D.plotLegend[3]= "Length B";
-  D.plotLegend[4]= "Length C";
-  D.plotLegend[5]= "Length M";
-  D.plotLegend[6]= "Length Y";
-  D.plotData[0].push_back(Err);
-  D.plotData[1].push_back(Len[0]);
-  D.plotData[2].push_back(Len[1]);
-  D.plotData[3].push_back(Len[2]);
-  D.plotData[4].push_back(Len[3]);
-  D.plotData[5].push_back(Len[4]);
-  D.plotData[6].push_back(Len[5]);
+  if (lineWasAdded) {
+    // Compute the total match error
+    float Err= 0.0f;
+    for (int w= 0; w < nW; w++) {
+      for (int h= 0; h < nH; h++) {
+        Err+= (ImCur[w][h] - ImRef[w][h]).normSquared();
+      }
+    }
 
-  D.scatLegend.resize(1);
-  D.scatLegend[0]= "Counts";
-  D.scatData.clear();
-  D.scatData.resize(1);
-  for (int idxCol= 0; idxCol < 6; idxCol++)
-    D.scatData[0].push_back(std::array<double, 2>({(double)idxCol, (double)Lines[idxCol].size()}));
+    // Compute the total string length for each color
+    std::vector<float> Len((int)Colors.size(), 0.0f);
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+      for (int idxLine= 1; idxLine < (int)Lines[idxCol].size(); idxLine++) {
+        Math::Vec2f pos0((Pegs[Lines[idxCol][idxLine - 1]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine - 1]][1] + 0.5f) / (float)(nH));
+        Math::Vec2f pos1((Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
+        Len[idxCol]+= (pos0 - pos1).norm();
+      }
+    }
+
+    // Add to plot data
+    D.plotLegend.resize(2);
+    D.plotData.resize(2);
+    D.plotData[1].resize(Pegs.size());
+    D.plotLegend[0]= "MatchErr";
+    D.plotLegend[1]= "PegCounts";
+    D.plotData[0].push_back(Err);
+    for (int idxPeg= 0; idxPeg < (int)Pegs.size(); idxPeg++) {
+      D.plotData[1][idxPeg]= PegsCount[idxPeg];
+    }
+
+    // Add to scatter data
+    D.scatLegend.resize(1);
+    D.scatData.resize(1);
+    D.scatData[0].resize(Colors.size());
+    D.scatLegend[0]= "Lengths";
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+      D.scatData[0][idxCol]= std::array<double, 2>({(double)idxCol, (double)Len[idxCol]});
+    }
+  }
 }
 
 
@@ -233,12 +264,12 @@ void StringArtOptim::Draw() {
   // Draw the reference and generated images
   if (D.displayMode1 || D.displayMode2) {
     glPushMatrix();
-    glTranslatef(1.0f, 0.0f, 0.0f);
+    glTranslatef(0.5f, 0.0f, 0.0f);
     glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
     for (int w= 0; w < nW; w++) {
       for (int h= 0; h < nH; h++) {
-        if (D.displayMode1) {
+        if (D.displayMode1 && !D.displayMode2) {
           glColor3fv(ImRef[w][h].array());
           glRectf(float(w) / float(nW), float(h) / float(nH), float(w + 1) / float(nW), float(h + 1) / float(nH));
         }
@@ -254,8 +285,9 @@ void StringArtOptim::Draw() {
   // Draw the pegs
   if (D.displayMode3) {
     float avgPegCount= 0.0f;
-    for (int idxCol= 0; idxCol < 6; idxCol++)
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
       avgPegCount+= (float)Lines[idxCol].size();
+    }
     avgPegCount/= (float)Pegs.size();
     glPointSize(10.0f);
     glBegin(GL_POINTS);
@@ -263,7 +295,7 @@ void StringArtOptim::Draw() {
       float r= 0.0f, g= 0.0f, b= 0.0f;
       Colormap::RatioToJetBrightSmooth(0.5f * (float)PegsCount[idxPeg] / avgPegCount, r, g, b);
       glColor3f(r, g, b);
-      glVertex3f(1.01f, (Pegs[idxPeg][0] + 0.5f) / float(nW), (Pegs[idxPeg][1] + 0.5f) / float(nH));
+      glVertex3f(0.5f + 0.001f, (Pegs[idxPeg][0] + 0.5f) / float(nW), (Pegs[idxPeg][1] + 0.5f) / float(nH));
     }
     glEnd();
     glPointSize(1.0f);
@@ -271,18 +303,15 @@ void StringArtOptim::Draw() {
 
   // Draw the string
   if (D.displayMode4) {
-    for (int idxCol= 0; idxCol < 6; idxCol++) {
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
       if (Lines[idxCol].size() >= 2) {
         glLineWidth(2.0f);
         glBegin(GL_LINE_STRIP);
-        if (idxCol == 0) glColor3f(1.0f, 0.0f, 0.0f);
-        if (idxCol == 1) glColor3f(0.0f, 1.0f, 0.0f);
-        if (idxCol == 2) glColor3f(0.0f, 0.0f, 1.0f);
-        if (idxCol == 3) glColor3f(0.0f, 0.5f, 0.5f);
-        if (idxCol == 4) glColor3f(0.5f, 0.0f, 0.5f);
-        if (idxCol == 5) glColor3f(0.5f, 0.5f, 0.0f);
+        glColor3fv((0.5f * Colors[idxCol] + Math::Vec3f(0.5f, 0.5f, 0.5f)).array());
         for (int idxLine= 0; idxLine < (int)Lines[idxCol].size(); idxLine++) {
-          Math::Vec3f pos(1.02f, (Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
+          Math::Vec3f pos(0.5f + 0.05f * float(idxLine) / float(Lines[idxCol].size()),
+                          (Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW),
+                          (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
           glVertex3fv(pos.array());
         }
         glEnd();
@@ -293,27 +322,30 @@ void StringArtOptim::Draw() {
 }
 
 
-void StringArtOptim::AddLineStep() {
-  // Intialize the update array
-  int bestPeg[6]= {-1, -1, -1, -1, -1, -1};
-  float bestErr[6]= {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+bool StringArtOptim::AddLineStep() {
+  // Intialize the update arrays
+  std::vector<int> bestPeg((int)Colors.size(), -1);
+  std::vector<float> bestErr((int)Colors.size(), 0.0f);
 
-// Find the best next peg for each color
+// Find the best next peg for each color with greedy search
 #pragma omp parallel for
-  for (int idxCol= 0; idxCol < 6; idxCol++) {
-    const int idxPeg0= Lines[idxCol][Lines[idxCol].size() - 1];
+  for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+    const int idxPeg0= Lines[idxCol].back();
     for (int idxPeg1= 0; idxPeg1 < (int)Pegs.size(); idxPeg1++) {
       std::vector<std::array<int, 2>> path= Bresenham2D(Pegs[idxPeg0][0], Pegs[idxPeg0][1], Pegs[idxPeg1][0], Pegs[idxPeg1][1]);
       float chgErr= 0.0f;
       for (int idxPos= 0; idxPos < (int)path.size(); idxPos++) {
         const int w= path[idxPos][0];
         const int h= path[idxPos][1];
-        const float colChg= ((idxCol < 3) ? (D.UI[CoeffRGB____].GetF()) : (-D.UI[CoeffCMY____].GetF())) * D.UI[CoeffColor__].GetF();
-        const float newVal= std::min(std::max(ImCur[w][h][idxCol % 3] + colChg, 0.0f), 1.0f);
-        const float curErr= ImRef[w][h][idxCol % 3] - ImCur[w][h][idxCol % 3];
-        const float newErr= ImRef[w][h][idxCol % 3] - newVal;
-        chgErr+= ((newErr > 0) ? (D.UI[CoeffBias___].GetF()) : (1.0f - D.UI[CoeffBias___].GetF())) * newErr * newErr;
-        chgErr-= ((curErr > 0) ? (D.UI[CoeffBias___].GetF()) : (1.0f - D.UI[CoeffBias___].GetF())) * curErr * curErr;
+        Math::Vec3f newVal;
+        if (D.UI[BlendMode___].GetB())
+          newVal= (1.0f - D.UI[CoeffColor__].GetF()) * ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
+        else
+          newVal= ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
+        for (int k= 0; k < 3; k++) newVal[k]= std::min(std::max(newVal[k], 0.0f), 1.0f);
+        const Math::Vec3f curErr= ImRef[w][h] - ImCur[w][h];
+        const Math::Vec3f newErr= ImRef[w][h] - newVal;
+        chgErr+= newErr.normSquared() - curErr.normSquared();
       }
       if (bestPeg[idxCol] < 0 || bestErr[idxCol] > chgErr) {
         bestErr[idxCol]= chgErr;
@@ -322,12 +354,29 @@ void StringArtOptim::AddLineStep() {
     }
   }
 
+  // Optionally keep only the best color
+  if (D.UI[SingleLine__].GetB()) {
+    int idxBestCol= 0;
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+      if (bestErr[idxBestCol] > bestErr[idxCol]) {
+        idxBestCol= idxCol;
+      }
+    }
+    for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+      if (idxCol != idxBestCol) {
+        bestPeg[idxCol]= -1;
+      }
+    }
+  }
 
-  // Update the image
-  for (int idxCol= 0; idxCol < 6; idxCol++) {
-    if (bestPeg[idxCol] >= 0 && bestErr[idxCol] < D.UI[CoeffCommit_].GetF()) {
+  // Update the lines
+  bool lineWasAdded= false;
+  for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
+    if (bestPeg[idxCol] >= 0 && bestErr[idxCol] < 0.0f) {
       Lines[idxCol].push_back(bestPeg[idxCol]);
       PegsCount[bestPeg[idxCol]]++;
+      lineWasAdded= true;
+      // Update the image
       if ((int)Lines[idxCol].size() > 1) {
         const int w0= Pegs[Lines[idxCol][Lines[idxCol].size() - 2]][0];
         const int h0= Pegs[Lines[idxCol][Lines[idxCol].size() - 2]][1];
@@ -337,23 +386,27 @@ void StringArtOptim::AddLineStep() {
         for (int idxPos= 0; idxPos < (int)path.size(); idxPos++) {
           const int w= path[idxPos][0];
           const int h= path[idxPos][1];
-          const float colChg= ((idxCol < 3) ? (D.UI[CoeffRGB____].GetF()) : (-D.UI[CoeffCMY____].GetF())) * D.UI[CoeffColor__].GetF();
-          ImCur[w][h][idxCol % 3]= std::min(std::max(ImCur[w][h][idxCol % 3] + colChg, 0.0f), 1.0f);
+          if (D.UI[BlendMode___].GetB())
+            ImCur[w][h]= (1.0f - D.UI[CoeffColor__].GetF()) * ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
+          else
+            ImCur[w][h]= ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
+          for (int k= 0; k < 3; k++) ImCur[w][h][k]= std::min(std::max(ImCur[w][h][k], 0.0f), 1.0f);
         }
       }
     }
   }
+
+  return lineWasAdded;
 }
 
 
 std::vector<std::array<int, 2>> StringArtOptim::Bresenham2D(int x0, int y0, int x1, int y1) {
   std::vector<std::array<int, 2>> listVoxels;
   listVoxels.push_back({x0, y0});
-
-  int dx= std::abs(x1 - x0);
-  int dy= std::abs(y1 - y0);
-  int xs= (x1 > x0) ? 1 : -1;
-  int ys= (y1 > y0) ? 1 : -1;
+  const int dx= std::abs(x1 - x0);
+  const int dy= std::abs(y1 - y0);
+  const int xs= (x1 > x0) ? 1 : -1;
+  const int ys= (y1 > y0) ? 1 : -1;
 
   // Driving axis is X-axis
   if (dx >= dy) {

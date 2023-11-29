@@ -24,8 +24,9 @@ class StringArtOptim
   std::vector<std::array<int, 2>> Pegs;
   std::vector<int> PegsCount;
   std::vector<std::vector<int>> Lines;
+  std::vector<Math::Vec3f> Colors;
 
-  void AddLineStep();
+  bool AddLineStep();
   std::vector<std::array<int, 2>> Bresenham2D(int x0, int y0, int x1, int y1);
 
   public:
