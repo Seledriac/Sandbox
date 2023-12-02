@@ -11,9 +11,9 @@
 #include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
-#include "../Algo/Bresenham.hpp"
 #include "../Data.hpp"
 #include "../FileIO/FileInput.hpp"
+#include "../Util/Bresenham.hpp"
 #include "../Util/Colormap.hpp"
 #include "../Util/Field.hpp"
 #include "../Util/Vector.hpp"
