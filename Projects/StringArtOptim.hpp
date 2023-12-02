@@ -27,7 +27,6 @@ class StringArtOptim
   std::vector<Math::Vec3f> Colors;
 
   bool AddLineStep();
-  std::vector<std::array<int, 2>> Bresenham2D(int x0, int y0, int x1, int y1);
 
   public:
   bool isActivProj;

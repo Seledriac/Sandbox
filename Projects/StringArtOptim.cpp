@@ -10,6 +10,7 @@
 #include "../freeglut/include/GL/freeglut.h"
 
 // Project lib
+#include "../Algo/Bresenham.hpp"
 #include "../Data.hpp"
 #include "../FileIO/FileInput.hpp"
 #include "../Util/Colormap.hpp"
@@ -331,7 +332,7 @@ bool StringArtOptim::AddLineStep() {
   for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
     const int idxPeg0= Lines[idxCol].back();
     for (int idxPeg1= 0; idxPeg1 < (int)Pegs.size(); idxPeg1++) {
-      std::vector<std::array<int, 2>> path= Bresenham2D(Pegs[idxPeg0][0], Pegs[idxPeg0][1], Pegs[idxPeg1][0], Pegs[idxPeg1][1]);
+      std::vector<std::array<int, 2>> path= Bresenham::Line2D(Pegs[idxPeg0][0], Pegs[idxPeg0][1], Pegs[idxPeg1][0], Pegs[idxPeg1][1]);
       float chgErr= 0.0f;
       for (int idxPos= 0; idxPos < (int)path.size(); idxPos++) {
         const int w= path[idxPos][0];
@@ -381,7 +382,7 @@ bool StringArtOptim::AddLineStep() {
         const int h0= Pegs[Lines[idxCol][Lines[idxCol].size() - 2]][1];
         const int w1= Pegs[Lines[idxCol][Lines[idxCol].size() - 1]][0];
         const int h1= Pegs[Lines[idxCol][Lines[idxCol].size() - 1]][1];
-        std::vector<std::array<int, 2>> path= Bresenham2D(w0, h0, w1, h1);
+        std::vector<std::array<int, 2>> path= Bresenham::Line2D(w0, h0, w1, h1);
         for (int idxPos= 0; idxPos < (int)path.size(); idxPos++) {
           const int w= path[idxPos][0];
           const int h= path[idxPos][1];
@@ -396,44 +397,4 @@ bool StringArtOptim::AddLineStep() {
   }
 
   return lineWasAdded;
-}
-
-
-std::vector<std::array<int, 2>> StringArtOptim::Bresenham2D(int x0, int y0, int x1, int y1) {
-  std::vector<std::array<int, 2>> listVoxels;
-  listVoxels.push_back({x0, y0});
-  const int dx= std::abs(x1 - x0);
-  const int dy= std::abs(y1 - y0);
-  const int xs= (x1 > x0) ? 1 : -1;
-  const int ys= (y1 > y0) ? 1 : -1;
-
-  // Driving axis is X-axis
-  if (dx >= dy) {
-    int p1= 2 * dy - dx;
-    while (x0 != x1) {
-      x0+= xs;
-      if (p1 >= 0) {
-        y0+= ys;
-        p1-= 2 * dx;
-      }
-      p1+= 2 * dy;
-      listVoxels.push_back({x0, y0});
-    }
-  }
-
-  // Driving axis is Y-axis
-  else {
-    int p1= 2 * dx - dy;
-    while (y0 != y1) {
-      y0+= ys;
-      if (p1 >= 0) {
-        x0+= xs;
-        p1-= 2 * dy;
-      }
-      p1+= 2 * dx;
-      listVoxels.push_back({x0, y0});
-    }
-  }
-
-  return listVoxels;
 }
