@@ -15,16 +15,16 @@
 #include "tb/Camera.hpp"
 
 // Project Sandbox Classes
-#include "Projects/AgentSwarmBoid.hpp"
-#include "Projects/CompuFluidDyna.hpp"
-#include "Projects/FractalCurvDev.hpp"
-#include "Projects/FractalElevMap.hpp"
-#include "Projects/MarkovProcGene.hpp"
-#include "Projects/MassSpringSyst.hpp"
-#include "Projects/PosiBasedDynam.hpp"
-#include "Projects/SpaceTimeWorld.hpp"
-#include "Projects/StringArtOptim.hpp"
-#include "Projects/TerrainErosion.hpp"
+#include "Projects/AgentSwarmBoid/AgentSwarmBoid.hpp"
+#include "Projects/CompuFluidDyna/CompuFluidDyna.hpp"
+#include "Projects/FractalCurvDev/FractalCurvDev.hpp"
+#include "Projects/FractalElevMap/FractalElevMap.hpp"
+#include "Projects/MarkovProcGene/MarkovProcGene.hpp"
+#include "Projects/MassSpringSyst/MassSpringSyst.hpp"
+#include "Projects/PosiBasedDynam/PosiBasedDynam.hpp"
+#include "Projects/SpaceTimeWorld/SpaceTimeWorld.hpp"
+#include "Projects/StringArtOptim/StringArtOptim.hpp"
+#include "Projects/TerrainErosion/TerrainErosion.hpp"
 
 
 // Global variables used for the display

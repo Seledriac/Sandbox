@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include "TrackBallMatrix.hpp"
 #include "TrackBallQuaternion.hpp"
 #include "TrackBallVectors.hpp"

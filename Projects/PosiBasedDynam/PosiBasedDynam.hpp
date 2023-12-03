@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "../Util/Vector.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Particle system simulation with a Position-Based Dynamics (PBD) approach

@@ -2,8 +2,8 @@
 
 
 // Standard lib
+#define _USE_MATH_DEFINES
 #include <cmath>
-#include <numbers>
 
 
 void Colormap::RatioToGrayscale(const float &iRatio, float &oR, float &oG, float &oB) {

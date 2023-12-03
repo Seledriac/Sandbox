@@ -2,21 +2,22 @@
 
 
 // Standard lib
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstdio>
 #include <vector>
 
 // GLUT lib
-#include "../freeglut/include/GL/freeglut.h"
+#include "../../freeglut/include/GL/freeglut.h"
 
 // Project lib
-#include "../Data.hpp"
-#include "../FileIO/FileInput.hpp"
-#include "../Util/Bresenham.hpp"
-#include "../Util/Colormap.hpp"
-#include "../Util/Field.hpp"
-#include "../Util/Random.hpp"
-#include "../Util/Vector.hpp"
+#include "../../Data.hpp"
+#include "../../FileIO/FileInput.hpp"
+#include "../../Util/Bresenham.hpp"
+#include "../../Util/Colormap.hpp"
+#include "../../Util/Field.hpp"
+#include "../../Util/Random.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Link to shared sandbox data

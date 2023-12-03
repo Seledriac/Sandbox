@@ -2,9 +2,13 @@ main.o: main.cpp freeglut/include/GL/freeglut.h \
  freeglut/include/GL/freeglut_std.h freeglut/include/GL/freeglut_ext.h \
  Data.hpp Util/Colormap.hpp Util/Vector.hpp tb/Camera.hpp \
  tb/TrackBall.hpp tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
- tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid.hpp \
- Projects/CompuFluidDyna.hpp Projects/FractalCurvDev.hpp \
- Projects/FractalElevMap.hpp Projects/MarkovProcGene.hpp \
- Projects/MassSpringSyst.hpp Projects/PosiBasedDynam.hpp \
- Projects/SpaceTimeWorld.hpp Projects/StringArtOptim.hpp \
- Projects/TerrainErosion.hpp
+ tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid/AgentSwarmBoid.hpp \
+ Projects/CompuFluidDyna/CompuFluidDyna.hpp \
+ Projects/FractalCurvDev/FractalCurvDev.hpp \
+ Projects/FractalElevMap/FractalElevMap.hpp \
+ Projects/MarkovProcGene/MarkovProcGene.hpp \
+ Projects/MassSpringSyst/MassSpringSyst.hpp \
+ Projects/PosiBasedDynam/PosiBasedDynam.hpp \
+ Projects/SpaceTimeWorld/SpaceTimeWorld.hpp \
+ Projects/StringArtOptim/StringArtOptim.hpp \
+ Projects/TerrainErosion/TerrainErosion.hpp

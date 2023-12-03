@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../Util/Vector.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Simple implementation of Reynolds Boids to produce emergent swarm intelligence

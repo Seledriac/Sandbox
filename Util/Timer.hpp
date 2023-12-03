@@ -4,7 +4,7 @@
 #include <chrono>
 #include <vector>
 
-std::vector<std::chrono::high_resolution_clock::time_point> TimerStack;
+static std::vector<std::chrono::high_resolution_clock::time_point> TimerStack;
 
 namespace Timer {
   inline int PushTimer() {

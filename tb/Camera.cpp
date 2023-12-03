@@ -1,5 +1,8 @@
 #include "Camera.hpp"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 // ========================= CAMERA SETUP ================================
 
 Camera::Camera() : eyeDir_(0, 0, -1), center_(0, 0, 0) {

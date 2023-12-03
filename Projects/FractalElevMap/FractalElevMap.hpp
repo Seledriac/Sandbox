@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../Util/Vector.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Generate 2.5D surface based on the Julia Set fractal

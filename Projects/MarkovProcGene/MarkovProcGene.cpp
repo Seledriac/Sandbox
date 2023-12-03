@@ -8,14 +8,14 @@
 #include <vector>
 
 // GLUT lib
-#include "../freeglut/include/GL/freeglut.h"
+#include "../../freeglut/include/GL/freeglut.h"
 
 // Project lib
-#include "../Data.hpp"
-#include "../FileIO/FileInput.hpp"
-#include "../Util/Draw.hpp"
-#include "../Util/Field.hpp"
-#include "../Util/Random.hpp"
+#include "../../Data.hpp"
+#include "../../FileIO/FileInput.hpp"
+#include "../../Util/Draw.hpp"
+#include "../../Util/Field.hpp"
+#include "../../Util/Random.hpp"
 
 
 // Link to shared sandbox data

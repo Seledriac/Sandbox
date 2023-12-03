@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../Util/Vector.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Terrain generation and erosion simulation 

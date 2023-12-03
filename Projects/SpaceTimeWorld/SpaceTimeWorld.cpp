@@ -8,15 +8,15 @@
 #include <vector>
 
 // GLUT lib
-#include "../freeglut/include/GL/freeglut.h"
+#include "../../freeglut/include/GL/freeglut.h"
 
 // Project lib
-#include "../Data.hpp"
-#include "../FileIO/FileInput.hpp"
-#include "../Util/Bresenham.hpp"
-#include "../Util/Colormap.hpp"
-#include "../Util/Field.hpp"
-#include "../Util/Vector.hpp"
+#include "../../Data.hpp"
+#include "../../FileIO/FileInput.hpp"
+#include "../../Util/Bresenham.hpp"
+#include "../../Util/Colormap.hpp"
+#include "../../Util/Field.hpp"
+#include "../../Util/Vector.hpp"
 
 
 class Shape

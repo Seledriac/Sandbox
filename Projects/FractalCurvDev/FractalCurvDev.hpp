@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "../Util/Vector.hpp"
+#include "../../Util/Vector.hpp"
 
 
 // Generate 3D surfaces from fractal curves
