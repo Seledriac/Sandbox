@@ -1,9 +1,10 @@
-main.o: main.cpp freeglut/include/GL/freeglut.h \
- freeglut/include/GL/freeglut_std.h freeglut/include/GL/freeglut_ext.h \
- Data.hpp Util/Colormap.hpp Util/Vec.hpp tb/Camera.hpp tb/TrackBall.hpp \
- tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
- tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid/AgentSwarmBoid.hpp \
- Projects/CompuFluidDyna/CompuFluidDyna.hpp \
+main.o: main.cpp Libs/freeglut/include/GL/freeglut.h \
+ Libs/freeglut/include/GL/freeglut_std.h \
+ Libs/freeglut/include/GL/freeglut_ext.h Libs/tb/Camera.hpp \
+ Libs/tb/TrackBall.hpp Libs/tb/TrackBallMatrix.hpp \
+ Libs/tb/TrackBallVectors.hpp Libs/tb/TrackBallQuaternion.hpp Data.hpp \
+ Util/Colormap.hpp Projects/AgentSwarmBoid/AgentSwarmBoid.hpp \
+ e:\dev\sandbox\util\vec.hpp Projects/CompuFluidDyna/CompuFluidDyna.hpp \
  Projects/FractalCurvDev/FractalCurvDev.hpp \
  Projects/FractalElevMap/FractalElevMap.hpp \
  Projects/MarkovProcGene/MarkovProcGene.hpp \

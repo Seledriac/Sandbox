@@ -1,5 +1,5 @@
 # Sandbox
-Sandbox environment with various personal projects and experimentations implemented from scratch (physics simulations, fractals, swarm intelligence, precedural generation, computational geometry, curved space-time rendering, ...). All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and does not rely on any external library.
+Sandbox environment with various personal projects and experimentations implemented from scratch (physics simulations, fractals, swarm intelligence, precedural generation, computational geometry, curved space-time rendering, ...). All projects use the same generic UI with interactive plots, automated parameter handling and 3D display scene. The repo is standalone and should not rely on any external library installation.
 
 ![Screenshot](docs/Anim_CFD.gif)
 ![Screenshot](docs/Anim_MarkovVoxProcGen.gif)\

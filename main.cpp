@@ -4,15 +4,16 @@
 #include <limits>
 
 // GLUT lib
-#include "freeglut/include/GL/freeglut.h"
+#include "Libs/freeglut/include/GL/freeglut.h"
+
+// Trackball lib
+#include "Libs/tb/Camera.hpp"
 
 // Project Data
 #include "Data.hpp"
 
 // Project Utilities
 #include "Util/Colormap.hpp"
-#include "Util/Vec.hpp"
-#include "tb/Camera.hpp"
 
 // Project Sandbox Classes
 #include "Projects/AgentSwarmBoid/AgentSwarmBoid.hpp"

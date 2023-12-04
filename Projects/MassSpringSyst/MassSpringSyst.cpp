@@ -7,7 +7,7 @@
 #include <vector>
 
 // GLUT lib
-#include "../../freeglut/include/GL/freeglut.h"
+#include "../../Libs/freeglut/include/GL/freeglut.h"
 
 // Project lib
 #include "../../Data.hpp"
