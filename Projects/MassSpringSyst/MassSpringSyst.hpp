@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Mass-spring soft body simulation
@@ -24,13 +24,13 @@ class MassSpringSyst
   private:
   int N;
   std::vector<std::vector<int>> Adj;
-  std::vector<Math::Vec3f> Ref;
-  std::vector<Math::Vec3f> Pos;
-  std::vector<Math::Vec3f> Vel;
-  std::vector<Math::Vec3f> Acc;
-  std::vector<Math::Vec3f> For;
-  std::vector<Math::Vec3f> Ext;
-  std::vector<Math::Vec3f> Fix;
+  std::vector<Vec::Vec3f> Ref;
+  std::vector<Vec::Vec3f> Pos;
+  std::vector<Vec::Vec3f> Vel;
+  std::vector<Vec::Vec3f> Acc;
+  std::vector<Vec::Vec3f> For;
+  std::vector<Vec::Vec3f> Ext;
+  std::vector<Vec::Vec3f> Fix;
   std::vector<float> Mas;
 
   void ComputeForces();

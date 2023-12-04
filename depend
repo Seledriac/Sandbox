@@ -1,7 +1,7 @@
 main.o: main.cpp freeglut/include/GL/freeglut.h \
  freeglut/include/GL/freeglut_std.h freeglut/include/GL/freeglut_ext.h \
- Data.hpp Util/Colormap.hpp Util/Vector.hpp tb/Camera.hpp \
- tb/TrackBall.hpp tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
+ Data.hpp Util/Colormap.hpp Util/Vec.hpp tb/Camera.hpp tb/TrackBall.hpp \
+ tb/TrackBallMatrix.hpp tb/TrackBallVectors.hpp \
  tb/TrackBallQuaternion.hpp Projects/AgentSwarmBoid/AgentSwarmBoid.hpp \
  Projects/CompuFluidDyna/CompuFluidDyna.hpp \
  Projects/FractalCurvDev/FractalCurvDev.hpp \

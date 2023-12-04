@@ -20,7 +20,7 @@ FLAGS_GLUT = -lGL -lglut -lGLU -lX11 -lm
 endif
 
 CFLAGS = ${FLAGS_BUILD} ${INCLUDE_DIRS} ${LIB_DIRS} ${FLAGS_GLUT} ${FLAGS_OPENMP} ${FLAGS_WARNING} ${FLAGS_DEBUG} ${FLAGS_OPTIMIZATION}
-SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp) $(wildcard FileIO/*.cpp) $(wildcard Algo/*.cpp) $(wildcard Util/*.cpp) $(wildcard Projects/*/*.cpp)
+SOURCES = $(wildcard *.cpp) $(wildcard tb/*.cpp) $(wildcard Util/*.cpp) $(wildcard Projects/*/*.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECS = main.exe
 

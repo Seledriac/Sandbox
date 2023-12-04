@@ -13,7 +13,7 @@
 #include "../../Data.hpp"
 #include "../../Util/Colormap.hpp"
 #include "../../Util/Random.hpp"
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Link to shared sandbox data
@@ -103,12 +103,12 @@ void PosiBasedDynam::Allocate() {
   N= std::max(D.UI[NumParticl__].GetI(), 1);
 
   // Allocate data
-  PosOld= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  PosCur= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  VelCur= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  AccCur= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  ForCur= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  ColCur= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  PosOld= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  PosCur= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  VelCur= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  AccCur= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  ForCur= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  ColCur= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   RadCur= std::vector<float>(N, 0.0f);
   MasCur= std::vector<float>(N, 0.0f);
   HotCur= std::vector<float>(N, 0.0f);
@@ -153,15 +153,15 @@ void PosiBasedDynam::Animate() {
   // Get UI parameters
   const float dt= D.UI[TimeStep____].GetF();
   const float velocityDecay= 1.0f - D.UI[VelDecay____].GetF() * dt;
-  const Math::Vec3f vecGrav(0.0f, 0.0f, D.UI[ForceGrav___].GetF());
-  const Math::Vec3f vecBuoy(0.0f, 0.0f, D.UI[ForceBuoy___].GetF());
+  const Vec::Vec3f vecGrav(0.0f, 0.0f, D.UI[ForceGrav___].GetF());
+  const Vec::Vec3f vecBuoy(0.0f, 0.0f, D.UI[ForceBuoy___].GetF());
   const float conductionFactor= D.UI[FactorCondu_].GetF();
   const float heatAdd= D.UI[HeatInput___].GetF();
   const float heatRem= D.UI[HeatOutput__].GetF();
 
   // Add or remove heat to particles based on position in the domain
   for (int k0= 0; k0 < N; k0++) {
-    const Math::Vec3f posSource(0.5f * (D.boxMin[0] + D.boxMax[0]), 0.5f * (D.boxMin[1] + D.boxMax[1]), D.boxMin[2]);
+    const Vec::Vec3f posSource(0.5f * (D.boxMin[0] + D.boxMax[0]), 0.5f * (D.boxMin[1] + D.boxMax[1]), D.boxMin[2]);
     const float radSource= 0.1f * ((D.boxMax[0] - D.boxMin[0]) + (D.boxMax[1] - D.boxMin[1]) + (D.boxMax[2] - D.boxMin[2]));
     if ((posSource - PosCur[k0]).normSquared() < radSource)
       HotCur[k0]+= heatAdd * dt;
@@ -203,7 +203,7 @@ void PosiBasedDynam::Animate() {
   for (int k0= 0; k0 < N; k0++) {
     for (int k1= k0 + 1; k1 < N; k1++) {
       if ((PosCur[k1] - PosCur[k0]).normSquared() <= (RadCur[k0] + RadCur[k1]) * (RadCur[k0] + RadCur[k1])) {
-        Math::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
+        Vec::Vec3f val= (PosCur[k1] - PosCur[k0]).normalized() * 0.5f * ((RadCur[k0] + RadCur[k1]) - (PosCur[k1] - PosCur[k0]).norm());
         PosCur[k0]-= val;
         PosCur[k1]+= val;
       }

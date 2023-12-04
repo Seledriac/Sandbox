@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace Math {
+namespace Vec {
   class Vec2f
   {
 public:

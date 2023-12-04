@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Generate 2.5D surface based on the Julia Set fractal
@@ -20,12 +20,12 @@ class FractalElevMap
   int mapNbIter;
   double mapDivThresh;
   double mapZoom;
-  Math::Vec2d mapFocus;
-  Math::Vec2d mapConst;
+  Vec::Vec2d mapFocus;
+  Vec::Vec2d mapConst;
 
-  std::vector<std::vector<Math::Vec3f>> mapPos;
-  std::vector<std::vector<Math::Vec3f>> mapNor;
-  std::vector<std::vector<Math::Vec3f>> mapCol;
+  std::vector<std::vector<Vec::Vec3f>> mapPos;
+  std::vector<std::vector<Vec::Vec3f>> mapNor;
+  std::vector<std::vector<Vec::Vec3f>> mapCol;
 
   public:
   bool isActivProj;

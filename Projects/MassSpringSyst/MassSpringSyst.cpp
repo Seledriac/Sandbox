@@ -11,10 +11,9 @@
 
 // Project lib
 #include "../../Data.hpp"
-#include "../../FileIO/FileInput.hpp"
 #include "../../Util/Colormap.hpp"
 #include "../../Util/Random.hpp"
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Link to shared sandbox data
@@ -123,13 +122,13 @@ void MassSpringSyst::Allocate() {
 
   // Allocate
   Adj= std::vector<std::vector<int>>(N, std::vector<int>());
-  Ref= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  Pos= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  Vel= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  Acc= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  For= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  Ext= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  Fix= std::vector<Math::Vec3f>(N, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  Ref= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Pos= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Vel= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Acc= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  For= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Ext= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Fix= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   Mas= std::vector<float>(N, 0.0f);
 }
 
@@ -219,13 +218,13 @@ void MassSpringSyst::Draw() {
 
 void MassSpringSyst::ComputeForces() {
   // Reset forces
-  std::fill(For.begin(), For.end(), Math::Vec3f(0.0f, 0.0f, 0.0f));
+  std::fill(For.begin(), For.end(), Vec::Vec3f(0.0f, 0.0f, 0.0f));
 
   // Accumulate forces
   for (int k0= 0; k0 < N; k0++) {
-    For[k0]+= D.UI[CoeffExt____].GetF() * Ext[k0];                         // External forces
-    For[k0]+= D.UI[CoeffGravi__].GetF() * Math::Vec3f(0.0f, 0.0f, -1.0f);  // Gravity forces
-    for (int k1 : Adj[k0]) {                                               // Spring forces
+    For[k0]+= D.UI[CoeffExt____].GetF() * Ext[k0];                        // External forces
+    For[k0]+= D.UI[CoeffGravi__].GetF() * Vec::Vec3f(0.0f, 0.0f, -1.0f);  // Gravity forces
+    for (int k1 : Adj[k0]) {                                              // Spring forces
       const float lenCur= (Pos[k1] - Pos[k0]).norm();
       const float lenRef= (Ref[k1] - Ref[k0]).norm();
       For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
@@ -259,7 +258,7 @@ void MassSpringSyst::StepForwardInTime() {
     ComputeForces();  // ft+1 (xt+1)
     ApplyBCFor();
     for (int k0= 0; k0 < N; k0++) {
-      Math::Vec3f oldAcc= Acc[k0];
+      Vec::Vec3f oldAcc= Acc[k0];
       Acc[k0]= For[k0] / Mas[k0];                                               // at+1 = ft+1 / m
       Vel[k0]= (1.0 - damping * dt) * Vel[k0] + 0.5 * (oldAcc + Acc[k0]) * dt;  // vt+1 = vt + 0.5 * (at + at+1) * dt
     }

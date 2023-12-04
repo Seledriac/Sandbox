@@ -4,7 +4,7 @@
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Simple implementation of Reynolds Boids to produce emergent swarm intelligence
@@ -19,8 +19,8 @@ class AgentSwarmBoid
   private:
   int NbAgents;
   int NbTypes;
-  std::vector<Math::Vec3f> Pos;
-  std::vector<Math::Vec3f> Vel;
+  std::vector<Vec::Vec3f> Pos;
+  std::vector<Vec::Vec3f> Vel;
   std::vector<int> Typ;
 
   public:

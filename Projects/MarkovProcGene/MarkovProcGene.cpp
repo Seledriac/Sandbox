@@ -12,9 +12,9 @@
 
 // Project lib
 #include "../../Data.hpp"
-#include "../../FileIO/FileInput.hpp"
 #include "../../Util/Draw.hpp"
 #include "../../Util/Field.hpp"
+#include "../../Util/FileInput.hpp"
 #include "../../Util/Random.hpp"
 
 

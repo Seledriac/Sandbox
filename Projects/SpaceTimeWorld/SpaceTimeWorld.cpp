@@ -12,29 +12,29 @@
 
 // Project lib
 #include "../../Data.hpp"
-#include "../../FileIO/FileInput.hpp"
 #include "../../Util/Bresenham.hpp"
 #include "../../Util/Colormap.hpp"
 #include "../../Util/Field.hpp"
-#include "../../Util/Vector.hpp"
+#include "../../Util/FileInput.hpp"
+#include "../../Util/Vec.hpp"
 
 
 class Shape
 {
   public:
   int type;
-  Math::Vec3f posBeg;
-  Math::Vec3f posEnd;
-  Math::Vec3f col;
+  Vec::Vec3f posBeg;
+  Vec::Vec3f posEnd;
+  Vec::Vec3f col;
   float mass;
   float rad0;
   float rad1;
 
   Shape(
       int const iType,
-      Math::Vec3f const iPosBeg,
-      Math::Vec3f const iPosEnd,
-      Math::Vec3f const iCol,
+      Vec::Vec3f const iPosBeg,
+      Vec::Vec3f const iPosEnd,
+      Vec::Vec3f const iCol,
       float const iMass,
       float const iRad0,
       float const iRad1) {
@@ -47,8 +47,8 @@ class Shape
     rad1= iRad1;
   }
 
-  float ImplicitEval(Math::Vec3f const iPosCell, float const iTimeRatio) {
-    Math::Vec3f posObj= posBeg + (posEnd - posBeg) * iTimeRatio;
+  float ImplicitEval(Vec::Vec3f const iPosCell, float const iTimeRatio) {
+    Vec::Vec3f posObj= posBeg + (posEnd - posBeg) * iTimeRatio;
 
     float val= 1.0f;
     if (type == 0)
@@ -165,12 +165,12 @@ void SpaceTimeWorld::Allocate() {
   if (!Field::CheckFieldDimensions(worldSolid, worldNbT, worldNbX, worldNbY, worldNbZ)) worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   if (!Field::CheckFieldDimensions(worldIsFix, worldNbT, worldNbX, worldNbY, worldNbZ)) worldIsFix= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
   if (!Field::CheckFieldDimensions(worldMasss, worldNbT, worldNbX, worldNbY, worldNbZ)) worldMasss= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
-  if (!Field::CheckFieldDimensions(worldColor, worldNbT, worldNbX, worldNbY, worldNbZ)) worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec3f(0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(worldFlows, worldNbT, worldNbX, worldNbY, worldNbZ)) worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Field::AllocField2D(screenNbH, screenNbV, Math::Vec3f(0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(worldColor, worldNbT, worldNbX, worldNbY, worldNbZ)) worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(worldFlows, worldNbT, worldNbX, worldNbY, worldNbZ)) worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Field::AllocField2D(screenNbH, screenNbV, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   if (!Field::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
-  if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 
@@ -233,10 +233,10 @@ void SpaceTimeWorld::Refresh() {
 
   // Create list of shapes to add
   std::vector<Shape> shapes;
-  shapes.push_back(Shape(0, Math::Vec3f(0.6f, -0.2f, -0.2f), Math::Vec3f(0.6f, +1.2f, 1.2f), Math::Vec3f(0.2f, 0.6f, 0.2f), +10.0f, 0.05f, 0.00f));  // 2 crossing balls
-  // shapes.push_back(Shape(0, Math::Vec3f(0.3f, +1.2f, -0.2f), Math::Vec3f(0.3f, -0.2f, 1.2f), Math::Vec3f(0.6f, 0.2f, 0.2f), -10.0f, 0.05f, 0.00f));  // 2 crossing balls
-  // shapes.push_back(Shape(0, Math::Vec3f(0.2f, +0.5f, +0.5f), Math::Vec3f(0.8f, +0.5f, 0.5f), Math::Vec3f(0.6f, 0.2f, 0.2f), +20.0f, 0.03f, 0.00f));  // 1 small approaching ball
-  // shapes.push_back(Shape(1, Math::Vec3f(0.5f, -0.5f, +0.5f), Math::Vec3f(0.5f, +1.5f, 0.5f), Math::Vec3f(0.3f, 0.3f, 0.7f), +10.0f, 0.15f, 0.03f));  // 1 moving donut
+  shapes.push_back(Shape(0, Vec::Vec3f(0.6f, -0.2f, -0.2f), Vec::Vec3f(0.6f, +1.2f, 1.2f), Vec::Vec3f(0.2f, 0.6f, 0.2f), +10.0f, 0.05f, 0.00f));  // 2 crossing balls
+  // shapes.push_back(Shape(0, Vec::Vec3f(0.3f, +1.2f, -0.2f), Vec::Vec3f(0.3f, -0.2f, 1.2f), Vec::Vec3f(0.6f, 0.2f, 0.2f), -10.0f, 0.05f, 0.00f));  // 2 crossing balls
+  // shapes.push_back(Shape(0, Vec::Vec3f(0.2f, +0.5f, +0.5f), Vec::Vec3f(0.8f, +0.5f, 0.5f), Vec::Vec3f(0.6f, 0.2f, 0.2f), +20.0f, 0.03f, 0.00f));  // 1 small approaching ball
+  // shapes.push_back(Shape(1, Vec::Vec3f(0.5f, -0.5f, +0.5f), Vec::Vec3f(0.5f, +1.5f, 0.5f), Vec::Vec3f(0.3f, 0.3f, 0.7f), +10.0f, 0.15f, 0.03f));  // 1 moving donut
 
   // Add the shapes
   for (int t= 0; t < worldNbT; t++) {
@@ -245,7 +245,7 @@ void SpaceTimeWorld::Refresh() {
     for (int x= 0; x < worldNbX; x++) {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
-          Math::Vec3f posCell((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
+          Vec::Vec3f posCell((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           for (Shape shape : shapes) {
             if (shape.ImplicitEval(posCell, posT) < 0.0f) {
               worldSolid[t][x][y][z]= true;
@@ -263,13 +263,13 @@ void SpaceTimeWorld::Refresh() {
 
   // Precompute a mask for the world flow
   int maskSize= D.UI[MassReach___].GetI();
-  std::vector<std::vector<std::vector<std::vector<Math::Vec4f>>>> maskVec= Field::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  std::vector<std::vector<std::vector<std::vector<Vec::Vec4f>>>> maskVec= Field::AllocField4D(2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, 2 * maskSize + 1, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
   for (int t= 0; t < maskSize * 2 + 1; t++) {
     for (int x= 0; x < maskSize * 2 + 1; x++) {
       for (int y= 0; y < maskSize * 2 + 1; y++) {
         for (int z= 0; z < maskSize * 2 + 1; z++) {
           if (t == maskSize && x == maskSize && y == maskSize && z == maskSize) continue;
-          Math::Vec4f vec(float(maskSize - t), float(maskSize - x), float(maskSize - y), float(maskSize - z));
+          Vec::Vec4f vec(float(maskSize - t), float(maskSize - x), float(maskSize - y), float(maskSize - z));
           maskVec[t][x][y][z]= vec.normalized() / vec.normSquared();
         }
       }
@@ -282,7 +282,7 @@ void SpaceTimeWorld::Refresh() {
     for (int x= 0; x < worldNbX; x++)
       for (int y= 0; y < worldNbY; y++)
         for (int z= 0; z < worldNbZ; z++)
-          worldFlows[t][x][y][z]= Math::Vec4f(0.0f, 0.0f, 0.0f, 0.0f);
+          worldFlows[t][x][y][z]= Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f);
 
 #pragma omp parallel for
   for (int t= 0; t < worldNbT; t++) {
@@ -315,10 +315,10 @@ void SpaceTimeWorld::Refresh() {
   // Initialize the photon fields
   for (int h= 0; h < screenNbH; h++) {
     for (int v= 0; v < screenNbV; v++) {
-      screenColor[h][v]= Math::Vec3f(0.0f, 0.0f, 0.0f);
+      screenColor[h][v]= Vec::Vec3f(0.0f, 0.0f, 0.0f);
       screenCount[h][v]= 1;
-      photonPos[h][v][0]= Math::Vec4f(((float)idxT + 0.5f) / float(worldNbT), 1.0f - 1.0f / float(worldNbX), (0.5f + float(h)) / float(screenNbH), (0.5f + float(v)) / float(screenNbV));
-      photonVel[h][v][0]= Math::Vec4f(0.0f, -2.0f, 0.0f, 0.0f);
+      photonPos[h][v][0]= Vec::Vec4f(((float)idxT + 0.5f) / float(worldNbT), 1.0f - 1.0f / float(worldNbX), (0.5f + float(h)) / float(screenNbH), (0.5f + float(v)) / float(screenNbV));
+      photonVel[h][v][0]= Vec::Vec4f(0.0f, -2.0f, 0.0f, 0.0f);
     }
   }
 
@@ -335,12 +335,12 @@ void SpaceTimeWorld::Refresh() {
 
         // if (idxT < 0 || idxT >= worldNbT || idxX < 0 || idxX >= worldNbX || idxY < 0 || idxY >= worldNbY || idxZ < 0 || idxZ >= worldNbZ) {
         //   float velDif= D.UI[FactorDoppl_].Get() * (photonVel[h][v][0].norm() - photonVel[h][v][s].norm());
-        //   screenColor[h][v]= Math::Vec3f(0.1, 0.1, 0.1) * (1.0 + velDif);
+        //   screenColor[h][v]= Vec::Vec3f(0.1, 0.1, 0.1) * (1.0 + velDif);
         //   break;
         // }
 
         photonPos[h][v][s + 1]= photonPos[h][v][s] + photonVel[h][v][s] / float(screenNbS);
-        Math::Vec4f flow(
+        Vec::Vec4f flow(
             worldFlows[idxT][idxX][idxY][idxZ][0] * D.UI[TimePersist_].GetF(),
             worldFlows[idxT][idxX][idxY][idxZ][1] * D.UI[FactorCurv__].GetF(),
             worldFlows[idxT][idxX][idxY][idxZ][2] * D.UI[FactorCurv__].GetF(),
@@ -428,11 +428,11 @@ void SpaceTimeWorld::Draw() {
       for (int y= 0; y < worldNbY; y++) {
         for (int z= 0; z < worldNbZ; z++) {
           // if (worldSolid[idxT][x][y][z]) continue;
-          Math::Vec3f flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
+          Vec::Vec3f flowVec(worldFlows[idxT][x][y][z][1], worldFlows[idxT][x][y][z][2], worldFlows[idxT][x][y][z][3]);
           float r, g, b;
           Colormap::RatioToJetBrightSmooth(0.5 + worldFlows[idxT][x][y][z][0], r, g, b);
           glColor3f(r, g, b);
-          Math::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
+          Vec::Vec3f pos((float(x) + 0.5f) / float(worldNbX), (float(y) + 0.5f) / float(worldNbY), (float(z) + 0.5f) / float(worldNbZ));
           glVertex3fv(pos.array());
           glVertex3fv((pos + D.UI[FactorCurv__].GetF() * flowVec / float(screenNbS)).array());
         }
@@ -465,8 +465,8 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v] - 1; s++) {
-          Math::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
-          Math::Vec3f photonEnd(photonPos[h][v][s + 1][1], photonPos[h][v][s + 1][2], photonPos[h][v][s + 1][3]);
+          Vec::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
+          Vec::Vec3f photonEnd(photonPos[h][v][s + 1][1], photonPos[h][v][s + 1][2], photonPos[h][v][s + 1][3]);
           glColor3fv(screenColor[h][v].array());
           glVertex3fv(photonBeg.array());
           glColor3fv(screenColor[h][v].array());
@@ -482,7 +482,7 @@ void SpaceTimeWorld::Draw() {
     for (int h= displaySkipsize / 2; h < screenNbH; h+= displaySkipsize) {
       for (int v= displaySkipsize / 2; v < screenNbV; v+= displaySkipsize) {
         for (int s= 0; s < screenCount[h][v]; s++) {
-          Math::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
+          Vec::Vec3f photonBeg(photonPos[h][v][s][1], photonPos[h][v][s][2], photonPos[h][v][s][3]);
           glColor3fv(screenColor[h][v].array());
           glVertex3fv(photonBeg.array());
         }

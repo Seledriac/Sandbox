@@ -4,10 +4,10 @@
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
-// Terrain generation and erosion simulation 
+// Terrain generation and erosion simulation
 // - Representation as height map
 // - Initial terrain created with iterative random cut planes
 // - Particles dropped and collide with the terrain using Position Based Dynamics scheme
@@ -21,18 +21,18 @@ class TerrainErosion
   int terrainNbX;
   int terrainNbY;
   int terrainNbC;
-  std::vector<std::vector<Math::Vec3f>> terrainPos;
-  std::vector<std::vector<Math::Vec3f>> terrainNor;
-  std::vector<std::vector<Math::Vec3f>> terrainCol;
+  std::vector<std::vector<Vec::Vec3f>> terrainPos;
+  std::vector<std::vector<Vec::Vec3f>> terrainNor;
+  std::vector<std::vector<Vec::Vec3f>> terrainCol;
   std::vector<std::vector<float>> terrainChg;
 
   int dropletNbK;
-  std::vector<Math::Vec3f> dropletPosOld;
-  std::vector<Math::Vec3f> dropletPosCur;
-  std::vector<Math::Vec3f> dropletVelCur;
-  std::vector<Math::Vec3f> dropletAccCur;
-  std::vector<Math::Vec3f> dropletForCur;
-  std::vector<Math::Vec3f> dropletColCur;
+  std::vector<Vec::Vec3f> dropletPosOld;
+  std::vector<Vec::Vec3f> dropletPosCur;
+  std::vector<Vec::Vec3f> dropletVelCur;
+  std::vector<Vec::Vec3f> dropletAccCur;
+  std::vector<Vec::Vec3f> dropletForCur;
+  std::vector<Vec::Vec3f> dropletColCur;
   std::vector<float> dropletMasCur;
   std::vector<float> dropletRadCur;
   std::vector<float> dropletSatCur;

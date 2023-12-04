@@ -5,7 +5,7 @@
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Generate 3D surfaces from fractal curves
@@ -19,8 +19,8 @@
 class FractalCurvDev
 {
   private:
-  std::vector<std::vector<Math::Vec3f>> Nodes;
-  std::vector<std::array<Math::Vec3f, 3>> Faces;
+  std::vector<std::vector<Vec::Vec3f>> Nodes;
+  std::vector<std::array<Vec::Vec3f, 3>> Faces;
 
   public:
   bool isActivProj;

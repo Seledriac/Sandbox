@@ -1,11 +1,10 @@
 #pragma once
 
 // Standard lib
-#include <array>
 #include <vector>
 
 // Project lib
-#include "../../Util/Vector.hpp"
+#include "../../Util/Vec.hpp"
 
 
 // Particle system simulation with a Position-Based Dynamics (PBD) approach
@@ -21,12 +20,12 @@ class PosiBasedDynam
   private:
   int N;
 
-  std::vector<Math::Vec3f> PosOld;
-  std::vector<Math::Vec3f> PosCur;
-  std::vector<Math::Vec3f> VelCur;
-  std::vector<Math::Vec3f> AccCur;
-  std::vector<Math::Vec3f> ForCur;
-  std::vector<Math::Vec3f> ColCur;
+  std::vector<Vec::Vec3f> PosOld;
+  std::vector<Vec::Vec3f> PosCur;
+  std::vector<Vec::Vec3f> VelCur;
+  std::vector<Vec::Vec3f> AccCur;
+  std::vector<Vec::Vec3f> ForCur;
+  std::vector<Vec::Vec3f> ColCur;
   std::vector<float> RadCur;
   std::vector<float> MasCur;
   std::vector<float> HotCur;

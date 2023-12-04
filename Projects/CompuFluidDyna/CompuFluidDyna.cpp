@@ -9,13 +9,11 @@
 #include "../../freeglut/include/GL/freeglut.h"
 
 // Project lib
-#include "../../FileIO/FileInput.hpp"
 #include "../../Util/Colormap.hpp"
 #include "../../Util/Field.hpp"
-#include "../../Util/Random.hpp"
 #include "../../Util/Timer.hpp"
-#include "../../Util/Vector.hpp"
-#include "CompuFluidDyna_Param.hpp"
+#include "../../Util/Vec.hpp"
+#include "CompuFluidDynaParam.hpp"
 
 
 // Constructor
@@ -395,7 +393,7 @@ void CompuFluidDyna::Draw() {
           }
           // Color by velocity magnitude
           if (D.UI[ColorMode___].GetI() == 2) {
-            Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
+            Vec::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (vec.norm() < D.UI[ColorThresh_].GetF()) continue;
             Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
           }
@@ -474,7 +472,7 @@ void CompuFluidDyna::Draw() {
             if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
             if (Solid[x][y][z] && D.UI[ColorThresh_].GetF() == 0.0) continue;
             // Draw the velocity field
-            Math::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
+            Vec::Vec3f vec(VelX[x][y][z], VelY[x][y][z], VelZ[x][y][z]);
             if (std::abs(D.UI[SliceDim____].GetI()) == 1) vec[0]= 0.0f;
             if (std::abs(D.UI[SliceDim____].GetI()) == 2) vec[1]= 0.0f;
             if (std::abs(D.UI[SliceDim____].GetI()) == 3) vec[2]= 0.0f;
@@ -482,7 +480,7 @@ void CompuFluidDyna::Draw() {
               float r= 0.0f, g= 0.0f, b= 0.0f;
               Colormap::RatioToJetBrightSmooth(vec.norm() * D.UI[ColorFactor_].GetF(), r, g, b);
               glColor3f(r, g, b);
-              Math::Vec3f pos((float)x, (float)y, (float)z);
+              Vec::Vec3f pos((float)x, (float)y, (float)z);
               glVertex3fv(pos.array());
               // glVertex3fv(pos + vec * segmentRelLength * D.UI[ScaleFactor_].GetF());
               // glVertex3fv(pos + vec.normalized() * segmentRelLength * D.UI[ScaleFactor_].GetF());
@@ -516,7 +514,7 @@ void CompuFluidDyna::Draw() {
           if (D.UI[SliceDim____].GetI() == 2 && y != (int)std::round(D.UI[SlicePlotY__].GetF() * nY)) continue;
           if (D.UI[SliceDim____].GetI() == 3 && z != (int)std::round(D.UI[SlicePlotZ__].GetF() * nZ)) continue;
           // Draw the velocity field
-          Math::Vec3f vec(AdvX[x][y][z], AdvY[x][y][z], AdvZ[x][y][z]);
+          Vec::Vec3f vec(AdvX[x][y][z], AdvY[x][y][z], AdvZ[x][y][z]);
           if (std::abs(D.UI[SliceDim____].GetI()) == 1) vec[0]= 0.0f;
           if (std::abs(D.UI[SliceDim____].GetI()) == 2) vec[1]= 0.0f;
           if (std::abs(D.UI[SliceDim____].GetI()) == 3) vec[2]= 0.0f;
@@ -525,7 +523,7 @@ void CompuFluidDyna::Draw() {
             const float g= 0.5f - vec[1];
             const float b= 0.5f - vec[2];
             glColor3f(r, g, b);
-            Math::Vec3f pos((float)x, (float)y, (float)z);
+            Vec::Vec3f pos((float)x, (float)y, (float)z);
             glVertex3fv(pos.array());
             glVertex3fv(pos + vec);
           }

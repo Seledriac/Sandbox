@@ -11,7 +11,7 @@
 
 // Project Utilities
 #include "Util/Colormap.hpp"
-#include "Util/Vector.hpp"
+#include "Util/Vec.hpp"
 #include "tb/Camera.hpp"
 
 // Project Sandbox Classes
