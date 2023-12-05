@@ -179,15 +179,10 @@ void CompuFluidDyna::InitializeScenario() {
   const int inputFile= D.UI[InputFile___].GetI();
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (scenarioType == 0) {
-    if (inputFile == 0) FileInput::LoadImageBMPFile("Resources/CFD_TeslaValveTwinSharp.bmp", imageRGBA, false);
-    if (inputFile == 1) FileInput::LoadImageBMPFile("Resources/CFD_Venturi.bmp", imageRGBA, false);
-    if (inputFile == 2) FileInput::LoadImageBMPFile("Resources/CFD_Nozzle.bmp", imageRGBA, false);
-    if (inputFile == 3) FileInput::LoadImageBMPFile("Resources/CFD_NACA.bmp", imageRGBA, false);
-    if (inputFile == 4) FileInput::LoadImageBMPFile("Resources/CFD_Wing.bmp", imageRGBA, false);
-    if (inputFile == 5) FileInput::LoadImageBMPFile("Resources/CFD_CriCri.bmp", imageRGBA, false);
-    if (inputFile == 6) FileInput::LoadImageBMPFile("Resources/CFD_Pipe.bmp", imageRGBA, false);
-    if (inputFile == 7) FileInput::LoadImageBMPFile("Resources/CFD_Wall.bmp", imageRGBA, false);
-    if (inputFile == 8) FileInput::LoadImageBMPFile("Resources/CFD_TestScenario.bmp", imageRGBA, false);
+    if (inputFile == 0) FileInput::LoadImageBMPFile("FileInputs/CFD_NACA.bmp", imageRGBA, false);
+    if (inputFile == 1) FileInput::LoadImageBMPFile("FileInputs/CFD_Nozzle.bmp", imageRGBA, false);
+    if (inputFile == 2) FileInput::LoadImageBMPFile("FileInputs/CFD_Pipe.bmp", imageRGBA, false);
+    if (inputFile == 3) FileInput::LoadImageBMPFile("FileInputs/CFD_TeslaValve.bmp", imageRGBA, false);
   }
   // Set scenario values
   for (int x= 0; x < nX; x++) {

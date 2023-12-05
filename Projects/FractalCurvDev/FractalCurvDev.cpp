@@ -174,7 +174,7 @@ void FractalCurvDev::Refresh() {
 
   // Save OBJ file of developed surface
   if (D.UI[WriteFile___].GetB()) {
-    std::string iFullpath= "Outputs/test.obj";
+    std::string iFullpath= "FileOutputs/test.obj";
     printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
     FILE* outputFile= nullptr;
     outputFile= fopen(iFullpath.c_str(), "w");

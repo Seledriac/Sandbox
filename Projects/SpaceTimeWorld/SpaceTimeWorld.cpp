@@ -186,7 +186,7 @@ void SpaceTimeWorld::Refresh() {
   // Load the BMP image for the background
   static std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (imageRGBA.empty())
-    FileInput::LoadImageBMPFile("Resources/GR_AlbertArt.bmp", imageRGBA, false);
+    FileInput::LoadImageBMPFile("FileInputs/GR_AlbertArt.bmp", imageRGBA, false);
 
   // Add the background
   for (int t= 0; t < worldNbT; t++) {

@@ -130,7 +130,7 @@ void MarkovProcGene::Refresh() {
     Field= Field::AllocField3D(nbX, nbY, nbZ, 0);
 
     std::vector<std::vector<std::array<float, 4>>> imageRGBA;
-    FileInput::LoadImageBMPFile("Resources/WFC_Example.bmp", imageRGBA, false);
+    FileInput::LoadImageBMPFile("FileInputs/WFC_Example.bmp", imageRGBA, false);
     const int nbWImag= (int)imageRGBA.size();
     const int nbHImag= (int)imageRGBA[0].size();
     const int nbWCell= std::min(std::max(D.UI[RuleSizeY___].GetI(), 3), nbWImag);

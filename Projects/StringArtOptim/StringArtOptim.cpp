@@ -128,12 +128,12 @@ void StringArtOptim::Refresh() {
   ImRef= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   ImCur= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
-  if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("Resources/SA_Smile.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("Resources/SA_MonaLisa.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 2) FileInput::LoadImageBMPFile("Resources/SA_Pillars.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("Resources/SA_Butterfly.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("Resources/GR_AlbertArt.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 5) FileInput::LoadImageBMPFile("Resources/GR_DeepField.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("FileInputs/SA_Smile.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("FileInputs/SA_MonaLisa.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 2) FileInput::LoadImageBMPFile("FileInputs/SA_Pillars.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("FileInputs/SA_Butterfly.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("FileInputs/GR_AlbertArt.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 5) FileInput::LoadImageBMPFile("FileInputs/GR_DeepField.bmp", imageRGBA, false);
   for (int w= 0; w < nW; w++) {
     for (int h= 0; h < nH; h++) {
       if (!imageRGBA.empty()) {
