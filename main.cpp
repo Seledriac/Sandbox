@@ -28,8 +28,11 @@
 #include "Projects/TerrainErosion/TerrainErosion.hpp"
 
 
-// Global variables used for the display
-int winW, winH;
+// Global variables used by the display
+static int windowID;
+static int winW, winH;
+
+// Global constants used by the display
 constexpr int winFPS= 60;
 constexpr int paramLabelNbChar= 12;
 constexpr int paramSpaceNbChar= 1;
@@ -49,9 +52,8 @@ constexpr int textBoxW= 9 * charWidth;
 constexpr int textBoxH= charHeight;
 Camera *cam;
 
-// Global variables used by the scene
+// Global variables used by the projects
 Data D;
-
 AgentSwarmBoid myAgentSwarmBoid;
 CompuFluidDyna myCompuFluidDyna;
 FractalCurvDev myFractalCurvDev;
@@ -169,6 +171,7 @@ float elapsed_time() {
 }
 
 
+// Utility function to draw text
 void draw_text(int const x, int const y, char *const text) {
   glPushMatrix();
   glTranslatef(float(x), float(y), 0.0f);
@@ -178,6 +181,30 @@ void draw_text(int const x, int const y, char *const text) {
   for (char *p= text; *p; p++)
     glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *p);
   glPopMatrix();
+}
+
+
+// Utility function to save persistent settings on disk
+void save_settings() {
+  FILE *outputFile= nullptr;
+  outputFile= fopen("settings.txt", "w");
+  if (outputFile != nullptr) {
+    fprintf(outputFile, "%d %d %d %d\n", winW, winH, winPosW, winPosH);
+    fclose(outputFile);
+  }
+}
+
+
+// Utility function to load persistent settings from disk
+void load_settings() {
+  FILE *inputFile= nullptr;
+  inputFile= fopen("settings.txt", "r");
+  if (inputFile != nullptr) {
+    char buffer[1000];
+    if (fgets(buffer, sizeof buffer, inputFile) != NULL) {
+      sscanf(buffer, "%d %d %d %d", &winW, &winH, &winPosW, &winPosH);
+    }
+  }
 }
 
 
@@ -447,7 +474,14 @@ void callback_keyboard(unsigned char key, int x, int y) {
   (void)x;  // Disable warning unused variable
   (void)y;  // Disable warning unused variable
 
-  if (key == 27) exit(EXIT_SUCCESS);
+  if (key == 27) {
+    // Save window settings before exiting
+    winPosW= glutGet((GLenum)GLUT_WINDOW_X);
+    winPosH= glutGet((GLenum)GLUT_WINDOW_Y);
+    save_settings();
+    glutDestroyWindow(windowID);
+    exit(EXIT_SUCCESS);
+  }
   else if (key == ' ') D.playAnimation= !D.playAnimation;
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\r') D.autoRefresh= !D.autoRefresh;
@@ -648,12 +682,19 @@ void init_scene() {
 
 // Main function
 int main(int argc, char *argv[]) {
+  // Load window settings or use default values
+  winW= 1400;
+  winH= 900;
+  winPosW= -1;
+  winPosH= -1;
+  load_settings();
+
   // Window creation
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(1400, 900);
-  glutInitWindowPosition(-1, -1);
-  glutCreateWindow("Display");
+  glutInitWindowSize(winW, winH);
+  glutInitWindowPosition(winPosW, winPosH);
+  windowID= glutCreateWindow("Sandbox");
 
   // World initialization
   init_GL();
@@ -667,7 +708,7 @@ int main(int argc, char *argv[]) {
   glutMouseFunc(&callback_mouse_click);
   glutMotionFunc(&callback_mouse_motion);
   glutPassiveMotionFunc(&callback_passive_mouse_motion);
-  glutTimerFunc(100, callback_timer, 0);
+  glutTimerFunc(100, &callback_timer, 0);
 
   // Start refresh loop
   glutMainLoop();
