@@ -31,6 +31,11 @@
 // Global variables used by the display
 static int windowID;
 static int winW, winH;
+static int winPosW, winPosH;
+static bool isMenuAttached;
+static bool isMenuActive;
+static bool isDarkMode;
+static bool isSmoothDraw;
 
 // Global constants used by the display
 constexpr int winFPS= 60;
@@ -277,24 +282,24 @@ void callback_display() {
   glLoadIdentity();
 
   // Draw the parameter list
-  {
-    glLineWidth(2.0f);
-    for (int k= 0; k < int(D.UI.size()); k++) {
-      if (k == D.idxParamUI)
-        glColor3f(0.8f, 0.4f, 0.4f);
-      else
-        glColor3f(0.8f, 0.8f, 0.8f);
-      char str[50];
-      sprintf(str, "%s %+020.9f", D.UI[k].name.c_str(), D.UI[k].GetD());  // Format must match paramValNbChar settings
-      draw_text(0, winH - (k + 1) * (charHeight + pixelMargin), str);
-      if (k == D.idxParamUI) {
-        sprintf(str, "_");
-        draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - (k + 1) * (charHeight + pixelMargin), str);
-        draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - 1 - k * (charHeight + pixelMargin), str);
-      }
+  glLineWidth(2.0f);
+  for (int k= 0; k < int(D.UI.size()); k++) {
+    if (k == D.idxParamUI)
+      glColor3f(0.8f, 0.4f, 0.4f);
+    else {
+      if (isDarkMode) glColor3f(0.8f, 0.8f, 0.8f);
+      else glColor3f(0.2f, 0.2f, 0.2f);
     }
-    glLineWidth(1.0f);
+    char str[50];
+    sprintf(str, "%s %+020.9f", D.UI[k].name.c_str(), D.UI[k].GetD());  // Format must match paramValNbChar settings
+    draw_text(0, winH - (k + 1) * (charHeight + pixelMargin), str);
+    if (k == D.idxParamUI) {
+      sprintf(str, "_");
+      draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - (k + 1) * (charHeight + pixelMargin), str);
+      draw_text((paramLabelNbChar + paramSpaceNbChar + D.idxCursorUI) * charWidth, winH - 1 - k * (charHeight + pixelMargin), str);
+    }
   }
+  glLineWidth(1.0f);
 
   // Draw the 2D plot
   if (!D.plotData.empty()) {
@@ -486,6 +491,13 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\r') D.autoRefresh= !D.autoRefresh;
   else if (key == '\b') D.UI[D.idxParamUI].Set(0.0);
+  else if (key == '/') {
+    if (!isMenuActive) {
+      if (isMenuAttached) glutDetachMenu(GLUT_RIGHT_BUTTON);
+      else glutAttachMenu(GLUT_RIGHT_BUTTON);
+      isMenuAttached= !isMenuAttached;
+    }
+  }
 
   else if (key == '1') D.displayMode1= !D.displayMode1;
   else if (key == '2') D.displayMode2= !D.displayMode2;
@@ -620,9 +632,58 @@ void callback_passive_mouse_motion(int x, int y) {
 }
 
 
+// Menu activation callback
+void callback_menu_status(int status, int x, int y) {
+  (void)x;  // Disable warning unused variable
+  (void)y;  // Disable warning unused variable
+  if (status == GLUT_MENU_IN_USE) isMenuActive= true;
+  if (status == GLUT_MENU_NOT_IN_USE) isMenuActive= false;
+}
+
+
+// Menu selection callback
+void callback_menu(int num) {
+  if (num == 2) {
+    isDarkMode= !isDarkMode;
+    if (isDarkMode) glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    else glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  }
+  if (num == 3) {
+    isSmoothDraw= !isSmoothDraw;
+    if (isSmoothDraw) {
+      glEnable(GL_POINT_SMOOTH);
+      glEnable(GL_LINE_SMOOTH);
+    }
+    else {
+      glDisable(GL_POINT_SMOOTH);
+      glDisable(GL_LINE_SMOOTH);
+    }
+  }
+  glutPostRedisplay();
+}
+
+
+// Menu initialization
+void init_menu() {
+  // Create menu tree starting from leaves
+  int submenu_id= glutCreateMenu(callback_menu);
+  glutAddMenuEntry("Dark mode", 2);
+  glutAddMenuEntry("Smooth draw", 3);
+  glutCreateMenu(callback_menu);
+  glutAddSubMenu("Display", submenu_id);
+  glutAddMenuEntry("Exit", 0);
+
+  // Add menu status callback and set flags
+  glutMenuStatusFunc(&callback_menu_status);
+  isMenuAttached= false;
+  isMenuActive= false;
+}
+
+
 // OpenGL initialization
 void init_GL() {
   // Set background color
+  isDarkMode= true;
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
   // Define light properties
@@ -663,6 +724,7 @@ void init_GL() {
   glShadeModel(GL_SMOOTH);
   glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
   glEnable(GL_COLOR_MATERIAL);
+  isSmoothDraw= true;
   glEnable(GL_POINT_SMOOTH);
   glEnable(GL_LINE_SMOOTH);
 }
@@ -697,6 +759,7 @@ int main(int argc, char *argv[]) {
   windowID= glutCreateWindow("Sandbox");
 
   // World initialization
+  init_menu();
   init_GL();
   init_scene();
 
