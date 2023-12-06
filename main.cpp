@@ -194,7 +194,8 @@ void save_settings() {
   FILE *outputFile= nullptr;
   outputFile= fopen("settings.txt", "w");
   if (outputFile != nullptr) {
-    fprintf(outputFile, "%d %d %d %d\n", winW, winH, winPosW, winPosH);
+    fprintf(outputFile, "winPosW winPosH %d %d\n", winPosW, winPosH);
+    fprintf(outputFile, "winW winH %d %d\n", winW, winH);
     fclose(outputFile);
   }
 }
@@ -205,10 +206,9 @@ void load_settings() {
   FILE *inputFile= nullptr;
   inputFile= fopen("settings.txt", "r");
   if (inputFile != nullptr) {
-    char buffer[1000];
-    if (fgets(buffer, sizeof buffer, inputFile) != NULL) {
-      sscanf(buffer, "%d %d %d %d", &winW, &winH, &winPosW, &winPosH);
-    }
+    fscanf(inputFile, "winPosW winPosH %d %d\n", &winPosW, &winPosH);
+    fscanf(inputFile, "winW winH %d %d\n", &winW, &winH);
+    fclose(inputFile);
   }
 }
 
@@ -480,10 +480,6 @@ void callback_keyboard(unsigned char key, int x, int y) {
   (void)y;  // Disable warning unused variable
 
   if (key == 27) {
-    // Save window settings before exiting
-    winPosW= glutGet((GLenum)GLUT_WINDOW_X);
-    winPosH= glutGet((GLenum)GLUT_WINDOW_Y);
-    save_settings();
     glutDestroyWindow(windowID);
     exit(EXIT_SUCCESS);
   }
@@ -491,7 +487,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\r') D.autoRefresh= !D.autoRefresh;
   else if (key == '\b') D.UI[D.idxParamUI].Set(0.0);
-  else if (key == '/') {
+  else if (key == '\t') {
     if (!isMenuActive) {
       if (isMenuAttached) glutDetachMenu(GLUT_RIGHT_BUTTON);
       else glutAttachMenu(GLUT_RIGHT_BUTTON);
@@ -643,11 +639,13 @@ void callback_menu_status(int status, int x, int y) {
 
 // Menu selection callback
 void callback_menu(int num) {
+  // Toggle dark mode display
   if (num == 2) {
     isDarkMode= !isDarkMode;
     if (isDarkMode) glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     else glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   }
+  // Toggle smooth drawing option
   if (num == 3) {
     isSmoothDraw= !isSmoothDraw;
     if (isSmoothDraw) {
@@ -658,6 +656,12 @@ void callback_menu(int num) {
       glDisable(GL_POINT_SMOOTH);
       glDisable(GL_LINE_SMOOTH);
     }
+  }
+  // Save window settings
+  if (num == 4) {
+    winPosW= glutGet((GLenum)GLUT_WINDOW_X);
+    winPosH= glutGet((GLenum)GLUT_WINDOW_Y);
+    save_settings();
   }
   glutPostRedisplay();
 }
@@ -671,6 +675,7 @@ void init_menu() {
   glutAddMenuEntry("Smooth draw", 3);
   glutCreateMenu(callback_menu);
   glutAddSubMenu("Display", submenu_id);
+  glutAddMenuEntry("Save settings", 4);
   glutAddMenuEntry("Exit", 0);
 
   // Add menu status callback and set flags
