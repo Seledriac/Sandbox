@@ -1,6 +1,7 @@
 #include "FileInput.hpp"
 
 // Standard lib
+#include <cstdint>
 #include <array>
 #include <fstream>
 #include <string>

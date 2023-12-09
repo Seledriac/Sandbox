@@ -350,4 +350,4 @@ private:
     float x[4];
   };
 
-}  // namespace Math
+}  // namespace Vec

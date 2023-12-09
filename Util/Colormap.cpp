@@ -2,8 +2,8 @@
 
 
 // Standard lib
-#define _USE_MATH_DEFINES
 #include <cmath>
+#include <numbers>
 
 
 void Colormap::RatioToGrayscale(const float &iRatio, float &oR, float &oG, float &oB) {
@@ -24,9 +24,9 @@ void Colormap::RatioBands5(const float &iRatio, float &oR, float &oG, float &oB)
     return;
   }
   const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-  oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
-  oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
-  oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 4.0f);
+  oR= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 4.0f);
+  oG= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 4.0f);
+  oB= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 4.0f);
 }
 void Colormap::RatioBands10(const float &iRatio, float &oR, float &oG, float &oB) {
   if (std::isnan(iRatio)) {
@@ -34,9 +34,9 @@ void Colormap::RatioBands10(const float &iRatio, float &oR, float &oG, float &oB
     return;
   }
   const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-  oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
-  oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
-  oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 10.0f);
+  oR= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 10.0f);
+  oG= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 10.0f);
+  oB= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 10.0f);
 }
 void Colormap::RatioBands20(const float &iRatio, float &oR, float &oG, float &oB) {
   if (std::isnan(iRatio)) {
@@ -44,9 +44,9 @@ void Colormap::RatioBands20(const float &iRatio, float &oR, float &oG, float &oB
     return;
   }
   const float ratio= std::min(std::max(iRatio, 0.0f), 1.0f);
-  oR= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
-  oG= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
-  oB= 0.5f + 0.5f * std::cos(ratio * M_PI * 20.0f);
+  oR= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 20.0f);
+  oG= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 20.0f);
+  oB= 0.5f + 0.5f * std::cos(ratio * std::numbers::pi * 20.0f);
 }
 
 

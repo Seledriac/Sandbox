@@ -2,9 +2,8 @@
 
 
 // Standard lib
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include <cstdio>
+#include <numbers>
 #include <vector>
 
 // GLUT lib
@@ -128,12 +127,12 @@ void StringArtOptim::Refresh() {
   ImRef= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   ImCur= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
-  if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("FileInputs/SA_Smile.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("FileInputs/SA_MonaLisa.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 2) FileInput::LoadImageBMPFile("FileInputs/SA_Pillars.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("FileInputs/SA_Butterfly.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("FileInputs/GR_AlbertArt.bmp", imageRGBA, false);
-  if (D.UI[ImageID_____].GetI() == 5) FileInput::LoadImageBMPFile("FileInputs/GR_DeepField.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("FileInput/SA_Smile.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("FileInput/SA_MonaLisa.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 2) FileInput::LoadImageBMPFile("FileInput/SA_Pillars.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 3) FileInput::LoadImageBMPFile("FileInput/SA_Butterfly.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 4) FileInput::LoadImageBMPFile("FileInput/GR_AlbertArt.bmp", imageRGBA, false);
+  if (D.UI[ImageID_____].GetI() == 5) FileInput::LoadImageBMPFile("FileInput/GR_DeepField.bmp", imageRGBA, false);
   for (int w= 0; w < nW; w++) {
     for (int h= 0; h < nH; h++) {
       if (!imageRGBA.empty()) {
@@ -154,7 +153,7 @@ void StringArtOptim::Refresh() {
       Pegs.push_back(std::array<int, 2>{Random::Val(0, nW - 1), Random::Val(0, nH - 1)});
     }
     else {
-      const float angle= 2.0f * M_PI * (float)idxPeg / (float)D.UI[PegNumber___].GetI();
+      const float angle= 2.0f * std::numbers::pi * (float)idxPeg / (float)D.UI[PegNumber___].GetI();
       const int w= std::round((0.5 + 0.5 * std::cos(angle)) * (nW - 1));
       const int h= std::round((0.5 + 0.5 * std::sin(angle)) * (nH - 1));
       Pegs.push_back(std::array<int, 2>{std::min(std::max(w, 0), nW - 1), std::min(std::max(h, 0), nH - 1)});

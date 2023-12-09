@@ -2,8 +2,7 @@
 
 
 // Standard lib
-#define _USE_MATH_DEFINES
-#include <cmath>
+#include <numbers>
 #include <cstdio>
 #include <cstring>
 
@@ -179,10 +178,10 @@ void CompuFluidDyna::InitializeScenario() {
   const int inputFile= D.UI[InputFile___].GetI();
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (scenarioType == 0) {
-    if (inputFile == 0) FileInput::LoadImageBMPFile("FileInputs/CFD_NACA.bmp", imageRGBA, false);
-    if (inputFile == 1) FileInput::LoadImageBMPFile("FileInputs/CFD_Nozzle.bmp", imageRGBA, false);
-    if (inputFile == 2) FileInput::LoadImageBMPFile("FileInputs/CFD_Pipe.bmp", imageRGBA, false);
-    if (inputFile == 3) FileInput::LoadImageBMPFile("FileInputs/CFD_TeslaValve.bmp", imageRGBA, false);
+    if (inputFile == 0) FileInput::LoadImageBMPFile("FileInput/CFD_NACA.bmp", imageRGBA, false);
+    if (inputFile == 1) FileInput::LoadImageBMPFile("FileInput/CFD_Nozzle.bmp", imageRGBA, false);
+    if (inputFile == 2) FileInput::LoadImageBMPFile("FileInput/CFD_Pipe.bmp", imageRGBA, false);
+    if (inputFile == 3) FileInput::LoadImageBMPFile("FileInput/CFD_TeslaValve.bmp", imageRGBA, false);
   }
   // Set scenario values
   for (int x= 0; x < nX; x++) {
@@ -447,7 +446,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDPres) ioField[x][y][z]= 0.0f;
-        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z] * std::cos(simTime * 2.0f * M_PI / D.UI[BCSmokTime__].GetF());
+        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z] * std::cos(simTime * 2.0f * std::numbers::pi / D.UI[BCSmokTime__].GetF());
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) ioField[x][y][z]= VelXForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= VelYForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= VelZForced[x][y][z];

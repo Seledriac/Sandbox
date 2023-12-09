@@ -1,7 +1,7 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
 #include <cmath>
+#include <numbers>
 
 #ifndef EPSILON
 #define EPSILON (1.0e-9)
@@ -38,7 +38,7 @@ public:
       return *this;
     }
     inline vec2& setCircle(float r, float phi_deg) {
-      phi_deg*= (M_PI / 180.0);
+      phi_deg*= (std::numbers::pi / 180.0);
       x[0]= r * cos(phi_deg);
       x[1]= r * sin(phi_deg);
       return *this;
@@ -51,7 +51,7 @@ public:
       return (l != 0.0) ? (*this*= (len / l)) : (*this);
     }
     inline vec2& rot(float angle_deg) {
-      angle_deg*= M_PI / 180.0;
+      angle_deg*= std::numbers::pi / 180.0;
       float c= cos(angle_deg);
       float s= sin(angle_deg);
       return *this= vec2(x[0] * c - x[1] * s, x[0] * s + x[1] * c);
@@ -122,8 +122,8 @@ public:
       return *this;
     }
     inline vec3& setSphere(float r, float phi_deg, float rho_deg) {
-      phi_deg*= (M_PI / 180.0);
-      rho_deg*= (M_PI / 180.0);
+      phi_deg*= (std::numbers::pi / 180.0);
+      rho_deg*= (std::numbers::pi / 180.0);
       x[0]= r * cos(phi_deg) * cos(rho_deg);
       x[1]= r * cos(phi_deg) * sin(rho_deg);
       x[2]= r * sin(phi_deg);
@@ -156,7 +156,7 @@ public:
     inline float getSphereR() const { return length(); }
     inline float getSpherePhi() const {
       float a= sqrt(x[0] * x[0] + x[1] * x[1]);
-      return (a != 0.0) ? (atan(x[2] / a) * 180.0 / M_PI) : 0.0;
+      return (a != 0.0) ? (atan(x[2] / a) * 180.0 / std::numbers::pi) : 0.0;
     }
     inline float getSphereRho() const {
       if (x[0] >= -EPSILON && x[0] <= EPSILON) {
@@ -168,11 +168,11 @@ public:
           return 270.0;
       }
       if (x[0] > 0.0) {
-        return atan(x[1] / x[0]) * 180.0 / M_PI;
+        return atan(x[1] / x[0]) * 180.0 / std::numbers::pi;
       }
       else  // (x[0] < 0.0)
       {
-        return 180.0 + atan(x[1] / x[0]) * 180.0 / M_PI;
+        return 180.0 + atan(x[1] / x[0]) * 180.0 / std::numbers::pi;
       }
     }
     inline vec3& rot(AXIS axis, float angle_deg) {
@@ -187,19 +187,19 @@ public:
       return *this;
     }
     inline vec3& rotX(float angle_deg) {
-      angle_deg*= M_PI / 180.0;
+      angle_deg*= std::numbers::pi / 180.0;
       float c= cos(angle_deg);
       float s= sin(angle_deg);
       return *this= vec3(x[0], x[1] * c - x[2] * s, x[1] * s + x[2] * c);
     }
     inline vec3& rotY(float angle_deg) {
-      angle_deg*= M_PI / 180.0;
+      angle_deg*= std::numbers::pi / 180.0;
       float c= cos(angle_deg);
       float s= sin(angle_deg);
       return *this= vec3(x[0] * c - x[2] * s, x[1], x[0] * s + x[2] * c);
     }
     inline vec3& rotZ(float angle_deg) {
-      angle_deg*= M_PI / 180.0;
+      angle_deg*= std::numbers::pi / 180.0;
       float c= cos(angle_deg);
       float s= sin(angle_deg);
       return *this= vec3(x[0] * c - x[1] * s, x[0] * s + x[1] * c, x[2]);

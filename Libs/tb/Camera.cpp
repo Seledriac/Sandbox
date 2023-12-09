@@ -1,7 +1,6 @@
 #include "Camera.hpp"
 
-#define _USE_MATH_DEFINES
-#include <cmath>
+#include <numbers>
 
 // ========================= CAMERA SETUP ================================
 
@@ -115,7 +114,7 @@ void Camera::pan(float x, float y) {
   x = x / windowWidth_;
   y = y / windowHeight_;
 
-  float length = 2 * eyeDir_.length() * tan(30 * M_PI / 180.0f);
+  float length = 2 * eyeDir_.length() * tan(30 * std::numbers::pi / 180.0f);
 
   tbmath::vec3 deltax = currentRight() * -x * (length * (windowWidth_ / windowHeight_));
   tbmath::vec3 deltay = currentUp() * -y * length;

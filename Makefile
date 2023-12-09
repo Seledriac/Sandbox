@@ -1,4 +1,4 @@
-CC = g++
+CC = g++ -std=c++23
 RM	= rm -f
 
 INCLUDE_DIRS = -I"Libs\freeglut\include"

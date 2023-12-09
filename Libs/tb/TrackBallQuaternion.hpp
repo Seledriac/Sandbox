@@ -2,8 +2,8 @@
 
 #include <assert.h>
 
-#define _USE_MATH_DEFINES
 #include <cmath>
+#include <numbers>
 
 #include "TrackBallVectors.hpp"
 
@@ -36,14 +36,14 @@ public:
     quaternion(float angle, const vec3& axis) {
       float d= axis.length();
       assert(d != 0.0 && "quaternion Axis is Zero");
-      angle*= (M_PI / 180.0);
+      angle*= (std::numbers::pi / 180.0);
       float s= sin(angle * 0.5) / d;
       set(cos(angle * 0.5), axis[0] * s, axis[1] * s, axis[2] * s);
     }
     quaternion& euler(float yaw, float pitch, float roll) {
-      yaw*= (M_PI / 180.0) / 2.0;
-      pitch*= (M_PI / 180.0) / 2.0;
-      roll*= (M_PI / 180.0) / 2.0;
+      yaw*= (std::numbers::pi / 180.0) / 2.0;
+      pitch*= (std::numbers::pi / 180.0) / 2.0;
+      roll*= (std::numbers::pi / 180.0) / 2.0;
       float c_yaw= cos(yaw);
       float s_yaw= sin(yaw);
       float c_pitch= cos(pitch);
