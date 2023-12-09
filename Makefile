@@ -34,7 +34,7 @@ main.exe: $(OBJECTS)
 	$(CC) -c $< -o $*.o $(INCLUDES) $(CFLAGS)
 
 clean ::
-	$(RM) $(OBJECTS) $(EXECS)
+	$(RM) $(OBJECTS) $(EXECS) depend
 
 depend::
 	$(CC) -MM *.cpp > depend

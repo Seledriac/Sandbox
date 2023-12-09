@@ -1,8 +1,8 @@
 #pragma once
 
+/*
 // Standard lib
 #include <vector>
-
 
 namespace Math {
 
@@ -274,3 +274,28 @@ public:
   };
 
 }  // namespace Math
+*/
+
+
+/*
+#include <vector>
+
+template<typename Impl, std::size_t dim>
+struct dim_wrapper {
+    using type_t = std::vector<typename dim_wrapper<Impl, dim - 1>::type_t>;
+};
+
+template<typename Impl>
+struct dim_wrapper<Impl, 0> {
+    using type_t = Impl;
+};
+
+template<typename Impl, std::size_t dim>
+using vec_D = typename dim_wrapper<Impl, dim>::type_t;
+
+vec_D<float, 3> myVec;
+
+
+// using Vec5i= vec_D<int, 5>;
+// template<size_t dim> using Vecu= Vec_D<unsigned, dim>;
+*/
