@@ -70,14 +70,15 @@ void FractalElevMap::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void FractalElevMap::CheckAlloc() {
+bool FractalElevMap::CheckAlloc() {
   if (D.UI[testVar0____].hasChanged()) isAllocated= false;
   if (D.UI[testVar1____].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void FractalElevMap::CheckRefresh() {
+bool FractalElevMap::CheckRefresh() {
   if (D.UI[testVar2____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar3____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar4____].hasChanged()) isRefreshed= false;
@@ -85,14 +86,14 @@ void FractalElevMap::CheckRefresh() {
   if (D.UI[testVar6____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar7____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar8____].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void FractalElevMap::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -110,10 +111,8 @@ void FractalElevMap::Allocate() {
 // Refresh the project
 void FractalElevMap::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   mapZoom= std::max(D.UI[testVar2____].GetD(), 1.e-6);
@@ -193,13 +192,19 @@ void FractalElevMap::Refresh() {
 }
 
 
+// Handle keypress
+void FractalElevMap::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void FractalElevMap::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 }
 
 

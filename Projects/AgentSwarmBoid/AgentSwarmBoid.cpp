@@ -76,22 +76,23 @@ void AgentSwarmBoid::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void AgentSwarmBoid::CheckAlloc() {
+bool AgentSwarmBoid::CheckAlloc() {
   if (D.UI[PopSize_____].hasChanged()) isAllocated= false;
   if (D.UI[PopTypes____].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void AgentSwarmBoid::CheckRefresh() {
+bool AgentSwarmBoid::CheckRefresh() {
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void AgentSwarmBoid::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -109,10 +110,8 @@ void AgentSwarmBoid::Allocate() {
 // Refresh the project
 void AgentSwarmBoid::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Initialize population with random positions, velocities and types
@@ -132,13 +131,19 @@ void AgentSwarmBoid::Refresh() {
 }
 
 
+// Handle keypress
+void AgentSwarmBoid::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void AgentSwarmBoid::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   // Optionally constrain to 2D
   if (D.UI[Constrain2D_].GetB()) {

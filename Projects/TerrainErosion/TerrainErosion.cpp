@@ -74,24 +74,25 @@ void TerrainErosion::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void TerrainErosion::CheckAlloc() {
+bool TerrainErosion::CheckAlloc() {
   if (D.UI[TerrainNbX__].hasChanged()) isAllocated= false;
   if (D.UI[TerrainNbY__].hasChanged()) isAllocated= false;
   if (D.UI[DropletNbK__].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void TerrainErosion::CheckRefresh() {
+bool TerrainErosion::CheckRefresh() {
   if (D.UI[TerrainNbCut].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void TerrainErosion::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -122,10 +123,8 @@ void TerrainErosion::Allocate() {
 // Refresh the project
 void TerrainErosion::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Get UI parameters
@@ -212,13 +211,19 @@ void TerrainErosion::Refresh() {
 }
 
 
+// Handle keypress
+void TerrainErosion::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void TerrainErosion::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   float dt= D.UI[SimuTimestep].GetF();
   float velocityDecay= std::min(std::max(D.UI[VelDecay____].GetF(), 0.0f), 1.0f);

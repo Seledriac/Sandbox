@@ -556,6 +556,18 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '-') D.plotLogScale= !D.plotLogScale;
   else if (key == ',') project_ForceHardInit();
   else if (key == '/') project_QueueSoftRefresh();
+  else {
+    if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.KeyPress(key);
+    if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.KeyPress(key);
+    if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.KeyPress(key);
+    if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.KeyPress(key);
+    if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.KeyPress(key);
+    if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.KeyPress(key);
+    if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.KeyPress(key);
+    if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.KeyPress(key);
+    if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.KeyPress(key);
+    if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.KeyPress(key);
+  }
 
   // Compute refresh
   if (D.autoRefresh)

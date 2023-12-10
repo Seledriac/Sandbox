@@ -73,12 +73,13 @@ void MarkovProcGene::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void MarkovProcGene::CheckAlloc() {
+bool MarkovProcGene::CheckAlloc() {
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void MarkovProcGene::CheckRefresh() {
+bool MarkovProcGene::CheckRefresh() {
   if (D.UI[Scenario____].hasChanged()) isRefreshed= false;
   if (D.UI[ResolutionX_].hasChanged()) isRefreshed= false;
   if (D.UI[ResolutionY_].hasChanged()) isRefreshed= false;
@@ -86,14 +87,14 @@ void MarkovProcGene::CheckRefresh() {
   if (D.UI[RuleSizeX___].hasChanged()) isRefreshed= false;
   if (D.UI[RuleSizeY___].hasChanged()) isRefreshed= false;
   if (D.UI[RuleSizeZ___].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void MarkovProcGene::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 }
@@ -102,10 +103,8 @@ void MarkovProcGene::Allocate() {
 // Refresh the project
 void MarkovProcGene::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Get UI parameters
@@ -543,13 +542,19 @@ void MarkovProcGene::Refresh() {
 }
 
 
+// Handle keypress
+void MarkovProcGene::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void MarkovProcGene::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   // Iterate over the desired number of substitutions
   if (Dict.empty()) return;

@@ -91,7 +91,7 @@ void MassSpringSyst::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void MassSpringSyst::CheckAlloc() {
+bool MassSpringSyst::CheckAlloc() {
   if (D.UI[Scenario____].hasChanged()) isAllocated= false;
   if (D.UI[InputFile___].hasChanged()) isAllocated= false;
   if (D.UI[DomainX_____].hasChanged()) isAllocated= false;
@@ -100,19 +100,20 @@ void MassSpringSyst::CheckAlloc() {
   if (D.UI[Distrib_____].hasChanged()) isAllocated= false;
   if (D.UI[NbNodes_____].hasChanged()) isAllocated= false;
   if (D.UI[LinkDist____].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void MassSpringSyst::CheckRefresh() {
+bool MassSpringSyst::CheckRefresh() {
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void MassSpringSyst::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Allocate()\n");
@@ -136,10 +137,8 @@ void MassSpringSyst::Allocate() {
 // Refresh the project
 void MassSpringSyst::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Refresh()\n");
 
@@ -166,13 +165,21 @@ void MassSpringSyst::Refresh() {
   }
 }
 
+
+// Handle keypress
+void MassSpringSyst::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+  if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::KeyPress()\n");
+}
+
+
 // Animate the project
 void MassSpringSyst::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Animate()\n");
 
   StepForwardInTime();

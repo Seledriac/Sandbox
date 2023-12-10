@@ -38,9 +38,10 @@ class PosiBasedDynam
   PosiBasedDynam();
 
   void SetActiveProject();
-  void CheckAlloc();
-  void CheckRefresh();
+  bool CheckAlloc();
+  bool CheckRefresh();
   void Allocate();
+  void KeyPress(const unsigned char key);
   void Refresh();
   void Animate();
   void Draw();

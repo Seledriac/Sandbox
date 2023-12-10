@@ -67,24 +67,25 @@ void FractalCurvDev::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void FractalCurvDev::CheckAlloc() {
+bool FractalCurvDev::CheckAlloc() {
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void FractalCurvDev::CheckRefresh() {
+bool FractalCurvDev::CheckRefresh() {
   if (D.UI[MaxDepth____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar1____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar2____].hasChanged()) isRefreshed= false;
   if (D.UI[testVar3____].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void FractalCurvDev::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 }
@@ -93,10 +94,8 @@ void FractalCurvDev::Allocate() {
 // Refresh the project
 void FractalCurvDev::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   int maxDepth= std::max(D.UI[MaxDepth____].GetI(), 2);
@@ -196,13 +195,19 @@ void FractalCurvDev::Refresh() {
 }
 
 
+// Handle keypress
+void FractalCurvDev::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void FractalCurvDev::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 }
 
 

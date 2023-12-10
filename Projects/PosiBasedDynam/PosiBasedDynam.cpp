@@ -77,25 +77,26 @@ void PosiBasedDynam::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void PosiBasedDynam::CheckAlloc() {
+bool PosiBasedDynam::CheckAlloc() {
   if (D.UI[NumParticl__].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void PosiBasedDynam::CheckRefresh() {
+bool PosiBasedDynam::CheckRefresh() {
   if (D.UI[RadParticl__].hasChanged()) isRefreshed= false;
   if (D.UI[DomainX_____].hasChanged()) isRefreshed= false;
   if (D.UI[DomainY_____].hasChanged()) isRefreshed= false;
   if (D.UI[DomainZ_____].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void PosiBasedDynam::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -118,10 +119,8 @@ void PosiBasedDynam::Allocate() {
 // Refresh the project
 void PosiBasedDynam::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Get domain dimensions
@@ -142,13 +141,19 @@ void PosiBasedDynam::Refresh() {
 }
 
 
+// Handle keypress
+void PosiBasedDynam::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void PosiBasedDynam::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   // Get UI parameters
   const float dt= D.UI[TimeStep____].GetF();

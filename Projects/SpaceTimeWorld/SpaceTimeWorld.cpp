@@ -122,7 +122,7 @@ void SpaceTimeWorld::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void SpaceTimeWorld::CheckAlloc() {
+bool SpaceTimeWorld::CheckAlloc() {
   if (D.UI[WorldNbT____].hasChanged()) isAllocated= false;
   if (D.UI[WorldNbX____].hasChanged()) isAllocated= false;
   if (D.UI[WorldNbY____].hasChanged()) isAllocated= false;
@@ -130,24 +130,25 @@ void SpaceTimeWorld::CheckAlloc() {
   if (D.UI[ScreenNbH___].hasChanged()) isAllocated= false;
   if (D.UI[ScreenNbV___].hasChanged()) isAllocated= false;
   if (D.UI[ScreenNbS___].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void SpaceTimeWorld::CheckRefresh() {
+bool SpaceTimeWorld::CheckRefresh() {
   if (D.UI[CursorWorldT].hasChanged()) isRefreshed= false;
   if (D.UI[MassReach___].hasChanged()) isRefreshed= false;
   if (D.UI[TimePersist_].hasChanged()) isRefreshed= false;
   if (D.UI[FactorCurv__].hasChanged()) isRefreshed= false;
   if (D.UI[FactorDoppl_].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void SpaceTimeWorld::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -177,10 +178,8 @@ void SpaceTimeWorld::Allocate() {
 // Refresh the project
 void SpaceTimeWorld::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Load the BMP image for the background
@@ -378,13 +377,19 @@ void SpaceTimeWorld::Refresh() {
 }
 
 
+// Handle keypress
+void SpaceTimeWorld::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void SpaceTimeWorld::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 }
 
 

@@ -84,18 +84,19 @@ void CompuFluidDyna::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void CompuFluidDyna::CheckAlloc() {
+bool CompuFluidDyna::CheckAlloc() {
   if (D.UI[Scenario____].hasChanged()) isAllocated= false;
   if (D.UI[InputFile___].hasChanged()) isAllocated= false;
   if (D.UI[ResolutionX_].hasChanged()) isAllocated= false;
   if (D.UI[ResolutionY_].hasChanged()) isAllocated= false;
   if (D.UI[ResolutionZ_].hasChanged()) isAllocated= false;
   if (D.UI[VoxelSize___].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void CompuFluidDyna::CheckRefresh() {
+bool CompuFluidDyna::CheckRefresh() {
   if (D.UI[BCVelX______].hasChanged()) isRefreshed= false;
   if (D.UI[BCVelY______].hasChanged()) isRefreshed= false;
   if (D.UI[BCVelZ______].hasChanged()) isRefreshed= false;
@@ -106,14 +107,14 @@ void CompuFluidDyna::CheckRefresh() {
   if (D.UI[ObjectPosZ__].hasChanged()) isRefreshed= false;
   if (D.UI[ObjectSize0_].hasChanged()) isRefreshed= false;
   if (D.UI[ObjectSize1_].hasChanged()) isRefreshed= false;
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void CompuFluidDyna::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -162,10 +163,8 @@ void CompuFluidDyna::Allocate() {
 // Refresh the project
 void CompuFluidDyna::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Initialize scenario values
@@ -203,13 +202,19 @@ void CompuFluidDyna::Refresh() {
 }
 
 
+// Handle keypress
+void CompuFluidDyna::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void CompuFluidDyna::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   // Get simulation parameters
   const int maxIter= std::max(D.UI[SolvMaxIter_].GetI(), 0);

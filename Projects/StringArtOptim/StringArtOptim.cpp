@@ -80,7 +80,7 @@ void StringArtOptim::SetActiveProject() {
 
 
 // Check if parameter changes should trigger an allocation
-void StringArtOptim::CheckAlloc() {
+bool StringArtOptim::CheckAlloc() {
   if (D.UI[ImageID_____].hasChanged()) isAllocated= false;
   if (D.UI[ImageSizeW__].hasChanged()) isAllocated= false;
   if (D.UI[ImageSizeH__].hasChanged()) isAllocated= false;
@@ -88,19 +88,20 @@ void StringArtOptim::CheckAlloc() {
   if (D.UI[PegNumber___].hasChanged()) isAllocated= false;
   if (D.UI[ColorsAdd___].hasChanged()) isAllocated= false;
   if (D.UI[ColorsSub___].hasChanged()) isAllocated= false;
+  return isAllocated;
 }
 
 
 // Check if parameter changes should trigger a refresh
-void StringArtOptim::CheckRefresh() {
+bool StringArtOptim::CheckRefresh() {
+  return isRefreshed;
 }
 
 
 // Allocate the project data
 void StringArtOptim::Allocate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (isAllocated) return;
+  if (CheckAlloc()) return;
   isRefreshed= false;
   isAllocated= true;
 
@@ -113,10 +114,8 @@ void StringArtOptim::Allocate() {
 // Refresh the project
 void StringArtOptim::Refresh() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (isRefreshed) return;
+  if (!CheckAlloc()) Allocate();
+  if (CheckRefresh()) return;
   isRefreshed= true;
 
   // Reset plot
@@ -198,13 +197,19 @@ void StringArtOptim::Refresh() {
 }
 
 
+// Handle keypress
+void StringArtOptim::KeyPress(const unsigned char key) {
+  if (!isActivProj) return;
+  if (!CheckAlloc()) Allocate();
+  (void)key;  // Disable warning unused variable
+}
+
+
 // Animate the project
 void StringArtOptim::Animate() {
   if (!isActivProj) return;
-  CheckAlloc();
-  if (!isAllocated) Allocate();
-  CheckRefresh();
-  if (!isRefreshed) Refresh();
+  if (!CheckAlloc()) Allocate();
+  if (!CheckRefresh()) Refresh();
 
   // Compute and add the new lines
   bool lineWasAdded= false;
