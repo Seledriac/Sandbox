@@ -43,9 +43,9 @@ Add to path env var (here shown in the case of C: drive root)
 - make depend (optional)
 - make
 - ./main
-- *press alphabet key to activate the associated project*
-- *use mouse clics to rotate, pan and zoom with the arcball to move in the 3D scene*
+- *use rightclick to select project, change options or save configurations*
 - *use TAB to attach/detach the contextural menou to rightclick*
+- *use mouse clics to rotate, pan and zoom with the arcball to move in the 3D scene*
 - *use KB arrows, modifier keys, or mouse wheel to highlight and change parameter values in the active project*
 - *use > or spacebar to step forward or run animation/simulation if the active project supports it*
 - *use number keys to toggle various displays in the active project*

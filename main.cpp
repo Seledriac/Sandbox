@@ -32,6 +32,7 @@
 static int windowID;
 static int winW, winH;
 static int winPosW, winPosH;
+static int currentProjectID;
 static bool isMenuAttached;
 static bool isMenuActive;
 static bool isDarkMode;
@@ -70,90 +71,161 @@ SpaceTimeWorld mySpaceTimeWorld;
 StringArtOptim myStringArtOptim;
 TerrainErosion myTerrainErosion;
 
+enum ProjectID
+{
+  AaaaaaaaaaaaaaID,
+  AgentSwarmBoidID,
+  CompuFluidDynaID,
+  FractalCurvDevID,
+  FractalElevMapID,
+  MarkovProcGeneID,
+  MassSpringSystID,
+  PosiBasedDynamID,
+  SpaceTimeWorldID,
+  StringArtOptimID,
+  TerrainErosionID,
+  ZzzzzzzzzzzzzzID,
+};
 
-void project_ForceHardInit(unsigned char key) {
+void project_ForceHardInit() {
   D.plotLegend.clear();
   D.scatLegend.clear();
   D.plotData.clear();
   D.scatData.clear();
 
-  if (key != 'a' && myAgentSwarmBoid.isActivProj) myAgentSwarmBoid= AgentSwarmBoid();
-  if (key != 'c' && myCompuFluidDyna.isActivProj) myCompuFluidDyna= CompuFluidDyna();
-  if (key != 'f' && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
-  if (key != 'h' && myFractalElevMap.isActivProj) myFractalElevMap= FractalElevMap();
-  if (key != 'm' && myMarkovProcGene.isActivProj) myMarkovProcGene= MarkovProcGene();
-  if (key != 's' && myMassSpringSyst.isActivProj) myMassSpringSyst= MassSpringSyst();
-  if (key != 'p' && myPosiBasedDynam.isActivProj) myPosiBasedDynam= PosiBasedDynam();
-  if (key != 'r' && mySpaceTimeWorld.isActivProj) mySpaceTimeWorld= SpaceTimeWorld();
-  if (key != 't' && myStringArtOptim.isActivProj) myStringArtOptim= StringArtOptim();
-  if (key != 'e' && myTerrainErosion.isActivProj) myTerrainErosion= TerrainErosion();
+  if (currentProjectID != ProjectID::AgentSwarmBoidID && myAgentSwarmBoid.isActivProj) myAgentSwarmBoid= AgentSwarmBoid();
+  if (currentProjectID != ProjectID::CompuFluidDynaID && myCompuFluidDyna.isActivProj) myCompuFluidDyna= CompuFluidDyna();
+  if (currentProjectID != ProjectID::FractalCurvDevID && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
+  if (currentProjectID != ProjectID::FractalElevMapID && myFractalElevMap.isActivProj) myFractalElevMap= FractalElevMap();
+  if (currentProjectID != ProjectID::MarkovProcGeneID && myMarkovProcGene.isActivProj) myMarkovProcGene= MarkovProcGene();
+  if (currentProjectID != ProjectID::MassSpringSystID && myMassSpringSyst.isActivProj) myMassSpringSyst= MassSpringSyst();
+  if (currentProjectID != ProjectID::PosiBasedDynamID && myPosiBasedDynam.isActivProj) myPosiBasedDynam= PosiBasedDynam();
+  if (currentProjectID != ProjectID::SpaceTimeWorldID && mySpaceTimeWorld.isActivProj) mySpaceTimeWorld= SpaceTimeWorld();
+  if (currentProjectID != ProjectID::StringArtOptimID && myStringArtOptim.isActivProj) myStringArtOptim= StringArtOptim();
+  if (currentProjectID != ProjectID::TerrainErosionID && myTerrainErosion.isActivProj) myTerrainErosion= TerrainErosion();
 
-  if (key == 'a') myAgentSwarmBoid.SetActiveProject();
-  if (key == 'c') myCompuFluidDyna.SetActiveProject();
-  if (key == 'f') myFractalCurvDev.SetActiveProject();
-  if (key == 'h') myFractalElevMap.SetActiveProject();
-  if (key == 'm') myMarkovProcGene.SetActiveProject();
-  if (key == 's') myMassSpringSyst.SetActiveProject();
-  if (key == 'p') myPosiBasedDynam.SetActiveProject();
-  if (key == 'r') mySpaceTimeWorld.SetActiveProject();
-  if (key == 't') myStringArtOptim.SetActiveProject();
-  if (key == 'e') myTerrainErosion.SetActiveProject();
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.SetActiveProject();
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.SetActiveProject();
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.SetActiveProject();
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.SetActiveProject();
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.SetActiveProject();
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.SetActiveProject();
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.SetActiveProject();
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.SetActiveProject();
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.SetActiveProject();
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.SetActiveProject();
 }
 
 
-void project_QueueSoftRefresh(unsigned char key) {
-  if (key == 'A') myAgentSwarmBoid.isRefreshed= false;
-  if (key == 'C') myCompuFluidDyna.isRefreshed= false;
-  if (key == 'F') myFractalCurvDev.isRefreshed= false;
-  if (key == 'H') myFractalElevMap.isRefreshed= false;
-  if (key == 'M') myMarkovProcGene.isRefreshed= false;
-  if (key == 'S') myMassSpringSyst.isRefreshed= false;
-  if (key == 'P') myPosiBasedDynam.isRefreshed= false;
-  if (key == 'R') mySpaceTimeWorld.isRefreshed= false;
-  if (key == 'T') myStringArtOptim.isRefreshed= false;
-  if (key == 'E') myTerrainErosion.isRefreshed= false;
+void project_QueueSoftRefresh() {
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.isRefreshed= false;
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.isRefreshed= false;
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.isRefreshed= false;
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.isRefreshed= false;
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.isRefreshed= false;
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.isRefreshed= false;
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.isRefreshed= false;
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.isRefreshed= false;
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.isRefreshed= false;
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.isRefreshed= false;
 }
 
 
 void project_Refresh() {
-  myAgentSwarmBoid.Refresh();
-  myCompuFluidDyna.Refresh();
-  myFractalCurvDev.Refresh();
-  myFractalElevMap.Refresh();
-  myMarkovProcGene.Refresh();
-  myMassSpringSyst.Refresh();
-  myPosiBasedDynam.Refresh();
-  mySpaceTimeWorld.Refresh();
-  myStringArtOptim.Refresh();
-  myTerrainErosion.Refresh();
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.Refresh();
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Refresh();
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Refresh();
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Refresh();
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Refresh();
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Refresh();
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Refresh();
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.Refresh();
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.Refresh();
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.Refresh();
 }
 
 
 void project_Animate() {
-  myAgentSwarmBoid.Animate();
-  myCompuFluidDyna.Animate();
-  myFractalCurvDev.Animate();
-  myFractalElevMap.Animate();
-  myMarkovProcGene.Animate();
-  myMassSpringSyst.Animate();
-  myPosiBasedDynam.Animate();
-  mySpaceTimeWorld.Animate();
-  myStringArtOptim.Animate();
-  myTerrainErosion.Animate();
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.Animate();
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Animate();
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Animate();
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Animate();
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Animate();
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Animate();
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Animate();
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.Animate();
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.Animate();
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.Animate();
 }
 
 
 void project_Draw() {
-  myAgentSwarmBoid.Draw();
-  myCompuFluidDyna.Draw();
-  myFractalCurvDev.Draw();
-  myFractalElevMap.Draw();
-  myMarkovProcGene.Draw();
-  myMassSpringSyst.Draw();
-  myPosiBasedDynam.Draw();
-  mySpaceTimeWorld.Draw();
-  myStringArtOptim.Draw();
-  myTerrainErosion.Draw();
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.Draw();
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Draw();
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Draw();
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Draw();
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Draw();
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Draw();
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Draw();
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.Draw();
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.Draw();
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.Draw();
+}
+
+
+// Utility function to save persistent sandbox configuration on disk
+void saveConfigSandbox() {
+  FILE *file= nullptr;
+  file= fopen("ConfigSandbox.txt", "w");
+  if (file != nullptr) {
+    fprintf(file, "winPosW winPosH %d %d\n", winPosW, winPosH);
+    fprintf(file, "winW winH %d %d\n", winW, winH);
+    fclose(file);
+  }
+}
+
+
+// Utility function to load persistent sandbox configuration from disk
+void loadConfigSandbox() {
+  FILE *file= nullptr;
+  file= fopen("ConfigSandbox.txt", "r");
+  if (file != nullptr) {
+    fscanf(file, "winPosW winPosH %d %d\n", &winPosW, &winPosH);
+    fscanf(file, "winW winH %d %d\n", &winW, &winH);
+    fclose(file);
+  }
+}
+
+
+// Utility function to save persistent project configuration on disk
+void saveConfigProject() {
+  FILE *file= nullptr;
+  file= fopen("ConfigProject.txt", "w");
+  if (file != nullptr) {
+    fprintf(file, "currentProjectID %d\n", currentProjectID);
+    for (int idxParam= 0; idxParam < (int)D.UI.size(); idxParam++) {
+      fprintf(file, "%s %lf\n", D.UI[idxParam].name.c_str(), D.UI[idxParam].GetD());
+    }
+    fclose(file);
+  }
+}
+
+
+// Utility function to load persistent project configuration from disk
+void loadConfigProject() {
+  FILE *file= nullptr;
+  file= fopen("ConfigProject.txt", "r");
+  if (file != nullptr) {
+    fscanf(file, "currentProjectID %d\n", &currentProjectID);
+    for (int idxParam= 0; idxParam < (int)D.UI.size(); idxParam++) {
+      double val= 0.0;
+      char name[100];
+      if (fscanf(file, "%s %lf\n", name, &val) == 2) {
+        D.UI[idxParam].Set(val);
+      }
+    }
+    fclose(file);
+  }
 }
 
 
@@ -186,30 +258,6 @@ void draw_text(int const x, int const y, char *const text) {
   for (char *p= text; *p; p++)
     glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, *p);
   glPopMatrix();
-}
-
-
-// Utility function to save persistent settings on disk
-void save_settings() {
-  FILE *outputFile= nullptr;
-  outputFile= fopen("settings.txt", "w");
-  if (outputFile != nullptr) {
-    fprintf(outputFile, "winPosW winPosH %d %d\n", winPosW, winPosH);
-    fprintf(outputFile, "winW winH %d %d\n", winW, winH);
-    fclose(outputFile);
-  }
-}
-
-
-// Utility function to load persistent settings from disk
-void load_settings() {
-  FILE *inputFile= nullptr;
-  inputFile= fopen("settings.txt", "r");
-  if (inputFile != nullptr) {
-    fscanf(inputFile, "winPosW winPosH %d %d\n", &winPosW, &winPosH);
-    fscanf(inputFile, "winW winH %d %d\n", &winW, &winH);
-    fclose(inputFile);
-  }
 }
 
 
@@ -413,8 +461,8 @@ void callback_display() {
       // Draw the polyline
       glBegin(GL_POINTS);
       for (int k1= 0; k1 < int(D.scatData[k0].size()); k1++) {
-        double relPosX= (D.scatData[k0][k1][0] - valMinX) / (valMaxX - valMinX);
-        double relPosY= (D.scatData[k0][k1][1] - valMinY) / (valMaxY - valMinY);
+        const double relPosX= (D.scatData[k0][k1][0] - valMinX) / (valMaxX - valMinX);
+        const double relPosY= (D.scatData[k0][k1][1] - valMinY) / (valMaxY - valMinY);
         glVertex3i(textBoxW + (int)std::round((double)scatAreaW * relPosX), 3 * textBoxH + (int)std::round((double)scatAreaH * relPosY), 0);
       }
       glEnd();
@@ -510,8 +558,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
   }
   else if (key == '-') D.plotLogScale= !D.plotLogScale;
 
-  else if (key >= 'a' && key <= 'z') project_ForceHardInit(key);
-  else if (key >= 'A' && key <= 'Z') project_QueueSoftRefresh(key);
+  // TODO add mechanism to ass keypress to active project
 
   // Compute refresh
   if (D.autoRefresh)
@@ -584,7 +631,7 @@ void callback_mouse_click(int button, int state, int x, int y) {
             if (D.idxCursorUI >= paramValSignNbChar + paramValInteNbChar + paramValSepaNbChar && D.idxCursorUI < paramValNbChar)
               D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() + std::pow(10.0, double(paramValInteNbChar + paramValSepaNbChar - D.idxCursorUI)));
           }
-          if (button == 4) {  // Mous wheel down
+          if (button == 4) {  // Mouse wheel down
             if (D.idxCursorUI < paramValSignNbChar) D.UI[D.idxParamUI].Set(-D.UI[D.idxParamUI].GetD());
             if (D.idxCursorUI >= paramValSignNbChar && D.idxCursorUI < paramValSignNbChar + paramValInteNbChar)
               D.UI[D.idxParamUI].Set(D.UI[D.idxParamUI].GetD() - std::pow(10.0, double(paramValInteNbChar - D.idxCursorUI)));
@@ -614,8 +661,8 @@ void callback_mouse_motion(int x, int y) {
 
 // Mouse passive motion interruption callback
 void callback_passive_mouse_motion(int x, int y) {
-  int prevParamIdx= D.idxParamUI;
-  int prevCursorIdx= D.idxCursorUI;
+  const int prevParamIdx= D.idxParamUI;
+  const int prevCursorIdx= D.idxCursorUI;
   if (x < (paramLabelNbChar + paramSpaceNbChar + paramValNbChar) * charWidth) {
     if ((y - 3) > pixelMargin && (y - 3) < int(D.UI.size()) * (charHeight + pixelMargin)) {
       D.idxParamUI= (y - 3) / (charHeight + pixelMargin);
@@ -639,14 +686,19 @@ void callback_menu_status(int status, int x, int y) {
 
 // Menu selection callback
 void callback_menu(int num) {
+  // Reset or activate the selected project
+  if (num > ProjectID::AaaaaaaaaaaaaaID && num < ProjectID::ZzzzzzzzzzzzzzID) {
+    currentProjectID= num;
+    project_ForceHardInit();
+  }
   // Toggle dark mode display
-  if (num == 2) {
+  if (num == -1) {
     isDarkMode= !isDarkMode;
     if (isDarkMode) glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     else glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   }
   // Toggle smooth drawing option
-  if (num == 3) {
+  if (num == -2) {
     isSmoothDraw= !isSmoothDraw;
     if (isSmoothDraw) {
       glEnable(GL_POINT_SMOOTH);
@@ -657,12 +709,24 @@ void callback_menu(int num) {
       glDisable(GL_LINE_SMOOTH);
     }
   }
-  // Save window settings
-  if (num == 4) {
+  // Save sandbox settings
+  if (num == -3) {
     winPosW= glutGet((GLenum)GLUT_WINDOW_X);
     winPosH= glutGet((GLenum)GLUT_WINDOW_Y);
-    save_settings();
+    saveConfigSandbox();
   }
+  // Save project parameters
+  if (num == -4) {
+    saveConfigProject();
+  }
+  if (num == -5) {
+    project_QueueSoftRefresh();
+  }
+
+  // Compute refresh
+  if (D.autoRefresh)
+    project_Refresh();
+
   glutPostRedisplay();
 }
 
@@ -670,18 +734,34 @@ void callback_menu(int num) {
 // Menu initialization
 void init_menu() {
   // Create menu tree starting from leaves
-  int submenu_id= glutCreateMenu(callback_menu);
-  glutAddMenuEntry("Dark mode", 2);
-  glutAddMenuEntry("Smooth draw", 3);
+  const int menuDisplay= glutCreateMenu(callback_menu);
+  glutAddMenuEntry("Dark mode", -1);
+  glutAddMenuEntry("Smooth draw", -2);
+  const int menuProject= glutCreateMenu(callback_menu);
+  glutAddMenuEntry("AgentSwarmBoid", ProjectID::AgentSwarmBoidID);
+  glutAddMenuEntry("CompuFluidDyna", ProjectID::CompuFluidDynaID);
+  glutAddMenuEntry("FractalCurvDev", ProjectID::FractalCurvDevID);
+  glutAddMenuEntry("FractalElevMap", ProjectID::FractalElevMapID);
+  glutAddMenuEntry("MarkovProcGene", ProjectID::MarkovProcGeneID);
+  glutAddMenuEntry("MassSpringSyst", ProjectID::MassSpringSystID);
+  glutAddMenuEntry("PosiBasedDynam", ProjectID::PosiBasedDynamID);
+  glutAddMenuEntry("SpaceTimeWorld", ProjectID::SpaceTimeWorldID);
+  glutAddMenuEntry("StringArtOptim", ProjectID::StringArtOptimID);
+  glutAddMenuEntry("TerrainErosion", ProjectID::TerrainErosionID);
+  const int menuSave= glutCreateMenu(callback_menu);
+  glutAddMenuEntry("Save settings", -3);
+  glutAddMenuEntry("Save parameters", -4);
+  glutAddMenuEntry("Queue refresh", -5);
   glutCreateMenu(callback_menu);
-  glutAddSubMenu("Display", submenu_id);
-  glutAddMenuEntry("Save settings", 4);
-  glutAddMenuEntry("Exit", 0);
+  glutAddSubMenu("Display", menuDisplay);
+  glutAddSubMenu("Project", menuProject);
+  glutAddSubMenu("Save", menuSave);
 
   // Add menu status callback and set flags
   glutMenuStatusFunc(&callback_menu_status);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
   isMenuAttached= false;
-  isMenuActive= false;
+  isMenuActive= true;
 }
 
 
@@ -692,28 +772,28 @@ void init_GL() {
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
   // Define light properties
-  float global_ambient[]= {1.0f, 1.0f, 1.0f, 1.0f};
-  float light0_ambient[]= {0.2f, 0.2f, 0.2f, 1.0f};
-  float light0_diffuse[]= {0.8f, 0.8f, 0.8f, 1.0f};
-  float light0_specular[]= {1.0f, 1.0f, 1.0f, 1.0f};
+  constexpr float global_ambient[]= {1.0f, 1.0f, 1.0f, 1.0f};
+  constexpr float light0_ambient[]= {0.2f, 0.2f, 0.2f, 1.0f};
+  constexpr float light0_diffuse[]= {0.8f, 0.8f, 0.8f, 1.0f};
+  constexpr float light0_specular[]= {1.0f, 1.0f, 1.0f, 1.0f};
   glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
   glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
 
   // Position lights
-  GLfloat position0[4]= {4.0f, 4.0f, 4.0f, 1.0f};
+  constexpr GLfloat position0[4]= {4.0f, 4.0f, 4.0f, 1.0f};
   glLightfv(GL_LIGHT0, GL_POSITION, position0);
 
   // Enable lights
   glEnable(GL_LIGHT0);
 
   // Define material shader properties
-  GLfloat mat_ambiant[4]= {0.1f, 0.1f, 0.1f, 1.0f};
-  GLfloat mat_diffuse[4]= {0.8f, 0.8f, 0.8f, 1.0f};
-  GLfloat mat_specular[4]= {0.3f, 0.3f, 0.3f, 0.3f};
-  // GLfloat mat_specular[4]= {1.0f, 1.0f, 1.0f, 1.0f};
-  GLfloat mat_shininess[1]= {64.0f};
+  constexpr GLfloat mat_ambiant[4]= {0.1f, 0.1f, 0.1f, 1.0f};
+  constexpr GLfloat mat_diffuse[4]= {0.8f, 0.8f, 0.8f, 1.0f};
+  constexpr GLfloat mat_specular[4]= {0.3f, 0.3f, 0.3f, 0.3f};
+  // constexpr GLfloat mat_specular[4]= {1.0f, 1.0f, 1.0f, 1.0f};
+  constexpr GLfloat mat_shininess[1]= {64.0f};
   // GLfloat mat_shininess[1]= {128.0f};
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambiant);
   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
@@ -754,7 +834,7 @@ int main(int argc, char *argv[]) {
   winH= 900;
   winPosW= -1;
   winPosH= -1;
-  load_settings();
+  loadConfigSandbox();
 
   // Window creation
   glutInit(&argc, argv);
@@ -777,6 +857,13 @@ int main(int argc, char *argv[]) {
   glutMotionFunc(&callback_mouse_motion);
   glutPassiveMotionFunc(&callback_passive_mouse_motion);
   glutTimerFunc(100, &callback_timer, 0);
+
+  // Compute refresh
+  currentProjectID= 0;
+  loadConfigProject();
+  project_ForceHardInit();
+  loadConfigProject();
+  project_Refresh();
 
   // Start refresh loop
   glutMainLoop();

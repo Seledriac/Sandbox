@@ -1,5 +1,6 @@
 *.o
 *.exe
 FileOutput/*
-settings.txt
 depend
+ConfigSandbox.txt
+ConfigProject.txt
