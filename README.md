@@ -28,6 +28,7 @@ Sandbox environment with various personal projects and experimentations implemen
 
 ## Minimal build env on windows
 Get gcc compiler and extract at root of C: drive or another appropriate location (e.g. latest Win64 verion at the time of writing : https://github.com/brechtsanders/winlibs_mingw/releases/download/13.2.0posix-17.0.5-11.0.1-ucrt-r3/winlibs-x86_64-posix-seh-gcc-13.2.0-mingw-w64ucrt-11.0.1-r3.7z)
+
 Doc available at  https://winlibs.com/
 
 Install MinGW at root of C: drive or another appropriate location
@@ -39,12 +40,12 @@ Add to path env var (here shown in the case of C: drive root)
 - C:\MinGW\msys\1.0\bin
 
 ## Build, run and use
-- make clean (optional)
-- make depend (optional)
-- make
-- ./main
-- *use rightclick to select project, change options or save configurations*
+- `make clean` (optional, if rebuild needed)
+- `make depend` (optional, if dependencies changed)
+- `make` (or `make -j 12` for multithread)
+- `./main.exe`
 - *use TAB to attach/detach the contextural menou to rightclick*
+- *use rightclick to open contextual menu and select project, change options or save configurations*
 - *use mouse clics to rotate, pan and zoom with the arcball to move in the 3D scene*
 - *use KB arrows, modifier keys, or mouse wheel to highlight and change parameter values in the active project*
 - *use > or spacebar to step forward or run animation/simulation if the active project supports it*

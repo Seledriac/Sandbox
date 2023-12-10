@@ -232,10 +232,8 @@ void loadConfigProject() {
 // Returns the elapsed time since its last call
 float elapsed_time() {
   static long last_time= -1;
-  long current_time;
-  float t= 0;
-
-  current_time= glutGet(GLUT_ELAPSED_TIME);
+  float t= 0.0f;
+  long current_time= glutGet(GLUT_ELAPSED_TIME);
   if (last_time == -1) {
     last_time= glutGet(GLUT_ELAPSED_TIME);
   }
@@ -243,7 +241,6 @@ float elapsed_time() {
     t+= (float)(current_time - last_time) / 1000.0f;
     last_time= current_time;
   }
-
   return t;
 }
 
@@ -557,8 +554,8 @@ void callback_keyboard(unsigned char key, int x, int y) {
     D.scatData.clear();
   }
   else if (key == '-') D.plotLogScale= !D.plotLogScale;
-
-  // TODO add mechanism to ass keypress to active project
+  else if (key == ',') project_ForceHardInit();
+  else if (key == '/') project_QueueSoftRefresh();
 
   // Compute refresh
   if (D.autoRefresh)
@@ -719,10 +716,6 @@ void callback_menu(int num) {
   if (num == -4) {
     saveConfigProject();
   }
-  if (num == -5) {
-    project_QueueSoftRefresh();
-  }
-
   // Compute refresh
   if (D.autoRefresh)
     project_Refresh();
@@ -751,7 +744,6 @@ void init_menu() {
   const int menuSave= glutCreateMenu(callback_menu);
   glutAddMenuEntry("Save settings", -3);
   glutAddMenuEntry("Save parameters", -4);
-  glutAddMenuEntry("Queue refresh", -5);
   glutCreateMenu(callback_menu);
   glutAddSubMenu("Display", menuDisplay);
   glutAddSubMenu("Project", menuProject);
@@ -759,9 +751,8 @@ void init_menu() {
 
   // Add menu status callback and set flags
   glutMenuStatusFunc(&callback_menu_status);
-  glutAttachMenu(GLUT_RIGHT_BUTTON);
   isMenuAttached= false;
-  isMenuActive= true;
+  isMenuActive= false;
 }
 
 
@@ -776,25 +767,18 @@ void init_GL() {
   constexpr float light0_ambient[]= {0.2f, 0.2f, 0.2f, 1.0f};
   constexpr float light0_diffuse[]= {0.8f, 0.8f, 0.8f, 1.0f};
   constexpr float light0_specular[]= {1.0f, 1.0f, 1.0f, 1.0f};
+  constexpr GLfloat position0[4]= {4.0f, 4.0f, 4.0f, 1.0f};
   glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
   glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
-  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
-
-  // Position lights
-  constexpr GLfloat position0[4]= {4.0f, 4.0f, 4.0f, 1.0f};
   glLightfv(GL_LIGHT0, GL_POSITION, position0);
-
-  // Enable lights
-  glEnable(GL_LIGHT0);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
 
   // Define material shader properties
   constexpr GLfloat mat_ambiant[4]= {0.1f, 0.1f, 0.1f, 1.0f};
   constexpr GLfloat mat_diffuse[4]= {0.8f, 0.8f, 0.8f, 1.0f};
   constexpr GLfloat mat_specular[4]= {0.3f, 0.3f, 0.3f, 0.3f};
-  // constexpr GLfloat mat_specular[4]= {1.0f, 1.0f, 1.0f, 1.0f};
   constexpr GLfloat mat_shininess[1]= {64.0f};
-  // GLfloat mat_shininess[1]= {128.0f};
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambiant);
   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
@@ -809,9 +793,10 @@ void init_GL() {
   glShadeModel(GL_SMOOTH);
   glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
   glEnable(GL_COLOR_MATERIAL);
-  isSmoothDraw= true;
+  glEnable(GL_LIGHT0);
   glEnable(GL_POINT_SMOOTH);
   glEnable(GL_LINE_SMOOTH);
+  isSmoothDraw= true;
 }
 
 
