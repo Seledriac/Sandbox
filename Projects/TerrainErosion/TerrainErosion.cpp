@@ -33,6 +33,7 @@ enum ParamType
   ErosionCoeff,
   SmoothResist,
   CliffThresh_,
+  Verbose_____,
 };
 
 
@@ -58,9 +59,10 @@ void TerrainErosion::SetActiveProject() {
     D.UI.push_back(ParamUI("ErosionCoeff", 0.05));
     D.UI.push_back(ParamUI("SmoothResist", 0.99));
     D.UI.push_back(ParamUI("CliffThresh_", 0.80));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != CliffThresh_ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

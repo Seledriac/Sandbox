@@ -33,6 +33,7 @@ enum ParamType
   RuleSizeZ___,
   NbSubsti____,
   ShadeCoeff__,
+  Verbose_____,
 };
 
 
@@ -57,9 +58,10 @@ void MarkovProcGene::SetActiveProject() {
     D.UI.push_back(ParamUI("RuleSizeZ___", 4));
     D.UI.push_back(ParamUI("NbSubsti____", 1));
     D.UI.push_back(ParamUI("ShadeCoeff__", 1));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != ShadeCoeff__ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

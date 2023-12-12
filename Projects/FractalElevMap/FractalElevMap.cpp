@@ -30,6 +30,7 @@ enum ParamType
   testVar6____,
   testVar7____,
   testVar8____,
+  Verbose_____,
 };
 
 
@@ -54,9 +55,10 @@ void FractalElevMap::SetActiveProject() {
     D.UI.push_back(ParamUI("testVar6____", -0.8350));
     D.UI.push_back(ParamUI("testVar7____", -0.2241));
     D.UI.push_back(ParamUI("testVar8____", 32.0));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != testVar8____ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

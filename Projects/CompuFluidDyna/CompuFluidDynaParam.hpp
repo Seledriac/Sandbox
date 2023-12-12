@@ -49,4 +49,5 @@ enum ParamType
   SlicePlotZ__,
   VerboseSolv_,
   VerboseTime_,
+  Verbose_____,
 };

@@ -63,7 +63,7 @@ void StringArtOptim::SetActiveProject() {
     D.UI.push_back(ParamUI("SingleLine__", -0.5));
     D.UI.push_back(ParamUI("BlendMode___", -0.5));
     D.UI.push_back(ParamUI("CoeffColor__", 0.1));
-    D.UI.push_back(ParamUI("Verbose_____", -0.5));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
   if (D.UI.size() != Verbose_____ + 1) {

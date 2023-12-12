@@ -40,7 +40,6 @@ enum ParamType
   ColorFactor_,
   ColorMode___,
   Verbose_____,
-  VerboseSolv_,
 };
 
 
@@ -73,11 +72,10 @@ void MassSpringSyst::SetActiveProject() {
     D.UI.push_back(ParamUI("CoeffDamp___", 0.2));
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));
     D.UI.push_back(ParamUI("ColorMode___", 1.0));
-    D.UI.push_back(ParamUI("Verbose_____", -0.5));
-    D.UI.push_back(ParamUI("VerboseSolv_", -0.5));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != VerboseSolv_ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

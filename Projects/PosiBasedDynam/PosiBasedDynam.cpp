@@ -34,6 +34,7 @@ enum ParamType
   ForceBuoy___,
   HeatInput___,
   HeatOutput__,
+  Verbose_____,
 };
 
 
@@ -61,9 +62,10 @@ void PosiBasedDynam::SetActiveProject() {
     D.UI.push_back(ParamUI("ForceBuoy___", 2.0));
     D.UI.push_back(ParamUI("HeatInput___", 0.2));
     D.UI.push_back(ParamUI("HeatOutput__", 0.1));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != HeatOutput__ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

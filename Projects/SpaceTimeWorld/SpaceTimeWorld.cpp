@@ -79,6 +79,7 @@ enum ParamType
   TimePersist_,
   FactorCurv__,
   FactorDoppl_,
+  Verbose_____,
 };
 
 
@@ -106,9 +107,10 @@ void SpaceTimeWorld::SetActiveProject() {
     D.UI.push_back(ParamUI("TimePersist_", 0.8));
     D.UI.push_back(ParamUI("FactorCurv__", 1.0));
     D.UI.push_back(ParamUI("FactorDoppl_", 1.0));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != FactorDoppl_ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

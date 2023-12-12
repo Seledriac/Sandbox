@@ -22,16 +22,13 @@ extern Data D;
 // List of UI parameters for this project
 enum ParamType
 {
+  FractalMode_,
   MaxDepth____,
-  testVar1____,
-  testVar2____,
-  testVar3____,
-  WriteFile___,
+  StepZVal____,
+  StepZExpo___,
+  SpreadCoeff_,
+  Verbose_____,
 };
-
-
-#define KOCH_SNOWFLAKE
-// #define DRAGON_CURVE
 
 
 // Constructor
@@ -46,14 +43,15 @@ FractalCurvDev::FractalCurvDev() {
 void FractalCurvDev::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("MaxDepth____", 5.0));
-    D.UI.push_back(ParamUI("testVar1____", 0.2));
-    D.UI.push_back(ParamUI("testVar2____", 1.5));
-    D.UI.push_back(ParamUI("testVar3____", 1.0));
-    D.UI.push_back(ParamUI("WriteFile___", 0.0));
+    D.UI.push_back(ParamUI("FractalMode_", 0));
+    D.UI.push_back(ParamUI("MaxDepth____", 5));
+    D.UI.push_back(ParamUI("StepZVal____", 0.2));
+    D.UI.push_back(ParamUI("StepZExpo___", 1.5));
+    D.UI.push_back(ParamUI("SpreadCoeff_", 1.0));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != WriteFile___ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 
@@ -74,10 +72,11 @@ bool FractalCurvDev::CheckAlloc() {
 
 // Check if parameter changes should trigger a refresh
 bool FractalCurvDev::CheckRefresh() {
+  if (D.UI[FractalMode_].hasChanged()) isRefreshed= false;
   if (D.UI[MaxDepth____].hasChanged()) isRefreshed= false;
-  if (D.UI[testVar1____].hasChanged()) isRefreshed= false;
-  if (D.UI[testVar2____].hasChanged()) isRefreshed= false;
-  if (D.UI[testVar3____].hasChanged()) isRefreshed= false;
+  if (D.UI[StepZVal____].hasChanged()) isRefreshed= false;
+  if (D.UI[StepZExpo___].hasChanged()) isRefreshed= false;
+  if (D.UI[SpreadCoeff_].hasChanged()) isRefreshed= false;
   return isRefreshed;
 }
 
@@ -103,21 +102,23 @@ void FractalCurvDev::Refresh() {
   Nodes.clear();
 
   // Initialize the curve at depth 0
-#ifdef KOCH_SNOWFLAKE
-  Nodes.resize(1);
-  Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(+std::sqrt(3.0f) / 2.0f, +0.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, +1.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
-#endif
-#ifdef DRAGON_CURVE
-  Nodes.resize(1);
-  Nodes[0].push_back(Vec::Vec3f(+0.0f, -1.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(+1.0f, +0.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(+0.0f, +1.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(-1.0f, +0.0f, 0.0f));
-  Nodes[0].push_back(Vec::Vec3f(+0.0f, -1.0f, 0.0f));
-#endif
+  if (D.UI[FractalMode_].GetI() == 0) {
+    // Koch snowflake
+    Nodes.resize(1);
+    Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(+std::sqrt(3.0f) / 2.0f, +0.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, +1.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(-std::sqrt(3.0f) / 2.0f, -1.0f, 0.0f));
+  }
+  if (D.UI[FractalMode_].GetI() == 1) {
+    // Dragon curve
+    Nodes.resize(1);
+    Nodes[0].push_back(Vec::Vec3f(+0.0f, -1.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(+1.0f, +0.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(+0.0f, +1.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(-1.0f, +0.0f, 0.0f));
+    Nodes[0].push_back(Vec::Vec3f(+0.0f, -1.0f, 0.0f));
+  }
 
   // Iteratively build the next level in the fractal recursion depth
   for (int idxDepth= 1; idxDepth < maxDepth; idxDepth++) {
@@ -125,72 +126,53 @@ void FractalCurvDev::Refresh() {
     for (int idxNode= 0; idxNode < int(Nodes[idxDepth - 1].size()) - 1; idxNode++) {
       Vec::Vec3f posA= Nodes[idxDepth - 1][idxNode];
       Vec::Vec3f posB= Nodes[idxDepth - 1][idxNode + 1];
-      Vec::Vec3f ZOffset(0.0f, 0.0f, -D.UI[testVar1____].GetF() / std::pow(D.UI[testVar2____].GetF(), double(idxDepth)));
+      Vec::Vec3f ZOffset(0.0f, 0.0f, -D.UI[StepZVal____].GetF() / std::pow(D.UI[StepZExpo___].GetF(), double(idxDepth)));
 
-#ifdef KOCH_SNOWFLAKE
-      Vec::Vec3f posN0= ZOffset + posA;
-      Vec::Vec3f posN1= ZOffset + posA + (posB - posA) * 1.0 / 3.0;
-      Vec::Vec3f posN2= ZOffset + (posA + posB) / 2.0 + (std::sqrt(3.0) / 6.0) * (posB - posA).norm() * (posB - posA).cross(Vec::Vec3f(0.0, 0.0, 1.0)).normalized();
-      Vec::Vec3f posN3= ZOffset + posA + (posB - posA) * 2.0 / 3.0;
-      Vec::Vec3f posN4= ZOffset + posB;
+      if (D.UI[FractalMode_].GetI() == 0) {
+        // Koch snowflake
+        Vec::Vec3f posN0= ZOffset + posA;
+        Vec::Vec3f posN1= ZOffset + posA + (posB - posA) * 1.0 / 3.0;
+        Vec::Vec3f posN2= ZOffset + (posA + posB) / 2.0 + (std::sqrt(3.0) / 6.0) * (posB - posA).norm() * (posB - posA).cross(Vec::Vec3f(0.0, 0.0, 1.0)).normalized();
+        Vec::Vec3f posN3= ZOffset + posA + (posB - posA) * 2.0 / 3.0;
+        Vec::Vec3f posN4= ZOffset + posB;
 
-      if (idxNode == 0)
-        Nodes[idxDepth].push_back(posN0);
-      Nodes[idxDepth].push_back(posN1);
-      Nodes[idxDepth].push_back(posN2);
-      Nodes[idxDepth].push_back(posN3);
-      Nodes[idxDepth].push_back(posN4);
+        if (idxNode == 0)
+          Nodes[idxDepth].push_back(posN0);
+        Nodes[idxDepth].push_back(posN1);
+        Nodes[idxDepth].push_back(posN2);
+        Nodes[idxDepth].push_back(posN3);
+        Nodes[idxDepth].push_back(posN4);
 
-      Vec::Vec3f posM= (posA + posB) / 2.0f;
-      Faces.push_back({posM, posA, posN0});
-      Faces.push_back({posM, posN0, posN1});
-      Faces.push_back({posM, posN1, posN2});
-      Faces.push_back({posM, posN2, posN3});
-      Faces.push_back({posM, posN3, posN4});
-      Faces.push_back({posM, posN4, posB});
-#endif
-#ifdef DRAGON_CURVE
-      Vec::Vec3f dir= (posB - posA).cross(Vec::Vec3f(0.0f, 0.0f, 1.0f)).normalized();
-      if (idxNode % 2 == 0)
-        dir= Vec::Vec3f() - dir;
-      Vec::Vec3f posN0= ZOffset + posA;
-      Vec::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.UI[testVar3____].Get() * (posB - posA).norm() * dir;
-      Vec::Vec3f posN2= ZOffset + posB;
+        Vec::Vec3f posM= (posA + posB) / 2.0f;
+        Faces.push_back({posM, posA, posN0});
+        Faces.push_back({posM, posN0, posN1});
+        Faces.push_back({posM, posN1, posN2});
+        Faces.push_back({posM, posN2, posN3});
+        Faces.push_back({posM, posN3, posN4});
+        Faces.push_back({posM, posN4, posB});
+      }
 
-      if (idxNode == 0)
-        Nodes[idxDepth].push_back(posN0);
-      Nodes[idxDepth].push_back(posN1);
-      Nodes[idxDepth].push_back(posN2);
+      if (D.UI[FractalMode_].GetI() == 1) {
+        // Dragon curve
+        Vec::Vec3f dir= (posB - posA).cross(Vec::Vec3f(0.0f, 0.0f, 1.0f)).normalized();
+        if (idxNode % 2 == 0)
+          dir= Vec::Vec3f() - dir;
+        Vec::Vec3f posN0= ZOffset + posA;
+        Vec::Vec3f posN1= ZOffset + 0.5f * (posA + posB) + 0.5f * D.UI[SpreadCoeff_].GetF() * (posB - posA).norm() * dir;
+        Vec::Vec3f posN2= ZOffset + posB;
 
-      Vec::Vec3f posM= (posA + posB) / 2.0f;
-      Faces.push_back({posM, posA, posN0});
-      Faces.push_back({posM, posN0, posN1});
-      Faces.push_back({posM, posN1, posN2});
-      Faces.push_back({posM, posN2, posB});
-#endif
+        if (idxNode == 0)
+          Nodes[idxDepth].push_back(posN0);
+        Nodes[idxDepth].push_back(posN1);
+        Nodes[idxDepth].push_back(posN2);
+
+        Vec::Vec3f posM= (posA + posB) / 2.0f;
+        Faces.push_back({posM, posA, posN0});
+        Faces.push_back({posM, posN0, posN1});
+        Faces.push_back({posM, posN1, posN2});
+        Faces.push_back({posM, posN2, posB});
+      }
     }
-  }
-
-  // Save OBJ file of developed surface
-  if (D.UI[WriteFile___].GetB()) {
-    std::string iFullpath= "FileOutput/test.obj";
-    printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
-    FILE* outputFile= nullptr;
-    outputFile= fopen(iFullpath.c_str(), "w");
-    if (outputFile == nullptr) {
-      printf("[ERROR] Unable to create the file\n\n");
-      throw 0;
-    }
-    for (unsigned int k= 0; k < Faces.size(); k++) {
-      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
-      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
-      fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
-    }
-    for (unsigned int k= 0; k < Faces.size(); k++) {
-      fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
-    }
-    fclose(outputFile);
-    printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
   }
 }
 
@@ -199,7 +181,29 @@ void FractalCurvDev::Refresh() {
 void FractalCurvDev::KeyPress(const unsigned char key) {
   if (!isActivProj) return;
   if (!CheckAlloc()) Allocate();
-  (void)key;  // Disable warning unused variable
+
+  // Save OBJ file of developed surface
+  if (key == 'o') {
+    std::string iFullpath= "FileOutput/test.obj";
+    printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
+    FILE* outputFile= nullptr;
+    outputFile= fopen(iFullpath.c_str(), "w");
+    if (outputFile == nullptr) {
+      printf("[ERROR] Unable to create the file\n\n");
+    }
+    else {
+      for (unsigned int k= 0; k < Faces.size(); k++) {
+        fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][0][0], Faces[k][0][1], Faces[k][0][2]);
+        fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][1][0], Faces[k][1][1], Faces[k][1][2]);
+        fprintf(outputFile, "v %lf %lf %lf\n", Faces[k][2][0], Faces[k][2][1], Faces[k][2][2]);
+      }
+      for (unsigned int k= 0; k < Faces.size(); k++) {
+        fprintf(outputFile, "f %d %d %d\n", k * 3 + 1, k * 3 + 2, k * 3 + 3);
+      }
+      fclose(outputFile);
+      printf("File saved: %zd vertices, %zd triangles\n", Faces.size() * 3, Faces.size());
+    }
+  }
 }
 
 

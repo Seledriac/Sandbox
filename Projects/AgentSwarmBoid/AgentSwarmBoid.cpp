@@ -33,6 +33,7 @@ enum ParamType
   CoeffEat____,
   CoeffRun____,
   CoeffOri____,
+  Verbose_____,
 };
 
 
@@ -60,9 +61,10 @@ void AgentSwarmBoid::SetActiveProject() {
     D.UI.push_back(ParamUI("CoeffEat____", 0.10));
     D.UI.push_back(ParamUI("CoeffRun____", 0.15));
     D.UI.push_back(ParamUI("CoeffOri____", 0.02));
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));
   }
 
-  if (D.UI.size() != CoeffOri____ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 

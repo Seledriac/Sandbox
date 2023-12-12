@@ -68,9 +68,10 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SlicePlotZ__", 0.5));    // Positions for the slices
     D.UI.push_back(ParamUI("VerboseSolv_", -0.5));   // Verbose mode for linear solvers
     D.UI.push_back(ParamUI("VerboseTime_", -0.5));   // Verbose mode for linear solvers
+    D.UI.push_back(ParamUI("Verbose_____", 0.0));    // Verbose mode
   }
 
-  if (D.UI.size() != VerboseTime_ + 1) {
+  if (D.UI.size() != Verbose_____ + 1) {
     printf("[ERROR] Invalid parameter count in UI\n");
   }
 
