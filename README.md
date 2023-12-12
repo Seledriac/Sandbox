@@ -44,9 +44,12 @@ Add to path env var (here shown in the case of C: drive root)
 - `make depend` (optional, if dependencies changed)
 - `make` (or `make -j 12` for multithread)
 - `./main.exe`
-- *use TAB to attach/detach the contextural menou to rightclick*
-- *use rightclick to open contextual menu and select project, change options or save configurations*
-- *use mouse clics to rotate, pan and zoom with the arcball to move in the 3D scene*
-- *use KB arrows, modifier keys, or mouse wheel to highlight and change parameter values in the active project*
-- *use > or spacebar to step forward or run animation/simulation if the active project supports it*
+- *use `rightclick` to open contextual menu, select project, change options or save configurations*
+- *use menu>save>... to save UI window and current project parameters as config txt files loaded on next startup*
+- *use `leftclick` + `nothing`/`shift`/`ctrl` to rotate/pan/zoom in the 3D scene with the arcball*
+- *use KB arrows + modifier keys, or mouse wheel to highlight and change parameter values in the active project*
+- *use `,` key to reset the active project*
+- *use `.` key to step forward the animation/simulation of the active project*
+- *use `/` key to soft-refresh the active project*
+- *use spacebar to autoplay animation/simulation*
 - *use number keys to toggle various displays in the active project*

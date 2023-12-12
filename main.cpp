@@ -33,8 +33,6 @@ static int windowID;
 static int winW, winH;
 static int winPosW, winPosH;
 static int currentProjectID;
-static bool isMenuAttached;
-static bool isMenuActive;
 static bool isDarkMode;
 static bool isSmoothDraw;
 
@@ -117,20 +115,6 @@ void project_ForceHardInit() {
 }
 
 
-void project_QueueSoftRefresh() {
-  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.isRefreshed= false;
-  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.isRefreshed= false;
-  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.isRefreshed= false;
-  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.isRefreshed= false;
-  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.isRefreshed= false;
-  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.isRefreshed= false;
-  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.isRefreshed= false;
-  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.isRefreshed= false;
-  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.isRefreshed= false;
-  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.isRefreshed= false;
-}
-
-
 void project_Refresh() {
   if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.Refresh();
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Refresh();
@@ -170,6 +154,21 @@ void project_Draw() {
   if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.Draw();
   if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.Draw();
   if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.Draw();
+}
+
+
+void project_QueueSoftRefresh() {
+  if (currentProjectID == ProjectID::AgentSwarmBoidID) myAgentSwarmBoid.isRefreshed= false;
+  if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.isRefreshed= false;
+  if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.isRefreshed= false;
+  if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.isRefreshed= false;
+  if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.isRefreshed= false;
+  if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.isRefreshed= false;
+  if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.isRefreshed= false;
+  if (currentProjectID == ProjectID::SpaceTimeWorldID) mySpaceTimeWorld.isRefreshed= false;
+  if (currentProjectID == ProjectID::StringArtOptimID) myStringArtOptim.isRefreshed= false;
+  if (currentProjectID == ProjectID::TerrainErosionID) myTerrainErosion.isRefreshed= false;
+  project_Refresh();
 }
 
 
@@ -532,14 +531,6 @@ void callback_keyboard(unsigned char key, int x, int y) {
   else if (key == '.') D.stepAnimation= !D.stepAnimation;
   else if (key == '\r') D.autoRefresh= !D.autoRefresh;
   else if (key == '\b') D.UI[D.idxParamUI].Set(0.0);
-  else if (key == '\t') {
-    if (!isMenuActive) {
-      if (isMenuAttached) glutDetachMenu(GLUT_RIGHT_BUTTON);
-      else glutAttachMenu(GLUT_RIGHT_BUTTON);
-      isMenuAttached= !isMenuAttached;
-    }
-  }
-
   else if (key == '1') D.displayMode1= !D.displayMode1;
   else if (key == '2') D.displayMode2= !D.displayMode2;
   else if (key == '3') D.displayMode3= !D.displayMode3;
@@ -622,12 +613,12 @@ void callback_keyboard_special(int key, int x, int y) {
 void callback_mouse_click(int button, int state, int x, int y) {
   cam->setCurrentMousePos(float(x), float(y));
 
-  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON) cam->beginRotate();
+  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON && !(glutGetModifiers() & (GLUT_ACTIVE_SHIFT | GLUT_ACTIVE_CTRL))) cam->beginRotate();
+  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON && (glutGetModifiers() & ~GLUT_ACTIVE_SHIFT & GLUT_ACTIVE_CTRL)) cam->beginZoom();
+  if (state == GLUT_DOWN && button == GLUT_LEFT_BUTTON && (glutGetModifiers() & GLUT_ACTIVE_SHIFT & ~GLUT_ACTIVE_CTRL)) cam->beginPan();
   if (state == GLUT_UP && button == GLUT_LEFT_BUTTON) cam->endRotate();
-  if (state == GLUT_DOWN && button == GLUT_RIGHT_BUTTON) cam->beginZoom();
-  if (state == GLUT_UP && button == GLUT_RIGHT_BUTTON) cam->endZoom();
-  if (state == GLUT_DOWN && button == GLUT_MIDDLE_BUTTON) cam->beginPan();
-  if (state == GLUT_UP && button == GLUT_MIDDLE_BUTTON) cam->endPan();
+  if (state == GLUT_UP && button == GLUT_LEFT_BUTTON) cam->endZoom();
+  if (state == GLUT_UP && button == GLUT_LEFT_BUTTON) cam->endPan();
 
   if (state == GLUT_UP && (button == 3 || button == 4)) {
     if (!D.UI.empty()) {
@@ -681,15 +672,6 @@ void callback_passive_mouse_motion(int x, int y) {
 
   if (D.idxParamUI != prevParamIdx || D.idxCursorUI != prevCursorIdx)
     glutPostRedisplay();
-}
-
-
-// Menu activation callback
-void callback_menu_status(int status, int x, int y) {
-  (void)x;  // Disable warning unused variable
-  (void)y;  // Disable warning unused variable
-  if (status == GLUT_MENU_IN_USE) isMenuActive= true;
-  if (status == GLUT_MENU_NOT_IN_USE) isMenuActive= false;
 }
 
 
@@ -761,10 +743,8 @@ void init_menu() {
   glutAddSubMenu("Project", menuProject);
   glutAddSubMenu("Save", menuSave);
 
-  // Add menu status callback and set flags
-  glutMenuStatusFunc(&callback_menu_status);
-  isMenuAttached= false;
-  isMenuActive= false;
+  // Attach menu to click
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 
