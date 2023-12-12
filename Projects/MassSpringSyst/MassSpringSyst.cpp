@@ -27,8 +27,8 @@ enum ParamType
   DomainX_____,
   DomainY_____,
   DomainZ_____,
-  Distrib_____,
-  NbNodes_____,
+  DistribMode_,
+  NbNodesTarg_,
   LinkDist____,
   TimeStep____,
   IntegMode___,
@@ -60,8 +60,8 @@ void MassSpringSyst::SetActiveProject() {
     D.UI.push_back(ParamUI("DomainX_____", 0.5));
     D.UI.push_back(ParamUI("DomainY_____", 0.5));
     D.UI.push_back(ParamUI("DomainZ_____", 0.5));
-    D.UI.push_back(ParamUI("Distrib_____", 0));
-    D.UI.push_back(ParamUI("NbNodes_____", 500));
+    D.UI.push_back(ParamUI("DistribMode_", 0));
+    D.UI.push_back(ParamUI("NbNodesTarg_", 500));
     D.UI.push_back(ParamUI("LinkDist____", 0.3));
     D.UI.push_back(ParamUI("TimeStep____", 0.02));
     D.UI.push_back(ParamUI("IntegMode___", 0));
@@ -95,8 +95,8 @@ bool MassSpringSyst::CheckAlloc() {
   if (D.UI[DomainX_____].hasChanged()) isAllocated= false;
   if (D.UI[DomainY_____].hasChanged()) isAllocated= false;
   if (D.UI[DomainZ_____].hasChanged()) isAllocated= false;
-  if (D.UI[Distrib_____].hasChanged()) isAllocated= false;
-  if (D.UI[NbNodes_____].hasChanged()) isAllocated= false;
+  if (D.UI[DistribMode_].hasChanged()) isAllocated= false;
+  if (D.UI[NbNodesTarg_].hasChanged()) isAllocated= false;
   if (D.UI[LinkDist____].hasChanged()) isAllocated= false;
   return isAllocated;
 }
@@ -115,20 +115,6 @@ void MassSpringSyst::Allocate() {
   isRefreshed= false;
   isAllocated= true;
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Allocate()\n");
-
-  // Get UI parameters
-  N= std::max(D.UI[NbNodes_____].GetI(), 1);
-
-  // Allocate
-  Adj= std::vector<std::vector<int>>(N, std::vector<int>());
-  Ref= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Pos= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Vel= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Acc= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  For= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Ext= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Fix= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Mas= std::vector<float>(N, 0.0f);
 }
 
 
@@ -141,26 +127,54 @@ void MassSpringSyst::Refresh() {
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Refresh()\n");
 
   // Get domain dimensions
-  D.boxMin= {0.5f - D.UI[DomainX_____].GetF(), 0.5f - D.UI[DomainY_____].GetF(), 0.5f - D.UI[DomainZ_____].GetF()};
-  D.boxMax= {0.5f + D.UI[DomainX_____].GetF(), 0.5f + D.UI[DomainY_____].GetF(), 0.5f + D.UI[DomainZ_____].GetF()};
+  D.boxMin= {0.5f - 0.5f * D.UI[DomainX_____].GetF(), 0.5f - 0.5f * D.UI[DomainY_____].GetF(), 0.5f - 0.5f * D.UI[DomainZ_____].GetF()};
+  D.boxMax= {0.5f + 0.5f * D.UI[DomainX_____].GetF(), 0.5f + 0.5f * D.UI[DomainY_____].GetF(), 0.5f + 0.5f * D.UI[DomainZ_____].GetF()};
+  const float volBox= (D.boxMax[0] - D.boxMin[0]) * (D.boxMax[1] - D.boxMin[1]) * (D.boxMax[2] - D.boxMin[2]);
+  if (volBox <= 0.0f) return;
+  const float caracLen= std::pow(volBox / float(std::max(D.UI[NbNodesTarg_].GetI(), 1)), 1.0f / 3.0f);
 
-  // Initialize nodes properties
-  for (int k0= 0; k0 < N; k0++) {
-    Mas[k0]= 1.0f;
-    for (int dim= 0; dim < 3; dim++)
-      Pos[k0][dim]= Random::Val(D.boxMin[dim], D.boxMax[dim]);
+  // Initialize positions
+  Pos.clear();
+  if (D.UI[DistribMode_].GetI() == 1) {
+    // Uniform grid
+    for (int x= 0; x < (D.boxMax[0] - D.boxMin[0]) / caracLen; x++) {
+      for (int y= 0; y < (D.boxMax[1] - D.boxMin[1]) / caracLen; y++) {
+        for (int z= 0; z < (D.boxMax[2] - D.boxMin[2]) / caracLen; z++) {
+          Pos.push_back(Vec::Vec3f(D.boxMin[0] + x * caracLen, D.boxMin[1] + y * caracLen, D.boxMin[2] + z * caracLen));
+        }
+      }
+    }
   }
+  else {
+    // Random distribution
+    for (int k0= 0; k0 < std::max(D.UI[NbNodesTarg_].GetI(), 1); k0++) {
+      Pos.push_back(Vec::Vec3f(0.0f, 0.0f, 0.0f));
+      for (int dim= 0; dim < 3; dim++) {
+        Pos[Pos.size() - 1][dim]= Random::Val(D.boxMin[dim], D.boxMax[dim]);
+      }
+    }
+  }
+  N= (int)Pos.size();
   Ref= Pos;
 
-  // Initialize the links
+  // Initialize links
+  Adj= std::vector<std::vector<int>>(N, std::vector<int>());
   for (int k0= 0; k0 < N; k0++) {
     for (int k1= k0 + 1; k1 < N; k1++) {
-      if ((Pos[k0] - Pos[k1]).normSquared() < std::pow(D.UI[LinkDist____].GetF(), 2.0f)) {
+      if ((Pos[k0] - Pos[k1]).normSquared() < std::pow(D.UI[LinkDist____].GetF() * caracLen, 2.0f)) {
         Adj[k0].push_back(k1);
         Adj[k1].push_back(k0);
       }
     }
   }
+
+  // Allocate and initialize other arrays
+  Vel= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Acc= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  For= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Ext= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Fix= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Mas= std::vector<float>(N, 1.0f);
 }
 
 
@@ -193,7 +207,7 @@ void MassSpringSyst::Draw() {
 
   // Draw the nodes
   if (D.displayMode1) {
-    const float rad= 0.1f * D.UI[LinkDist____].GetF();
+    const float rad= 0.01f;
     for (int k0= 0; k0 < N; k0++) {
       glPushMatrix();
       glTranslatef(Pos[k0][0], Pos[k0][1], Pos[k0][2]);
