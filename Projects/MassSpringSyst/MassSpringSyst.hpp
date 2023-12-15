@@ -14,6 +14,7 @@
 // https://www.cs.rpi.edu/~cutler/classes/advancedgraphics/S17/lectures/06_mass_spring_systems.pdf
 //
 // Reference implicit solve
+// https://njoubert.com/assets/mine_simulation.pdf
 // http://www.cs.cmu.edu/~baraff/sigcourse/notese.pdf
 // http://www.cs.cmu.edu/~baraff/sigcourse/slidese.pdf
 // https://blog.mmacklin.com/2012/05/04/implicitsprings/
@@ -36,6 +37,7 @@ class MassSpringSyst
   void ComputeForces();
   void StepForwardInTime();
   void ApplyBCPos();
+  void ApplyBCVel();
   void ApplyBCFor();
 
   public:

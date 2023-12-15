@@ -195,6 +195,16 @@ void MassSpringSyst::Animate() {
   if (D.UI[Verbose_____].GetB()) printf("MassSpringSyst::Animate()\n");
 
   StepForwardInTime();
+
+  // Add to plot data
+  D.plotLegend.resize(3);
+  D.plotData.resize(3);
+  D.plotLegend[0]= "PosLastX";
+  D.plotLegend[1]= "PosLastY";
+  D.plotLegend[2]= "PosLastZ";
+  D.plotData[0].push_back(Pos[Pos.size() - 1][0]);
+  D.plotData[1].push_back(Pos[Pos.size() - 1][1]);
+  D.plotData[2].push_back(Pos[Pos.size() - 1][2]);
 }
 
 
@@ -243,6 +253,7 @@ void MassSpringSyst::ComputeForces() {
   for (int k0= 0; k0 < N; k0++) {
     For[k0]+= D.UI[CoeffExt____].GetF() * Ext[k0];                        // External forces
     For[k0]+= D.UI[CoeffGravi__].GetF() * Vec::Vec3f(0.0f, 0.0f, -1.0f);  // Gravity forces
+    For[k0]+= -D.UI[CoeffDamp___].GetF() * Vel[k0];                       // Damping forces
     for (int k1 : Adj[k0]) {                                              // Spring forces
       const float lenCur= (Pos[k1] - Pos[k0]).norm();
       const float lenRef= (Ref[k1] - Ref[k0]).norm();
@@ -254,33 +265,34 @@ void MassSpringSyst::ComputeForces() {
 
 void MassSpringSyst::StepForwardInTime() {
   const float dt= D.UI[TimeStep____].GetF();
-  const float damping= D.UI[CoeffDamp___].GetF();
 
   // Euler integration
   if (D.UI[IntegMode___].GetI() == 0) {
-    ComputeForces();  // ft (xt)
+    ComputeForces();  // f(xt)
     ApplyBCFor();
     for (int k0= 0; k0 < N; k0++) {
-      Acc[k0]= For[k0] / Mas[k0];                              // at+1 = ft / m
-      Vel[k0]= (1.0 - damping * dt) * Vel[k0] + Acc[k0] * dt;  // vt+1 = vt + at+1 * dt
-      Pos[k0]= Pos[k0] + Vel[k0] * dt;                         // xt+1 = xt + vt+1 * dt
+      Acc[k0]= For[k0] / Mas[k0];       // a₁ = f(x₀) / m
+      Vel[k0]= Vel[k0] + Acc[k0] * dt;  // v₁ = v₀ + Δt a₁
+      Pos[k0]= Pos[k0] + Vel[k0] * dt;  // x₁ = x₀ + Δt v₁
     }
+    ApplyBCVel();
     ApplyBCPos();
   }
 
   // Velocity Verlet integration
   if (D.UI[IntegMode___].GetI() == 1) {
     for (int k0= 0; k0 < N; k0++) {
-      Pos[k0]= Pos[k0] + Vel[k0] * dt + 0.5 * Acc[k0] * dt * dt;  // xt+1 = xt + vt * dt + 0.5 * at * dt * dt
+      Pos[k0]= Pos[k0] + Vel[k0] * dt + 0.5 * Acc[k0] * dt * dt;  // x₁ = x₀ + Δt v₀ + 0.5 * a₀ * Δt²
       ApplyBCPos();
     }
-    ComputeForces();  // ft+1 (xt+1)
+    ComputeForces();  // f(x₁)
     ApplyBCFor();
     for (int k0= 0; k0 < N; k0++) {
       Vec::Vec3f oldAcc= Acc[k0];
-      Acc[k0]= For[k0] / Mas[k0];                                               // at+1 = ft+1 / m
-      Vel[k0]= (1.0 - damping * dt) * Vel[k0] + 0.5 * (oldAcc + Acc[k0]) * dt;  // vt+1 = vt + 0.5 * (at + at+1) * dt
+      Acc[k0]= For[k0] / Mas[k0];                        // a₁ = f(x₁) / m
+      Vel[k0]= Vel[k0] + 0.5 * (oldAcc + Acc[k0]) * dt;  // v₁ = v₀ + 0.5 * (a₀ + a₁) * Δt
     }
+    ApplyBCVel();
   }
 }
 
@@ -297,9 +309,39 @@ void MassSpringSyst::ApplyBCPos() {
 }
 
 
+void MassSpringSyst::ApplyBCVel() {
+  for (int k0= 0; k0 < N; k0++) {
+    for (int dim= 0; dim < 3; dim++) {
+      if (Fix[k0][dim] > 0.0f)
+        Vel[k0][dim]= 0.0f;
+      else if (Pos[k0][dim] <= (float)D.boxMin[dim] && Vel[k0][dim] < 0.0f)
+        Vel[k0][dim]= 0.0f;
+      else if (Pos[k0][dim] >= (float)D.boxMax[dim] && Vel[k0][dim] > 0.0f)
+        Vel[k0][dim]= 0.0f;
+    }
+  }
+}
+
+
 void MassSpringSyst::ApplyBCFor() {
-  for (int k0= 0; k0 < N; k0++)
-    for (int dim= 0; dim < 3; dim++)
+  for (int k0= 0; k0 < N; k0++) {
+    for (int dim= 0; dim < 3; dim++) {
       if (Fix[k0][dim] > 0.0f)
         For[k0][dim]= 0.0f;
+    }
+  }
 }
+
+
+// v₁ = v₀ + Δt * (Fe + Fd + Fs + Fg) / m
+// x₁ = x₀ + v₁ * Δt
+
+// |  1    -Δt  | | x₁ |   |   x₀    |
+// |            | |    | = |         |
+// | k/m  1-d/m | | v₁ |   | v₀ -gΔt |
+
+// x₁ = xt + Δt * v₁
+// v₁ = vt + Δt * (-g * m + k*(x₁ - L) - d*v₁)/m
+
+
+// (x₁, v₁) - dt * (v₁, k/m x₁ - d/m v₁) = (xt, vt - g*dt)
