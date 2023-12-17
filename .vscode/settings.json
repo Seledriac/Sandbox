@@ -98,7 +98,9 @@
     "xlocbuf": "cpp",
     "xlocmes": "cpp",
     "xlocmon": "cpp",
-    "xloctime": "cpp"
+    "xloctime": "cpp",
+    "span": "cpp",
+    "variant": "cpp"
   },
   "cmake.configureOnOpen": true
 }
