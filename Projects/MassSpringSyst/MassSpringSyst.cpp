@@ -67,7 +67,7 @@ void MassSpringSyst::SetActiveProject() {
     D.UI.push_back(ParamUI("IntegMode___", 0));
     D.UI.push_back(ParamUI("SolvMaxIter_", 10));
     D.UI.push_back(ParamUI("CoeffExt____", 1.0));
-    D.UI.push_back(ParamUI("CoeffGravi__", 0.1));
+    D.UI.push_back(ParamUI("CoeffGravi__", -0.1));
     D.UI.push_back(ParamUI("CoeffSpring_", 40.0));
     D.UI.push_back(ParamUI("CoeffDamp___", 0.2));
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));
@@ -175,6 +175,9 @@ void MassSpringSyst::Refresh() {
   Ext= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   Fix= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
   Mas= std::vector<float>(N, 1.0f);
+
+  // for (int k0= 0; k0 < N / 10; k0++)
+  //   Fix[k0].set(1.0f, 1.0f, 1.0f);
 }
 
 
@@ -235,7 +238,11 @@ void MassSpringSyst::Draw() {
     glBegin(GL_LINES);
     for (int k0= 0; k0 < N; k0++) {
       for (int k1 : Adj[k0]) {
-        glColor3f(0.5f, 0.5f, 0.5f);
+        float r, g, b;
+        const float lenCur= (Pos[k1] - Pos[k0]).norm();
+        const float lenRef= (Ref[k1] - Ref[k0]).norm();
+        For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
+        Colormap::RatioToJetSmooth(0.5f + 0.5f * (For[k0] + For[k1]).norm(), r, g, b);
         glVertex3fv(Pos[k0].array());
         glVertex3fv(Pos[k1]);
       }
@@ -312,11 +319,9 @@ void MassSpringSyst::ApplyBCPos() {
 void MassSpringSyst::ApplyBCVel() {
   for (int k0= 0; k0 < N; k0++) {
     for (int dim= 0; dim < 3; dim++) {
-      if (Fix[k0][dim] > 0.0f)
-        Vel[k0][dim]= 0.0f;
-      else if (Pos[k0][dim] <= (float)D.boxMin[dim] && Vel[k0][dim] < 0.0f)
-        Vel[k0][dim]= 0.0f;
-      else if (Pos[k0][dim] >= (float)D.boxMax[dim] && Vel[k0][dim] > 0.0f)
+      if ((Fix[k0][dim] > 0.0f) ||
+          (Pos[k0][dim] <= D.boxMin[dim] && Vel[k0][dim] < 0.0f) ||
+          (Pos[k0][dim] >= D.boxMax[dim] && Vel[k0][dim] > 0.0f))
         Vel[k0][dim]= 0.0f;
     }
   }
