@@ -261,7 +261,8 @@ void MassSpringSyst::ComputeForces() {
     for (int k1 : Adj[k0]) {                                                              // Spring forces
       const float lenCur= (Pos[k1] - Pos[k0]).norm();
       const float lenRef= (Ref[k1] - Ref[k0]).norm();
-      For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
+      if (lenCur > 0.0f)
+        For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
     }
   }
 }
