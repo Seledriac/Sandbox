@@ -165,15 +165,15 @@ void SpaceTimeWorld::Allocate() {
   screenNbS= std::max(D.UI[ScreenNbS___].GetI(), 1);
 
   // Allocate data
-  if (!Field::CheckFieldDimensions(worldSolid, worldNbT, worldNbX, worldNbY, worldNbZ)) worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  if (!Field::CheckFieldDimensions(worldIsFix, worldNbT, worldNbX, worldNbY, worldNbZ)) worldIsFix= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
-  if (!Field::CheckFieldDimensions(worldMasss, worldNbT, worldNbX, worldNbY, worldNbZ)) worldMasss= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
-  if (!Field::CheckFieldDimensions(worldColor, worldNbT, worldNbX, worldNbY, worldNbZ)) worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(worldFlows, worldNbT, worldNbX, worldNbY, worldNbZ)) worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(screenColor, screenNbH, screenNbV)) screenColor= Field::AllocField2D(screenNbH, screenNbV, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(screenCount, screenNbH, screenNbV)) screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
-  if (!Field::CheckFieldDimensions(photonPos, screenNbH, screenNbV, screenNbS)) photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
-  if (!Field::CheckFieldDimensions(photonVel, screenNbH, screenNbV, screenNbS)) photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  worldSolid= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
+  worldIsFix= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, false);
+  worldMasss= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, 0.0f);
+  worldColor= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  worldFlows= Field::AllocField4D(worldNbT, worldNbX, worldNbY, worldNbZ, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  screenColor= Field::AllocField2D(screenNbH, screenNbV, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  screenCount= Field::AllocField2D(screenNbH, screenNbV, 1);
+  photonPos= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
+  photonVel= Field::AllocField3D(screenNbH, screenNbV, screenNbS, Vec::Vec4f(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 
