@@ -233,11 +233,11 @@ void CompuFluidDyna::InitializeScenario() {
             Solid[x][y][z]= true;
           }
           else {
-            const Vec::Vec3f posVox= Vec::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
-            const Vec::Vec3f posInlet(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+            const Vec::Vec3<float> posVox= Vec::Vec3<float>(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3<float>(x + 0.5f, y + 0.5f, z + 0.5f);
+            const Vec::Vec3<float> posInlet(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
             for (int k= 0; k < 2; k++) {
               if (k == 0 && (posVox - posInlet).norm() > D.UI[ObjectSize0_].GetF()) continue;
-              if (k == 1 && (posVox - Vec::Vec3f(1.0f, 1.0f, 1.0f) + posInlet).norm() > D.UI[ObjectSize1_].GetF()) continue;
+              if (k == 1 && (posVox - Vec::Vec3<float>(1.0f, 1.0f, 1.0f) + posInlet).norm() > D.UI[ObjectSize1_].GetF()) continue;
               VelBC[x][y][z]= true;
               SmoBC[x][y][z]= true;
               VelXForced[x][y][z]= D.UI[BCVelX______].GetF() * ((k == 0) ? (1.0f) : (-1.0f));
@@ -273,9 +273,9 @@ void CompuFluidDyna::InitializeScenario() {
             SmokForced[x][y][z]= D.UI[BCSmok______].GetF();
           }
           else {
-            const Vec::Vec3f posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
-            const Vec::Vec3f posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
-            Vec::Vec3f dist= (posCell - posObstacle);
+            const Vec::Vec3<float> posCell(((float)x + 0.5f) / (float)nX, ((float)y + 0.5f) / (float)nY, ((float)z + 0.5f) / (float)nZ);
+            const Vec::Vec3<float> posObstacle(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+            Vec::Vec3<float> dist= (posCell - posObstacle);
             dist[0]*= (float)(nX - 1) * voxSize;
             dist[1]*= (float)(nY - 1) * voxSize;
             dist[2]*= (float)(nZ - 1) * voxSize;
@@ -311,16 +311,16 @@ void CompuFluidDyna::InitializeScenario() {
         // >    |||       >
         // -----|||--------
         if (scenarioType == 4) {
-          const Vec::Vec3f posVox= Vec::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
-          const Vec::Vec3f posWall(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+          const Vec::Vec3<float> posVox= Vec::Vec3<float>(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3<float>(x + 0.5f, y + 0.5f, z + 0.5f);
+          const Vec::Vec3<float> posWall(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
           const float radHole= D.UI[ObjectSize0_].GetF();
           const float radWall= D.UI[ObjectSize1_].GetF();
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
               (nZ > 1 && (z == 0 || z == nZ - 1))) {
             Solid[x][y][z]= true;
           }
-          else if ((posVox - posWall).coeffMul(Vec::Vec3f(0.0f, 1.0f, 0.0f)).norm() <= radWall &&
-                   (posVox - posWall).coeffMul(Vec::Vec3f(1.0f, 0.0f, 1.0f)).norm() > radHole) {
+          else if ((posVox - posWall).coeffMul(Vec::Vec3<float>(0.0f, 1.0f, 0.0f)).norm() <= radWall &&
+                   (posVox - posWall).coeffMul(Vec::Vec3<float>(1.0f, 0.0f, 1.0f)).norm() > radHole) {
             Solid[x][y][z]= true;
           }
           else if (y == 0) {
@@ -394,8 +394,8 @@ void CompuFluidDyna::InitializeScenario() {
         //       |     |
         //       |  v  |
         if (scenarioType == 8) {
-          const Vec::Vec3f posVox= Vec::Vec3f(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3f(x + 0.5f, y + 0.5f, z + 0.5f);
-          const Vec::Vec3f posBend(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
+          const Vec::Vec3<float> posVox= Vec::Vec3<float>(D.boxMin[0], D.boxMin[1], D.boxMin[2]) + voxSize * Vec::Vec3<float>(x + 0.5f, y + 0.5f, z + 0.5f);
+          const Vec::Vec3<float> posBend(D.UI[ObjectPosX__].GetF(), D.UI[ObjectPosY__].GetF(), D.UI[ObjectPosZ__].GetF());
           const float radPipe= D.UI[ObjectSize0_].GetF();
           const float radBend= D.UI[ObjectSize1_].GetF();
           if ((nX > 1 && (x == 0 || x == nX - 1)) ||
@@ -404,7 +404,7 @@ void CompuFluidDyna::InitializeScenario() {
             Solid[x][y][z]= true;
           }
           else if (posVox[1] < posBend[1]) {
-            if ((posVox - posBend - Vec::Vec3f(0.0f, 0.0f, radBend + radPipe)).coeffMul(Vec::Vec3f(1.0f, 0.0f, 1.0f)).norm() > radPipe) {
+            if ((posVox - posBend - Vec::Vec3<float>(0.0f, 0.0f, radBend + radPipe)).coeffMul(Vec::Vec3<float>(1.0f, 0.0f, 1.0f)).norm() > radPipe) {
               Solid[x][y][z]= true;
             }
             else if (y == 0) {
@@ -419,7 +419,7 @@ void CompuFluidDyna::InitializeScenario() {
             }
           }
           else if (posVox[2] < posBend[2]) {
-            if ((posVox - posBend - Vec::Vec3f(0.0f, radBend + radPipe, 0.0f)).coeffMul(Vec::Vec3f(1.0f, 1.0f, 0.0f)).norm() > radPipe) {
+            if ((posVox - posBend - Vec::Vec3<float>(0.0f, radBend + radPipe, 0.0f)).coeffMul(Vec::Vec3<float>(1.0f, 1.0f, 0.0f)).norm() > radPipe) {
               Solid[x][y][z]= true;
             }
             else if (z == 0) {
@@ -427,7 +427,7 @@ void CompuFluidDyna::InitializeScenario() {
               PresForced[x][y][z]= 0.0;
             }
           }
-          else if ((posBend + ((posVox - posBend).coeffMul(Vec::Vec3f(0.0f, 1.0f, 1.0f)).normalized() * (radBend + radPipe)) - posVox).norm() > radPipe) {
+          else if ((posBend + ((posVox - posBend).coeffMul(Vec::Vec3<float>(0.0f, 1.0f, 1.0f)).normalized() * (radBend + radPipe)) - posVox).norm() > radPipe) {
             Solid[x][y][z]= true;
           }
         }
@@ -991,17 +991,17 @@ void CompuFluidDyna::AdvectField(const int iFieldID, const float iTimeStep,
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) continue;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) continue;
         // Find source position for active voxel using naive linear backtracking scheme
-        const Vec::Vec3f posEnd((float)x, (float)y, (float)z);
-        const Vec::Vec3f velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
-        Vec::Vec3f posBeg= posEnd - iTimeStep * velEnd / voxSize;
+        const Vec::Vec3<float> posEnd((float)x, (float)y, (float)z);
+        const Vec::Vec3<float> velEnd(iVelX[x][y][z], iVelY[x][y][z], iVelZ[x][y][z]);
+        Vec::Vec3<float> posBeg= posEnd - iTimeStep * velEnd / voxSize;
         // Iterative source position correction with 2nd order MacCormack scheme
         int correcMaxIter= std::max(D.UI[CoeffAdvec__].GetI() - 1, 0);
         for (int iter= 0; iter < correcMaxIter; iter++) {
           const float velBegX= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelX);
           const float velBegY= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelY);
           const float velBegZ= TrilinearInterpolation(posBeg[0], posBeg[1], posBeg[2], iVelZ);
-          const Vec::Vec3f velBeg(velBegX, velBegY, velBegZ);
-          const Vec::Vec3f vecErr= posEnd - (posBeg + iTimeStep * velBeg / voxSize);
+          const Vec::Vec3<float> velBeg(velBegX, velBegY, velBegZ);
+          const Vec::Vec3<float> vecErr= posEnd - (posBeg + iTimeStep * velBeg / voxSize);
           posBeg= posBeg + vecErr / 2.0f;
         }
         // Save source vector for display
@@ -1033,7 +1033,7 @@ void CompuFluidDyna::VorticityConfinement(const float iTimeStep, const float iVo
         for (int z= 0; z < nZ; z++) {
           if (Solid[x][y][z] || VelBC[x][y][z]) continue;
           // Gradient of vorticity with zero derivative at solid interface or domain boundary
-          Vec::Vec3f vortGrad(0.0f, 0.0f, 0.0f);
+          Vec::Vec3<float> vortGrad(0.0f, 0.0f, 0.0f);
           if (x - 1 >= 0 && !Solid[x - 1][y][z]) vortGrad[0]+= (Vort[x][y][z] - Vort[x - 1][y][z]) / (2.0f * voxSize);
           if (y - 1 >= 0 && !Solid[x][y - 1][z]) vortGrad[1]+= (Vort[x][y][z] - Vort[x][y - 1][z]) / (2.0f * voxSize);
           if (z - 1 >= 0 && !Solid[x][y][z - 1]) vortGrad[2]+= (Vort[x][y][z] - Vort[x][y][z - 1]) / (2.0f * voxSize);

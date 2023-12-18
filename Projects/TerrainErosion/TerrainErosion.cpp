@@ -104,17 +104,17 @@ void TerrainErosion::Allocate() {
   dropletNbK= std::max(1, D.UI[DropletNbK__].GetI());
 
   // Allocate data
-  terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3f(0.0f, 0.0f, 1.0f));
-  terrainCol= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3f(0.5f, 0.5f, 0.5f));
+  terrainPos= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  terrainNor= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3<float>(0.0f, 0.0f, 1.0f));
+  terrainCol= Field::AllocField2D(terrainNbX, terrainNbY, Vec::Vec3<float>(0.5f, 0.5f, 0.5f));
   terrainChg= Field::AllocField2D(terrainNbX, terrainNbY, 0.0f);
 
-  dropletPosOld= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletPosCur= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletVelCur= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletAccCur= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletForCur= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  dropletColCur= std::vector<Vec::Vec3f>(dropletNbK, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  dropletPosOld= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  dropletPosCur= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  dropletVelCur= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  dropletAccCur= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  dropletForCur= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  dropletColCur= std::vector<Vec::Vec3<float>>(dropletNbK, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
   dropletMasCur= std::vector<float>(dropletNbK, 0.0f);
   dropletRadCur= std::vector<float>(dropletNbK, 0.0f);
   dropletSatCur= std::vector<float>(dropletNbK, 0.0f);
@@ -136,8 +136,8 @@ void TerrainErosion::Refresh() {
   srand(0);
 
   // Precompute cut planes
-  std::vector<Vec::Vec2f> cutPiv(terrainNbC);
-  std::vector<Vec::Vec2f> cutVec(terrainNbC);
+  std::vector<Vec::Vec2<float>> cutPiv(terrainNbC);
+  std::vector<Vec::Vec2<float>> cutVec(terrainNbC);
   for (int iter= 0; iter < terrainNbC; iter++) {
     cutPiv[iter].set(Random::Val(0.0f, 1.0f), Random::Val(0.0f, 1.0f));
     do {
@@ -153,7 +153,7 @@ void TerrainErosion::Refresh() {
       terrainPos[x][y][1]= float(y) / float(terrainNbY - 1);
       terrainPos[x][y][2]= 0.0f;
       for (int iter= 0; iter < terrainNbC; iter++) {
-        Vec::Vec2f pos(terrainPos[x][y][0], terrainPos[x][y][1]);
+        Vec::Vec2<float> pos(terrainPos[x][y][0], terrainPos[x][y][1]);
         if ((pos - cutPiv[iter]).dot(cutVec[iter]) < 0.0f)
           terrainPos[x][y][2]+= 1.0f;
         else
@@ -164,7 +164,7 @@ void TerrainErosion::Refresh() {
 
   // Smooth the terrain
   for (int iter= 0; iter < std::max(terrainNbX, terrainNbY) / 64; iter++) {
-    std::vector<std::vector<Vec::Vec3f>> terrainPosOld= terrainPos;
+    std::vector<std::vector<Vec::Vec3<float>>> terrainPosOld= terrainPos;
     for (int x= 0; x < terrainNbX; x++) {
       for (int y= 0; y < terrainNbY; y++) {
         int count= 0;
@@ -229,7 +229,7 @@ void TerrainErosion::Animate() {
 
   float dt= D.UI[SimuTimestep].GetF();
   float velocityDecay= std::min(std::max(D.UI[VelDecay____].GetF(), 0.0f), 1.0f);
-  Vec::Vec3f gravity(0.0f, 0.0f, -0.5f);
+  Vec::Vec3<float> gravity(0.0f, 0.0f, -0.5f);
 
   // Respawn dead droplets
   for (int k= 0; k < dropletNbK; k++) {
@@ -293,7 +293,7 @@ void TerrainErosion::Animate() {
     interpoVal+= terrainPos[x1][y1][2] * (xWeight1 * yWeight1);
 
     if (dropletPosCur[k][2] - dropletRadCur[k] < interpoVal) {
-      Vec::Vec3f interpoNor(0.0f, 0.0f, 0.0f);
+      Vec::Vec3<float> interpoNor(0.0f, 0.0f, 0.0f);
       interpoNor+= terrainNor[x0][y0] * (xWeight0 * yWeight0);
       interpoNor+= terrainNor[x0][y1] * (xWeight0 * yWeight1);
       interpoNor+= terrainNor[x1][y0] * (xWeight1 * yWeight0);
@@ -307,7 +307,7 @@ void TerrainErosion::Animate() {
   for (int k0= 0; k0 < dropletNbK; k0++) {
     for (int k1= k0 + 1; k1 < dropletNbK; k1++) {
       if ((dropletPosCur[k1] - dropletPosCur[k0]).normSquared() <= (dropletRadCur[k0] + dropletRadCur[k1]) * (dropletRadCur[k0] + dropletRadCur[k1])) {
-        Vec::Vec3f val= (dropletPosCur[k1] - dropletPosCur[k0]).normalized() * 0.5f * ((dropletRadCur[k0] + dropletRadCur[k1]) - (dropletPosCur[k1] - dropletPosCur[k0]).norm());
+        Vec::Vec3<float> val= (dropletPosCur[k1] - dropletPosCur[k0]).normalized() * 0.5f * ((dropletRadCur[k0] + dropletRadCur[k1]) - (dropletPosCur[k1] - dropletPosCur[k0]).norm());
         dropletPosCur[k0]-= val;
         dropletPosCur[k1]+= val;
       }
@@ -352,7 +352,7 @@ void TerrainErosion::Animate() {
   }
 
   // Smooth the terrain
-  std::vector<std::vector<Vec::Vec3f>> terrainPosOld= terrainPos;
+  std::vector<std::vector<Vec::Vec3<float>>> terrainPosOld= terrainPos;
   for (int x= 0; x < terrainNbX; x++) {
     for (int y= 0; y < terrainNbY; y++) {
       int count= 0;
@@ -413,7 +413,7 @@ void TerrainErosion::Draw() {
         terrainCol[x][y][2]= 0.5f + terrainNor[x][y][2] / 2.0f;
       }
       else if (D.displayMode3) {
-        if (terrainNor[x][y].dot(Vec::Vec3f(0.0f, 0.0f, 1.0f)) < D.UI[CliffThresh_].GetF()) {
+        if (terrainNor[x][y].dot(Vec::Vec3<float>(0.0f, 0.0f, 1.0f)) < D.UI[CliffThresh_].GetF()) {
           terrainCol[x][y][0]= 0.7f;
           terrainCol[x][y][1]= 0.6f;
           terrainCol[x][y][2]= 0.3f;
@@ -433,8 +433,8 @@ void TerrainErosion::Draw() {
     glBegin(GL_QUADS);
     for (int x= 0; x < terrainNbX - 1; x++) {
       for (int y= 0; y < terrainNbY - 1; y++) {
-        Vec::Vec3f flatNormal= (terrainNor[x][y] + terrainNor[x + 1][y] + terrainNor[x + 1][y + 1] + terrainNor[x][y + 1]).normalized();
-        Vec::Vec3f flatColor= (terrainCol[x][y] + terrainCol[x + 1][y] + terrainCol[x + 1][y + 1] + terrainCol[x][y + 1]) / 4.0f;
+        Vec::Vec3<float> flatNormal= (terrainNor[x][y] + terrainNor[x + 1][y] + terrainNor[x + 1][y + 1] + terrainNor[x][y + 1]).normalized();
+        Vec::Vec3<float> flatColor= (terrainCol[x][y] + terrainCol[x + 1][y] + terrainCol[x + 1][y + 1] + terrainCol[x][y + 1]) / 4.0f;
         glColor3fv((flatColor / 2.0f).array());
         glNormal3fv(flatNormal.array());
         glVertex3fv(terrainPos[x][y].array());

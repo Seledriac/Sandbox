@@ -123,8 +123,8 @@ void StringArtOptim::Refresh() {
   D.plotLegend.clear();
 
   // Initialize images
-  ImRef= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  ImCur= Field::AllocField2D(nW, nH, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  ImRef= Field::AllocField2D(nW, nH, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  ImCur= Field::AllocField2D(nW, nH, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
   std::vector<std::vector<std::array<float, 4>>> imageRGBA;
   if (D.UI[ImageID_____].GetI() == 0) FileInput::LoadImageBMPFile("FileInput/SA_Smile.bmp", imageRGBA, false);
   if (D.UI[ImageID_____].GetI() == 1) FileInput::LoadImageBMPFile("FileInput/SA_MonaLisa.bmp", imageRGBA, false);
@@ -163,30 +163,30 @@ void StringArtOptim::Refresh() {
   // Initialize colors
   Colors.clear();
   if (D.UI[ColorsAdd___].GetI() >= 1) {
-    Colors.push_back(Vec::Vec3f(1.0f, 0.0f, 0.0f));
-    Colors.push_back(Vec::Vec3f(0.0f, 1.0f, 0.0f));
-    Colors.push_back(Vec::Vec3f(0.0f, 0.0f, 1.0f));
+    Colors.push_back(Vec::Vec3<float>(1.0f, 0.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, 1.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, 0.0f, 1.0f));
   }
   if (D.UI[ColorsAdd___].GetI() >= 2) {
-    Colors.push_back(Vec::Vec3f(0.0f, 1.0f, 1.0f));
-    Colors.push_back(Vec::Vec3f(1.0f, 0.0f, 1.0f));
-    Colors.push_back(Vec::Vec3f(1.0f, 1.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, 1.0f, 1.0f));
+    Colors.push_back(Vec::Vec3<float>(1.0f, 0.0f, 1.0f));
+    Colors.push_back(Vec::Vec3<float>(1.0f, 1.0f, 0.0f));
   }
   if (D.UI[ColorsAdd___].GetI() >= 3) {
-    Colors.push_back(Vec::Vec3f(1.0f, 1.0f, 1.0f));
+    Colors.push_back(Vec::Vec3<float>(1.0f, 1.0f, 1.0f));
   }
   if (D.UI[ColorsSub___].GetI() >= 1) {
-    Colors.push_back(Vec::Vec3f(-1.0f, 0.0f, 0.0f));
-    Colors.push_back(Vec::Vec3f(0.0f, -1.0f, 0.0f));
-    Colors.push_back(Vec::Vec3f(0.0f, 0.0f, -1.0f));
+    Colors.push_back(Vec::Vec3<float>(-1.0f, 0.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, -1.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, 0.0f, -1.0f));
   }
   if (D.UI[ColorsSub___].GetI() >= 2) {
-    Colors.push_back(Vec::Vec3f(0.0f, -1.0f, -1.0f));
-    Colors.push_back(Vec::Vec3f(-1.0f, 0.0f, -1.0f));
-    Colors.push_back(Vec::Vec3f(-1.0f, -1.0f, 0.0f));
+    Colors.push_back(Vec::Vec3<float>(0.0f, -1.0f, -1.0f));
+    Colors.push_back(Vec::Vec3<float>(-1.0f, 0.0f, -1.0f));
+    Colors.push_back(Vec::Vec3<float>(-1.0f, -1.0f, 0.0f));
   }
   if (D.UI[ColorsSub___].GetI() >= 3) {
-    Colors.push_back(Vec::Vec3f(-1.0f, -1.0f, -1.0f));
+    Colors.push_back(Vec::Vec3<float>(-1.0f, -1.0f, -1.0f));
   }
   for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++)
     Colors[idxCol].normalize();
@@ -231,8 +231,8 @@ void StringArtOptim::Animate() {
     std::vector<float> Len((int)Colors.size(), 0.0f);
     for (int idxCol= 0; idxCol < (int)Colors.size(); idxCol++) {
       for (int idxLine= 1; idxLine < (int)Lines[idxCol].size(); idxLine++) {
-        Vec::Vec2f pos0((Pegs[Lines[idxCol][idxLine - 1]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine - 1]][1] + 0.5f) / (float)(nH));
-        Vec::Vec2f pos1((Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
+        Vec::Vec2<float> pos0((Pegs[Lines[idxCol][idxLine - 1]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine - 1]][1] + 0.5f) / (float)(nH));
+        Vec::Vec2<float> pos1((Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW), (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
         Len[idxCol]+= (pos0 - pos1).norm();
       }
     }
@@ -312,9 +312,9 @@ void StringArtOptim::Draw() {
       if (Lines[idxCol].size() >= 2) {
         glLineWidth(2.0f);
         glBegin(GL_LINE_STRIP);
-        glColor3fv((0.5f * Colors[idxCol] + Vec::Vec3f(0.5f, 0.5f, 0.5f)).array());
+        glColor3fv((0.5f * Colors[idxCol] + Vec::Vec3<float>(0.5f, 0.5f, 0.5f)).array());
         for (int idxLine= 0; idxLine < (int)Lines[idxCol].size(); idxLine++) {
-          Vec::Vec3f pos(0.5f + 0.05f * float(idxLine) / float(Lines[idxCol].size()),
+          Vec::Vec3<float> pos(0.5f + 0.05f * float(idxLine) / float(Lines[idxCol].size()),
                          (Pegs[Lines[idxCol][idxLine]][0] + 0.5f) / (float)(nW),
                          (Pegs[Lines[idxCol][idxLine]][1] + 0.5f) / (float)(nH));
           glVertex3fv(pos.array());
@@ -342,14 +342,14 @@ bool StringArtOptim::AddLineStep() {
       for (int idxPos= 0; idxPos < (int)path.size(); idxPos++) {
         const int w= path[idxPos][0];
         const int h= path[idxPos][1];
-        Vec::Vec3f newVal;
+        Vec::Vec3<float> newVal;
         if (D.UI[BlendMode___].GetB())
           newVal= (1.0f - D.UI[CoeffColor__].GetF()) * ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
         else
           newVal= ImCur[w][h] + D.UI[CoeffColor__].GetF() * Colors[idxCol];
         for (int k= 0; k < 3; k++) newVal[k]= std::min(std::max(newVal[k], 0.0f), 1.0f);
-        const Vec::Vec3f curErr= ImRef[w][h] - ImCur[w][h];
-        const Vec::Vec3f newErr= ImRef[w][h] - newVal;
+        const Vec::Vec3<float> curErr= ImRef[w][h] - ImCur[w][h];
+        const Vec::Vec3<float> newErr= ImRef[w][h] - newVal;
         chgErr+= newErr.normSquared() - curErr.normSquared();
       }
       if (bestPeg[idxCol] < 0 || bestErr[idxCol] > chgErr) {

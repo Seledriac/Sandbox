@@ -140,7 +140,7 @@ void MassSpringSyst::Refresh() {
     for (int x= 0; x < (D.boxMax[0] - D.boxMin[0]) / caracLen; x++) {
       for (int y= 0; y < (D.boxMax[1] - D.boxMin[1]) / caracLen; y++) {
         for (int z= 0; z < (D.boxMax[2] - D.boxMin[2]) / caracLen; z++) {
-          Pos.push_back(Vec::Vec3f(D.boxMin[0] + x * caracLen, D.boxMin[1] + y * caracLen, D.boxMin[2] + z * caracLen));
+          Pos.push_back(Vec::Vec3<float>(D.boxMin[0] + x * caracLen, D.boxMin[1] + y * caracLen, D.boxMin[2] + z * caracLen));
         }
       }
     }
@@ -148,7 +148,7 @@ void MassSpringSyst::Refresh() {
   else {
     // Random distribution
     for (int k0= 0; k0 < std::max(D.UI[NbNodesTarg_].GetI(), 1); k0++) {
-      Pos.push_back(Vec::Vec3f(0.0f, 0.0f, 0.0f));
+      Pos.push_back(Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
       for (int dim= 0; dim < 3; dim++) {
         Pos[Pos.size() - 1][dim]= Random::Val(D.boxMin[dim], D.boxMax[dim]);
       }
@@ -169,11 +169,11 @@ void MassSpringSyst::Refresh() {
   }
 
   // Allocate and initialize other arrays
-  Vel= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Acc= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  For= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Ext= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  Fix= std::vector<Vec::Vec3f>(N, Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  Vel= std::vector<Vec::Vec3<float>>(N, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  Acc= std::vector<Vec::Vec3<float>>(N, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  For= std::vector<Vec::Vec3<float>>(N, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  Ext= std::vector<Vec::Vec3<float>>(N, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  Fix= std::vector<Vec::Vec3<float>>(N, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
   Mas= std::vector<float>(N, 1.0f);
 
   // for (int k0= 0; k0 < N / 10; k0++)
@@ -254,14 +254,14 @@ void MassSpringSyst::Draw() {
 
 void MassSpringSyst::ComputeForces() {
   // Reset forces
-  std::fill(For.begin(), For.end(), Vec::Vec3f(0.0f, 0.0f, 0.0f));
+  std::fill(For.begin(), For.end(), Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
 
   // Accumulate forces
   for (int k0= 0; k0 < N; k0++) {
-    For[k0]+= D.UI[CoeffExt____].GetF() * Ext[k0];                        // External forces
-    For[k0]+= D.UI[CoeffGravi__].GetF() * Vec::Vec3f(0.0f, 0.0f, -1.0f);  // Gravity forces
-    For[k0]+= -D.UI[CoeffDamp___].GetF() * Vel[k0];                       // Damping forces
-    for (int k1 : Adj[k0]) {                                              // Spring forces
+    For[k0]+= D.UI[CoeffExt____].GetF() * Ext[k0];                              // External forces
+    For[k0]+= D.UI[CoeffGravi__].GetF() * Vec::Vec3<float>(0.0f, 0.0f, -1.0f);  // Gravity forces
+    For[k0]+= -D.UI[CoeffDamp___].GetF() * Vel[k0];                             // Damping forces
+    for (int k1 : Adj[k0]) {                                                    // Spring forces
       const float lenCur= (Pos[k1] - Pos[k0]).norm();
       const float lenRef= (Ref[k1] - Ref[k0]).norm();
       For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
@@ -295,7 +295,7 @@ void MassSpringSyst::StepForwardInTime() {
     ComputeForces();  // f(x₁)
     ApplyBCFor();
     for (int k0= 0; k0 < N; k0++) {
-      Vec::Vec3f oldAcc= Acc[k0];
+      Vec::Vec3<float> oldAcc= Acc[k0];
       Acc[k0]= For[k0] / Mas[k0];                        // a₁ = f(x₁) / m
       Vel[k0]= Vel[k0] + 0.5 * (oldAcc + Acc[k0]) * dt;  // v₁ = v₀ + 0.5 * (a₀ + a₁) * Δt
     }

@@ -21,18 +21,18 @@ class TerrainErosion
   int terrainNbX;
   int terrainNbY;
   int terrainNbC;
-  std::vector<std::vector<Vec::Vec3f>> terrainPos;
-  std::vector<std::vector<Vec::Vec3f>> terrainNor;
-  std::vector<std::vector<Vec::Vec3f>> terrainCol;
+  std::vector<std::vector<Vec::Vec3<float>>> terrainPos;
+  std::vector<std::vector<Vec::Vec3<float>>> terrainNor;
+  std::vector<std::vector<Vec::Vec3<float>>> terrainCol;
   std::vector<std::vector<float>> terrainChg;
 
   int dropletNbK;
-  std::vector<Vec::Vec3f> dropletPosOld;
-  std::vector<Vec::Vec3f> dropletPosCur;
-  std::vector<Vec::Vec3f> dropletVelCur;
-  std::vector<Vec::Vec3f> dropletAccCur;
-  std::vector<Vec::Vec3f> dropletForCur;
-  std::vector<Vec::Vec3f> dropletColCur;
+  std::vector<Vec::Vec3<float>> dropletPosOld;
+  std::vector<Vec::Vec3<float>> dropletPosCur;
+  std::vector<Vec::Vec3<float>> dropletVelCur;
+  std::vector<Vec::Vec3<float>> dropletAccCur;
+  std::vector<Vec::Vec3<float>> dropletForCur;
+  std::vector<Vec::Vec3<float>> dropletColCur;
   std::vector<float> dropletMasCur;
   std::vector<float> dropletRadCur;
   std::vector<float> dropletSatCur;

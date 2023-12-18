@@ -20,12 +20,12 @@ class FractalElevMap
   int mapNbIter;
   double mapDivThresh;
   double mapZoom;
-  Vec::Vec2d mapFocus;
-  Vec::Vec2d mapConst;
+  Vec::Vec2<double> mapFocus;
+  Vec::Vec2<double> mapConst;
 
-  std::vector<std::vector<Vec::Vec3f>> mapPos;
-  std::vector<std::vector<Vec::Vec3f>> mapNor;
-  std::vector<std::vector<Vec::Vec3f>> mapCol;
+  std::vector<std::vector<Vec::Vec3<float>>> mapPos;
+  std::vector<std::vector<Vec::Vec3<float>>> mapNor;
+  std::vector<std::vector<Vec::Vec3<float>>> mapCol;
 
   public:
   bool isActivProj;

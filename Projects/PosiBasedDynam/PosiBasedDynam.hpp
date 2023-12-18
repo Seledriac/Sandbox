@@ -20,12 +20,12 @@ class PosiBasedDynam
   private:
   int N;
 
-  std::vector<Vec::Vec3f> PosOld;
-  std::vector<Vec::Vec3f> PosCur;
-  std::vector<Vec::Vec3f> VelCur;
-  std::vector<Vec::Vec3f> AccCur;
-  std::vector<Vec::Vec3f> ForCur;
-  std::vector<Vec::Vec3f> ColCur;
+  std::vector<Vec::Vec3<float>> PosOld;
+  std::vector<Vec::Vec3<float>> PosCur;
+  std::vector<Vec::Vec3<float>> VelCur;
+  std::vector<Vec::Vec3<float>> AccCur;
+  std::vector<Vec::Vec3<float>> ForCur;
+  std::vector<Vec::Vec3<float>> ColCur;
   std::vector<float> RadCur;
   std::vector<float> MasCur;
   std::vector<float> HotCur;

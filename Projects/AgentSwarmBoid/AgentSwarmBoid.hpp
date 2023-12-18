@@ -19,8 +19,8 @@ class AgentSwarmBoid
   private:
   int NbAgents;
   int NbTypes;
-  std::vector<Vec::Vec3f> Pos;
-  std::vector<Vec::Vec3f> Vel;
+  std::vector<Vec::Vec3<float>> Pos;
+  std::vector<Vec::Vec3<float>> Vel;
   std::vector<int> Typ;
 
   public:

@@ -104,9 +104,9 @@ void FractalElevMap::Allocate() {
   mapNbY= std::max(D.UI[testVar1____].GetI(), 2);
 
   // Allocate data
-  mapPos= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3f(0.0f, 0.0f, 0.0f));
-  mapNor= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3f(0.0f, 0.0f, 1.0f));
-  mapCol= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3f(0.5f, 0.5f, 0.5f));
+  mapPos= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3<float>(0.0f, 0.0f, 0.0f));
+  mapNor= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3<float>(0.0f, 0.0f, 1.0f));
+  mapCol= Field::AllocField2D(mapNbX, mapNbY, Vec::Vec3<float>(0.5f, 0.5f, 0.5f));
 }
 
 
@@ -121,8 +121,8 @@ void FractalElevMap::Refresh() {
 
   mapNbIter= std::max(D.UI[testVar3____].GetI(), 1);
 
-  mapFocus= Vec::Vec2d(D.UI[testVar4____].GetD(), D.UI[testVar5____].GetD());
-  mapConst= Vec::Vec2d(D.UI[testVar6____].GetD(), D.UI[testVar7____].GetD());
+  mapFocus= Vec::Vec2<double>(D.UI[testVar4____].GetD(), D.UI[testVar5____].GetD());
+  mapConst= Vec::Vec2<double>(D.UI[testVar6____].GetD(), D.UI[testVar7____].GetD());
 
   mapDivThresh= std::max(D.UI[testVar8____].GetD(), 0.0);
 
@@ -134,12 +134,12 @@ void FractalElevMap::Refresh() {
       mapPos[x][y][0]= float(x) / float(mapNbX - 1);
       mapPos[x][y][1]= float(y) / float(mapNbY - 1);
 
-      Vec::Vec2d z= mapFocus + Vec::Vec2d(2.0 * double(x) / double(mapNbX - 1) - 1.0, 2.0 * double(y) / double(mapNbY - 1) - 1.0) / mapZoom;
+      Vec::Vec2<double> z= mapFocus + Vec::Vec2<double>(2.0 * double(x) / double(mapNbX - 1) - 1.0, 2.0 * double(y) / double(mapNbY - 1) - 1.0) / mapZoom;
       int idxIter= 0;
       while (idxIter < mapNbIter && z.normSquared() < mapDivThresh) {
         const double zr= z[0] * z[0] - z[1] * z[1];
         const double zi= 2.0 * z[0] * z[1];
-        z= Vec::Vec2d(zr, zi) + mapConst;
+        z= Vec::Vec2<double>(zr, zi) + mapConst;
         idxIter++;
       }
 
@@ -158,7 +158,7 @@ void FractalElevMap::Refresh() {
 
   // Smooth the positions
   for (int iter= 0; iter < std::max(mapNbX, mapNbY) / 128; iter++) {
-    std::vector<std::vector<Vec::Vec3f>> mapPosOld= mapPos;
+    std::vector<std::vector<Vec::Vec3<float>>> mapPosOld= mapPos;
 #pragma omp parallel for
     for (int x= 0; x < mapNbX; x++) {
       for (int y= 0; y < mapNbY; y++) {
@@ -221,8 +221,8 @@ void FractalElevMap::Draw() {
   glBegin(GL_QUADS);
   for (int x= 0; x < mapNbX - 1; x++) {
     for (int y= 0; y < mapNbY - 1; y++) {
-      Vec::Vec3f flatNormal= (mapNor[x][y] + mapNor[x + 1][y] + mapNor[x + 1][y + 1] + mapNor[x][y + 1]).normalized();
-      Vec::Vec3f flatColor= (mapCol[x][y] + mapCol[x + 1][y] + mapCol[x + 1][y + 1] + mapCol[x][y + 1]) / 4.0f;
+      Vec::Vec3<float> flatNormal= (mapNor[x][y] + mapNor[x + 1][y] + mapNor[x + 1][y + 1] + mapNor[x][y + 1]).normalized();
+      Vec::Vec3<float> flatColor= (mapCol[x][y] + mapCol[x + 1][y] + mapCol[x + 1][y + 1] + mapCol[x][y + 1]) / 4.0f;
       glColor3fv((flatColor / 2.0f).array());
       glNormal3fv(flatNormal.array());
       glVertex3fv(mapPos[x][y].array());

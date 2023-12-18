@@ -19,12 +19,12 @@ class StringArtOptim
   int nH;
 
   // Fields for scenario setup
-  std::vector<std::vector<Vec::Vec3f>> ImRef;
-  std::vector<std::vector<Vec::Vec3f>> ImCur;
+  std::vector<std::vector<Vec::Vec3<float>>> ImRef;
+  std::vector<std::vector<Vec::Vec3<float>>> ImCur;
   std::vector<std::array<int, 2>> Pegs;
   std::vector<int> PegsCount;
   std::vector<std::vector<int>> Lines;
-  std::vector<Vec::Vec3f> Colors;
+  std::vector<Vec::Vec3<float>> Colors;
 
   bool AddLineStep();
 

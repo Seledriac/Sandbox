@@ -25,13 +25,13 @@ class MassSpringSyst
   private:
   int N;
   std::vector<std::vector<int>> Adj;
-  std::vector<Vec::Vec3f> Ref;
-  std::vector<Vec::Vec3f> Pos;
-  std::vector<Vec::Vec3f> Vel;
-  std::vector<Vec::Vec3f> Acc;
-  std::vector<Vec::Vec3f> For;
-  std::vector<Vec::Vec3f> Ext;
-  std::vector<Vec::Vec3f> Fix;
+  std::vector<Vec::Vec3<float>> Ref;
+  std::vector<Vec::Vec3<float>> Pos;
+  std::vector<Vec::Vec3<float>> Vel;
+  std::vector<Vec::Vec3<float>> Acc;
+  std::vector<Vec::Vec3<float>> For;
+  std::vector<Vec::Vec3<float>> Ext;
+  std::vector<Vec::Vec3<float>> Fix;
   std::vector<float> Mas;
 
   void ComputeForces();

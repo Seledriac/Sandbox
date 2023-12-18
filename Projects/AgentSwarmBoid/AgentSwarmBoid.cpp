@@ -103,8 +103,8 @@ void AgentSwarmBoid::Allocate() {
   NbTypes= std::max(D.UI[PopTypes____].GetI(), 1);
 
   // Allocate data
-  Pos= std::vector<Vec::Vec3f>(NbAgents);
-  Vel= std::vector<Vec::Vec3f>(NbAgents);
+  Pos= std::vector<Vec::Vec3<float>>(NbAgents);
+  Vel= std::vector<Vec::Vec3<float>>(NbAgents);
   Typ= std::vector<int>(NbAgents);
 }
 
@@ -156,14 +156,14 @@ void AgentSwarmBoid::Animate() {
   }
 
   // Compute the forces
-  std::vector<Vec::Vec3f> velocityChange(NbAgents);
+  std::vector<Vec::Vec3<float>> velocityChange(NbAgents);
 #pragma omp parallel for
   for (int k0= 0; k0 < NbAgents; k0++) {
     int countSep= 0;
     int countAli= 0;
     int countEat= 0;
     int countRun= 0;
-    Vec::Vec3f sep, ali, coh, eat, run, ori;
+    Vec::Vec3<float> sep, ali, coh, eat, run, ori;
     for (int k1= 0; k1 < NbAgents; k1++) {
       if ((Pos[k0] - Pos[k1]).normSquared() < D.UI[SizeView____].GetF() * D.UI[SizeView____].GetF()) {
         if (k0 != k1) {
@@ -193,7 +193,7 @@ void AgentSwarmBoid::Animate() {
     if (countEat > 0) eat/= countEat;
     if (countRun > 0) run/= countRun;
 
-    Vec::Vec3f center(0.5f, 0.5f, 0.5f);
+    Vec::Vec3<float> center(0.5f, 0.5f, 0.5f);
     ori= center - Pos[k0];
 
     velocityChange[k0].set(0.0f, 0.0f, 0.0f);
@@ -226,19 +226,19 @@ void AgentSwarmBoid::Draw() {
   // Draw the agents
   if (D.displayMode1) {
     for (int k= 0; k < NbAgents; k++) {
-      Vec::Vec3f front= Vel[k].normalized();
-      Vec::Vec3f u(1.0f, 0.0f, 0.0f);
+      Vec::Vec3<float> front= Vel[k].normalized();
+      Vec::Vec3<float> u(1.0f, 0.0f, 0.0f);
       if (u.dot(front) == 0.0f) u.set(0.0f, 1.0f, 0.0f);
-      Vec::Vec3f left= front.cross(u).normalized();
-      Vec::Vec3f up= front.cross(left).normalized();
+      Vec::Vec3<float> left= front.cross(u).normalized();
+      Vec::Vec3<float> up= front.cross(left).normalized();
 
-      Vec::Vec3f p1= Pos[k] + 0.05f * 2.0f * (+0.5f * front + 0.00f * left + 0.0f * up);
-      Vec::Vec3f p2= Pos[k] + 0.05f * 2.0f * (+0.0f * front - 0.07f * left + 0.1f * up);
-      Vec::Vec3f p3= Pos[k] + 0.05f * 2.0f * (+0.0f * front + 0.07f * left + 0.1f * up);
-      Vec::Vec3f p4= Pos[k] + 0.05f * 2.0f * (+0.0f * front + 0.00f * left - 0.1f * up);
-      Vec::Vec3f p5= Pos[k] + 0.05f * 2.0f * (-0.4f * front + 0.00f * left + 0.0f * up);
-      Vec::Vec3f p6= Pos[k] + 0.05f * 2.0f * (-0.6f * front + 0.00f * left - 0.2f * up);
-      Vec::Vec3f p7= Pos[k] + 0.05f * 2.0f * (-0.6f * front + 0.00f * left + 0.2f * up);
+      Vec::Vec3<float> p1= Pos[k] + 0.05f * 2.0f * (+0.5f * front + 0.00f * left + 0.0f * up);
+      Vec::Vec3<float> p2= Pos[k] + 0.05f * 2.0f * (+0.0f * front - 0.07f * left + 0.1f * up);
+      Vec::Vec3<float> p3= Pos[k] + 0.05f * 2.0f * (+0.0f * front + 0.07f * left + 0.1f * up);
+      Vec::Vec3<float> p4= Pos[k] + 0.05f * 2.0f * (+0.0f * front + 0.00f * left - 0.1f * up);
+      Vec::Vec3<float> p5= Pos[k] + 0.05f * 2.0f * (-0.4f * front + 0.00f * left + 0.0f * up);
+      Vec::Vec3<float> p6= Pos[k] + 0.05f * 2.0f * (-0.6f * front + 0.00f * left - 0.2f * up);
+      Vec::Vec3<float> p7= Pos[k] + 0.05f * 2.0f * (-0.6f * front + 0.00f * left + 0.2f * up);
 
       float r= 0.5f, g= 0.5f, b= 0.5f;
       if (NbTypes > 1)

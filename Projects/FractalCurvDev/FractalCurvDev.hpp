@@ -19,8 +19,8 @@
 class FractalCurvDev
 {
   private:
-  std::vector<std::vector<Vec::Vec3f>> Nodes;
-  std::vector<std::array<Vec::Vec3f, 3>> Faces;
+  std::vector<std::vector<Vec::Vec3<float>>> Nodes;
+  std::vector<std::array<Vec::Vec3<float>, 3>> Faces;
 
   public:
   bool isActivProj;
