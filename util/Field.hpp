@@ -9,40 +9,35 @@
 namespace Field {
 
   // Allocation of fields
-  template <class element_type>
+  template <typename element_type>
   inline std::vector<std::vector<element_type>> AllocField2D(int const iNbA, int const iNbB, element_type const& val) {
     return std::vector<std::vector<element_type>>(iNbA, std::vector<element_type>(iNbB, val));
   }
-  template <class element_type>
+  template <typename element_type>
   inline std::vector<std::vector<std::vector<element_type>>> AllocField3D(int const iNbA, int const iNbB, int const iNbC, element_type const& val) {
     return std::vector<std::vector<std::vector<element_type>>>(iNbA, std::vector<std::vector<element_type>>(iNbB, std::vector<element_type>(iNbC, val)));
   }
-  template <class element_type>
+  template <typename element_type>
   inline std::vector<std::vector<std::vector<std::vector<element_type>>>> AllocField4D(int const iNbA, int const iNbB, int const iNbC, int const iNbD, element_type const& val) {
     return std::vector<std::vector<std::vector<std::vector<element_type>>>>(iNbA, std::vector<std::vector<std::vector<element_type>>>(iNbB, std::vector<std::vector<element_type>>(iNbC, std::vector<element_type>(iNbD, val))));
   }
-  template <class element_type>
+  template <typename element_type>
   inline std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> AllocField5D(int const iNbA, int const iNbB, int const iNbC, int const iNbD, int const iNbE, element_type const& val) {
     return std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>>(iNbA, std::vector<std::vector<std::vector<std::vector<element_type>>>>(iNbB, std::vector<std::vector<std::vector<element_type>>>(iNbC, std::vector<std::vector<element_type>>(iNbD, std::vector<element_type>(iNbE, val)))));
   }
 
   // Get dimensions of fields
-  template <class element_type>
+  template <typename element_type>
   inline void GetFieldDimensions(std::vector<std::vector<element_type>> const& iField, int& oNbA, int& oNbB) {
-    oNbA= 0;
-    oNbB= 0;
-
+    oNbA= oNbB= 0;
     oNbA= int(iField.size());
     if (oNbA > 0) {
       oNbB= int(iField[0].size());
     }
   }
-  template <class element_type>
+  template <typename element_type>
   inline void GetFieldDimensions(std::vector<std::vector<std::vector<element_type>>> const& iField, int& oNbA, int& oNbB, int& oNbC) {
-    oNbA= 0;
-    oNbB= 0;
-    oNbC= 0;
-
+    oNbA= oNbB= oNbC= 0;
     oNbA= int(iField.size());
     if (oNbA > 0) {
       oNbB= int(iField[0].size());
@@ -51,13 +46,9 @@ namespace Field {
       }
     }
   }
-  template <class element_type>
+  template <typename element_type>
   inline void GetFieldDimensions(std::vector<std::vector<std::vector<std::vector<element_type>>>> const& iField, int& oNbA, int& oNbB, int& oNbC, int& oNbD) {
-    oNbA= 0;
-    oNbB= 0;
-    oNbC= 0;
-    oNbD= 0;
-
+    oNbA= oNbB= oNbC= oNbD= 0;
     oNbA= int(iField.size());
     if (oNbA > 0) {
       oNbB= int(iField[0].size());
@@ -69,14 +60,9 @@ namespace Field {
       }
     }
   }
-  template <class element_type>
+  template <typename element_type>
   inline void GetFieldDimensions(std::vector<std::vector<std::vector<std::vector<std::vector<element_type>>>>> const& iField, int& oNbA, int& oNbB, int& oNbC, int& oNbD, int& oNbE) {
-    oNbA= 0;
-    oNbB= 0;
-    oNbC= 0;
-    oNbD= 0;
-    oNbE= 0;
-
+    oNbA= oNbB= oNbC= oNbD= oNbE= 0;
     oNbA= int(iField.size());
     if (oNbA > 0) {
       oNbB= int(iField[0].size());
@@ -148,7 +134,7 @@ namespace Field {
 
 namespace Math {
 
-  template <class element_type>
+  template <typename element_type>
   class Field1D
   {
 public:
@@ -203,7 +189,7 @@ public:
   };
 
 
-  template <class element_type>
+  template <typename element_type>
   class Field2D
   {
 public:
@@ -269,7 +255,7 @@ public:
   };
 
 
-  template <class element_type>
+  template <typename element_type>
   class Field3D
   {
 public:
@@ -340,7 +326,7 @@ public:
   };
 
 
-  template <class element_type>
+  template <typename element_type>
   class Field4D
   {
 public:
