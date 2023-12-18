@@ -129,17 +129,19 @@ void MassSpringSyst::Refresh() {
   // Get domain dimensions
   D.boxMin= {0.5f - 0.5f * D.UI[DomainX_____].GetF(), 0.5f - 0.5f * D.UI[DomainY_____].GetF(), 0.5f - 0.5f * D.UI[DomainZ_____].GetF()};
   D.boxMax= {0.5f + 0.5f * D.UI[DomainX_____].GetF(), 0.5f + 0.5f * D.UI[DomainY_____].GetF(), 0.5f + 0.5f * D.UI[DomainZ_____].GetF()};
-  const float volBox= (D.boxMax[0] - D.boxMin[0]) * (D.boxMax[1] - D.boxMin[1]) * (D.boxMax[2] - D.boxMin[2]);
-  if (volBox <= 0.0f) return;
-  const float caracLen= std::pow(volBox / float(std::max(D.UI[NbNodesTarg_].GetI(), 1)), 1.0f / 3.0f);
+  const float boxDx= (D.boxMax[0] - D.boxMin[0]);
+  const float boxDy= (D.boxMax[1] - D.boxMin[1]);
+  const float boxDz= (D.boxMax[2] - D.boxMin[2]);
+  const float boxVol= ((boxDx > 0.0f) ? boxDx : 1.0f) * ((boxDy > 0.0f) ? boxDy : 1.0f) * ((boxDz > 0.0f) ? boxDz : 1.0f);
+  const float caracLen= std::pow(boxVol / float(std::max(D.UI[NbNodesTarg_].GetI(), 1)), 1.0f / ((boxDx > 0.0f) + (boxDy > 0.0f) + (boxDz > 0.0f)));
 
   // Initialize positions
   Pos.clear();
   if (D.UI[DistribMode_].GetI() == 1) {
     // Uniform grid
-    for (int x= 0; x < (D.boxMax[0] - D.boxMin[0]) / caracLen; x++) {
-      for (int y= 0; y < (D.boxMax[1] - D.boxMin[1]) / caracLen; y++) {
-        for (int z= 0; z < (D.boxMax[2] - D.boxMin[2]) / caracLen; z++) {
+    for (int x= 0; x < std::max((int)std::floor(boxDx / caracLen), 1); x++) {
+      for (int y= 0; y < std::max((int)std::floor(boxDy / caracLen), 1); y++) {
+        for (int z= 0; z < std::max((int)std::floor(boxDz / caracLen), 1); z++) {
           Pos.push_back(Vec::Vec3<float>(D.boxMin[0] + x * caracLen, D.boxMin[1] + y * caracLen, D.boxMin[2] + z * caracLen));
         }
       }
