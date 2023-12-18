@@ -3,7 +3,7 @@
 // Standard lib
 #include <vector>
 
-// Project lib
+// Sandbox lib
 #include "../../Util/Vec.hpp"
 
 

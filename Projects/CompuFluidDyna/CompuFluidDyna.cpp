@@ -8,7 +8,7 @@
 // GLUT lib
 #include "../../Libs/freeglut/include/GL/freeglut.h"
 
-// Project lib
+// Sandbox lib
 #include "../../Util/Colormap.hpp"
 #include "../../Util/Field.hpp"
 #include "../../Util/Timer.hpp"

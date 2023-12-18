@@ -1,6 +1,6 @@
 #pragma once
 
-// Project lib
+// Sandbox lib
 #include "../../Data.hpp"
 
 // Link to shared sandbox data

@@ -10,7 +10,7 @@
 // GLUT lib
 #include "../../Libs/freeglut/include/GL/freeglut.h"
 
-// Project lib
+// Sandbox lib
 #include "../../Data.hpp"
 #include "../../Util/Draw.hpp"
 #include "../../Util/Field.hpp"

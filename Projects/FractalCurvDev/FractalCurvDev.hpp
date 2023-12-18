@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 
-// Project lib
+// Sandbox lib
 #include "../../Util/Vec.hpp"
 
 

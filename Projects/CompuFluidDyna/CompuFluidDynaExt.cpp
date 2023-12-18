@@ -9,12 +9,13 @@
 // GLUT lib
 #include "../../Libs/freeglut/include/GL/freeglut.h"
 
-// Project lib
+// Sandbox lib
 #include "../../Util/Field.hpp"
 #include "../../Util/FileInput.hpp"
-#include "../../Util/MarchingCubes.hpp"
 #include "../../Util/Random.hpp"
 #include "../../Util/Vec.hpp"
+
+// Project supplements
 #include "CompuFluidDynaParam.hpp"
 
 
@@ -183,87 +184,8 @@ void CompuFluidDyna::InitializeScenario() {
     if (inputFile == 1) FileInput::LoadImageBMPFile("FileInput/CFD_Nozzle.bmp", imageRGBA, false);
     if (inputFile == 2) FileInput::LoadImageBMPFile("FileInput/CFD_Pipe.bmp", imageRGBA, false);
     if (inputFile == 3) FileInput::LoadImageBMPFile("FileInput/CFD_TeslaValve.bmp", imageRGBA, false);
-    if (inputFile == 4) FileInput::LoadImageBMPFile("FileInput/Logo.bmp", imageRGBA, false);
   }
 
-  if (inputFile == 4) {
-    Smok= Field::AllocField3D(nX, nY, nZ, 0.0f);
-    for (int x= 0; x < nX; x++) {
-      for (int y= 0; y < nY; y++) {
-        for (int z= 0; z < nZ; z++) {
-          if (scenarioType == 0 && !imageRGBA.empty()) {
-            const float posW= (float)(imageRGBA.size() - 1) * ((float)y + 0.5f) / (float)nY;
-            const float posH= (float)(imageRGBA[0].size() - 1) * ((float)z + 0.5f) / (float)nZ;
-            const int idxPixelW= std::min(std::max((int)std::round(posW), 0), (int)imageRGBA.size() - 1);
-            const int idxPixelH= std::min(std::max((int)std::round(posH), 0), (int)imageRGBA[0].size() - 1);
-            const std::array<float, 4> colRGBA= imageRGBA[idxPixelW][idxPixelH];
-            Smok[x][y][z]= 1.0f - colRGBA[0];
-          }
-        }
-      }
-    }
-
-    {
-      std::vector<std::vector<std::vector<float>>> oldSmok= Smok;
-      for (int x= 0; x < nX; x++) {
-        for (int y= 1; y < nY - 1; y++) {
-          for (int z= 1; z < nZ - 1; z++) {
-            Smok[x][y][z]= (oldSmok[x][y][z] + oldSmok[x][y + 1][z] + oldSmok[x][y - 1][z] + oldSmok[x][y][z + 1] + oldSmok[x][y][z - 1]) / 5.0f;
-          }
-        }
-      }
-    }
-    {
-      std::vector<std::vector<std::vector<float>>> oldSmok= Smok;
-      for (int x= 0; x < nX; x++) {
-        for (int y= 1; y < nY - 1; y++) {
-          for (int z= 1; z < nZ - 1; z++) {
-            Smok[x][y][z]= (oldSmok[x][y][z] + oldSmok[x][y + 1][z] + oldSmok[x][y - 1][z] + oldSmok[x][y][z + 1] + oldSmok[x][y][z - 1]) / 5.0f;
-          }
-        }
-      }
-    }
-    {
-      std::vector<std::vector<std::vector<float>>> oldSmok= Smok;
-      for (int x= 0; x < nX; x++) {
-        for (int y= 1; y < nY - 1; y++) {
-          for (int z= 1; z < nZ - 1; z++) {
-            Smok[x][y][z]= (oldSmok[x][y][z] + oldSmok[x][y + 1][z] + oldSmok[x][y - 1][z] + oldSmok[x][y][z + 1] + oldSmok[x][y][z - 1]) / 5.0f;
-          }
-        }
-      }
-    }
-
-    std::vector<std::vector<std::vector<float>>> temp= Field::AllocField3D(nX + 4, nY, nZ, 0.0f);
-    temp[1]= Smok[0];
-    temp[2]= Smok[0];
-
-    std::vector<Vec::Vec3f> oVertices;
-    std::vector<std::array<int, 3>> oTriangles;
-    MarchingCubes::ComputeMarchingCubes(temp, 0.3f, oVertices, oTriangles);
-
-    for (unsigned int k= 0; k < oVertices.size(); k++) {
-      oVertices[k][0]= (oVertices[k][0] < 0.5f) ? 0.0f : 1.0f;
-    }
-
-    std::string iFullpath= "FileOutput/test.obj";
-    printf("Saving OBJ mesh file [%s]\n", iFullpath.c_str());
-    FILE* outputFile= nullptr;
-    outputFile= fopen(iFullpath.c_str(), "w");
-    if (outputFile == nullptr) {
-      printf("[ERROR] Unable to create the file\n\n");
-    }
-    else {
-      for (unsigned int k= 0; k < oVertices.size(); k++) {
-        fprintf(outputFile, "v %f %f %f\n", oVertices[k][0], oVertices[k][1], oVertices[k][2]);
-      }
-      for (unsigned int k= 0; k < oTriangles.size(); k++) {
-        fprintf(outputFile, "f %d %d %d\n", oTriangles[k][0] + 1, oTriangles[k][1] + 1, oTriangles[k][2] + 1);
-      }
-      fclose(outputFile);
-    }
-    return;
-  }
 
   // Set scenario values
   for (int x= 0; x < nX; x++) {
