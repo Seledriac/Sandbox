@@ -220,34 +220,34 @@ void MassSpringSyst::Draw() {
 
   // Draw the nodes
   if (D.displayMode1) {
-    const float rad= 0.01f;
+    glPointSize(10.0f);
+    glBegin(GL_POINTS);
     for (int k0= 0; k0 < N; k0++) {
-      glPushMatrix();
-      glTranslatef(Pos[k0][0], Pos[k0][1], Pos[k0][2]);
-      glScalef(rad, rad, rad);
       float r, g, b;
-      Colormap::RatioToJetSmooth(Vel[k0].norm(), r, g, b);
+      Colormap::RatioToJetSmooth(For[k0].norm(), r, g, b);
       glColor3f(r, g, b);
-      glutSolidSphere(1.0, 32, 16);
-      glPopMatrix();
+      glVertex3fv(Pos[k0].array());
     }
+    glEnd();
+    glPointSize(1.0f);
   }
 
   // Draw the springs
   if (D.displayMode2) {
+    glLineWidth(2.0f);
     glBegin(GL_LINES);
     for (int k0= 0; k0 < N; k0++) {
       for (int k1 : Adj[k0]) {
+        if (k0 > k1) continue;
         float r, g, b;
-        const float lenCur= (Pos[k1] - Pos[k0]).norm();
-        const float lenRef= (Ref[k1] - Ref[k0]).norm();
-        For[k0]-= D.UI[CoeffSpring_].GetF() * (lenRef - lenCur) * (Pos[k1] - Pos[k0]) / lenCur;
-        Colormap::RatioToJetSmooth(0.5f + 0.5f * (For[k0] + For[k1]).norm(), r, g, b);
+        Colormap::RatioToJetSmooth(((For[k0] + For[k1]) / 2.0f).norm(), r, g, b);
+        glColor3f(r, g, b);
         glVertex3fv(Pos[k0].array());
-        glVertex3fv(Pos[k1]);
+        glVertex3fv(Pos[k1].array());
       }
     }
     glEnd();
+    glLineWidth(1.0f);
   }
 }
 
