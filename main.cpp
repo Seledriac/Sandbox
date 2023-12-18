@@ -20,6 +20,7 @@
 #include "Projects/CompuFluidDyna/CompuFluidDyna.hpp"
 #include "Projects/FractalCurvDev/FractalCurvDev.hpp"
 #include "Projects/FractalElevMap/FractalElevMap.hpp"
+#include "Projects/ImageExtruMesh/ImageExtruMesh.hpp"
 #include "Projects/MarkovProcGene/MarkovProcGene.hpp"
 #include "Projects/MassSpringSyst/MassSpringSyst.hpp"
 #include "Projects/PosiBasedDynam/PosiBasedDynam.hpp"
@@ -62,6 +63,7 @@ AgentSwarmBoid myAgentSwarmBoid;
 CompuFluidDyna myCompuFluidDyna;
 FractalCurvDev myFractalCurvDev;
 FractalElevMap myFractalElevMap;
+ImageExtruMesh myImageExtruMesh;
 MarkovProcGene myMarkovProcGene;
 MassSpringSyst myMassSpringSyst;
 PosiBasedDynam myPosiBasedDynam;
@@ -76,6 +78,7 @@ enum ProjectID
   CompuFluidDynaID,
   FractalCurvDevID,
   FractalElevMapID,
+  ImageExtruMeshID,
   MarkovProcGeneID,
   MassSpringSystID,
   PosiBasedDynamID,
@@ -95,6 +98,7 @@ void project_ForceHardInit() {
   if (currentProjectID != ProjectID::CompuFluidDynaID && myCompuFluidDyna.isActivProj) myCompuFluidDyna= CompuFluidDyna();
   if (currentProjectID != ProjectID::FractalCurvDevID && myFractalCurvDev.isActivProj) myFractalCurvDev= FractalCurvDev();
   if (currentProjectID != ProjectID::FractalElevMapID && myFractalElevMap.isActivProj) myFractalElevMap= FractalElevMap();
+  if (currentProjectID != ProjectID::ImageExtruMeshID && myImageExtruMesh.isActivProj) myImageExtruMesh= ImageExtruMesh();
   if (currentProjectID != ProjectID::MarkovProcGeneID && myMarkovProcGene.isActivProj) myMarkovProcGene= MarkovProcGene();
   if (currentProjectID != ProjectID::MassSpringSystID && myMassSpringSyst.isActivProj) myMassSpringSyst= MassSpringSyst();
   if (currentProjectID != ProjectID::PosiBasedDynamID && myPosiBasedDynam.isActivProj) myPosiBasedDynam= PosiBasedDynam();
@@ -106,6 +110,7 @@ void project_ForceHardInit() {
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.SetActiveProject();
   if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.SetActiveProject();
   if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.SetActiveProject();
+  if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.SetActiveProject();
   if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.SetActiveProject();
   if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.SetActiveProject();
   if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.SetActiveProject();
@@ -120,6 +125,7 @@ void project_Refresh() {
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Refresh();
   if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Refresh();
   if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Refresh();
+  if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.Refresh();
   if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Refresh();
   if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Refresh();
   if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Refresh();
@@ -134,6 +140,7 @@ void project_Animate() {
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Animate();
   if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Animate();
   if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Animate();
+  if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.Animate();
   if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Animate();
   if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Animate();
   if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Animate();
@@ -148,6 +155,7 @@ void project_Draw() {
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.Draw();
   if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.Draw();
   if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.Draw();
+  if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.Draw();
   if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.Draw();
   if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.Draw();
   if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.Draw();
@@ -162,6 +170,7 @@ void project_QueueSoftRefresh() {
   if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.isRefreshed= false;
   if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.isRefreshed= false;
   if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.isRefreshed= false;
+  if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.isRefreshed= false;
   if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.isRefreshed= false;
   if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.isRefreshed= false;
   if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.isRefreshed= false;
@@ -552,6 +561,7 @@ void callback_keyboard(unsigned char key, int x, int y) {
     if (currentProjectID == ProjectID::CompuFluidDynaID) myCompuFluidDyna.KeyPress(key);
     if (currentProjectID == ProjectID::FractalCurvDevID) myFractalCurvDev.KeyPress(key);
     if (currentProjectID == ProjectID::FractalElevMapID) myFractalElevMap.KeyPress(key);
+    if (currentProjectID == ProjectID::ImageExtruMeshID) myImageExtruMesh.KeyPress(key);
     if (currentProjectID == ProjectID::MarkovProcGeneID) myMarkovProcGene.KeyPress(key);
     if (currentProjectID == ProjectID::MassSpringSystID) myMassSpringSyst.KeyPress(key);
     if (currentProjectID == ProjectID::PosiBasedDynamID) myPosiBasedDynam.KeyPress(key);
@@ -729,6 +739,7 @@ void init_menu() {
   glutAddMenuEntry("CompuFluidDyna", ProjectID::CompuFluidDynaID);
   glutAddMenuEntry("FractalCurvDev", ProjectID::FractalCurvDevID);
   glutAddMenuEntry("FractalElevMap", ProjectID::FractalElevMapID);
+  glutAddMenuEntry("ImageExtruMesh", ProjectID::ImageExtruMeshID);
   glutAddMenuEntry("MarkovProcGene", ProjectID::MarkovProcGeneID);
   glutAddMenuEntry("MassSpringSyst", ProjectID::MassSpringSystID);
   glutAddMenuEntry("PosiBasedDynam", ProjectID::PosiBasedDynamID);
