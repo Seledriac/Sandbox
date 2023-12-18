@@ -186,7 +186,6 @@ void CompuFluidDyna::InitializeScenario() {
     if (inputFile == 3) FileInput::LoadImageBMPFile("FileInput/CFD_TeslaValve.bmp", imageRGBA, false);
   }
 
-
   // Set scenario values
   for (int x= 0; x < nX; x++) {
     for (int y= 0; y < nY; y++) {

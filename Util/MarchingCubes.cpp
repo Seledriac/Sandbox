@@ -353,7 +353,7 @@ void MarchingCubes::ComputeMarchingCubes(
   double stepX, stepY, stepZ, voxDiag, shiftX, shiftY, shiftZ;
   Field::GetFieldDimensions(iField, nbX, nbY, nbZ);
   Field::GetVoxelSizes(nbX, nbY, nbZ, iBBoxMin, iBBoxMax, true, stepX, stepY, stepZ, voxDiag);
-  Field::GetVoxelStart(iBBoxMin, iBBoxMax, stepX, stepY, stepZ, true, shiftX, shiftY, shiftZ);
+  Field::GetVoxelStart(iBBoxMin, stepX, stepY, stepZ, true, shiftX, shiftY, shiftZ);
   double epsilon= voxDiag * 1.e-6;
 
   // Process each cell in the field
