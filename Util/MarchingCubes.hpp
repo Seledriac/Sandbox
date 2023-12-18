@@ -4,26 +4,25 @@
 #include <array>
 #include <vector>
 
-// Sandbox lib
-#include "Vec.hpp"
-
 
 class MarchingCubes
 {
   private:
   static void Interpolate(
-      float const& iIsoval,
-      float const& iEpsilon,
-      Vec::Vec3f const& p1,
-      Vec::Vec3f const& p2,
-      float const& v1,
-      float const& v2,
-      Vec::Vec3f& oVert);
+      double const iIsoval,
+      double const iEpsilon,
+      double const iVal1,
+      double const iVal2,
+      std::array<double, 3> const& iPos1,
+      std::array<double, 3> const& iPos2,
+      std::array<double, 3>& oPos);
 
   public:
   static void ComputeMarchingCubes(
-      std::vector<std::vector<std::vector<float>>> const& iField,
-      float const iIsoval,
-      std::vector<Vec::Vec3f>& oVertices,
+      double const iIsoval,
+      std::array<double, 3> const& iBBoxMin,
+      std::array<double, 3> const& iBBoxMax,
+      std::vector<std::vector<std::vector<double>>> const& iField,
+      std::vector<std::array<double, 3>>& oVertices,
       std::vector<std::array<int, 3>>& oTriangles);
 };

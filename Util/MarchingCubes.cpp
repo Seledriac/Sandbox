@@ -12,32 +12,43 @@
 
 
 void MarchingCubes::Interpolate(
-    float const& iIsoval,
-    float const& iEpsilon,
-    Vec::Vec3f const& p1,
-    Vec::Vec3f const& p2,
-    float const& v1,
-    float const& v2,
-    Vec::Vec3f& oVert) {
-  if (std::abs(iIsoval - v1) < iEpsilon)
-    oVert= p1;
-  else if (std::abs(iIsoval - v2) < iEpsilon)
-    oVert= p2;
-  else if (std::abs(v1 - v2) < iEpsilon)
-    oVert= p1;
-  else
-    oVert= p1 + ((iIsoval - v1) / (v2 - v1)) * (p2 - p1);
+    double const iIsoval,
+    double const iEpsilon,
+    double const iVal1,
+    double const iVal2,
+    std::array<double, 3> const& iPos1,
+    std::array<double, 3> const& iPos2,
+    std::array<double, 3>& oPos) {
+  if (std::abs(iIsoval - iVal1) < iEpsilon) {
+    oPos= iPos1;
+  }
+  else if (std::abs(iIsoval - iVal2) < iEpsilon) {
+    oPos= iPos2;
+  }
+  else if (std::abs(iVal1 - iVal2) < iEpsilon) {
+    for (unsigned int dim= 0; dim < 3; dim++) {
+      oPos[dim]= (iPos1[dim] + iPos1[dim]) / 2.0;
+    }
+  }
+  else {
+    for (unsigned int dim= 0; dim < 3; dim++) {
+      oPos[dim]= iPos1[dim] + ((iIsoval - iVal1) / (iVal2 - iVal1)) * (iPos2[dim] - iPos1[dim]);
+    }
+  }
 }
 
 
 void MarchingCubes::ComputeMarchingCubes(
-    std::vector<std::vector<std::vector<float>>> const& iField,
-    float const iIsoval,
-    std::vector<Vec::Vec3f>& oVertices,
+    double const iIsoval,
+    std::array<double, 3> const& iBBoxMin,
+    std::array<double, 3> const& iBBoxMax,
+    std::vector<std::vector<std::vector<double>>> const& iField,
+    std::vector<std::array<double, 3>>& oVertices,
     std::vector<std::array<int, 3>>& oTriangles) {
   // Clear the previous mesh
   oVertices.clear();
   oTriangles.clear();
+
   // Create the edge table
   constexpr int EdgeTable[256]= {
       0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -333,74 +344,76 @@ void MarchingCubes::ComputeMarchingCubes(
       {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
   // Preallocate temporary lists
-  float CellVal[8];
-  Vec::Vec3f CellPos[8];
-  Vec::Vec3f verts[12];
+  double CubeVal[8];
+  std::array<double, 3> CubePos[8];
+  std::array<double, 3> newVerts[12];
 
   // Get input field dimensions
   int nbX, nbY, nbZ;
+  double stepX, stepY, stepZ, voxDiag, shiftX, shiftY, shiftZ;
   Field::GetFieldDimensions(iField, nbX, nbY, nbZ);
-  float stepX= 1.0f / 3.0f, stepY= 1.0f / 3.0f, stepZ= 1.0f / 3.0f, voxDiag= 1.0f, shiftX= 0.0f, shiftY= 0.0f, shiftZ= 0.0f;
-  float epsilon= voxDiag * 1.e-3f;
+  Field::GetVoxelSizes(nbX, nbY, nbZ, iBBoxMin, iBBoxMax, true, stepX, stepY, stepZ, voxDiag);
+  Field::GetVoxelStart(iBBoxMin, iBBoxMax, stepX, stepY, stepZ, true, shiftX, shiftY, shiftZ);
+  double epsilon= voxDiag * 1.e-6;
 
   // Process each cell in the field
   for (int idxX= 0; idxX < nbX - 1; idxX++) {
     for (int idxY= 0; idxY < nbY - 1; idxY++) {
       for (int idxZ= 0; idxZ < nbZ - 1; idxZ++) {
         // Get the field values of the cell
-        CellVal[0]= iField[idxX + 0][idxY + 0][idxZ + 0];
-        CellVal[1]= iField[idxX + 0][idxY + 0][idxZ + 1];
-        CellVal[2]= iField[idxX + 0][idxY + 1][idxZ + 1];
-        CellVal[3]= iField[idxX + 0][idxY + 1][idxZ + 0];
-        CellVal[4]= iField[idxX + 1][idxY + 0][idxZ + 0];
-        CellVal[5]= iField[idxX + 1][idxY + 0][idxZ + 1];
-        CellVal[6]= iField[idxX + 1][idxY + 1][idxZ + 1];
-        CellVal[7]= iField[idxX + 1][idxY + 1][idxZ + 0];
+        CubeVal[0]= iField[idxX + 0][idxY + 0][idxZ + 0];
+        CubeVal[1]= iField[idxX + 0][idxY + 0][idxZ + 1];
+        CubeVal[2]= iField[idxX + 0][idxY + 1][idxZ + 1];
+        CubeVal[3]= iField[idxX + 0][idxY + 1][idxZ + 0];
+        CubeVal[4]= iField[idxX + 1][idxY + 0][idxZ + 0];
+        CubeVal[5]= iField[idxX + 1][idxY + 0][idxZ + 1];
+        CubeVal[6]= iField[idxX + 1][idxY + 1][idxZ + 1];
+        CubeVal[7]= iField[idxX + 1][idxY + 1][idxZ + 0];
 
         // Determine the index into the edge table which tells us which vertices are inside of the surface
         int cellIndex= 0;
-        if (CellVal[0] < iIsoval) cellIndex|= 1;
-        if (CellVal[1] < iIsoval) cellIndex|= 2;
-        if (CellVal[2] < iIsoval) cellIndex|= 4;
-        if (CellVal[3] < iIsoval) cellIndex|= 8;
-        if (CellVal[4] < iIsoval) cellIndex|= 16;
-        if (CellVal[5] < iIsoval) cellIndex|= 32;
-        if (CellVal[6] < iIsoval) cellIndex|= 64;
-        if (CellVal[7] < iIsoval) cellIndex|= 128;
+        if (CubeVal[0] < iIsoval) cellIndex|= 1;
+        if (CubeVal[1] < iIsoval) cellIndex|= 2;
+        if (CubeVal[2] < iIsoval) cellIndex|= 4;
+        if (CubeVal[3] < iIsoval) cellIndex|= 8;
+        if (CubeVal[4] < iIsoval) cellIndex|= 16;
+        if (CubeVal[5] < iIsoval) cellIndex|= 32;
+        if (CubeVal[6] < iIsoval) cellIndex|= 64;
+        if (CubeVal[7] < iIsoval) cellIndex|= 128;
 
         // Cell is entirely in/out of the surface, thus no intersection with isosurface
         if (EdgeTable[cellIndex] == 0)
           continue;
 
         // Get the corner positions of the cell
-        CellPos[0]= Vec::Vec3f(stepX * (idxX + 0) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 0) + shiftZ);
-        CellPos[1]= Vec::Vec3f(stepX * (idxX + 0) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 1) + shiftZ);
-        CellPos[2]= Vec::Vec3f(stepX * (idxX + 0) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 1) + shiftZ);
-        CellPos[3]= Vec::Vec3f(stepX * (idxX + 0) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 0) + shiftZ);
-        CellPos[4]= Vec::Vec3f(stepX * (idxX + 1) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 0) + shiftZ);
-        CellPos[5]= Vec::Vec3f(stepX * (idxX + 1) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 1) + shiftZ);
-        CellPos[6]= Vec::Vec3f(stepX * (idxX + 1) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 1) + shiftZ);
-        CellPos[7]= Vec::Vec3f(stepX * (idxX + 1) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 0) + shiftZ);
+        CubePos[0]= std::array<double, 3>({stepX * (idxX + 0) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 0) + shiftZ});
+        CubePos[1]= std::array<double, 3>({stepX * (idxX + 0) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 1) + shiftZ});
+        CubePos[2]= std::array<double, 3>({stepX * (idxX + 0) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 1) + shiftZ});
+        CubePos[3]= std::array<double, 3>({stepX * (idxX + 0) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 0) + shiftZ});
+        CubePos[4]= std::array<double, 3>({stepX * (idxX + 1) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 0) + shiftZ});
+        CubePos[5]= std::array<double, 3>({stepX * (idxX + 1) + shiftX, stepY * (idxY + 0) + shiftY, stepZ * (idxZ + 1) + shiftZ});
+        CubePos[6]= std::array<double, 3>({stepX * (idxX + 1) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 1) + shiftZ});
+        CubePos[7]= std::array<double, 3>({stepX * (idxX + 1) + shiftX, stepY * (idxY + 1) + shiftY, stepZ * (idxZ + 0) + shiftZ});
 
         // Find the vertices where the surface intersects the cube
-        if (EdgeTable[cellIndex] & 1) Interpolate(iIsoval, epsilon, CellPos[0], CellPos[1], CellVal[0], CellVal[1], verts[0]);
-        if (EdgeTable[cellIndex] & 2) Interpolate(iIsoval, epsilon, CellPos[1], CellPos[2], CellVal[1], CellVal[2], verts[1]);
-        if (EdgeTable[cellIndex] & 4) Interpolate(iIsoval, epsilon, CellPos[2], CellPos[3], CellVal[2], CellVal[3], verts[2]);
-        if (EdgeTable[cellIndex] & 8) Interpolate(iIsoval, epsilon, CellPos[3], CellPos[0], CellVal[3], CellVal[0], verts[3]);
-        if (EdgeTable[cellIndex] & 16) Interpolate(iIsoval, epsilon, CellPos[4], CellPos[5], CellVal[4], CellVal[5], verts[4]);
-        if (EdgeTable[cellIndex] & 32) Interpolate(iIsoval, epsilon, CellPos[5], CellPos[6], CellVal[5], CellVal[6], verts[5]);
-        if (EdgeTable[cellIndex] & 64) Interpolate(iIsoval, epsilon, CellPos[6], CellPos[7], CellVal[6], CellVal[7], verts[6]);
-        if (EdgeTable[cellIndex] & 128) Interpolate(iIsoval, epsilon, CellPos[7], CellPos[4], CellVal[7], CellVal[4], verts[7]);
-        if (EdgeTable[cellIndex] & 256) Interpolate(iIsoval, epsilon, CellPos[0], CellPos[4], CellVal[0], CellVal[4], verts[8]);
-        if (EdgeTable[cellIndex] & 512) Interpolate(iIsoval, epsilon, CellPos[1], CellPos[5], CellVal[1], CellVal[5], verts[9]);
-        if (EdgeTable[cellIndex] & 1024) Interpolate(iIsoval, epsilon, CellPos[2], CellPos[6], CellVal[2], CellVal[6], verts[10]);
-        if (EdgeTable[cellIndex] & 2048) Interpolate(iIsoval, epsilon, CellPos[3], CellPos[7], CellVal[3], CellVal[7], verts[11]);
+        if (EdgeTable[cellIndex] & 1) Interpolate(iIsoval, epsilon, CubeVal[0], CubeVal[1], CubePos[0], CubePos[1], newVerts[0]);
+        if (EdgeTable[cellIndex] & 2) Interpolate(iIsoval, epsilon, CubeVal[1], CubeVal[2], CubePos[1], CubePos[2], newVerts[1]);
+        if (EdgeTable[cellIndex] & 4) Interpolate(iIsoval, epsilon, CubeVal[2], CubeVal[3], CubePos[2], CubePos[3], newVerts[2]);
+        if (EdgeTable[cellIndex] & 8) Interpolate(iIsoval, epsilon, CubeVal[3], CubeVal[0], CubePos[3], CubePos[0], newVerts[3]);
+        if (EdgeTable[cellIndex] & 16) Interpolate(iIsoval, epsilon, CubeVal[4], CubeVal[5], CubePos[4], CubePos[5], newVerts[4]);
+        if (EdgeTable[cellIndex] & 32) Interpolate(iIsoval, epsilon, CubeVal[5], CubeVal[6], CubePos[5], CubePos[6], newVerts[5]);
+        if (EdgeTable[cellIndex] & 64) Interpolate(iIsoval, epsilon, CubeVal[6], CubeVal[7], CubePos[6], CubePos[7], newVerts[6]);
+        if (EdgeTable[cellIndex] & 128) Interpolate(iIsoval, epsilon, CubeVal[7], CubeVal[4], CubePos[7], CubePos[4], newVerts[7]);
+        if (EdgeTable[cellIndex] & 256) Interpolate(iIsoval, epsilon, CubeVal[0], CubeVal[4], CubePos[0], CubePos[4], newVerts[8]);
+        if (EdgeTable[cellIndex] & 512) Interpolate(iIsoval, epsilon, CubeVal[1], CubeVal[5], CubePos[1], CubePos[5], newVerts[9]);
+        if (EdgeTable[cellIndex] & 1024) Interpolate(iIsoval, epsilon, CubeVal[2], CubeVal[6], CubePos[2], CubePos[6], newVerts[10]);
+        if (EdgeTable[cellIndex] & 2048) Interpolate(iIsoval, epsilon, CubeVal[3], CubeVal[7], CubePos[3], CubePos[7], newVerts[11]);
 
         // Create the triangles
         for (int i= 0; TriTable[cellIndex][i] != -1; i+= 3) {
-          oVertices.push_back(verts[TriTable[cellIndex][i + 2]]);
-          oVertices.push_back(verts[TriTable[cellIndex][i + 1]]);
-          oVertices.push_back(verts[TriTable[cellIndex][i + 0]]);
+          oVertices.push_back(newVerts[TriTable[cellIndex][i + 2]]);
+          oVertices.push_back(newVerts[TriTable[cellIndex][i + 1]]);
+          oVertices.push_back(newVerts[TriTable[cellIndex][i + 0]]);
           oTriangles.push_back(std::array<int, 3>({int(oVertices.size()) - 3, int(oVertices.size()) - 2, int(oVertices.size()) - 1}));
         }
       }
