@@ -52,7 +52,7 @@ void TerrainErosion::SetActiveProject() {
     D.UI.push_back(ParamUI("TerrainNbX__", 128));
     D.UI.push_back(ParamUI("TerrainNbY__", 128));
     D.UI.push_back(ParamUI("TerrainNbCut", 256));
-    D.UI.push_back(ParamUI("DropletNbK__", 400));
+    D.UI.push_back(ParamUI("DropletNbK__", 1000));
     D.UI.push_back(ParamUI("DropletRad__", 0.01));
     D.UI.push_back(ParamUI("SimuTimestep", 0.02));
     D.UI.push_back(ParamUI("VelDecay____", 0.5));
