@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <limits>
+#include <cstring>
 
 // GLUT lib
 #include "Libs/freeglut/include/GL/freeglut.h"
@@ -530,8 +531,7 @@ void callback_reshape(int width, int height) {
 // Keyboard interruption callback
 void callback_keyboard(unsigned char key, int x, int y) {
   (void)x;  // Disable warning unused variable
-  (void)y;  // Disable warning unused variable
-
+  (void)y;  // Disable warning unused variable  
   if (key == 27) {
     glutDestroyWindow(windowID);
     exit(EXIT_SUCCESS);
@@ -847,7 +847,7 @@ int main(int argc, char *argv[]) {
   glutTimerFunc(100, &callback_timer, 0);
 
   // Compute refresh
-  currentProjectID= 0;
+  currentProjectID= CompuFluidDynaID;
   loadConfigProject();
   project_ForceHardInit();
   loadConfigProject();

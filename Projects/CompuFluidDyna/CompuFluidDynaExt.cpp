@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <cstring>
 #include <numbers>
+#include <tuple>
+#include <algorithm>
 
 // GLUT lib
 #include "../../Libs/freeglut/include/GL/freeglut.h"
@@ -184,6 +186,7 @@ void CompuFluidDyna::InitializeScenario() {
     if (inputFile == 1) FileInput::LoadImageBMPFile("FileInput/CFD_Nozzle.bmp", imageRGBA, false);
     if (inputFile == 2) FileInput::LoadImageBMPFile("FileInput/CFD_Pipe.bmp", imageRGBA, false);
     if (inputFile == 3) FileInput::LoadImageBMPFile("FileInput/CFD_TeslaValve.bmp", imageRGBA, false);
+    if (inputFile == 4) FileInput::LoadImageBMPFile("FileInput/CFD_Pipe2.bmp", imageRGBA, false);
   }
 
   // Set scenario values
@@ -201,9 +204,10 @@ void CompuFluidDyna::InitializeScenario() {
             Solid[x][y][z]= true;
           }
           else {
-            if (std::abs(colRGBA[0] - 0.5f) > 0.1f) PreBC[x][y][z]= true;
-            if (std::abs(colRGBA[1] - 0.5f) > 0.1f) VelBC[x][y][z]= true;
-            if (std::abs(colRGBA[2] - 0.5f) > 0.1f) SmoBC[x][y][z]= true;
+            if (std::abs(colRGBA[0] - 0.5f) > 0.1f) {PreBC[x][y][z]= true;/*printf("[x][y][z]=[%d][%d][%d]; PresBC\n",x,y,z);*/}
+            if (std::abs(colRGBA[1] - 0.5f) > 0.1f) {VelBC[x][y][z]= true;/*printf("[x][y][z]=[%d][%d][%d]; VelBC\n",x,y,z);*/}
+            if (std::abs(colRGBA[2] - 0.5f) > 0.1f) {SmoBC[x][y][z]= true;/*printf("[x][y][z]=[%d][%d][%d]; SmoBC\n",x,y,z);*/}
+            
           }
           if (PreBC[x][y][z]) {
             PresForced[x][y][z]= D.UI[BCPres______].GetF() * ((colRGBA[0] > 0.5f) ? (1.0f) : (-1.0f));
@@ -449,7 +453,7 @@ void CompuFluidDyna::ApplyBC(const int iFieldID, std::vector<std::vector<std::ve
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= 0.0f;
         if (Solid[x][y][z] && iFieldID == FieldID::IDPres) ioField[x][y][z]= 0.0f;
-        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z] * std::cos(simTime * 2.0f * std::numbers::pi / D.UI[BCSmokTime__].GetF());
+        if (SmoBC[x][y][z] && iFieldID == FieldID::IDSmok) ioField[x][y][z]= SmokForced[x][y][z]/* * std::cos(simTime * 2.0f * std::numbers::pi / D.UI[BCSmokTime__].GetF())*/;
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelX) ioField[x][y][z]= VelXForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelY) ioField[x][y][z]= VelYForced[x][y][z];
         if (VelBC[x][y][z] && iFieldID == FieldID::IDVelZ) ioField[x][y][z]= VelZForced[x][y][z];
@@ -468,6 +472,16 @@ void CompuFluidDyna::ImplicitFieldAdd(const std::vector<std::vector<std::vector<
     for (int y= 0; y < nY; y++)
       for (int z= 0; z < nZ; z++)
         oField[x][y][z]= iFieldA[x][y][z] + iFieldB[x][y][z];
+}
+
+// Multiplication of one field by an other
+void CompuFluidDyna::ImplicitFieldMult(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                                      const std::vector<std::vector<std::vector<float>>>& iFieldB,
+                                      std::vector<std::vector<std::vector<float>>>& oField) {
+  for (int x= 0; x < nX; x++)
+    for (int y= 0; y < nY; y++)
+      for (int z= 0; z < nZ; z++)
+        oField[x][y][z]= iFieldA[x][y][z] * iFieldB[x][y][z];
 }
 
 
@@ -724,7 +738,7 @@ void CompuFluidDyna::GradientDescentSolve(const int iFieldID, const int iMaxIter
 }
 
 
-// Solve linear system with an iterative Gauss Seidel scheme
+// Solve linear system with an iterative Gauss Seidel schemnitiale
 // Solving each equation sequentially by cascading latest solution to next equation
 // Run a forward and backward pass in parallel to avoid element ordering bias
 // Apply successive overrelaxation coefficient to accelerate convergence
@@ -1152,5 +1166,400 @@ void CompuFluidDyna::ComputeVelocityCurlVorticity() {
         Vort[x][y][z]= std::sqrt(CurX[x][y][z] * CurX[x][y][z] + CurY[x][y][z] * CurY[x][y][z] + CurZ[x][y][z] * CurZ[x][y][z]);
       }
     }
+  }
+}
+
+// Compute pressure drop (if iMode == 1, compute relative pressure drop)
+float CompuFluidDyna::ComputePressureDrop(const bool iMode) {
+  float sumPres = 0.0f;
+  int nbForcedVel = 0;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+        if (VelBC[x][y][z]) { 
+          sumPres += Pres[x][y][z];
+          nbForcedVel++;
+        }
+      }
+    }
+  }
+  float PD = (sumPres / (float)nbForcedVel) - D.UI[BCPres______].GetF();
+  if (iMode)
+    PD /= std::abs(IPD);
+  return PD;
+}
+
+// Compute kinetic energy
+void CompuFluidDyna::ComputeKineticEnergy() {
+  float ke = 0.0f;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+          // m * v^2
+          ke += Smok[x][y][z] * (VelX[x][y][z] * VelX[x][y][z] + VelY[x][y][z] * VelY[x][y][z] + VelZ[x][y][z] * VelZ[x][y][z]);
+        }
+      }
+    } 
+  KE = 0.5 * ke;
+}
+
+// Compute total density
+void CompuFluidDyna::ComputeTotalDensity() {
+  float td = 0.0f;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+          td += std::abs(Smok[x][y][z]);
+        }
+      }
+    }
+  TD = td;
+}
+
+// Compute the volume out of the solid voxels (for the pipes diameter estimation)
+void CompuFluidDyna::ComputeVolumeOutOfSolid() {
+  int vol = 0;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+          if (!Solid[x][y][z])
+            vol++;
+        }
+      }
+    }
+  VolOOS = vol;
+}
+
+// Compute the geometry border area
+void CompuFluidDyna::ComputeGeometrySurfaceArea() {
+  int area = 0;
+  bool sSwitch = false;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+        if (!sSwitch && !Solid[x][y][z]) {          
+          sSwitch = true;
+          area++;
+        }
+        if (sSwitch) {
+          if (y > 0 && Solid[x][y - 1][z]) 
+            area++;
+          if (y < nY - 1 && Solid[x][y + 1][z]) 
+            area++;
+          if (z < nZ - 1 && Solid[x][y][z+1]) {
+            sSwitch = false;
+            area++;
+          }
+        }
+      }
+    }
+  }
+  SurfArea = area;
+}
+
+struct less_than
+{
+    inline bool operator() (const std::tuple<int,int,int,float>& elt1, const std::tuple<int,int,int,float>& elt2)
+    {
+        return (get<3>(elt1) < get<3>(elt2));
+    }
+};
+struct more_than
+{
+    inline bool operator() (const std::tuple<int,int,int,float>& elt1, const std::tuple<int,int,int,float>& elt2)
+    {
+        return (get<3>(elt1) > get<3>(elt2));
+    }
+};
+
+std::vector<std::tuple<int,int,int,float>> CompuFluidDyna::SortVoxels(std::vector<std::vector<std::vector<float>>>& ioField,
+                                                                      bool iReverse) {
+  std::vector<std::tuple<int,int,int,float>> vec;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+        if (!Solid[x][y][z] || SmoBC[x][y][z] || PreBC[x][y][z] || VelBC[x][y][z]
+        || (x - 1 >= 0 && (SmoBC[x - 1][y][z] || PreBC[x - 1][y][z] || VelBC[x - 1][y][z]))
+        || (x + 1 < nX && (SmoBC[x + 1][y][z] || PreBC[x + 1][y][z] || VelBC[x + 1][y][z]))
+        || (y - 1 >= 0 && (SmoBC[x][y - 1][z] || PreBC[x][y - 1][z] || VelBC[x][y - 1][z]))
+        || (y + 1 < nY && (SmoBC[x][y + 1][z] || PreBC[x][y + 1][z] || VelBC[x][y + 1][z]))
+        || (z - 1 >= 0 && (SmoBC[x][y][z - 1] || PreBC[x][y][z - 1] || VelBC[x][y][z - 1]))
+        || (z + 1 < nZ && (SmoBC[x][y][z + 1] || PreBC[x][y][z + 1] || VelBC[x][y][z + 1]))
+        )
+          continue;
+        int count = 0;
+        float sum = 0.0f;
+        if (x - 1 >= 0 && !Solid[x - 1][y][z] && ++count) sum+= ioField[x - 1][y][z];
+        if (y - 1 >= 0 && !Solid[x][y - 1][z] && ++count) sum+= ioField[x][y - 1][z];
+        if (z - 1 >= 0 && !Solid[x][y][z - 1] && ++count) sum+= ioField[x][y][z - 1];
+        if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) sum+= ioField[x + 1][y][z];
+        if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) sum+= ioField[x][y + 1][z];
+        if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) sum+= ioField[x][y][z + 1];
+        if (count > 0) {
+          std::tuple<int,int,int,float> tup(x,y,z,sum/(float)count);
+          vec.push_back(tup);
+        }
+      }
+    }
+  }
+  if (iReverse)
+    std::sort(vec.begin(), vec.end(), more_than());
+  else
+    std::sort(vec.begin(), vec.end(), less_than());
+  return vec;
+}
+
+// Optimize the shape of the solid geometry to minimize pressure drop 
+// https://open-research-europe.ec.europa.eu/articles/3-156
+void CompuFluidDyna::HeuristicOptimization() {
+  std::vector<std::vector<std::vector<float>>> VelMagnitude = Field::AllocField3D(nX, nY, nZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> tmp1 = Field::AllocField3D(nX, nY, nZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> tmp2 = Field::AllocField3D(nX, nY, nZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> tmp3 = Field::AllocField3D(nX, nY, nZ, 0.0f);
+  std::vector<std::vector<std::vector<float>>> tmp4 = Field::AllocField3D(nX, nY, nZ, 0.0f);  
+  ImplicitFieldMult(VelX,VelX,tmp1);
+  ImplicitFieldMult(VelY,VelY,tmp2);
+  ImplicitFieldMult(VelZ,VelZ,tmp3);
+  ImplicitFieldAdd(tmp1,tmp2,tmp4);
+  ImplicitFieldAdd(tmp3,tmp4,VelMagnitude);
+  // sort voxels relative to velocity magnitude (approximating strain rate ?)    
+  std::vector<std::tuple<int,int,int,float>> sortedCoordsToErode = SortVoxels(VelMagnitude,true);
+  ComputeVolumeOutOfSolid();
+  ComputeGeometrySurfaceArea();
+  float d = VolOOS / SurfArea;
+  // printf("\nVolOOS before erosion: %f\n", VolOOS);
+  // printf("SurfArea before erosion = %f\n",SurfArea);    
+  int nbVoxelsToErode = D.UI[FracErosion_].GetF() * sortedCoordsToErode.size(), x,y,z, nbVoxelsToSediment;    
+  float fracSedimentation = D.UI[FracErosion_].GetF();
+  // erosion
+  for (auto it = sortedCoordsToErode.begin(); it != sortedCoordsToErode.end(); ++it) { 
+    int i = std::distance(sortedCoordsToErode.begin(), it);
+    if (i >= nbVoxelsToErode)
+      break;
+    x = get<0>(sortedCoordsToErode[i]);
+    y = get<1>(sortedCoordsToErode[i]);
+    z = get<2>(sortedCoordsToErode[i]);
+    // printf("i = %d\n",i);
+    // printf("before erode : [x][y][z]=[%d][%d][%d]\n",x,y,z);
+    Solid[x][y][z] = false; // erosion
+    int count = 0;
+    float sumSmok = 0.0f, sumVelX = 0.0f, sumVelY = 0.0f, sumVelZ = 0.0f;
+    if (x - 1 >= 0 && !Solid[x - 1][y][z] && ++count) {sumSmok+= Smok[x - 1][y][z];sumVelX+= VelX[x - 1][y][z];sumVelY+= VelY[x - 1][y][z];sumVelZ+= VelZ[x - 1][y][z];}
+    if (y - 1 >= 0 && !Solid[x][y - 1][z] && ++count) {sumSmok+= Smok[x][y - 1][z];sumVelX+= VelX[x][y - 1][z];sumVelY+= VelY[x][y - 1][z];sumVelZ+= VelZ[x][y - 1][z];}
+    if (z - 1 >= 0 && !Solid[x][y][z - 1] && ++count) {sumSmok+= Smok[x][y][z - 1];sumVelX+= VelX[x][y][z - 1];sumVelY+= VelY[x][y][z - 1];sumVelZ+= VelZ[x][y][z - 1];}
+    if (x + 1 < nX && !Solid[x + 1][y][z] && ++count) {sumSmok+= Smok[x + 1][y][z];sumVelX+= VelX[x + 1][y][z];sumVelY+= VelY[x + 1][y][z];sumVelZ+= VelZ[x + 1][y][z];}
+    if (y + 1 < nY && !Solid[x][y + 1][z] && ++count) {sumSmok+= Smok[x][y + 1][z];sumVelX+= VelX[x][y + 1][z];sumVelY+= VelY[x][y + 1][z];sumVelZ+= VelZ[x][y + 1][z];}
+    if (z + 1 < nZ && !Solid[x][y][z + 1] && ++count) {sumSmok+= Smok[x][y][z + 1];sumVelX+= VelX[x][y][z + 1];sumVelY+= VelY[x][y][z + 1];sumVelZ+= VelZ[x][y][z + 1];}    
+    Smok[x][y][z] = sumSmok / (float)count; // the eroded voxel has the average smoke value of its neighbours (temporary, to avoid sedimentation of eroded voxels)
+    VelX[x][y][z] = sumVelX / (float)count; // the eroded voxel has the average VelX value of its neighbours (temporary, to avoid sedimentation of eroded voxels)
+    VelY[x][y][z] = sumVelY / (float)count; // the eroded voxel has the average VelY value of its neighbours (temporary, to avoid sedimentation of eroded voxels)
+    VelZ[x][y][z] = sumVelZ / (float)count; // the eroded voxel has the average VelZ value of its neighbours (temporary, to avoid sedimentation of eroded voxels)
+    Pres[x][y][z] = 0.0f;
+    // printf("after erode : [x][y][z]=[%d][%d][%d]; VelX[x][y][z]=%f; VelY[x][y][z]=%f; VelZ[x][y][z]=%f\n",x,y,z,VelX[x][y][z],VelY[x][y][z],VelZ[x][y][z]);
+  }
+  // printf("nbVoxelsEroded : %d\n", nbVoxelsToErode);
+  // update the Velocity Magnitude field
+  ImplicitFieldMult(VelX,VelX,tmp1);
+  ImplicitFieldMult(VelY,VelY,tmp2);
+  ImplicitFieldMult(VelZ,VelZ,tmp3);
+  ImplicitFieldAdd(tmp1,tmp2,tmp4);
+  ImplicitFieldAdd(tmp3,tmp4,VelMagnitude);
+  std::vector<std::tuple<int,int,int,float>> sortedCoordsToSediment = SortVoxels(VelMagnitude,false); // update the voxels list (and sort it again)
+  ComputeVolumeOutOfSolid();
+  ComputeGeometrySurfaceArea();
+  d = VolOOS / SurfArea;
+  // printf("VolOOS after erosion : %f\n", VolOOS);
+  // printf("SurfArea after erosion = %f\n",SurfArea);   
+  // printf("d after erosion : %f\n", d);
+  int cpt;
+  while ( d > d0 ) { // while the diameter has not gotten back to its initial value, sediment
+    fracSedimentation = (d / d0) * (d / d0) - 1; // 2D fs adjustment      
+    nbVoxelsToSediment = fracSedimentation * sortedCoordsToSediment.size();
+    if (nbVoxelsToSediment <= 0) // avoid infinite loop
+      break;
+    // printf("nbVoxelsToSediment : %d\n", nbVoxelsToSediment);
+    cpt = 0;
+    // sedimentation
+    for (auto it = sortedCoordsToSediment.begin(); it != sortedCoordsToSediment.end(); ++it) { 
+      int i = std::distance(sortedCoordsToSediment.begin(), it);
+      if (cpt >= nbVoxelsToSediment)
+        break;
+      x = get<0>(sortedCoordsToSediment[i]);
+      y = get<1>(sortedCoordsToSediment[i]);
+      z = get<2>(sortedCoordsToSediment[i]);
+      // printf("i = %d\n",i);
+      // printf("before sediment : [x][y][z]=[%d][%d][%d]; VelX[x][y][z]=%f; VelY[x][y][z]=%f; VelZ[x][y][z]=%f\n",x,y,z,VelX[x][y][z],VelY[x][y][z],VelZ[x][y][z]);
+      if (x - 1 >= 0 && !Solid[x - 1][y][z]) {
+        Solid[x - 1][y][z] = true;
+        Smok[x - 1][y][z] = 0.0f;
+        Pres[x - 1][y][z] = 0.0f;
+        Dive[x - 1][y][z] = 0.0f;
+        Vort[x - 1][y][z] = 0.0f;
+        VelX[x - 1][y][z] = 0.0f;
+        VelY[x - 1][y][z] = 0.0f;
+        VelZ[x - 1][y][z] = 0.0f;
+        CurX[x - 1][y][z] = 0.0f;
+        CurY[x - 1][y][z] = 0.0f;
+        CurZ[x - 1][y][z] = 0.0f;
+        AdvX[x - 1][y][z] = 0.0f;
+        AdvY[x - 1][y][z] = 0.0f;
+        AdvZ[x - 1][y][z] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y][z]=[%d][%d][%d]; VelX[x][y][z]=%f; VelY[x][y][z]=%f; VelZ[x][y][z]=%f\n",x,y,z,VelX[x][y][z],VelY[x][y][z],VelZ[x][y][z]);
+        continue;
+      }
+      if (x + 1 < nX && !Solid[x + 1][y][z]) {
+        Solid[x + 1][y][z] = true;
+        Smok[x + 1][y][z] = 0.0f;
+        Pres[x + 1][y][z] = 0.0f;
+        Dive[x + 1][y][z] = 0.0f;
+        Vort[x + 1][y][z] = 0.0f;
+        VelX[x + 1][y][z] = 0.0f;
+        VelY[x + 1][y][z] = 0.0f;
+        VelZ[x + 1][y][z] = 0.0f;
+        CurX[x + 1][y][z] = 0.0f;
+        CurY[x + 1][y][z] = 0.0f;
+        CurZ[x + 1][y][z] = 0.0f;
+        AdvX[x + 1][y][z] = 0.0f;
+        AdvY[x + 1][y][z] = 0.0f;
+        AdvZ[x + 1][y][z] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y][z]=[%d][%d][%d]; VelX[x][y][z]=%f; VelY[x][y][z]=%f; VelZ[x][y][z]=%f\n",x,y,z,VelX[x][y][z],VelY[x][y][z],VelZ[x][y][z]);
+        continue;
+      }
+      if (y - 1 >= 0 && !Solid[x][y - 1][z]) {
+        Solid[x][y - 1][z] = true;
+        Smok[x][y - 1][z] = 0.0f;
+        Pres[x][y - 1][z] = 0.0f;
+        Dive[x][y - 1][z] = 0.0f;
+        Vort[x][y - 1][z] = 0.0f;
+        VelX[x][y - 1][z] = 0.0f;
+        VelY[x][y - 1][z] = 0.0f;
+        VelZ[x][y - 1][z] = 0.0f;
+        CurX[x][y - 1][z] = 0.0f;
+        CurY[x][y - 1][z] = 0.0f;
+        CurZ[x][y - 1][z] = 0.0f;
+        AdvX[x][y - 1][z] = 0.0f;
+        AdvY[x][y - 1][z] = 0.0f;
+        AdvZ[x][y - 1][z] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y-1][z]=[%d][%d][%d]; VelX[x][y-1][z]=%f; VelY[x][y-1][z]=%f; VelZ[x][y-1][z]=%f\n",x,y-1,z,VelX[x][y-1][z],VelY[x][y-1][z],VelZ[x][y-1][z]);
+        continue;
+      }
+      if (y + 1 < nY && !Solid[x][y + 1][z]) {
+        Solid[x][y + 1][z] = true;
+        Smok[x][y + 1][z] = 0.0f;
+        Pres[x][y + 1][z] = 0.0f;
+        Dive[x][y + 1][z] = 0.0f;
+        Vort[x][y + 1][z] = 0.0f;
+        VelX[x][y + 1][z] = 0.0f;
+        VelY[x][y + 1][z] = 0.0f;
+        VelZ[x][y + 1][z] = 0.0f;
+        CurX[x][y + 1][z] = 0.0f;
+        CurY[x][y + 1][z] = 0.0f;
+        CurZ[x][y + 1][z] = 0.0f;
+        AdvX[x][y + 1][z] = 0.0f;
+        AdvY[x][y + 1][z] = 0.0f;
+        AdvZ[x][y + 1][z] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y+1][z]=[%d][%d][%d]; VelX[x][y+1][z]=%f; VelY[x][y+1][z]=%f; VelZ[x][y+1][z]=%f\n",x,y+1,z,VelX[x][y+1][z],VelY[x][y+1][z],VelZ[x][y+1][z]);
+        continue;
+      }
+      if (z - 1 >= 0 && !Solid[x][y][z - 1]) {      
+        Solid[x][y][z - 1] = true;
+        Smok[x][y][z - 1] = 0.0f;
+        Pres[x][y][z - 1] = 0.0f;
+        Dive[x][y][z - 1] = 0.0f;
+        Vort[x][y][z - 1] = 0.0f;
+        VelX[x][y][z - 1] = 0.0f;
+        VelY[x][y][z - 1] = 0.0f;
+        VelZ[x][y][z - 1] = 0.0f;
+        CurX[x][y][z - 1] = 0.0f;
+        CurY[x][y][z - 1] = 0.0f;
+        CurZ[x][y][z - 1] = 0.0f;
+        AdvX[x][y][z - 1] = 0.0f;
+        AdvY[x][y][z - 1] = 0.0f;
+        AdvZ[x][y][z - 1] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y][z-1]=[%d][%d][%d]; VelX[x][y][z-1]=%f; VelY[x][y][z-1]=%f; VelZ[x][y][z-1]=%f\n",x,y,z-1,VelX[x][y][z-1],VelY[x][y][z-1],VelZ[x][y][z-1]);
+        continue;
+      }
+      if (z + 1 < nZ && !Solid[x][y][z + 1]) {
+        Solid[x][y][z + 1] = true;
+        Smok[x][y][z + 1] = 0.0f;
+        Pres[x][y][z + 1] = 0.0f;
+        Dive[x][y][z + 1] = 0.0f;
+        Vort[x][y][z + 1] = 0.0f;
+        VelX[x][y][z + 1] = 0.0f;
+        VelY[x][y][z + 1] = 0.0f;
+        VelZ[x][y][z + 1] = 0.0f;
+        CurX[x][y][z + 1] = 0.0f;
+        CurY[x][y][z + 1] = 0.0f;
+        CurZ[x][y][z + 1] = 0.0f;
+        AdvX[x][y][z + 1] = 0.0f;
+        AdvY[x][y][z + 1] = 0.0f;
+        AdvZ[x][y][z + 1] = 0.0f;
+        cpt++;
+        ComputeVolumeOutOfSolid();
+        ComputeGeometrySurfaceArea();
+        // printf("after sediment : [x][y][z+1]=[%d][%d][%d]; VelX[x][y][z+1]=%f; VelY[x][y][z+1]=%f; VelZ[x][y][z+1]=%f\n",x,y,z+1,VelX[x][y][z+1],VelY[x][y][z+1],VelZ[x][y][z+1]);
+        continue;
+      }        
+      // printf("VolOOS : %f\n", VolOOS);
+      // if(Solid[x][y+1][z] && Solid[x][y-1][z] && Solid[x][y+1][z] && Solid[x][y-1][z] && Solid[x][y][z+1] && Solid[x][y][z-1]) {
+      //   printf("Solid[x][y][z]=%d\n",static_cast<int>(Solid[x][y][z]));
+      //   printf("Solid[x][y+1][z]=%d\n",static_cast<int>(Solid[x][y+1][z]));
+      //   printf("Solid[x][y-1][z]=%d\n",static_cast<int>(Solid[x][y-1][z]));
+      //   printf("Solid[x][y][z+1]=%d\n",static_cast<int>(Solid[x][y][z+1]));
+      //   printf("Solid[x][y][z-1]=%d\n",static_cast<int>(Solid[x][y][z-1]));
+      //   printf("Pres[x][y][z]=%f\n",Pres[x][y][z]);
+      //   printf("Pres[x][y+1][z]=%f\n",Pres[x][y+1][z]);
+      //   printf("Pres[x][y-1][z]=%f\n",Pres[x][y-1][z]);
+      //   printf("Pres[x][y][z+1]=%f\n",Pres[x][y][z+1]);
+      //   printf("Pres[x][y][z-1]=%f\n",Pres[x][y][z-1]);
+      // }
+    }      
+    ComputeVolumeOutOfSolid();
+    ComputeGeometrySurfaceArea();
+    d = VolOOS / SurfArea;
+    // printf("VolOOS after sedimentation : %f\n", VolOOS);
+    // printf("nbVoxels after sedimentation = %f\n",SurfArea);      
+    // printf("d after sedimentation : %f\n", d);
+    // // printf("cpt = %d\n",cpt);
+    // exit(EXIT_SUCCESS);      
+  }
+  // put back the fields of eroded voxels to zero values (as in the paper)
+  for (auto it = sortedCoordsToErode.begin(); it != sortedCoordsToErode.end(); ++it) { 
+    int i = std::distance(sortedCoordsToErode.begin(), it);
+    if (i >= nbVoxelsToErode)
+      break;      
+    x = get<0>(sortedCoordsToErode[i]);
+    y = get<1>(sortedCoordsToErode[i]);
+    z = get<2>(sortedCoordsToErode[i]);
+    // printf("i = %d\n",i);
+    // printf("after erode : [x][y][z]=[%d][%d][%d]; VelX[x][y][z]=%f; VelY[x][y][z]=%f; VelZ[x][y][z]=%f\n",x,y,z,VelX[x][y][z],VelY[x][y][z],VelZ[x][y][z]);
+    Smok[x][y][z] = 0.0f;
+    Pres[x][y][z] = 0.0f;
+    Dive[x][y][z] = 0.0f;
+    Vort[x][y][z] = 0.0f;
+    VelX[x][y][z] = 0.0f;
+    VelY[x][y][z] = 0.0f;
+    VelZ[x][y][z] = 0.0f;
+    CurX[x][y][z] = 0.0f;
+    CurY[x][y][z] = 0.0f;
+    CurZ[x][y][z] = 0.0f;
+    AdvX[x][y][z] = 0.0f;
+    AdvY[x][y][z] = 0.0f;
+    AdvZ[x][y][z] = 0.0f;
   }
 }

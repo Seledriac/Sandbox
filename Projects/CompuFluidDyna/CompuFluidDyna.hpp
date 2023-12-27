@@ -2,6 +2,7 @@
 
 // Standard lib
 #include <vector>
+#include <tuple>
 
 
 // Fluid simulation code
@@ -50,6 +51,42 @@ class CompuFluidDyna
   float voxSize;
   float simTime;
 
+  // Pressure drop
+  float IPD; // Initial pressure drop
+  float RPD; // Relative pressure drop
+  float PDD; // Pressure drop delta
+  float minRPD; // Minimum pressure drop attained
+  int nbIterSinceMinRPDChange; // Number of optimization iterations since the last minimum pressure drop change
+  
+  // Kinetic energy
+  float KE; // Kinetic Energy
+  float KED; // Kinetic Energy Delta  
+
+  // Total Density
+  float TD;
+  int nbIterSinceMaxTDChange; // Number of iterations since the last max total density Change
+  float MaxTD; // Max total density (used to find stability in periodic simulations)
+
+  // Volume out of solid voxels
+  float VolOOS;
+  
+  // Geometry surface area
+  float SurfArea;
+
+  // Initial geometry "diameter" (volume/surface area)
+  float d0;
+
+  // Flush Time
+  float FTime;
+  bool flushed;
+
+  // Time since the last optimization interation
+  float TimeSinceLastIter;
+
+  // Flag for if optimization has started or not 
+  bool OptimStarted;
+  bool OptimEnded;
+
   // Fluid properties
   float fluidDensity;
 
@@ -94,6 +131,9 @@ class CompuFluidDyna
   void ImplicitFieldSub(const std::vector<std::vector<std::vector<float>>>& iFieldA,
                         const std::vector<std::vector<std::vector<float>>>& iFieldB,
                         std::vector<std::vector<std::vector<float>>>& oField);
+  void ImplicitFieldMult(const std::vector<std::vector<std::vector<float>>>& iFieldA,
+                        const std::vector<std::vector<std::vector<float>>>& iFieldB,
+                        std::vector<std::vector<std::vector<float>>>& oField);
   void ImplicitFieldScale(const float iVal,
                           const std::vector<std::vector<std::vector<float>>>& iField,
                           std::vector<std::vector<std::vector<float>>>& oField);
@@ -131,8 +171,17 @@ class CompuFluidDyna
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
                             std::vector<std::vector<std::vector<float>>>& ioVelZ);
+  std::vector<std::tuple<int,int,int,float>> SortVoxels(std::vector<std::vector<std::vector<float>>>& ioField, 
+                                                        bool iReverse);
   void ComputeVelocityDivergence();
   void ComputeVelocityCurlVorticity();
+  float ComputePressureDrop(const bool iMode);
+  void ComputeKineticEnergy();
+  void ComputeTotalDensity();
+  void ComputeVolumeOutOfSolid();
+  void ComputeGeometrySurfaceArea();
+  void HeuristicOptimization();
+  
 
   public:
   bool isActivProj;
@@ -144,6 +193,7 @@ class CompuFluidDyna
   void SetActiveProject();
   bool CheckAlloc();
   bool CheckRefresh();
+  void CheckFlushed();
   void Allocate();
   void KeyPress(const unsigned char key);
   void Refresh();

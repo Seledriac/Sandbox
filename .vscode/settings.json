@@ -100,7 +100,9 @@
     "xlocmon": "cpp",
     "xloctime": "cpp",
     "span": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "cinttypes": "cpp"
   },
-  "cmake.configureOnOpen": true
+  "cmake.configureOnOpen": true,
+  "C_Cpp.errorSquiggles": "disabled"
 }

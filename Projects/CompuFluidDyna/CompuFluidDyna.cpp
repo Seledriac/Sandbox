@@ -41,6 +41,13 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
     D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
     D.UI.push_back(ParamUI("SolvTolAbs__", 0.0));    // Solver tolerance relative absolute value of residual magnitude
+    D.UI.push_back(ParamUI("OptimPDDTol_", 1.e-3));  // Shape optimizer tolerance relative to the pressure drop delta
+    D.UI.push_back(ParamUI("KEDTol______", 1.e-3));  // Tolerance relative to Kinetic Energy delta to consider the flow stable
+    D.UI.push_back(ParamUI("FlushTol____", 1.e-1));  // Tolerance relative to the minimum fluid density from which we consider that the fluid flushed  
+    D.UI.push_back(ParamUI("StaIterWin__", 100));    // Max number of iterations without a change of MaxTD before considering that the fluid is stable
+    D.UI.push_back(ParamUI("OptiIterWin_", 100));     // Max number of iterations without a change of MinRPD before ending the optimization
+    D.UI.push_back(ParamUI("FracErosion_", 0.05));   // Fraction of eroded voxels at each optimization step
+    D.UI.push_back(ParamUI("CoeffFluTime", 2.0));    // Coefficient applied to the flush time, time window between optimization iterations to reach flow stability
     D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
     D.UI.push_back(ParamUI("CoeffAdvec__", 5.0));    // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffDiffuS_", 1.e-4));  // Diffusion of smoke field, i.e. smoke spread/smear
@@ -111,6 +118,21 @@ bool CompuFluidDyna::CheckRefresh() {
   return isRefreshed;
 }
 
+// Check if the fluid has flushed through the whole geometry
+void CompuFluidDyna::CheckFlushed() {
+  float sumSmo = 0.0f;
+  for (int x= 0; x < nX; x++) {
+    for (int y= 0; y < nY; y++) {
+      for (int z= 0; z < nZ; z++) {
+        if (PreBC[x][y][z]) { 
+          sumSmo += Smok[x][y][z];
+        }
+      }
+    }
+  }
+  if (sumSmo >= D.UI[FlushTol____].GetF())
+    flushed = true;
+}
 
 // Allocate the project data
 void CompuFluidDyna::Allocate() {
@@ -200,6 +222,31 @@ void CompuFluidDyna::Refresh() {
   ApplyBC(FieldID::IDVelZ, VelZ);
   ApplyBC(FieldID::IDPres, Dive);
   ApplyBC(FieldID::IDPres, Pres);
+
+  // Initialize optimization variables
+  RPD = 1.0f;
+  minRPD = RPD;
+  nbIterSinceMinRPDChange = 0;  
+
+  ComputeKineticEnergy();
+  KED = INFINITY;
+
+  ComputeTotalDensity();
+  nbIterSinceMaxTDChange = 0;
+  MaxTD = TD;
+
+  flushed = false;
+  FTime = 0.0f;
+
+  TimeSinceLastIter = INFINITY;
+
+  OptimStarted = false;
+  OptimEnded = false;
+
+  ComputeVolumeOutOfSolid();
+  ComputeGeometrySurfaceArea();
+  d0 = VolOOS / SurfArea;
+  // printf("d0 : %f\n", d0);
 }
 
 
@@ -318,8 +365,55 @@ void CompuFluidDyna::Animate() {
 
   // TODO Compute fluid density to check if constant as it should be in incompressible case
 
-  // TODO Test heuristic optimization of solid regions
+  // Test heuristic optimization of solid regions
   // https://open-research-europe.ec.europa.eu/articles/3-156
+  TimeSinceLastIter += timestep;
+  // Determine flush time through the geometry
+  if (!flushed) 
+    CheckFlushed();
+  if (flushed && !FTime) {
+    FTime = simTime;
+    printf("%f T flushTime\n", simTime);
+  }
+  // printf("%f KED\n", KED);
+  // printf("hello\n");
+  nbIterSinceMaxTDChange++;
+  if (KED >= D.UI[KEDTol______].GetF() && nbIterSinceMaxTDChange < D.UI[StaIterWin__].GetI()) { // Check if the flow is stable yet
+    const float oldKE = KE;
+    ComputeKineticEnergy();
+    KED = std::abs(KE - oldKE);
+    ComputeTotalDensity();
+    if (TD > MaxTD) {
+      MaxTD = TD;
+      nbIterSinceMaxTDChange = 0;
+    }
+  } else if (flushed && !OptimEnded) { // If it is stable (it should have flushed at this time)    
+    if (TimeSinceLastIter >= FTime * D.UI[CoeffFluTime].GetF()) {
+      if (!OptimStarted) {
+        IPD = ComputePressureDrop(false); printf("IPD : %f\n", IPD);
+      }
+      // printf("%f T stableTime\n", simTime);
+      const float oldRPD = RPD;
+      RPD = ComputePressureDrop(true);
+      PDD = std::abs(RPD - oldRPD);
+      // printf("\nPDD after last opti : %f\n", PDD);
+      if (RPD < minRPD) {
+        minRPD = RPD;
+        nbIterSinceMinRPDChange = 0;
+      } else {
+        nbIterSinceMinRPDChange++;
+      }
+      if (nbIterSinceMinRPDChange > D.UI[OptiIterWin_].GetI()
+      || (OptimStarted && PDD < std::max(D.UI[OptimPDDTol_].GetF(), 0.0f))) { // optimization ends
+        printf("RPD after opti : %f\n", RPD);
+        OptimEnded = true;
+      } else {
+        OptimStarted = true;
+        HeuristicOptimization();
+      }
+      TimeSinceLastIter = 0.0f;
+    }
+  }
 
   // TODO Introduce solid interface normals calculations to better handle BC on sloped geometry ?
   // TODO Test with flow separation scenarios ?
