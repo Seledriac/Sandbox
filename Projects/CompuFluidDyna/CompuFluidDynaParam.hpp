@@ -27,6 +27,7 @@ enum ParamType
   FlushTol____,
   StaIterWin__,
   OptiIterWin_,
+  SafeZoneRad_,
   FracErosion_,
   CoeffFluTime,
   CoeffGravi__,

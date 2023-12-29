@@ -276,7 +276,7 @@ void callback_display() {
   // Set the camera transformation matrix for the scene
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0, double(winW) / double(winH), 0.1, 100.0);
+  gluPerspective(45.0, double(winW) / double(winH), 0.1, 1000.0);
 
   // Set the world transformation matrix for the scene
   glMatrixMode(GL_MODELVIEW);

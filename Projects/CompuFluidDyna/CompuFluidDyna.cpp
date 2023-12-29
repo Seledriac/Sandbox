@@ -28,12 +28,12 @@ CompuFluidDyna::CompuFluidDyna() {
 void CompuFluidDyna::SetActiveProject() {
   if (!isActivProj) {
     D.UI.clear();
-    D.UI.push_back(ParamUI("Scenario____", 0));      // Scenario ID, 0= load file, 1> hard coded scenarios
+    D.UI.push_back(ParamUI("Scenario____", 8));      // Scenario ID, 0= load file, 1> hard coded scenarios
     D.UI.push_back(ParamUI("InputFile___", 3));      // BMP file to load
-    D.UI.push_back(ParamUI("ResolutionX_", 1));      // Eulerian mesh resolution
+    D.UI.push_back(ParamUI("ResolutionX_", 30));      // Eulerian mesh resolution
     D.UI.push_back(ParamUI("ResolutionY_", 100));    // Eulerian mesh resolution
     D.UI.push_back(ParamUI("ResolutionZ_", 100));    // Eulerian mesh resolution
-    D.UI.push_back(ParamUI("VoxelSize___", 1.e-2));  // Element size
+    D.UI.push_back(ParamUI("VoxelSize___", 1e-1));  // Element size
     D.UI.push_back(ParamUI("TimeStep____", 0.02));   // Simulation time step
     D.UI.push_back(ParamUI("SolvMaxIter_", 32));     // Max number of solver iterations
     D.UI.push_back(ParamUI("SolvType____", 2));      // Flag to use Gauss Seidel (=0), Gradient Descent (=1) or Conjugate Gradient (=2)
@@ -41,17 +41,18 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("SolvTolRhs__", 0.0));    // Solver tolerance relative to RHS norm
     D.UI.push_back(ParamUI("SolvTolRel__", 1.e-3));  // Solver tolerance relative to initial guess
     D.UI.push_back(ParamUI("SolvTolAbs__", 0.0));    // Solver tolerance relative absolute value of residual magnitude
-    D.UI.push_back(ParamUI("OptimPDDTol_", 1.e-3));  // Shape optimizer tolerance relative to the pressure drop delta
+    D.UI.push_back(ParamUI("OptimPDDTol_", 1.e-8));  // Shape optimizer tolerance relative to the pressure drop delta
     D.UI.push_back(ParamUI("KEDTol______", 1.e-3));  // Tolerance relative to Kinetic Energy delta to consider the flow stable
-    D.UI.push_back(ParamUI("FlushTol____", 1.e-1));  // Tolerance relative to the minimum fluid density from which we consider that the fluid flushed  
+    D.UI.push_back(ParamUI("FlushTol____", 0.1));    // Tolerance relative to the minimum fluid density from which we consider that the fluid flushed  
     D.UI.push_back(ParamUI("StaIterWin__", 100));    // Max number of iterations without a change of MaxTD before considering that the fluid is stable
-    D.UI.push_back(ParamUI("OptiIterWin_", 100));     // Max number of iterations without a change of MinRPD before ending the optimization
+    D.UI.push_back(ParamUI("OptiIterWin_", 1000));   // Max number of iterations without a change of MinRPD before ending the optimization
+    D.UI.push_back(ParamUI("SafeZoneRad_", 30));     // Radius of the zone of non optimization around the base case voxels
     D.UI.push_back(ParamUI("FracErosion_", 0.05));   // Fraction of eroded voxels at each optimization step
-    D.UI.push_back(ParamUI("CoeffFluTime", 2.0));    // Coefficient applied to the flush time, time window between optimization iterations to reach flow stability
+    D.UI.push_back(ParamUI("CoeffFluTime", 0.1));    // Coefficient applied to the flush time, time window between optimization iterations to reach flow stability
     D.UI.push_back(ParamUI("CoeffGravi__", 0.0));    // Magnitude of gravity in Z- direction
     D.UI.push_back(ParamUI("CoeffAdvec__", 5.0));    // 0= no advection, 1= linear advection, >1 MacCormack correction iterations
     D.UI.push_back(ParamUI("CoeffDiffuS_", 1.e-4));  // Diffusion of smoke field, i.e. smoke spread/smear
-    D.UI.push_back(ParamUI("CoeffDiffuV_", 1.e-3));  // Diffusion of velocity field, i.e. viscosity
+    D.UI.push_back(ParamUI("CoeffDiffuV_", 0.0025)); // Diffusion of velocity field, i.e. viscosity
     D.UI.push_back(ParamUI("CoeffVorti__", 0.0));    // Vorticity confinement to avoid dissipation of energy in small scale vortices
     D.UI.push_back(ParamUI("CoeffProj___", 1.0));    // Enable incompressibility projection
     D.UI.push_back(ParamUI("BCVelX______", 0.0));    // Velocity value for voxels with enforced velocity
@@ -63,8 +64,8 @@ void CompuFluidDyna::SetActiveProject() {
     D.UI.push_back(ParamUI("ObjectPosX__", 0.5));    // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosY__", 0.25));   // Coordinates for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ObjectPosZ__", 0.5));    // Coordinates for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectSize0_", 0.08));   // Size for objects in hard coded scenarios
-    D.UI.push_back(ParamUI("ObjectSize1_", 0.08));   // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize0_", 0.5));   // Size for objects in hard coded scenarios
+    D.UI.push_back(ParamUI("ObjectSize1_", 0.5));   // Size for objects in hard coded scenarios
     D.UI.push_back(ParamUI("ScaleFactor_", 1.0));    // Scale factor for drawn geometry
     D.UI.push_back(ParamUI("ColorFactor_", 1.0));    // Color factor for drawn geometry
     D.UI.push_back(ParamUI("ColorThresh_", 0.0));    // Color cutoff drawn geometry
@@ -403,12 +404,15 @@ void CompuFluidDyna::Animate() {
       } else {
         nbIterSinceMinRPDChange++;
       }
+      float PD = ComputePressureDrop(false);
       if (nbIterSinceMinRPDChange > D.UI[OptiIterWin_].GetI()
-      || (OptimStarted && PDD < std::max(D.UI[OptimPDDTol_].GetF(), 0.0f))) { // optimization ends
+      || (OptimStarted && PDD < std::max(D.UI[OptimPDDTol_].GetF(), 0.0f))) { // optimization ends        
+        printf("PD after opti : %f\n", PD);
         printf("RPD after opti : %f\n", RPD);
         OptimEnded = true;
       } else {
         OptimStarted = true;
+        printf("PD : %f\n", PD);
         HeuristicOptimization();
       }
       TimeSinceLastIter = 0.0f;
