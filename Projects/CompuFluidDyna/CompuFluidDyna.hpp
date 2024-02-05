@@ -51,21 +51,30 @@ class CompuFluidDyna
   float voxSize;
   float simTime;
 
+  // Fields for optimization
+
   // Pressure drop
   float IPD; // Initial pressure drop
   float RPD; // Relative pressure drop
   float PDD; // Pressure drop delta
   float minRPD; // Minimum pressure drop attained
   int nbIterSinceMinRPDChange; // Number of optimization iterations since the last minimum pressure drop change
+
+  // Mass Flow Rates
+  std::vector<float> MFR; // Mass flow rates computed for the scenario
+  // Fields for the optimized mass flow rate
+  float MFRtmp;
+  float MaxMFR; // Maximum Mass flow rate attained
+  float MFRD; // Mass flow rate delta
+  int MFRNormalDir; // direction of the normal vector of the section on which we calculate the mass flow rate : 1 is (1,0,0), 2 is (0,1,0), 3 is (0,0,1).
+  int nbIterSinceMaxMFRChange; // Number of optimization iterations since the last maximum mass flow rate attained at the section
   
   // Kinetic energy
   float KE; // Kinetic Energy
-  float KED; // Kinetic Energy Delta  
+  float KED; // Kinetic Energy Delta
 
-  // Total Density
-  float TD;
-  int nbIterSinceMaxTDChange; // Number of iterations since the last max total density Change
-  float MaxTD; // Max total density (used to find stability in periodic simulations)
+  // Strain rate (frobenius norm of the strain rate tensor at each voxel of the grid)
+  std::vector<std::vector<std::vector<float>>> StrRate;
 
   // Volume out of solid voxels
   float VolOOS;
@@ -108,6 +117,7 @@ class CompuFluidDyna
   std::vector<std::vector<std::vector<float>>> Dum3;
   std::vector<std::vector<std::vector<float>>> Dum4;
   std::vector<std::vector<std::vector<float>>> Vort;
+  std::vector<std::vector<std::vector<float>>> Vmag;
   std::vector<std::vector<std::vector<float>>> Pres;
   std::vector<std::vector<std::vector<float>>> Dive;
   std::vector<std::vector<std::vector<float>>> Smok;
@@ -171,16 +181,20 @@ class CompuFluidDyna
                             std::vector<std::vector<std::vector<float>>>& ioVelX,
                             std::vector<std::vector<std::vector<float>>>& ioVelY,
                             std::vector<std::vector<std::vector<float>>>& ioVelZ);
-  std::vector<std::tuple<int,int,int,float>> SortVoxels(std::vector<std::vector<std::vector<float>>>& ioField, 
-                                                        bool iReverse);
+  std::vector<std::tuple<int,int,int,float>> SortVoxels(const std::vector<std::vector<std::vector<float>>>& iField, 
+                                                                      const bool iAvg,
+                                                                      const bool iReverse,
+                                                                      const std::vector<std::tuple<int,int,int,float>> &coordsToAvoid = {});
   void ComputeVelocityDivergence();
   void ComputeVelocityCurlVorticity();
+  void ComputeVelocityMagnitude();
   float ComputePressureDrop(const bool iMode);
+  void ComputeMassFlowRates(bool iComputeAll);
   void ComputeKineticEnergy();
-  void ComputeTotalDensity();
+  void ComputeStrainRate();
   void ComputeVolumeOutOfSolid();
   void ComputeGeometrySurfaceArea();
-  void HeuristicOptimization();
+  void HeuristicOptimizationStep();
   
 
   public:

@@ -45,10 +45,10 @@ class Data
   bool stepAnimation= false;
   bool autoRefresh= true;
 
-  bool displayMode1= true;
+  bool displayMode1= false;
   bool displayMode2= true;
-  bool displayMode3= true;
-  bool displayMode4= true;
+  bool displayMode3= false;
+  bool displayMode4= false;
   bool displayMode5= true;
   bool displayMode6= true;
   bool displayMode7= true;
